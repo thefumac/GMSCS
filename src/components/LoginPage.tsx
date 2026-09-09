@@ -211,32 +211,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                   </div>
                 </button>
 
-                {/* 5. 김철수 선임심사원 (소속 상근 심사원) */}
+                {/* 5. 정대현 심사원보 (비상근 심사원) */}
                 <button
                   type="button"
-                  onClick={() => handleSelectAccount('aud-1')}
+                  onClick={() => handleSelectAccount('aud-4')}
                   className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'aud-1'
-                      ? 'bg-emerald-950/50 border-emerald-400 text-emerald-100 ring-2 ring-emerald-500/30'
-                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-600/30 border border-emerald-400/40 flex items-center justify-center text-sm shrink-0">
-                    💼
-                  </div>
-                  <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">김철수 선임심사원</div>
-                    <div className="text-[10.5px] text-emerald-300 truncate">소속 상근 심사원</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">전체 시스템 메뉴 공유</div>
-                  </div>
-                </button>
-
-                {/* 6. 이영희 심사원 (비상근 심사원) */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectAccount('aud-2')}
-                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'aud-2'
+                    selectedAuditorId === 'aud-4'
                       ? 'bg-amber-950/50 border-amber-400 text-amber-100 ring-2 ring-amber-500/30'
                       : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
                   }`}
@@ -245,7 +225,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                     👤
                   </div>
                   <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">이영희 심사원</div>
+                    <div className="font-extrabold text-white truncate">정대현 심사원보</div>
                     <div className="text-[10.5px] text-amber-300 truncate">비상근 심사원 (외부/위촉)</div>
                     <div className="text-[9.5px] text-amber-400/90 mt-0.5">★ 배정 기업/보고서/수당 격리</div>
                   </div>

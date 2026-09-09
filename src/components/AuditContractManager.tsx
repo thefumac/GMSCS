@@ -1079,7 +1079,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         companyName={selectedCompany.companyName}
         auditDates={`${existingPlannedStartDate} ~ ${existingPlannedEndDate}`}
         standards={combinedExistingStandards}
-        auditorName={auditors.find(a => a.id === existingLeadAuditorId)?.name || '김철수 선임심사원'}
+        auditorName={auditors.find(a => a.id === existingLeadAuditorId)?.name || '남경호 대표이사'}
         initialData={existingWeekendData}
         onSaveData={(data) => setExistingWeekendData(data)}
       />

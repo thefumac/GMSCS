@@ -386,7 +386,7 @@ export function App() {
   ) => {
     const oldComp = companies.find(c => c.id === companyId);
     if (!oldComp) return;
-    const oldAuditorId = oldComp.managingAuditorId || 'aud-1';
+    const oldAuditorId = oldComp.managingAuditorId || 'admin';
     const oldAuditorName = auditors.find(a => a.id === oldAuditorId)?.name || '기존심사원';
     const newAuditorName = auditors.find(a => a.id === newAuditorId)?.name || '신규심사원';
 

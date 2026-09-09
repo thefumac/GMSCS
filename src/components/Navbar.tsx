@@ -57,7 +57,7 @@ interface NavbarProps {
   activeCategory: MainCategory;
   setActiveCategory: (cat: MainCategory) => void;
   urgentAlertCount: number;
-  currentUserRole: string; // 'admin' | 'aud-1' | 'aud-2' etc.
+  currentUserRole: string; // 'admin' | 'aud-3' | 'aud-hq-2' etc.
   onSelectUserRole: (role: string) => void;
   allAuditors: Auditor[];
   pendingAdjustmentCount?: number;
