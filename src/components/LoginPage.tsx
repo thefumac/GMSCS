@@ -4,12 +4,9 @@ import {
   Lock, 
   User, 
   ArrowRight, 
-  CheckCircle2, 
   Server, 
   Usb, 
   AlertCircle,
-  Briefcase,
-  Building2,
   Award
 } from 'lucide-react';
 import { Auditor } from '../types';
@@ -33,9 +30,38 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
     }
   };
 
+  const handleUsernameChange = (val: string) => {
+    setUsername(val);
+    const inputClean = val.trim().toLowerCase();
+    const matched = auditors.find(a => 
+      a.email.toLowerCase() === inputClean || 
+      a.name.toLowerCase() === inputClean ||
+      a.id.toLowerCase() === inputClean
+    );
+    if (matched) {
+      setSelectedAuditorId(matched.id);
+    } else {
+      setSelectedAuditorId('');
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(selectedAuditorId);
+    const inputClean = username.trim().toLowerCase();
+    const matched = auditors.find(a => 
+      a.email.toLowerCase() === inputClean || 
+      a.name.toLowerCase() === inputClean ||
+      a.name.toLowerCase().includes(inputClean) ||
+      a.id.toLowerCase() === inputClean
+    );
+
+    if (matched) {
+      onLogin(matched.id);
+    } else if (selectedAuditorId) {
+      onLogin(selectedAuditorId);
+    } else {
+      alert('입력하신 계정 정보를 확인해 주세요. 등록된 심사원 이메일 또는 성함을 입력하여 로그인할 수 있습니다.');
+    }
   };
 
   return (
@@ -90,24 +116,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                   사무국 통합 로그인
                 </span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                ISO 9001 · 14001 · 45001 및 ESG 경영시스템 인증 심사, 심사일정 달력, 공문 심사계획서 발송, 실시간 보고서 작성, 심사비(3.3%) 정산을 통합 관리합니다.
-              </p>
             </div>
 
-            <div className="space-y-2.5 pt-2 text-xs text-slate-400 border-t border-slate-700/50">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>KAB 인정기준 준수 (불변 공식 표준 MD 기반 산출)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>소속별 권한 격리 (사무국 직원 / 소속 상근 / 비상근 심사원)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>2중 안전 백업 (로컬 주서버 + 외장 USB 물리 스토리지)</span>
-              </div>
+            {/* 심사원 공지사항 예정 영역 (비워둠) */}
+            <div className="min-h-[160px]">
             </div>
           </div>
 
@@ -116,14 +128,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
             <div className="flex items-center justify-between pb-4 border-b border-slate-700/60">
               <div>
                 <h2 className="text-lg font-bold text-white">심사원 인증 로그인</h2>
-                <p className="text-xs text-slate-400">등록된 계정을 선택하거나 로그인 정보를 입력하세요.</p>
+                <p className="text-xs text-slate-400">사무국 직원은 빠른 선택을 이용하시고, 외촉/비상근 심사원은 계정 정보를 직접 입력하여 로그인하십시오.</p>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-slate-700/60 border border-slate-600 flex items-center justify-center text-cyan-400 shadow-inner">
                 <Lock className="w-5 h-5" />
               </div>
             </div>
 
-            {/* Quick 1-Click Role Presets */}
+            {/* Quick 1-Click Role Presets (사무국 4인 전용) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-300">
                 <span>빠른 심사원 계정 선택 (데모/실무 프리셋)</span>
@@ -210,26 +222,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                     <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 전체 메뉴 접근 권한</div>
                   </div>
                 </button>
-
-                {/* 5. 정대현 심사원보 (비상근 심사원) */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectAccount('aud-4')}
-                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'aud-4'
-                      ? 'bg-amber-950/50 border-amber-400 text-amber-100 ring-2 ring-amber-500/30'
-                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-amber-600/30 border border-amber-400/40 flex items-center justify-center text-sm shrink-0">
-                    👤
-                  </div>
-                  <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">정대현 심사원보</div>
-                    <div className="text-[10.5px] text-amber-300 truncate">비상근 심사원 (외부/위촉)</div>
-                    <div className="text-[9.5px] text-amber-400/90 mt-0.5">★ 배정 기업/보고서/수당 격리</div>
-                  </div>
-                </button>
               </div>
             </div>
 
@@ -237,16 +229,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-4 pt-2">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  심사원 이메일 계정 (ID)
+                  심사원 이메일 계정 (ID) 또는 성함
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                   <input
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
                     className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
-                    placeholder="name@gmscs.co.kr"
+                    placeholder="이메일 또는 성함 입력 (예: name@gmscs.co.kr)"
                     required
                   />
                 </div>
