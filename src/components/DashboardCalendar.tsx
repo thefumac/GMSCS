@@ -11,7 +11,8 @@ import {
   Clock, 
   FileEdit,
   Send, 
-  DollarSign
+  DollarSign,
+  FileText
 } from 'lucide-react';
 import { AuditProject, Auditor, Company } from '../types';
 
@@ -107,55 +108,75 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   const stats = useMemo(() => {
     const total = projects.length;
     const pendingSign = projects.filter(p => p.status === '서명대기').length;
+    const pendingSecretariatReview = projects.filter(p => p.status === '사무국검토대기').length;
     const unpaid = projects.filter(p => p.paymentStatus !== '입금완료').length;
     const thisMonthCount = projects.filter(p => {
       const d = new Date(p.startDate);
       return d.getFullYear() === currentYear && (d.getMonth() + 1) === currentMonth;
     }).length;
 
-    return { total, pendingSign, unpaid, thisMonthCount };
+    return { total, pendingSign, pendingSecretariatReview, unpaid, thisMonthCount };
   }, [projects, currentYear, currentMonth]);
 
   return (
     <div className="space-y-6">
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-panel p-5 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <div className="glass-panel p-4 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-semibold text-slate-500">{currentYear}년 {currentMonth}월 심사 배정</p>
+            <p className="text-xs font-semibold text-slate-500">{currentYear}년 {currentMonth}월 심사</p>
             <h3 className="text-2xl font-extrabold text-slate-900 mt-1">{stats.thisMonthCount} <span className="text-sm font-normal text-slate-500">건</span></h3>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm">
             <CalendarIcon className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
+        {/* 사무국 보고서 적정성 검토 대기 카드 */}
+        <div className={`glass-panel p-4 rounded-2xl border flex items-center justify-between shadow-sm transition ${
+          stats.pendingSecretariatReview > 0
+            ? 'border-amber-300 bg-amber-50/70 ring-2 ring-amber-400/40'
+            : 'border-slate-200/80'
+        }`}>
+          <div>
+            <p className="text-xs font-semibold text-amber-800">사무국 보고서 검토 대기</p>
+            <h3 className="text-2xl font-extrabold text-amber-700 mt-1">{stats.pendingSecretariatReview} <span className="text-sm font-normal text-amber-600">건</span></h3>
+          </div>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
+            stats.pendingSecretariatReview > 0
+              ? 'bg-amber-500 text-white animate-pulse'
+              : 'bg-slate-100 text-slate-500'
+          }`}>
+            <FileText className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="glass-panel p-4 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-xs font-semibold text-slate-500">전자서명 대기 보고서</p>
             <h3 className="text-2xl font-extrabold text-amber-600 mt-1">{stats.pendingSign} <span className="text-sm font-normal text-slate-500">건</span></h3>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
             <Clock className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
+        <div className="glass-panel p-4 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-xs font-semibold text-slate-500">심사비 미수금 관리</p>
             <h3 className="text-2xl font-extrabold text-rose-600 mt-1">{stats.unpaid} <span className="text-sm font-normal text-slate-500">건</span></h3>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-sm">
             <DollarSign className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
+        <div className="glass-panel p-4 rounded-2xl border border-slate-200/80 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-xs font-semibold text-slate-500">등록 총 고객사</p>
-            <h3 className="text-2xl font-extrabold text-cyan-700 mt-1">{companies.length} <span className="text-sm font-normal text-slate-500">개사 (300사 관리)</span></h3>
+            <h3 className="text-2xl font-extrabold text-cyan-700 mt-1">{companies.length} <span className="text-sm font-normal text-slate-500">사</span></h3>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 shadow-sm">
             <Building2 className="w-5 h-5" />
           </div>
         </div>
@@ -265,15 +286,19 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-cyan-500 focus:bg-white"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-cyan-500 focus:bg-white font-medium"
             >
               <option value="all">전체 상태</option>
               <option value="계획수립">계획수립</option>
               <option value="계획서발송">계획서발송</option>
               <option value="심사진행중">심사진행중</option>
               <option value="보고서작성">보고서작성</option>
-              <option value="서명대기">서명대기 (주의)</option>
+              <option value="서명대기">서명대기</option>
               <option value="서명완료">서명완료</option>
+              <option value="사무국검토대기">⚠️ 사무국 검토대기</option>
+              <option value="보완요청">❌ 보완요청 (반려)</option>
+              <option value="심의대기">✅ 심의대기 (승인)</option>
+              <option value="인증결정">인증결정</option>
             </select>
           </div>
         </div>
@@ -375,11 +400,14 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
                 {/* Day Project Chips */}
                 <div className="space-y-1.5">
                   {dayProjects.map((p) => {
-                    // Status style for light theme
+                    // Status style
                     let badgeColor = 'bg-blue-50 text-blue-800 border-blue-200';
-                    if (p.status === '서명대기') badgeColor = 'bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/40 animate-pulse';
-                    if (p.status === '서명완료') badgeColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-                    if (p.status === '심사진행중') badgeColor = 'bg-cyan-50 text-cyan-800 border-cyan-200';
+                    if (p.status === '사무국검토대기') badgeColor = 'bg-amber-100 text-amber-900 border-amber-300 ring-1 ring-amber-400/50 animate-pulse';
+                    else if (p.status === '보완요청') badgeColor = 'bg-rose-50 text-rose-800 border-rose-200';
+                    else if (p.status === '심의대기') badgeColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                    else if (p.status === '서명대기') badgeColor = 'bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/40 animate-pulse';
+                    else if (p.status === '서명완료') badgeColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                    else if (p.status === '심사진행중') badgeColor = 'bg-cyan-50 text-cyan-800 border-cyan-200';
 
                     return (
                       <button
@@ -393,8 +421,14 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
                             {p.appliedMd}MD
                           </span>
                         </div>
-                        <div className="text-[10px] opacity-90 truncate mt-0.5 font-semibold">
-                          {p.auditType} · {p.leadAuditorName.split(' ')[0]}
+                        <div className="text-[10px] opacity-90 truncate mt-0.5 font-semibold flex items-center justify-between">
+                          <span>{p.auditType} · {p.leadAuditorName.split(' ')[0]}</span>
+                          {p.status === '사무국검토대기' && (
+                            <span className="text-[9px] font-extrabold text-amber-800 bg-amber-200/80 px-1 rounded">검토대기</span>
+                          )}
+                          {p.status === '보완요청' && (
+                            <span className="text-[9px] font-extrabold text-rose-800 bg-rose-200/80 px-1 rounded">보완요청</span>
+                          )}
                         </div>
                         {p.issuerName !== 'GMSCS' && (
                           <div className="text-[9px] text-amber-700 font-bold truncate">
@@ -418,12 +452,23 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                   <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
                     {selectedProject.auditType}
                   </span>
                   <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
-                    발행기관: {selectedProject.issuerName}
+                    발행: {selectedProject.issuerName}
+                  </span>
+                  <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${
+                    selectedProject.status === '사무국검토대기'
+                      ? 'bg-amber-100 text-amber-900 border-amber-300 animate-pulse'
+                      : selectedProject.status === '보완요청'
+                      ? 'bg-rose-100 text-rose-800 border-rose-200'
+                      : selectedProject.status === '심의대기'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}>
+                    {selectedProject.status}
                   </span>
                 </div>
                 <h3 className="text-xl font-extrabold text-slate-900 mt-2">
@@ -438,12 +483,25 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
               </button>
             </div>
 
+            {selectedProject.status === '사무국검토대기' && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-amber-900 font-bold">
+                  <span className="text-base">⚠️</span>
+                  <span>사무국 적정성 검토 대기 중인 프로젝트입니다.</span>
+                </div>
+                <span className="text-[11px] text-amber-800 font-medium">보고서 열람 후 승인 또는 보완요청</span>
+              </div>
+            )}
+
             {/* Body Info Grid */}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <span className="text-slate-500 font-medium">심사 일정</span>
+                <span className="text-slate-500 font-medium">심사 일정 &amp; 보고서 기한</span>
                 <p className="font-bold text-slate-800">
                   {selectedProject.startDate} ~ {selectedProject.endDate}
+                </p>
+                <p className="text-[10px] text-cyan-700 font-medium">
+                  작성 마감: 심사종료 + 7일 (부적합 처리)
                 </p>
               </div>
 

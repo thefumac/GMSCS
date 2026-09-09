@@ -15,6 +15,7 @@ import { AuditorSettlementManager } from './components/AuditorSettlementManager'
 import { CommitteeManager } from './components/CommitteeManager';
 import { EmailDispatchModal, EmailDispatchData } from './components/EmailDispatchModal';
 import { LoginPage } from './components/LoginPage';
+import { AuditorNoticeManager } from './components/AuditorNoticeManager';
 
 import { 
   mockAuditors, 
@@ -25,8 +26,10 @@ import {
   mockSettlements,
   mockCommitteeMeetings,
   mockEmailLogs,
-  mockAuditContracts
+  mockAuditContracts,
+  mockAuditorNotices
 } from './data/mockData';
+import { getMergedAuditors, getMergedCompanies } from './data/legacyDataLoader';
 import { 
   AuditReport, 
   AuditProject, 
@@ -40,7 +43,8 @@ import {
   AuditorReassignmentLog,
   EmailDispatchLog,
   AuditContractRecord,
-  AuditorAffiliation
+  AuditorAffiliation,
+  AuditorNotice
 } from './types';
 
 export function App() {
@@ -94,15 +98,30 @@ export function App() {
   // 일반관리 - 재무관리 하위 서브탭 ('settlements' | 'billing')
   const [financeSubTab, setFinanceSubTab] = useState<'settlements' | 'billing'>('settlements');
 
-  // Core Data States
-  const [auditors, setAuditors] = useState<Auditor[]>(mockAuditors);
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
+  // Core Data States (36 Legacy Auditors & 572 Legacy Companies)
+  const [auditors, setAuditors] = useState<Auditor[]>(() => getMergedAuditors());
+  const [companies, setCompanies] = useState<Company[]>(() => getMergedCompanies());
   const [projects, setProjects] = useState<AuditProject[]>(mockProjects);
   const [reports, setReports] = useState<Record<string, AuditReport>>(mockReports);
   const [settlements, setSettlements] = useState<AuditorSettlement[]>(mockSettlements);
   const [committeeMeetings, setCommitteeMeetings] = useState<CommitteeMeeting[]>(mockCommitteeMeetings);
   const [emailLogs, setEmailLogs] = useState<EmailDispatchLog[]>(mockEmailLogs);
   const [auditContracts, setAuditContracts] = useState<AuditContractRecord[]>(mockAuditContracts);
+  
+  // 심사원 공지사항 상태 (사무국 4인 공식 공지 & 파일/저장링크)
+  const [auditorNotices, setAuditorNotices] = useState<AuditorNotice[]>(mockAuditorNotices);
+
+  const handleAddNotice = (notice: AuditorNotice) => {
+    setAuditorNotices(prev => [notice, ...prev]);
+  };
+
+  const handleUpdateNotice = (notice: AuditorNotice) => {
+    setAuditorNotices(prev => prev.map(n => n.id === notice.id ? notice : n));
+  };
+
+  const handleDeleteNotice = (id: string) => {
+    setAuditorNotices(prev => prev.filter(n => n.id !== id));
+  };
 
   // Email Modal State
   const [isEmailModalOpen, setIsEmailModalOpen] = useState<boolean>(false);
@@ -149,7 +168,7 @@ export function App() {
   // 비상근 심사원의 비인가 탭 접근 방지 및 자동 리디렉션
   React.useEffect(() => {
     if (isNonPermanent) {
-      const allowedTabs: ActiveTab[] = ['portal', 'reports', 'finance'];
+      const allowedTabs: ActiveTab[] = ['portal', 'reports', 'finance', 'notices'];
       if (currentAuditorObj?.isCommitteeMember) {
         allowedTabs.push('committee');
       }
@@ -191,6 +210,11 @@ export function App() {
 
   // 비용 승인 대기 카운트 (계약 건 + 프로젝트 건)
   const pendingAdjustmentCount = auditContracts.filter(c => c.approvalStatus === '승인대기').length;
+
+  // 사무국 심사보고서 적정성 검토 대기 건수
+  const pendingSecretariatReviewCount = Object.values(reports).filter(
+    r => r.secretariatReviewStatus === '검토대기'
+  ).length;
 
   // 위원회 심의 대기 안건 카운트
   const pendingCommitteeCount = committeeMeetings
@@ -330,19 +354,134 @@ export function App() {
       [updated.id]: updated
     }));
 
-    // 만약 모든 서명이 완료되었다면 프로젝트 상태를 '서명완료' 및 위원회 '심의상정'으로 변경
+    // 만약 모든 서명이 완료되었다면 프로젝트 상태를 '서명완료'로 변경 (사무국 검토 승인 전에는 위원회 심의상정되지 않음)
     const allSigned = updated.signatures.every(s => s.isSigned);
     if (allSigned) {
       setProjects(prev => prev.map(p => {
         if (p.reportId === updated.id) {
+          const preservedStatus = ['사무국검토대기', '보완요청', '심의대기', '인증발행'].includes(p.status) 
+            ? p.status 
+            : '서명완료';
           return { 
             ...p, 
-            status: '서명완료',
-            committeeStatus: '심의상정' 
+            status: preservedStatus
           };
         }
         return p;
       }));
+    }
+  };
+
+  // 심사팀장: 심사보고서 작성 및 서명 완료 후 사무국에 적정성 검토 제출
+  const handleSubmitToSecretariat = (reportId: string) => {
+    const nowStr = new Date().toLocaleString();
+    setReports(prev => {
+      const rep = prev[reportId];
+      if (!rep) return prev;
+      return {
+        ...prev,
+        [reportId]: {
+          ...rep,
+          secretariatReviewStatus: '검토대기',
+          submittedToSecretariatAt: nowStr
+        }
+      };
+    });
+
+    setProjects(prev => prev.map(p => {
+      if (p.reportId === reportId) {
+        return {
+          ...p,
+          status: '사무국검토대기'
+        };
+      }
+      return p;
+    }));
+
+    alert('[사무국 제출 완료]\n심사보고서가 사무국으로 공식 제출되었습니다.\n사무국의 내용 적정성 사전 검토 후 승인 시 인증심의위원회로 공식 상정됩니다.');
+  };
+
+  // 사무국: 심사보고서 내용 적정성 사전 검토 (승인 또는 보완요청)
+  const handleSecretariatReview = (
+    reportId: string,
+    status: '검토승인' | '보완요청',
+    comment: string,
+    reviewer: string
+  ) => {
+    const nowStr = new Date().toLocaleString();
+    setReports(prev => {
+      const rep = prev[reportId];
+      if (!rep) return prev;
+      return {
+        ...prev,
+        [reportId]: {
+          ...rep,
+          secretariatReviewStatus: status,
+          secretariatReviewedAt: nowStr,
+          secretariatReviewer: reviewer,
+          secretariatComment: comment
+        }
+      };
+    });
+
+    const targetReport = reports[reportId];
+
+    if (status === '검토승인') {
+      // 1. 프로젝트 상태를 '심의대기'로 전환
+      setProjects(prev => prev.map(p => {
+        if (p.reportId === reportId) {
+          return {
+            ...p,
+            status: '심의대기',
+            committeeStatus: '심의대기'
+          };
+        }
+        return p;
+      }));
+
+      // 2. 독립 의결 기구인 인증심의위원회(CommitteeManager)에 신규 안건으로 자동 등록
+      const targetProject = projects.find(p => p.reportId === reportId);
+      if (targetProject) {
+        setCommitteeMeetings(prev => {
+          const updated = [...prev];
+          const firstMeeting = updated[0];
+          if (firstMeeting) {
+            const alreadyExists = firstMeeting.agendas.some(a => a.projectId === targetProject.id);
+            if (!alreadyExists) {
+              firstMeeting.agendas.push({
+                id: `agenda-${Date.now()}`,
+                projectId: targetProject.id,
+                companyId: targetProject.companyId,
+                companyName: targetProject.companyName,
+                standards: targetProject.standards,
+                auditType: targetProject.auditType,
+                leadAuditorName: targetProject.leadAuditorName,
+                auditDates: `${targetProject.startDate} ~ ${targetProject.endDate}`,
+                majorCount: targetReport?.nonConformityCount.major || 0,
+                minorCount: targetReport?.nonConformityCount.minor || 0,
+                observationCount: targetReport?.nonConformityCount.observation || 0,
+                leadRecommendation: (targetReport?.nonConformityCount.major || 0) > 0 ? '시정조치 후 추천' : '인증등록 추천'
+              });
+            }
+          }
+          return updated;
+        });
+      }
+
+      alert(`[사무국 검토 승인 완료]\n심사보고서 내용 적정성 검토가 승인되었습니다.\n독립 의결 기구인 [인증심의위원회] 안건으로 공식 상정되어 심의 대기로 전환되었습니다.`);
+    } else {
+      // 보완 요청 (반려)
+      setProjects(prev => prev.map(p => {
+        if (p.reportId === reportId) {
+          return {
+            ...p,
+            status: '보완요청'
+          };
+        }
+        return p;
+      }));
+
+      alert(`[심사팀 보완요청 (반려)]\n사유: ${comment}\n심사팀장에게 보완요청 통보가 전송되었습니다.`);
     }
   };
 
@@ -525,7 +664,7 @@ export function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginPage auditors={auditors} onLogin={handleLogin} />;
+    return <LoginPage auditors={auditors} onLogin={handleLogin} auditorNotices={auditorNotices} />;
   }
 
   return (
@@ -552,13 +691,43 @@ export function App() {
         allAuditors={auditors}
         pendingAdjustmentCount={pendingAdjustmentCount}
         pendingCommitteeCount={pendingCommitteeCount}
+        pendingSecretariatReviewCount={pendingSecretariatReviewCount}
         onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
         onLogout={handleLogout}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Main Container - Expanded Full Width to eliminate wasted side margins */}
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4">
         
+        {/* 사무국 심사보고서 적정성 검토 대기 알림 배너 */}
+        {!isNonPermanent && pendingSecretariatReviewCount > 0 && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs text-white flex items-center justify-center font-bold text-xl shrink-0 animate-pulse">
+                ⚠️
+              </div>
+              <div>
+                <div className="text-sm font-black flex items-center gap-2">
+                  <span>[사무국 심사보고서 적정성 검토 대기] {pendingSecretariatReviewCount}건의 보고서가 접수되었습니다.</span>
+                </div>
+                <div className="text-xs text-amber-100 mt-0.5">
+                  심사팀에서 작성을 마친 심사보고서의 4대 항목(심사범위, 부적합 조치, 회의록, 전자서명) 적정성을 검토해 주십시오. 승인 완료 시 인증심의위원회 안건으로 상정됩니다.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setActiveCategory('audit');
+                setActiveTab('reports');
+                setIsEditingReport(false);
+              }}
+              className="px-4 py-2 bg-white text-amber-900 hover:bg-amber-50 rounded-xl text-xs font-extrabold shadow-sm transition whitespace-nowrap self-end sm:self-auto cursor-pointer"
+            >
+              보고서 검토하기 &rarr;
+            </button>
+          </div>
+        )}
+
         {/* 비상근 심사원 보안 격리 모드 알림 배너 */}
         {isNonPermanent && (
           <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
@@ -705,6 +874,9 @@ export function App() {
                   onSaveReport={handleSaveReport}
                   onClose={handleBackToReportList}
                   onBackToList={handleBackToReportList}
+                  currentUserRole={currentUserRole}
+                  onSubmitToSecretariat={handleSubmitToSecretariat}
+                  onSecretariatReview={handleSecretariatReview}
                 />
               </div>
             )}
@@ -823,6 +995,18 @@ export function App() {
               />
             )}
           </div>
+        )}
+
+        {/* 5-1. 심사원 공지사항 관리 (사무국 4인 공지 등록 & 파일/저장링크 배포) */}
+        {activeTab === 'notices' && (
+          <AuditorNoticeManager
+            notices={auditorNotices}
+            onAddNotice={handleAddNotice}
+            onUpdateNotice={handleUpdateNotice}
+            onDeleteNotice={handleDeleteNotice}
+            currentUserRole={currentUserRole}
+            allAuditors={auditors}
+          />
         )}
 
         {/* 5-2. 자료관리 (주서버 & 외장 USB 백업 및 설정) */}

@@ -6,7 +6,16 @@ import {
   CheckCircle2, 
   RefreshCw, 
   FileCode, 
-  Copy
+  Copy,
+  Wifi,
+  Lock,
+  Key,
+  ShieldCheck,
+  AlertTriangle,
+  ExternalLink,
+  Download,
+  Terminal,
+  Globe
 } from 'lucide-react';
 import { BackupRecord } from '../types';
 import { mockBackups } from '../data/mockData';
@@ -15,30 +24,68 @@ export const BackupManager: React.FC = () => {
   const [backups, setBackups] = useState<BackupRecord[]>(mockBackups);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'securityGuide' | 'script'>('overview');
 
+  // 원외(원장 자택 공유기) + AES-256 암호화 내장 백업 스크립트
   const backupScriptCode = `@echo off
-:: ===============================================================
-:: GMSCS 사내 서버 및 외장 하드 디스크 2중 자동 백업 스크립트
-:: 실행 주기: 매일 02:00 (Windows Task Scheduler / Linux Cron)
-:: ===============================================================
+:: =========================================================================
+:: GMSCS 사내 서버 + 사내 외장하드 + [원외 3차] 원장 자택 공유기 3-2-1 백업 스크립트
+:: 보안 기능: AES-256 암호화 (외장하드 도난/분실 시에도 해독 불가)
+:: 실행 주기: 매일 심야 02:00 (Windows 작업 스케줄러 / Linux Cron)
+:: =========================================================================
 
-SET BACKUP_DIR=C:\\GMSCS_Backup
-SET EXTERNAL_DRIVE=D:\\GMSCS_Cold_Storage
+SET BACKUP_DIR=C:\\GMSCS_Backup\\LocalStaging
+SET INTERNAL_USB=D:\\GMSCS_Office_USB
+SET OFFSITE_SFTP_HOST=home.gmscs-director.net
+SET OFFSITE_SFTP_PORT=2222
+SET OFFSITE_SFTP_USER=gmscs_backup_agent
+SET ZIP_PASSWORD=GmScS_2026_SecuRe_Key!@#$
+
 SET TIMESTAMP=%date:~0,4%%date:~5,2%%date:~8,2%_%time:~0,2%%time:~3,2%
+SET TIMESTAMP=%TIMESTAMP: =0%
 
-echo [%TIMESTAMP%] GMSCS PostgreSQL 1차 백업 시작...
+echo ==============================================================
+echo [%TIMESTAMP%] [1단계] GMSCS PostgreSQL 데이터베이스 덤프 시작...
+echo ==============================================================
+if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 pg_dump -U gmscs_admin -d gmscs_db -F c -b -v -f "%BACKUP_DIR%\\gmscs_db_%TIMESTAMP%.dump"
 
-echo [%TIMESTAMP%] 심사보고서 및 전자서명 PDF 증분 백업...
-robocopy "C:\\GMSCS_Storage\\PDFs" "%BACKUP_DIR%\\PDFs" /MIR /R:2 /W:5
+echo.
+echo [%TIMESTAMP%] [2단계] 심사보고서 및 전자서명 PDF 증분 수집...
+robocopy "C:\\GMSCS_Storage\\PDFs" "%BACKUP_DIR%\\PDFs" /MIR /R:2 /W:3
 
-echo [%TIMESTAMP%] 외장 하드 디스크(USB/스토리지) 감지 및 2차 미러링...
-if exist "%EXTERNAL_DRIVE%" (
-    robocopy "%BACKUP_DIR%" "%EXTERNAL_DRIVE%\\Daily_%TIMESTAMP%" /E /Z
-    echo [성공] 외장 하드 백업 완료: %EXTERNAL_DRIVE%
+echo.
+echo ==============================================================
+echo [%TIMESTAMP%] [3단계 - 보안] 백업 압축파일 AES-256 비밀번호 암호화 수행
+echo (외장하드 도난 및 원격 전송 도청 원천 방어)
+echo ==============================================================
+"C:\\Program Files\\7-Zip\\7z.exe" a -t7z "%BACKUP_DIR%\\GMSCS_FullBackup_%TIMESTAMP%.7z" ^
+  "%BACKUP_DIR%\\gmscs_db_%TIMESTAMP%.dump" ^
+  "%BACKUP_DIR%\\PDFs" ^
+  -p"%ZIP_PASSWORD%" -mhe=on -mx=5
+
+echo.
+echo ==============================================================
+echo [%TIMESTAMP%] [4단계] 사내 로컬 외장 하드디스크(D:) 2차 미러링...
+echo ==============================================================
+if exist "%INTERNAL_USB%" (
+    robocopy "%BACKUP_DIR%" "%INTERNAL_USB%\\Daily_%TIMESTAMP%" GMSCS_FullBackup_%TIMESTAMP%.7z /Z
+    echo [성공] 사내 외장하드 미러링 완료!
 ) else (
-    echo [경고] 외장 하드 드라이브가 연결되어 있지 않습니다! 관리자 확인 요망.
+    echo [주의] 사내 2차 외장하드가 분리되어 있습니다.
 )
+
+echo.
+echo ==============================================================
+echo [%TIMESTAMP%] [5단계 - 원외 DR] 원장 자택 공유기(간이 NAS) 외장하드로 보안 SFTP 전송...
+echo ==============================================================
+:: WinSCP 또는 OpenSSH sftp를 통한 암호화 전송
+echo put "%BACKUP_DIR%\\GMSCS_FullBackup_%TIMESTAMP%.7z" /mnt/ext_hdd/GMSCS_Offsite_DR/ > sftp_batch.txt
+sftp -P %OFFSITE_SFTP_PORT% -b sftp_batch.txt %OFFSITE_SFTP_USER%@%OFFSITE_SFTP_HOST%
+del sftp_batch.txt
+
+echo.
+echo [%TIMESTAMP%] >>> GMSCS 3-2-1 3중 재해복구(DR) 암호화 백업 완료! <<<
 `;
 
   const handleManualBackup = () => {
@@ -51,16 +98,16 @@ if exist "%EXTERNAL_DRIVE%" (
         id: `bak-${Date.now()}`,
         backupDate: formattedDate,
         backupType: 'Full DB',
-        sizeBytes: 1580000000,
-        destination: '외장 하드 디스크 (USB 3.0)',
+        sizeBytes: 1620000000,
+        destination: 'NAS 오프라인 콜드보관', // 원외 원장 자택 공유기
         status: '정상완료',
-        checksum: `sha256:manual_${Math.random().toString(36).substring(2)}`
+        checksum: `sha256:aes256_offsite_${Math.random().toString(36).substring(2)}`
       };
 
       setBackups([newRecord, ...backups]);
       setIsBackingUp(false);
-      alert('[2중 백업 완료]\n1. 인증원 사내 주서버 PostgreSQL 데이터베이스 덤프 완료\n2. 연결된 외장 하드 디스크(D:)로 암호화 미러링 완료\n3. 위변조 검증 체크섬 정상 검증');
-    }, 1200);
+      alert('[3-2-1 3중 원외 백업 완료]\n1. 사내 주서버 PostgreSQL 데이터베이스 덤프 완료\n2. AES-256 군사등급 비밀번호 암호화 아카이브 생성 (.7z)\n3. 사내 외장하드(D:) 미러링 완료\n4. 원장 자택 공유기 외장하드(SFTP 포트 2222) 원외 원격 전송 완료');
+    }, 1500);
   };
 
   const copyScript = () => {
@@ -72,150 +119,355 @@ if exist "%EXTERNAL_DRIVE%" (
   return (
     <div className="space-y-6">
       {/* Header Info */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-2 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-600">
-              <HardDrive className="w-5 h-5" />
+          <div className="flex items-center space-x-3">
+            <span className="p-2.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-700">
+              <HardDrive className="w-6 h-6" />
             </span>
-            <h2 className="text-xl font-extrabold text-slate-900">
-              인증원 사내 서버 & 외장 저장 유닛(외장하드/CD) 2중 백업 센터
-            </h2>
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                사내 서버 &amp; 원외(원장 자택) 3-2-1 재해복구(DR) 백업 센터
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  AES-256 암호화 적용
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                KAB 심사기록 보존 규정(6년) 및 ISO 27001 보안 기준에 따라, 사내 화재·침수·랜섬웨어에 대비하여 
+                <strong className="text-cyan-700"> 사내 주서버</strong>, 
+                <strong className="text-emerald-700"> 사내 외장하드</strong>, 그리고 
+                <strong className="text-indigo-700"> 원장 자택 공유기 외장하드(원외 원격지)</strong>에 3중 보관됩니다.
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-slate-500 font-medium mt-1">
-            KAB 심사기록 보존 규정(최소 6년 이상 보존)을 충족하기 위해 
-            <strong className="text-cyan-700"> 사내 주서버(PostgreSQL)</strong>와 
-            <strong className="text-emerald-700"> 외장 하드 디스크</strong>로 매일 심야 자동 백업됩니다.
-          </p>
         </div>
 
         <button
           onClick={handleManualBackup}
           disabled={isBackingUp}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-600/20 transition disabled:opacity-50"
+          className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs shadow-md shadow-cyan-600/20 transition disabled:opacity-50 cursor-pointer shrink-0"
         >
           <RefreshCw className={`w-4 h-4 ${isBackingUp ? 'animate-spin' : ''}`} />
-          <span>{isBackingUp ? '사내 서버 및 외장하드 백업 중...' : '지금 즉시 2중 백업 실행'}</span>
+          <span>{isBackingUp ? '원외 원격 암호화 전송 중...' : '지금 즉시 3-2-1 원외 백업 실행'}</span>
         </button>
       </div>
 
-      {/* Storage Architecture Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Unit 1: 인증원 사내 주서버 */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Server className="w-5 h-5 text-cyan-600" />
-              <h4 className="text-sm font-bold text-slate-900">1차: 인증원 사내 주서버 (Primary)</h4>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              운영 상태: 가동중
-            </span>
-          </div>
-          <div className="text-xs text-slate-700 space-y-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-            <div>• 데이터베이스: PostgreSQL 16 (인증 트랜잭션, 감사로그)</div>
-            <div>• 파일 저장소: 로컬 SSD RAID-1 (웹 심사보고서, 전자서명 원본 PDF)</div>
-            <div>• 백업 주기: 매일 심야 02:00 (전체 DB 덤프)</div>
-            <div>• 무결성 검증: SHA-256 해시값 실시간 비교</div>
-          </div>
-        </div>
-
-        {/* Unit 2: 외장 하드 디스크 / 오프라인 유닛 */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Usb className="w-5 h-5 text-emerald-600" />
-              <h4 className="text-sm font-bold text-slate-900">2차: 외장 저장 유닛 (USB 3.0 / 외장하드)</h4>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
-              연결 감지: 마운트 완료 (D:)
-            </span>
-          </div>
-          <div className="text-xs text-slate-700 space-y-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-            <div>• 장치 모델: 외장 드라이브 (USB 3.0 고속 전송, 4TB)</div>
-            <div>• 백업 목적: 랜섬웨어/화재 대비 오프라인 에어갭(Air-gap) 보관</div>
-            <div>• 동기화 주기: 매일 03:00 자동 미러링</div>
-            <div>• 시디롬/블루레이: 반기별 1회 영구 불변(WORM) 디스크 굽기 지원</div>
-          </div>
-        </div>
+      {/* Sub Tabs */}
+      <div className="flex items-center space-x-2 border-b border-slate-200 pb-3">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'overview'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          📊 3-2-1 백업 스토리지 구조 &amp; 최근 로그
+        </button>
+        <button
+          onClick={() => setActiveTab('securityGuide')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'securityGuide'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          🛡️ 외장하드 보안/비밀번호 잠금 및 공유기 연결 가이드
+        </button>
+        <button
+          onClick={() => setActiveTab('script')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeTab === 'script'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          💻 원격 자동 백업 배치 스크립트 (.bat)
+        </button>
       </div>
 
-      {/* Backup History Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-            최근 2중 백업 수행 로그
-          </h4>
-          <span className="text-[11px] text-slate-500 font-medium">총 3건 정상 보관 중</span>
-        </div>
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-            <tr>
-              <th className="p-3.5">백업 일시</th>
-              <th className="p-3.5">백업 유형</th>
-              <th className="p-3.5">저장 위치</th>
-              <th className="p-3.5">용량</th>
-              <th className="p-3.5">상태</th>
-              <th className="p-3.5">위변조 검증 체크섬</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {backups.map((bak) => (
-              <tr key={bak.id} className="hover:bg-slate-50/80 transition">
-                <td className="p-3.5 font-bold text-slate-900">{bak.backupDate}</td>
-                <td className="p-3.5">
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    {bak.backupType}
-                  </span>
-                </td>
-                <td className="p-3.5 text-slate-700 font-medium flex items-center gap-1.5">
-                  {bak.destination.includes('외장') ? (
-                    <Usb className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : (
-                    <Server className="w-3.5 h-3.5 text-cyan-600" />
-                  )}
-                  <span>{bak.destination}</span>
-                </td>
-                <td className="p-3.5 text-slate-600 font-medium">
-                  {(bak.sizeBytes / (1024 * 1024)).toFixed(1)} MB
-                </td>
-                <td className="p-3.5">
-                  <span className="flex items-center space-x-1 text-emerald-700 font-bold">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>{bak.status}</span>
-                  </span>
-                </td>
-                <td className="p-3.5 font-mono text-[10px] text-slate-500 truncate max-w-xs">
-                  {bak.checksum}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* TAB 1: OVERVIEW */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Storage Architecture 3 Units Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Unit 1: 인증원 사내 주서버 */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Server className="w-5 h-5 text-cyan-600" />
+                  <h4 className="text-sm font-extrabold text-slate-900">1차: 사내 주서버 (Primary)</h4>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  실시간 운영
+                </span>
+              </div>
+              <div className="text-xs text-slate-700 space-y-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div>• 장치: 사내 메인 서버 (PostgreSQL 16)</div>
+                <div>• 대상: 300사 계약, 심사기록, 트랜잭션 DB</div>
+                <div>• 주기: 매일 심야 02:00 자동 덤프</div>
+                <div>• 복구 목표: RPO 24시간 이내 복원 보장</div>
+              </div>
+            </div>
 
-      {/* Automatic Script Viewer */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <FileCode className="w-4 h-4 text-cyan-600" />
-            <h4 className="text-xs font-bold text-slate-800">
-              인증원 서버 구동용 자동 2중 백업 스크립트 (Windows Task Scheduler / Linux Cron)
+            {/* Unit 2: 사내 로컬 외장하드 */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Usb className="w-5 h-5 text-emerald-600" />
+                  <h4 className="text-sm font-extrabold text-slate-900">2차: 사내 외장하드 (Local USB)</h4>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
+                  마운트됨 (D:)
+                </span>
+              </div>
+              <div className="text-xs text-slate-700 space-y-1.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div>• 장치: 사무국 직결 USB 3.0 고속 외장하드</div>
+                <div>• 목적: 사내 서버 하드웨어 고장 즉시 대체</div>
+                <div>• 주기: 매일 02:30 고속 미러링 동기화</div>
+                <div>• 보관: 주 1회 오프라인 에어갭 분리 보관</div>
+              </div>
+            </div>
+
+            {/* Unit 3: 원외 원장 자택 공유기 외장하드 */}
+            <div className="bg-white p-5 rounded-2xl border border-indigo-200 bg-indigo-50/30 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Wifi className="w-5 h-5 text-indigo-600" />
+                  <h4 className="text-sm font-extrabold text-indigo-950">3차: 원장 자택 공유기 (Offsite DR)</h4>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  SFTP 연동
+                </span>
+              </div>
+              <div className="text-xs text-indigo-950 space-y-1.5 bg-white p-3.5 rounded-xl border border-indigo-100">
+                <div>• 장치: 원장 자택 공유기 USB 포트 (간이 NAS)</div>
+                <div>• 목적: <strong>사무실 화재/침수/물리적 도난 완전 대비</strong></div>
+                <div>• 암호화: <strong>AES-256 군사등급 비밀번호 잠금</strong></div>
+                <div>• 전송: SFTP (포트 2222) 보안 터널 전송</div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Backup History Table */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                최근 3-2-1 백업 수행 로그 (사내 + 원외)
+              </h4>
+              <span className="text-[11px] text-slate-500 font-medium">총 {backups.length}건 정상 보관 중</span>
+            </div>
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="p-3.5">백업 일시</th>
+                  <th className="p-3.5">백업 유형</th>
+                  <th className="p-3.5">저장 위치</th>
+                  <th className="p-3.5">용량</th>
+                  <th className="p-3.5">보안 암호화</th>
+                  <th className="p-3.5">상태</th>
+                  <th className="p-3.5">위변조 검증 체크섬</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {backups.map((bak) => (
+                  <tr key={bak.id} className="hover:bg-slate-50/80 transition">
+                    <td className="p-3.5 font-bold text-slate-900">{bak.backupDate}</td>
+                    <td className="p-3.5">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                        {bak.backupType}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-slate-700 font-medium flex items-center gap-1.5">
+                      {bak.destination.includes('NAS') ? (
+                        <Wifi className="w-3.5 h-3.5 text-indigo-600" />
+                      ) : bak.destination.includes('외장') ? (
+                        <Usb className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Server className="w-3.5 h-3.5 text-cyan-600" />
+                      )}
+                      <span className={bak.destination.includes('NAS') ? 'font-bold text-indigo-900' : ''}>
+                        {bak.destination.includes('NAS') ? '원외 원장 자택 공유기 외장하드' : bak.destination}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-slate-600 font-medium">
+                      {(bak.sizeBytes / (1024 * 1024)).toFixed(1)} MB
+                    </td>
+                    <td className="p-3.5">
+                      <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1 w-fit">
+                        <Lock className="w-3 h-3" />
+                        AES-256 암호화
+                      </span>
+                    </td>
+                    <td className="p-3.5">
+                      <span className="flex items-center space-x-1 text-emerald-700 font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{bak.status}</span>
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-mono text-[10px] text-slate-500 truncate max-w-xs">
+                      {bak.checksum}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: SECURITY & ROUTER GUIDE */}
+      {activeTab === 'securityGuide' && (
+        <div className="space-y-5">
+          <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-3xl shadow-lg space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-indigo-300 text-xs font-bold">
+              <ShieldCheck className="w-4 h-4" />
+              <span>KAB 공인 인증기관 정보보호 및 DR 백업 가이드</span>
+            </div>
+            <h3 className="text-xl font-black">
+              원장 자택 공유기 외장하드 원격 연결 및 비밀번호/보안 잠금 완벽 대책
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+              "사무실에만 백업 장치가 있으면 화재나 물리적 재난 시 무용지물이 됩니다."
+              원외(원장 자택) 백업은 최상의 보안 대책이며, 외장하드 도난 및 전송 구간 해킹을 방지하기 위해 아래 3대 보안 기술을 적용합니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            {/* Card 1: 파일 자체 AES-256 암호화 */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-extrabold text-slate-900">
+                1. 파일 자체 AES-256 암호화 (추천 1순위)
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                공유기 간이 NAS는 리눅스 OS 기반이라 Windows BitLocker를 인식하지 못합니다. 
+                따라서 <strong>백업 압축 시 파일 자체에 강력한 비밀번호를 걸어 암호화(7-Zip AES-256 + 헤더 암호화)</strong>하여 전송합니다.
+              </p>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 space-y-1">
+                <div className="font-bold text-emerald-800">✅ 보안 효과:</div>
+                <div>누군가 자택에 침입해 외장하드를 통째로 훔쳐 가더라도, 비밀번호 없이는 내부 심사보고서나 기업 DB를 1바이트도 열어볼 수 없습니다.</div>
+              </div>
+            </div>
+
+            {/* Card 2: 전송 구간 암호화 (SFTP / FTPS) */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold">
+                <Wifi className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-extrabold text-slate-900">
+                2. 원격 전송 구간 암호화 (SFTP)
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                일반 FTP는 비밀번호와 파일이 평문으로 전송되어 중간에서 도청될 위험이 있습니다. 
+                사무국 서버에서 원장 자택으로 전송할 때는 <strong>SFTP (SSH 기반 암호화 통신, 포트 2222)</strong>를 사용합니다.
+              </p>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 space-y-1">
+                <div className="font-bold text-cyan-800">✅ 네트워크 보안:</div>
+                <div>통신사 인터넷 구간을 통과할 때 모든 데이터 패킷이 SSL/SSH로 암호화되어 스니핑이나 변조가 원천 차단됩니다.</div>
+              </div>
+            </div>
+
+            {/* Card 3: 공유기 방화벽 및 IP 접근 통제 */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <Globe className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-extrabold text-slate-900">
+                3. 자택 공유기 방화벽 IP 통제
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                원장 자택 공유기(ipTIME / ASUS / KT / SKT 등) 관리자 페이지에서 
+                간이 NAS 포트포워딩 설정 시 <strong>"사무국 공인 고정 IP"에서 오는 접속만 허용</strong>하도록 방화벽 규칙을 적용합니다.
+              </p>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 space-y-1">
+                <div className="font-bold text-indigo-800">✅ 해킹 방어:</div>
+                <div>불특정 다수의 인터넷 해커나 봇이 원장 자택 공유기 포트를 스캔하더라도 포트 자체가 응답하지 않아 안전합니다.</div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Detailed Setup Steps */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-cyan-600" />
+              원장 자택 공유기 5분 세팅 가이드 (ipTIME / ASUS 기준)
             </h4>
-          </div>
-          <button
-            onClick={copyScript}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            <span>{copiedScript ? '복사됨!' : '스크립트 복사'}</span>
-          </button>
-        </div>
 
-        <pre className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-[11px] text-emerald-400 font-mono overflow-x-auto leading-relaxed">
-          {backupScriptCode}
-        </pre>
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="font-extrabold text-slate-800 text-sm text-cyan-700">STEP 1</div>
+                <div className="font-bold text-slate-900">외장하드 USB 연결</div>
+                <div className="text-slate-600 text-[11px]">
+                  공유기 뒷면의 USB 3.0 포트에 외장하드를 연결합니다. (NTFS 또는 ext4 포맷 권장)
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="font-extrabold text-slate-800 text-sm text-cyan-700">STEP 2</div>
+                <div className="font-bold text-slate-900">간이 NAS 서비스 실행</div>
+                <div className="text-slate-600 text-[11px]">
+                  공유기 관리자(192.168.0.1) 접속 → [USB/서비스 관리] → [ipDISK / FTP / SFTP] 활성화
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="font-extrabold text-slate-800 text-sm text-cyan-700">STEP 3</div>
+                <div className="font-bold text-slate-900">백업 계정/암호 생성</div>
+                <div className="text-slate-600 text-[11px]">
+                  백업 전용 사용자 ID(`gmscs_agent`)와 16자리 영문+숫자+특수문자 고강도 비밀번호를 등록합니다.
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="font-extrabold text-slate-800 text-sm text-cyan-700">STEP 4</div>
+                <div className="font-bold text-slate-900">DDNS 주소 등록</div>
+                <div className="text-slate-600 text-[11px]">
+                  자택 IP가 바뀌어도 접속 가능하도록 `xxx.iptime.org` 또는 DDNS 호스트 주소를 연동합니다.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: AUTOMATION SCRIPT */}
+      {activeTab === 'script' && (
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <FileCode className="w-4 h-4 text-cyan-600" />
+              <h4 className="text-xs font-bold text-slate-800">
+                GMSCS 사내서버 + 사내외장하드 + 원장자택 원외 3차 자동 백업 스크립트 (GMSCS_Secure_Offsite_Backup.bat)
+              </h4>
+            </div>
+            <button
+              onClick={copyScript}
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>{copiedScript ? '복사됨!' : '스크립트 전체 복사'}</span>
+            </button>
+          </div>
+
+          <pre className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-[11px] text-emerald-400 font-mono overflow-x-auto leading-relaxed">
+            {backupScriptCode}
+          </pre>
+
+          <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-950 text-xs flex items-center justify-between">
+            <span>
+              💡 <strong>적용 방법:</strong> 위 스크립트를 사내 서버 C:\GMSCS_Backup\backup.bat 파일로 저장한 뒤, Windows [작업 스케줄러]에서 매일 02:00 자동 실행되도록 등록하시면 됩니다.
+            </span>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

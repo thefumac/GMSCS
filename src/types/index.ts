@@ -16,7 +16,7 @@ export type StandardCode =
 
 export type AuditType = '최초 1단계' | '최초 2단계' | '사후관리 1차' | '사후관리 2차' | '갱신심사' | '전환심사' | '특별심사';
 
-export type AuditStatus = '계획수립' | '계획서발송' | '심사진행중' | '보고서작성' | '서명대기' | '서명완료' | '심의진행' | '인증발행';
+export type AuditStatus = '계획수립' | '계획서발송' | '심사진행중' | '보고서작성' | '서명대기' | '서명완료' | '사무국검토대기' | '보완요청' | '심의대기' | '심의진행' | '인증발행';
 
 export type ClientType = '직영' | '심사원영업';
 
@@ -192,13 +192,15 @@ export interface SignatureLog {
   id: string;
   signerRole: '심사팀장' | '참석 심사원' | '심사원보' | '검증심사원' | '근로자 대표' | '피심사기업 대표/품질책임자';
   signerName: string;
-  signatureDataUrl?: string; // base64 canvas image
+  signerEmail?: string;
+  kabCertNumber?: string;
+  signatureDataUrl?: string; // base64 canvas image 또는 전자 직인
   signedAt?: string;
   ipAddress?: string;
   userAgent?: string;
   verificationToken: string;
   isSigned: boolean;
-  verifyMethod: '자필서명' | '기업이메일확인';
+  verifyMethod: '공인이메일인증' | '기업이메일확인' | '자필서명';
   emailVerified?: boolean;
   emailVerifiedAt?: string;
 }
@@ -257,6 +259,19 @@ export interface AuditReport {
   signatures: SignatureLog[];
   pdfUrl?: string;
   updatedAt: string;
+
+  // 사무국 적정성 검토 프로세스 (신규)
+  secretariatReviewStatus?: '작성중' | '검토대기' | '보완요청' | '검토승인';
+  submittedToSecretariatAt?: string;
+  secretariatReviewer?: string;
+  secretariatReviewedAt?: string;
+  secretariatComment?: string;
+  secretariatChecklist?: {
+    scopeCheck: boolean;
+    ncrCheck: boolean;
+    meetingCheck: boolean;
+    signCheck: boolean;
+  };
 }
 
 export interface AuditorReassignmentLog {
@@ -390,3 +405,73 @@ export interface BackupRecord {
   status: '정상완료' | '동기화중' | '외장하드 미연결경고';
   checksum: string;
 }
+
+export interface NoticeAttachment {
+  id: string;
+  fileName: string;
+  fileSize?: string;
+  fileUrl: string; // 다운로드 또는 저장 링크 URL
+  fileType?: string;
+}
+
+export interface AuditorNotice {
+  id: string;
+  title: string;
+  content: string;
+  category: '긴급' | 'KAB기준' | '심사지침' | '서식배포' | '일반공지';
+  targetAudience: '전체 심사원' | '비상근심사원 전용' | '사무국 내부';
+  authorName: string;
+  authorRole: string;
+  authorId: string;
+  createdAt: string;
+  isUrgent?: boolean;
+  attachments: NoticeAttachment[];
+}
+
+// Remark 공식 서식: 부서/프로세스별 조항 심사 매트릭스
+export interface ProcessMatrixRow {
+  id: string;
+  processName: string;
+  deptName: string;
+  clause4: boolean; // 조직상황
+  clause5: boolean; // 리더십
+  clause6: boolean; // 기획
+  clause7: boolean; // 지원
+  clause8: boolean; // 운용
+  clause9: boolean; // 성과평가
+  clause10: boolean; // 개선
+  markUsage: boolean; // 인증마크 사용
+  ncCount: string; // 부적합 수 (예: '√', '경1', '중1' 등)
+}
+
+// Remark 공식 서식: 3개년 심사계획 및 주기별 조항 매트릭스
+export interface ThreeYearCyclePlanItem {
+  id: string;
+  clauseNumber: string;
+  clauseTitle: string;
+  cycleInitial: string; // '○' | '√' | ''
+  cycleSurv1: string;
+  cycleSurv2: string;
+  cycleSurv3: string;
+  cycleSurv4: string;
+  cycleSurv5: string;
+}
+
+// Remark 공식 서식: 전 회차(이전 심사) 부적합 및 시정조치 유효성 확인
+export interface PreviousAuditNcCheck {
+  id: string;
+  ncNumber: string; // 예: NCR-2025-01
+  standardCode: string; // 예: ISO 9001:2015 7.1.5
+  deptName: string;
+  ncGrade: '경부적합' | '중부적합' | '관찰사항';
+  ncContent: string; // 부적합 내용
+  correctiveAction: string; // 시정조치 및 재발방지대책
+  actionDate: string;
+  verificationMethod: '문서확인' | '현장확인';
+  adequacyResult: '적합(적절함)' | '부적합(부적절함)' | '보완필요';
+  effectivenessResult: '효과적' | '효과적이지않음' | '확인대기';
+  auditorName: string;
+  verifiedAt: string;
+}
+
+

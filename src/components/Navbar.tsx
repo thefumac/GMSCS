@@ -17,10 +17,11 @@ import {
   UserCheck, 
   LayoutDashboard, 
   CheckCircle2, 
-  FolderLock, 
-  Briefcase, 
   FileCheck,
-  LogOut
+  LogOut,
+  Megaphone,
+  Briefcase,
+  FolderLock
 } from 'lucide-react';
 import { Auditor } from '../types';
 
@@ -48,8 +49,10 @@ export type ActiveTab =
   | 'auditors' 
   | 'portal'
   // 일반관리
+  | 'notices' // 심사원 공지사항 관리 (사무국 4인 공지 등록 & 파일/저장링크 배포)
   | 'finance' // 재무관리 (정산 + 수납/계산서)
   | 'data';   // 자료관리 (백업 + 서버설정)
+
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -62,6 +65,7 @@ interface NavbarProps {
   allAuditors: Auditor[];
   pendingAdjustmentCount?: number;
   pendingCommitteeCount?: number;
+  pendingSecretariatReviewCount?: number;
   onOpenEmailModal: () => void;
   onLogout?: () => void;
 }
@@ -77,6 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   allAuditors,
   pendingAdjustmentCount = 1,
   pendingCommitteeCount = 2,
+  pendingSecretariatReviewCount = 0,
   onOpenEmailModal,
   onLogout
 }) => {
@@ -145,7 +150,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       label: '심사관리', 
       icon: Briefcase,
       defaultTab: 'contracts' as ActiveTab,
-      badge: pendingAdjustmentCount && pendingAdjustmentCount > 0 ? pendingAdjustmentCount : undefined,
+      badge: ((pendingAdjustmentCount || 0) + (pendingSecretariatReviewCount || 0)) > 0 
+        ? ((pendingAdjustmentCount || 0) + (pendingSecretariatReviewCount || 0)) 
+        : undefined,
       badgeColor: 'bg-amber-600',
       description: '심사계약·보고서·일정진행·OK ESG'
     },
@@ -192,6 +199,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       { id: 'portal', label: '나의 관리업체 & 배정 일정 & 이해상충 변경', icon: UserCheck },
     ],
     'general-admin': [
+      { id: 'notices', label: '심사원 공지사항 (사무국 지침·서식 다운로드)', icon: Megaphone },
       { id: 'finance', label: '나의 심사비 정산 명세서 (3.3% 원천징수)', icon: DollarSign },
       { id: 'email-dispatch', label: '스마트 메일 발송', icon: Mail, onClick: onOpenEmailModal },
     ]
@@ -201,22 +209,29 @@ export const Navbar: React.FC<NavbarProps> = ({
     ],
     'certification': [
       { id: 'committee', label: '인증심의위원회', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' },
-      { id: 'companies', label: '고객사 인증현황 (300사)', icon: Building2 },
+      { id: 'companies', label: '고객사 인증현황 (572개사 전수)', icon: Building2 },
       { id: 'surveillance', label: '사후 / 만료 관리 (D-Day)', icon: BellRing, badge: urgentAlertCount, badgeColor: 'bg-rose-600' },
       { id: 'kab', label: 'KAB 인정기관 관리 (공인기준·MD)', icon: Calculator },
     ],
     'audit': [
       { id: 'contracts', label: '심사 계약 관리 (신규·유지·추가·변경)', icon: FileCheck, badge: pendingAdjustmentCount, badgeColor: 'bg-amber-600' },
-      { id: 'reports', label: '심사 보고서 관리 (목록·상세·정산)', icon: FileText, badge: 1, badgeColor: 'bg-cyan-600' },
+      { 
+        id: 'reports', 
+        label: '심사 보고서 관리 (적정성 검토·정산)', 
+        icon: FileText, 
+        badge: pendingSecretariatReviewCount && pendingSecretariatReviewCount > 0 ? pendingSecretariatReviewCount : undefined, 
+        badgeColor: 'bg-amber-500' 
+      },
       { id: 'projects', label: '심사 진행현황 & 계획서', icon: CheckCircle2 },
       { id: 'integrations', label: 'OK ESG & ISO-Record 연동', icon: Layers },
       { id: 'email-dispatch', label: '스마트 메일 발송 센터', icon: Mail, onClick: onOpenEmailModal },
     ],
     'auditor-mgmt': [
-      { id: 'auditors', label: '심사원 자격·코드·심의위원 관리', icon: Users },
+      { id: 'auditors', label: '심사원 자격·코드·심의위원 관리 (36명)', icon: Users },
       { id: 'portal', label: '심사원 전용 포털 (배정업체·일정·이해상충)', icon: UserCheck },
     ],
     'general-admin': [
+      { id: 'notices', label: '심사원 공지사항 관리 (사무국 4인 공지 등록·파일 링크)', icon: Megaphone },
       { id: 'finance', label: '재무관리 (심사비용 수납 & 심사원 정산원장)', icon: DollarSign },
       { id: 'data', label: '자료관리 (주서버 & 외장 USB 백업·설정)', icon: HardDrive },
       { id: 'email-dispatch', label: '스마트 메일 발송 센터', icon: Mail, onClick: onOpenEmailModal },
@@ -241,7 +256,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 1. 시스템 타이틀 영역 (Top System Bar) */}
       {/* ========================================================================= */}
       <div className="border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
             {/* Logo & Platform Name */}
@@ -361,7 +376,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 2. 주 메뉴 영역 (Tier-1 Main Navigation Bar) */}
       {/* ========================================================================= */}
       <div className="bg-slate-900 text-slate-100 border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Primary Category Tabs */}
             <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar py-2">
@@ -420,7 +435,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* ========================================================================= */}
       {currentSubItems.length > 0 && (
         <div className="bg-slate-100/90 border-b border-slate-200 shadow-2xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-2">
             <nav className="flex space-x-1.5 overflow-x-auto no-scrollbar text-xs">
               {currentSubItems.map((item) => {
                 const Icon = item.icon;

@@ -7,19 +7,30 @@ import {
   Server, 
   Usb, 
   AlertCircle,
-  Award
+  Award,
+  Megaphone,
+  Paperclip,
+  ExternalLink,
+  Download,
+  Calendar,
+  ChevronRight,
+  X,
+  FileText,
+  Building
 } from 'lucide-react';
-import { Auditor } from '../types';
+import { Auditor, AuditorNotice } from '../types';
 
 interface LoginPageProps {
   auditors: Auditor[];
   onLogin: (roleId: string) => void;
+  auditorNotices?: AuditorNotice[];
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditorNotices = [] }) => {
   const [selectedAuditorId, setSelectedAuditorId] = useState<string>('admin');
   const [password, setPassword] = useState<string>('******');
   const [username, setUsername] = useState<string>('ceo@gmscs.co.kr');
+  const [activeNoticeModal, setActiveNoticeModal] = useState<AuditorNotice | null>(null);
 
   // 계정 선택 시 이메일 자동 세팅
   const handleSelectAccount = (audId: string) => {
@@ -93,33 +104,119 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
           <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
             <Usb className="w-3.5 h-3.5" />
-            <span className="font-semibold text-[11px]">외장 USB 2중 백업 연결됨</span>
+            <span className="font-semibold text-[11px]">원외 3차 DR 백업 연동됨</span>
           </div>
         </div>
       </header>
 
-      {/* Main Login Container */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      {/* Main Login Container - items-start로 왼쪽 헤더와 오른쪽 카드 최상단 수평 정렬 */}
+      <main className="flex-1 flex items-start justify-center p-4 sm:p-6 lg:p-8 pt-8 sm:pt-12">
+        <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Hero & Platform Info (5 cols) */}
-          <div className="lg:col-span-5 space-y-6 text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold">
+          <div className="lg:col-span-5 space-y-5 text-left flex flex-col justify-start">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold w-fit">
               <Award className="w-3.5 h-3.5" />
               <span>차세대 스마트 인증·심사 포털 2.0</span>
             </div>
 
-            <div className="space-y-3">
+            {/* 변경된 브랜드 타이틀 (GMSCS인증원 / 심사 관리 시스템) */}
+            <div className="space-y-1">
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-                GMSCS 심사원 및<br />
+                GMSCS인증원<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-300">
-                  사무국 통합 로그인
+                  심사 관리 시스템
                 </span>
               </h1>
+              <p className="text-xs text-slate-400 pt-1">
+                KAB 공인 심사원 및 인증사무국 전용 통합 전산망
+              </p>
             </div>
 
-            {/* 심사원 공지사항 예정 영역 (비워둠) */}
-            <div className="min-h-[160px]">
+            {/* 심사원 공지사항 박스 (사무국 4인 공식 공지 및 파일/저장링크 다운로드) */}
+            <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-4.5 shadow-xl shadow-slate-950/40 space-y-3">
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-700/60">
+                <div className="flex items-center space-x-2">
+                  <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                    <Megaphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5">
+                      심사원 공지사항
+                      <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-cyan-900/80 text-cyan-300 border border-cyan-700/60">
+                        사무국 공식
+                      </span>
+                    </h3>
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-400">
+                  총 {auditorNotices.length}건
+                </span>
+              </div>
+
+              {/* 공지사항 목록 */}
+              <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                {auditorNotices.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-slate-500">
+                    등록된 심사원 공지사항이 없습니다.
+                  </div>
+                ) : (
+                  auditorNotices.map((notice) => (
+                    <div
+                      key={notice.id}
+                      onClick={() => setActiveNoticeModal(notice)}
+                      className="p-3 rounded-xl bg-slate-900/70 hover:bg-slate-900 border border-slate-700/60 hover:border-cyan-500/50 transition cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between gap-1.5 mb-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {notice.isUrgent ? (
+                            <span className="px-1.5 py-0.5 text-[9.5px] font-bold rounded bg-rose-950/80 text-rose-300 border border-rose-600/40">
+                              긴급
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 text-[9.5px] font-medium rounded bg-cyan-950/80 text-cyan-300 border border-cyan-600/30">
+                              {notice.category}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {notice.authorName} ({notice.authorRole.split('/')[0].trim()})
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 shrink-0">
+                          {notice.createdAt}
+                        </span>
+                      </div>
+
+                      <h4 className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 transition line-clamp-1">
+                        {notice.title}
+                      </h4>
+
+                      <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                        {notice.content}
+                      </p>
+
+                      {/* 첨부파일 및 링크 뱃지 */}
+                      {notice.attachments && notice.attachments.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-cyan-400">
+                          <span className="flex items-center gap-1">
+                            <Paperclip className="w-3 h-3" />
+                            첨부파일/저장링크 {notice.attachments.length}개
+                          </span>
+                          <span className="flex items-center gap-0.5 text-slate-400 group-hover:text-cyan-300">
+                            상세보기 <ChevronRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="pt-1 text-center">
+                <p className="text-[10px] text-slate-500">
+                  * 공지사항 등록 및 첨부파일 관리는 <strong>[일반관리] - [심사원 공지사항]</strong>에서 가능합니다.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -287,6 +384,127 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
       <footer className="px-6 py-4 border-t border-slate-800/80 text-center text-xs text-slate-500">
         Copyright © 2026 GMSCS (Global Management System Certification Service). All rights reserved.
       </footer>
+
+      {/* 심사원 공지사항 상세 모달 */}
+      {activeNoticeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 text-left max-h-[90vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-slate-800">
+              <div className="space-y-1.5 pr-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {activeNoticeModal.isUrgent ? (
+                    <span className="px-2 py-0.5 text-xs font-black rounded-md bg-rose-600 text-white shadow-sm">
+                      긴급
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-cyan-600/30 text-cyan-300 border border-cyan-500/40">
+                      {activeNoticeModal.category}
+                    </span>
+                  )}
+                  <span className="text-xs text-slate-400 font-medium">
+                    대상: {activeNoticeModal.targetAudience}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    · 등록일: {activeNoticeModal.createdAt}
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
+                  {activeNoticeModal.title}
+                </h3>
+                <div className="text-xs text-slate-400 flex items-center gap-1.5 pt-0.5">
+                  <span className="font-semibold text-slate-300">{activeNoticeModal.authorName}</span>
+                  <span className="text-slate-500">({activeNoticeModal.authorRole})</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setActiveNoticeModal(null)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 whitespace-pre-wrap font-sans">
+                {activeNoticeModal.content}
+              </div>
+
+              {/* 첨부파일 및 외부/클라우드 저장 링크 영역 */}
+              {activeNoticeModal.attachments && activeNoticeModal.attachments.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-slate-200">
+                    <Paperclip className="w-4 h-4 text-cyan-400" />
+                    <span>첨부파일 및 공식 배포 저장 링크 ({activeNoticeModal.attachments.length}개)</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {activeNoticeModal.attachments.map((file) => (
+                      <div
+                        key={file.id}
+                        className="p-3 rounded-xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between gap-3 hover:border-cyan-500/50 transition"
+                      >
+                        <div className="flex items-center space-x-2.5 truncate">
+                          <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="truncate">
+                            <div className="text-xs font-bold text-slate-200 truncate">
+                              {file.fileName}
+                            </div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-2">
+                              {file.fileSize && <span>{file.fileSize}</span>}
+                              <span className="text-cyan-400/80 truncate max-w-[260px]">
+                                {file.fileUrl}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(file.fileUrl);
+                              alert('저장 링크 URL이 클립보드에 복사되었습니다.');
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition cursor-pointer"
+                          >
+                            링크 복사
+                          </button>
+                          <a
+                            href={file.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-xs transition flex items-center space-x-1.5"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>다운로드</span>
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-800 flex justify-end">
+              <button
+                onClick={() => setActiveNoticeModal(null)}
+                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

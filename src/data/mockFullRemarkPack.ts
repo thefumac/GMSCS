@@ -1,10 +1,14 @@
 // Remark 2025 Audit Report Pack(251001).docx 원본 828줄 기반 전체 세부 항목 데이터 모델
+import { ProcessMatrixRow, ThreeYearCyclePlanItem, PreviousAuditNcCheck } from '../types';
 
 export interface MultiSiteInfo {
   id: string;
   siteName: string; // 예: 추가사업장 (화성 제2공장)
+  siteNameEn?: string;
   address: string;
+  addressEn?: string;
   scope: string;
+  scopeEn?: string;
   employeeCount: number;
 }
 
@@ -41,11 +45,14 @@ export interface FullAuditReportPackData {
   reportId: string;
   projectId: string;
   companyName: string;
+  companyNameEn?: string;
   certNumber: string;
   
   // I. 고객 현황 & 복수 사업장
   ceoName: string;
+  ceoNameEn?: string;
   mainSiteAddress: string;
+  mainSiteAddressEn?: string;
   additionalSites: MultiSiteInfo[];
   tel: string;
   fax: string;
@@ -58,9 +65,11 @@ export interface FullAuditReportPackData {
   standards: string[];
   auditType: string;
   auditScope: string;
+  auditScopeEn?: string;
   iafCode: string;
   exclusionClause: string;
   exclusionJustification: string;
+  exclusionJustificationEn?: string;
 
   // III. 1단계 문서심사 전용 섹션
   stage1: {
@@ -133,21 +142,32 @@ export interface FullAuditReportPackData {
     };
     finalRecommendation: '인증 등록 추천' | '인증 유지 추천' | '인증 갱신 추천' | '시정조치 확인 후 추천' | '재심사 필요';
   };
+
+  // V. Remark 공식 실물 서식 필수 3대 매트릭스
+  processMatrix: ProcessMatrixRow[]; // 부서/프로세스별 조항 심사 결과 매트릭스
+  threeYearPlan: ThreeYearCyclePlanItem[]; // 3개년 심사 주기 매트릭스
+  previousAuditChecks: PreviousAuditNcCheck[]; // 전 회차(이전 심사) 부적합 및 시정조치 유효성 확인
 }
 
 export const initialFullReportData: FullAuditReportPackData = {
   reportId: 'rep-1',
   projectId: 'proj-1',
   companyName: '(주)한성정밀공업',
+  companyNameEn: 'Hansung Precision Industry Co., Ltd.',
   certNumber: 'GMS-Q-2022-0491',
   ceoName: '박한성',
+  ceoNameEn: 'Han-Sung Park',
   mainSiteAddress: '경기도 화성시 향남읍 발안공단로 45 (주사업장 및 제1공장)',
+  mainSiteAddressEn: '45, Baran-gongdan-ro, Hyangnam-eup, Hwaseong-si, Gyeonggi-do, Republic of Korea (Head Office & Plant 1)',
   additionalSites: [
     {
       id: 'site-2',
       siteName: '제2사업장 (정밀 사출가공센터)',
+      siteNameEn: '2nd Site (Precision Injection Center)',
       address: '경기도 화성시 양감면 정문송산로 118',
+      addressEn: '118, Jeongmunsongsan-ro, Yanggam-myeon, Hwaseong-si, Gyeonggi-do, Republic of Korea',
       scope: '정밀 플라스틱 사출 및 후가공',
+      scopeEn: 'Precision plastic injection molding and secondary processing',
       employeeCount: 18,
     }
   ],
@@ -160,9 +180,11 @@ export const initialFullReportData: FullAuditReportPackData = {
   standards: ['ISO 9001:2015', 'ISO 14001:2015'],
   auditType: '사후관리 2차',
   auditScope: '자동차용 정밀 금형 및 부품의 설계, 개발 및 제조',
+  auditScopeEn: 'Design, Development and Manufacture of Precision Molds and Components for Automobiles',
   iafCode: '17 (기계/금속가공)',
   exclusionClause: '8.3 제품 및 서비스의 설계와 개발 (단, 고객 도면에 의한 주문생산)',
   exclusionJustification: '고객사가 제공하는 사양서 및 CAD 도면에 따라 가공하며, 자체 설계 행위가 없으므로 정당한 제외로 인정함.',
+  exclusionJustificationEn: 'Machining is performed strictly in accordance with customer-provided specifications and CAD drawings, and justified exclusion is accepted as there is no design and development activity performed.',
 
   stage1: {
     appVsSurveyDiff: { hasDiff: false, details: '신청서 기재 인원 48명 및 공정 라인 변동 없음' },
@@ -344,5 +366,137 @@ export const initialFullReportData: FullAuditReportPackData = {
       summaryText: '중부적합 0건, 경부적합 1건(계측기 교정주기 초과 1건), 관찰사항 2건(절삭유 보관소 환기시설 추가 개선 권고, 협력업체 정기평가 주기 표준화 권고)',
     },
     finalRecommendation: '인증 유지 추천',
-  }
+  },
+
+  // V. Remark 공식 실물 서식 필수 3대 매트릭스
+  processMatrix: [
+    {
+      id: 'pm-1',
+      processName: '경영기획 및 리더십',
+      deptName: '최고경영진 / 경영지원실',
+      clause4: true,
+      clause5: true,
+      clause6: true,
+      clause7: true,
+      clause8: false,
+      clause9: true,
+      clause10: true,
+      markUsage: false,
+      ncCount: '√ (적합)'
+    },
+    {
+      id: 'pm-2',
+      processName: '품질보증 및 개선관리',
+      deptName: '품질혁신팀',
+      clause4: true,
+      clause5: false,
+      clause6: true,
+      clause7: true,
+      clause8: true,
+      clause9: true,
+      clause10: true,
+      markUsage: true,
+      ncCount: '√ / 경1 (부적합 1건)'
+    },
+    {
+      id: 'pm-3',
+      processName: '생산운영 및 공정관리',
+      deptName: '생산1팀, 생산2팀 (화성공장)',
+      clause4: false,
+      clause5: false,
+      clause6: false,
+      clause7: true,
+      clause8: true,
+      clause9: true,
+      clause10: false,
+      markUsage: false,
+      ncCount: '√ (적합)'
+    },
+    {
+      id: 'pm-4',
+      processName: '구매 및 공급자 관리',
+      deptName: '자재구매팀',
+      clause4: false,
+      clause5: false,
+      clause6: false,
+      clause7: true,
+      clause8: true,
+      clause9: true,
+      clause10: false,
+      markUsage: false,
+      ncCount: '√ (적합)'
+    },
+    {
+      id: 'pm-5',
+      processName: '제품설계 및 공정개발',
+      deptName: '기술연구소',
+      clause4: true,
+      clause5: false,
+      clause6: true,
+      clause7: true,
+      clause8: true,
+      clause9: false,
+      clause10: true,
+      markUsage: false,
+      ncCount: '√ (적합)'
+    },
+    {
+      id: 'pm-6',
+      processName: '영업 및 고객관리',
+      deptName: '국내/해외 영업마케팅팀',
+      clause4: true,
+      clause5: false,
+      clause6: false,
+      clause7: false,
+      clause8: true,
+      clause9: true,
+      clause10: true,
+      markUsage: true,
+      ncCount: '√ (적합)'
+    }
+  ],
+
+  threeYearPlan: [
+    { id: 'typ-4', clauseNumber: '4', clauseTitle: '조직 상황 (내외부 이슈, 이해관계자, 적용범위)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-5', clauseNumber: '5', clauseTitle: '리더십 (방침, 조직 역할, 책임 및 권한)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-6', clauseNumber: '6', clauseTitle: '기획 (리스크와 기회 관리, 품질/환경 목표)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-7', clauseNumber: '7', clauseTitle: '지원 (자원, 역량, 인식, 문서화된 정보)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-8', clauseNumber: '8', clauseTitle: '운용 (운용 기획 및 관리, 제품/서비스 요구사항)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-9', clauseNumber: '9', clauseTitle: '성과 평가 (모니터링, 내부심사, 경영검토)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-10', clauseNumber: '10', clauseTitle: '개선 (부적합 및 시정조치, 지속적 개선)', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' },
+    { id: 'typ-mark', clauseNumber: '기타', clauseTitle: '인증마크 및 인정마크(KAB) 사용 적절성', cycleInitial: '○ (√)', cycleSurv1: '○ (√)', cycleSurv2: '○', cycleSurv3: '○', cycleSurv4: '', cycleSurv5: '' }
+  ],
+
+  previousAuditChecks: [
+    {
+      id: 'pnc-1',
+      ncNumber: 'NCR-2025-01',
+      standardCode: 'ISO 9001:2015 7.1.5.2',
+      deptName: '품질혁신팀',
+      ncGrade: '경부적합',
+      ncContent: '정밀 가공 공정의 디지털 버니어캘리퍼스(HS-QC-C08, C09) 2기의 공인기관 정기 교정 유효기간이 2025년 08월 15일로 만료되었으나, 유효기간 경과 후에도 식별 라벨 갱신 없이 계속 사용됨.',
+      correctiveAction: '1. 해당 계측기 2기 즉시 사용중지 및 KOLAS 공인교정기관 긴급 재교정 완료(성적서 수령).\n2. 사내 전 계측기 42기 전수 점검 및 만료 D-30일 사전 알림 자동 대장 도입.\n3. 계측기 관리담당자 재교육 실시 완료.',
+      actionDate: '2025-09-20',
+      verificationMethod: '현장확인',
+      adequacyResult: '적합(적절함)',
+      effectivenessResult: '효과적',
+      auditorName: '남경호 대표이사 / 수석심사원',
+      verifiedAt: '2026-09-09'
+    },
+    {
+      id: 'pnc-2',
+      ncNumber: 'OBS-2025-02',
+      standardCode: 'ISO 14001:2015 8.1',
+      deptName: '생산2팀 (절삭유 보관소)',
+      ncGrade: '관찰사항',
+      ncContent: '제2공장 절삭유 보관소의 2차 방유턱 용량이 기준치에는 충족하나, 우천 시 빗물 유입 가능성이 관찰되어 배수로 차단막 보강 권고.',
+      correctiveAction: '보관소 상부 처마 차양막 추가 설치(1.5m 연장) 및 빗물 차단용 경사턱 보강 공사 완료.',
+      actionDate: '2025-10-10',
+      verificationMethod: '문서확인',
+      adequacyResult: '적합(적절함)',
+      effectivenessResult: '효과적',
+      auditorName: '이혜원 정심사원',
+      verifiedAt: '2026-09-09'
+    }
+  ]
 };

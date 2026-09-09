@@ -8,7 +8,8 @@ import {
   AuditorSettlement,
   CommitteeMeeting,
   EmailDispatchLog,
-  AuditContractRecord
+  AuditContractRecord,
+  AuditorNotice
 } from '../types';
 
 export const mockAuditors: Auditor[] = [
@@ -304,7 +305,7 @@ export const mockProjects: AuditProject[] = [
     leadAuditorName: '남경호 대표이사',
     startDate: '2026-09-14',
     endDate: '2026-09-15',
-    status: '심사진행중',
+    status: '사무국검토대기',
     kabStandardMd: 2.5,
     appliedMd: 2.0, // 관리자 수동 조정
     standardFee: 2000000,
@@ -477,6 +478,7 @@ export const mockReports: Record<string, AuditReport> = {
         id: 'sig-client-email',
         signerRole: '피심사기업 대표/품질책임자',
         signerName: '박한성 대표이사 / 강태석 품질팀장',
+        signerEmail: 'hansung_ceo@hansung.co.kr',
         verificationToken: 'vtok-client-email-hansung-99',
         isSigned: true,
         verifyMethod: '기업이메일확인',
@@ -490,45 +492,67 @@ export const mockReports: Record<string, AuditReport> = {
         id: 'sig-lead',
         signerRole: '심사팀장',
         signerName: '남경호 대표이사',
+        signerEmail: 'ceo@gmscs.co.kr',
+        kabCertNumber: 'KAB-LA-2022-0419',
         verificationToken: 'vtok-lead-nam-2026',
         isSigned: true,
-        verifyMethod: '자필서명',
+        verifyMethod: '공인이메일인증',
+        emailVerified: true,
+        emailVerifiedAt: '2026-09-09 11:15:00',
         signedAt: '2026-09-09 11:15:00',
-        ipAddress: '121.134.88.20',
+        ipAddress: '121.134.88.20 (GMSCS 보안메일 인증)',
         userAgent: 'Chrome on Windows',
       },
       {
         id: 'sig-member',
         signerRole: '참석 심사원',
         signerName: '이혜원 정심사원',
+        signerEmail: 'aud-hq-2@gmscs.co.kr',
+        kabCertNumber: 'KAB-A-2023-1102',
         verificationToken: 'vtok-member-lee-2026',
         isSigned: true,
-        verifyMethod: '자필서명',
+        verifyMethod: '공인이메일인증',
+        emailVerified: true,
+        emailVerifiedAt: '2026-09-09 11:20:00',
         signedAt: '2026-09-09 11:20:00',
-        ipAddress: '121.134.88.20',
+        ipAddress: '121.134.88.20 (GMSCS 보안메일 인증)',
         userAgent: 'Chrome on Windows',
       },
       {
         id: 'sig-provisional',
         signerRole: '심사원보',
         signerName: '정대현 심사원보',
+        signerEmail: 'aud-4@gmscs.co.kr',
+        kabCertNumber: 'KAB-PA-2025-0814',
         verificationToken: 'vtok-provisional-jung-2026',
         isSigned: true,
-        verifyMethod: '자필서명',
+        verifyMethod: '공인이메일인증',
+        emailVerified: true,
+        emailVerifiedAt: '2026-09-09 11:25:00',
         signedAt: '2026-09-09 11:25:00',
-        ipAddress: '121.134.88.20',
+        ipAddress: '121.134.88.20 (GMSCS 보안메일 인증)',
         userAgent: 'Chrome on Windows',
       },
       {
         id: 'sig-reviewer',
         signerRole: '검증심사원',
         signerName: '정현일 검증심사원 (부원장)',
+        signerEmail: 'aud-3@gmscs.co.kr',
+        kabCertNumber: 'KAB-LA-2021-0308',
         verificationToken: 'vtok-reviewer-jung-2026',
         isSigned: false, // 검증 대기 상태
-        verifyMethod: '자필서명',
+        verifyMethod: '공인이메일인증',
       },
     ],
     updatedAt: '2026-09-09 12:00:00',
+    secretariatReviewStatus: '검토대기',
+    submittedToSecretariatAt: '2026-09-09 14:20:00',
+    secretariatChecklist: {
+      scopeCheck: true,
+      ncrCheck: true,
+      meetingCheck: true,
+      signCheck: true,
+    },
   },
   'rep-2': {
     id: 'rep-2',
@@ -563,6 +587,7 @@ export const mockReports: Record<string, AuditReport> = {
         id: 'sig-201',
         signerRole: '피심사기업 대표/품질책임자',
         signerName: '최유진 대표이사 / 임도현 이사',
+        signerEmail: 'yjchoi@ainext.ai',
         verificationToken: 'vtok-ainext-client-email',
         isSigned: false,
         verifyMethod: '기업이메일확인',
@@ -572,12 +597,15 @@ export const mockReports: Record<string, AuditReport> = {
         id: 'sig-202',
         signerRole: '심사팀장',
         signerName: '정현일 선임심사원 (부원장)',
+        signerEmail: 'aud-3@gmscs.co.kr',
+        kabCertNumber: 'KAB-LA-2021-0308',
         verificationToken: 'vtok-lead-jung-ainext',
         isSigned: false,
-        verifyMethod: '자필서명',
+        verifyMethod: '공인이메일인증',
       }
     ],
     updatedAt: '2026-09-09 12:00:00',
+    secretariatReviewStatus: '작성중',
   }
 };
 
@@ -1015,4 +1043,94 @@ export const mockAuditContracts: AuditContractRecord[] = [
     contractStatus: '계약체결'
   }
 ];
+
+export const mockAuditorNotices: AuditorNotice[] = [
+  {
+    id: 'not-01',
+    title: '[긴급/지침] 2026년 KAB 인정기준 개정 안내 및 심사보고서 서식 준수 철저의 건',
+    category: '긴급',
+    targetAudience: '전체 심사원',
+    authorName: '남경호 대표이사',
+    authorRole: '수석심사원 / 원장',
+    authorId: 'admin',
+    createdAt: '2026-09-08',
+    isUrgent: true,
+    content: `전 심사원께 안내드립니다.
+한국인정지원센터(KAB) 최신 인정기준 개정에 따라, 2026년 9월 1일부터 진행되는 모든 1단계/2단계 및 사후관리 심사보고서에는 개정된 서식을 필히 적용하셔야 합니다.
+
+[주요 준수 사항]
+1. 시작회의 및 종결회의 근로자대표 참석 확인란 및 독립성 보장 확인 서명 필수
+2. 심사일정 기간 외 임의 작성 및 소급 서명 엄격 금지 (Audit Period Lock 실시간 점검)
+3. ISO 9001/14001/45001 통합심사 시 KAB 공식 MD 산정 기준표 및 감경 한도(최대 30%) 준수
+
+첨부된 2026년 KAB 개정 공문 및 심사보고서 작성 지침서를 반드시 다운로드하여 숙지하시기 바랍니다.`,
+    attachments: [
+      {
+        id: 'att-1',
+        fileName: '2026_KAB_공문_심사품질관리기준_개정안.pdf',
+        fileSize: '2.4 MB',
+        fileUrl: 'https://storage.googleapis.com/gmscs-docs/guidelines/2026_KAB_Audit_Standard.pdf',
+        fileType: 'PDF'
+      },
+      {
+        id: 'att-2',
+        fileName: 'GMSCS_공식_심사보고서_Remark_표준양식_v4.2.docx',
+        fileSize: '850 KB',
+        fileUrl: 'https://storage.googleapis.com/gmscs-docs/forms/GMSCS_Report_Template_v4.2.docx',
+        fileType: 'DOCX'
+      }
+    ]
+  },
+  {
+    id: 'not-02',
+    title: '[서식배포] ISO 14001:2015 환경측면 평가 및 ESG-MS 부속서E 점검표 양식 배포',
+    category: '서식배포',
+    targetAudience: '전체 심사원',
+    authorName: '정현일 부원장',
+    authorRole: '사무국 선임심사원 / 심의부위원장',
+    authorId: 'aud-3',
+    createdAt: '2026-09-06',
+    isUrgent: false,
+    content: `환경경영시스템(ISO 14001) 및 ESG 통합 인증 심사 시 필수 점검 서식인 '부속서 E 점검표(ESG-MS:2023)' 엑셀 서식을 배포합니다.
+
+해당 점검표는 심사보고서 팩 작성 시 파일 첨부 탭에 함께 업로드해 주셔야 인증심의위원회 상정이 가능합니다.
+궁금하신 점은 사무국 심의간사(이혜원 대리)에게 문의하여 주시기 바랍니다.`,
+    attachments: [
+      {
+        id: 'att-3',
+        fileName: 'ESG-MS_부속서E_현장점검표_공식양식_2026.xlsx',
+        fileSize: '1.1 MB',
+        fileUrl: 'https://storage.googleapis.com/gmscs-docs/forms/ESG-MS_Annex_E_Checklist.xlsx',
+        fileType: 'XLSX'
+      }
+    ]
+  },
+  {
+    id: 'not-03',
+    title: '[행정안내] 2026년도 심사원 여비·숙박비 산정 및 수당 정산 지급일정 안내',
+    category: '일반공지',
+    targetAudience: '비상근심사원 전용',
+    authorName: '이혜원 대리',
+    authorRole: '사무국 정심사원 / 심의간사',
+    authorId: 'aud-hq-2',
+    createdAt: '2026-09-02',
+    isUrgent: false,
+    content: `비상근 심사원 여러분의 노고에 감사드립니다.
+2026년도 심사비 정산원장 지급 및 여비 산정 기준을 안내드립니다.
+
+- 심사비 정산 지급일: 매월 25일 (휴일인 경우 익영업일 지급)
+- 원천징수: 3.3% 사업소득세 원천징수 후 개인 통장 계좌 입금
+- 지방 출장 여비(교통비/숙박비)는 심사 종료 후 3영업일 이내에 영수증 사본을 이메일(audit@gmscs.co.kr)로 제출 바랍니다.`,
+    attachments: [
+      {
+        id: 'att-4',
+        fileName: 'GMSCS_심사원_여비교통비_지급규정_2026.pdf',
+        fileSize: '430 KB',
+        fileUrl: 'https://storage.googleapis.com/gmscs-docs/notices/Travel_Expense_Regulation_2026.pdf',
+        fileType: 'PDF'
+      }
+    ]
+  }
+];
+
 
