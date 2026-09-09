@@ -1,8 +1,22 @@
-export type StandardCode = 'ISO 9001:2015' | 'ISO 14001:2015' | 'ISO 45001:2018' | 'ISO 27001:2022' | 'ISO 37001:2016' | 'ESG-MS';
+export type StandardCode = 
+  | 'ISO 9001:2015' 
+  | 'ISO 14001:2015' 
+  | 'ISO 45001:2018' 
+  | 'ESG-MS:2023' 
+  | 'ISO 50001:2018' 
+  | 'ISO 27001:2022' 
+  | 'ISO 27701:2019' 
+  | 'ISO 37001:2016' 
+  | 'ISO 37301:2021' 
+  | 'ISO 22301:2019' 
+  | 'ISO 22716:2007' 
+  | 'ISO 15378:2017' 
+  | 'ISO 22000:2018' 
+  | 'ISO 13485:2016';
 
 export type AuditType = '최초 1단계' | '최초 2단계' | '사후관리 1차' | '사후관리 2차' | '갱신심사' | '전환심사' | '특별심사';
 
-export type AuditStatus = '계획수립' | '계획서발송' | '심사진행중' | '보고서작성' | '서명대기' | '서명완료' | '인증발행';
+export type AuditStatus = '계획수립' | '계획서발송' | '심사진행중' | '보고서작성' | '서명대기' | '서명완료' | '심의진행' | '인증발행';
 
 export type ClientType = '직영' | '심사원영업';
 
@@ -28,6 +42,8 @@ export interface Company {
   createdAt: string;
 }
 
+export type AuditorAffiliation = '사무국직원' | '소속심사원' | '비상근심사원';
+
 export interface Auditor {
   id: string;
   name: string;
@@ -35,10 +51,21 @@ export interface Auditor {
   email: string;
   grade: '선임심사원' | '정심사원' | '심사원보' | '검증심사원' | '기술전문가';
   status: '활동' | '휴식' | '자격만료임박';
+  affiliation: AuditorAffiliation; // 사무국 직원 / 소속 상근 / 비상근 구분
+  isSystemAdmin?: boolean; // 시스템 총괄 관리자 여부 (대표님 등)
   iafCodes: string[];
   registeredStandards: StandardCode[];
   contractExpiryDate: string;
   activeClientCount: number;
+  
+  // 인증심의위원 자격
+  isCommitteeMember: boolean;
+  committeeRole?: '심의위원장' | '심의위원' | '전문심의위원';
+  committeeAppointmentDate?: string;
+  
+  // 정산 관련 계좌 및 MD 단가
+  bankAccount?: string;
+  payoutRatePerMd?: number; // 기본 MD당 수당
 }
 
 export interface CertContract {
@@ -53,6 +80,101 @@ export interface CertContract {
   validUntil: string; // 만료일 (3년)
   surveillanceDueDate: string; // 차기 사후관리 예정일
   status: '유효' | '만료임박' | '만료' | '정지';
+}
+
+export type AuditContractType = '신규인증' | '정기사후' | '갱신심사' | '규격추가' | '인증변경';
+
+export interface CertChangeApplicationData {
+  appliedDate: string;
+  changeCategories: ('상호' | '주소' | '사업자' | '범위' | '표준' | '기타')[];
+  newCompanyNameKo?: string;
+  newCompanyNameEn?: string;
+  newCeoName?: string;
+  newAddressHead?: string;
+  newAddressPlant?: string;
+  newBizType?: string;
+  scopeChangeType?: '이전' | '추가' | '축소' | '기타';
+  newScopeDetails?: string;
+  desiredAuditDate?: string;
+  attachedDocuments: string[];
+  clientSignature?: string;
+}
+
+export interface WeekendAuditReasonData {
+  auditDates: string;
+  isWeekendOrHoliday: boolean;
+  reasonCategory: '연속가동생산' | '고객사요청' | '공정특성' | '기타';
+  detailedReason: string;
+  auditorSigned: boolean;
+  auditorSignedAt?: string;
+  clientVerified: boolean;
+  clientVerifiedAt?: string;
+  clientVerificationMethod: '전자서명' | '이메일확인';
+  clientEmail?: string;
+  clientName?: string;
+}
+
+export interface AuditContractRecord {
+  id: string;
+  contractNumber: string;
+  contractDate: string;
+  companyId: string;
+  companyName: string;
+  contractType: AuditContractType;
+  standards: StandardCode[];
+  addedStandards?: StandardCode[]; // 규격추가 시
+  changeDetails?: string; // 인증변경 시 사유/내용
+  employeeCount: number;
+  riskLevel: 'High' | 'Medium' | 'Low';
+  
+  // 이전 계약 사항 (대사 및 비교용)
+  previousContract?: {
+    contractNumber: string;
+    contractDate: string;
+    contractType: string;
+    standards: StandardCode[];
+    appliedMd: number;
+    ratePerMd: number;
+    finalFee: number;
+    travelExpense: number;
+  };
+
+  // KAB 공식 표준 MD (원칙상 조정하지 않고 준수)
+  kabStandardMd: number;
+  appliedMd: number; // KAB 표준 MD와 일치
+  
+  // MD당 단가 조정 (KAB 표준 800,000원에서 단가 조정)
+  standardRatePerMd: number; // 800,000원
+  ratePerMd: number; // 실제 합의 적용 단가 (예: 700,000원, 600,000원 등)
+
+  // 5대 공식 비용 구성 항목
+  docAuditMd: number; // 문서심사 MD
+  docAuditFee: number; // 1. 문서심사비
+  onsiteAuditMd: number; // 현장심사 MD
+  onsiteAuditFee: number; // 2. 현장심사비
+  travelExpense: number; // 3. 여비교통비
+  lodgingOption: '업체직접제공' | '턴키포함'; // 4. 숙박비 옵션
+  lodgingNights: number; // 숙박 일수
+  lodgingExpense: number; // 숙박비 금액
+  applicationFee: number; // 5. 신청 및 등록비 (신규/추가/변경 시)
+
+  standardFee: number; // KAB 표준 총액
+  finalFee: number; // 5대 항목 합산 최종 계약 금액 (VAT 별도)
+  
+  isAdjusted: boolean;
+  adjustmentReason?: string;
+  approvalStatus: '승인불필요' | '승인대기' | '승인완료' | '반려';
+  approvedBy?: string;
+  approvedAt?: string;
+  leadAuditorId: string;
+  leadAuditorName: string;
+  plannedAuditStartDate?: string;
+  plannedAuditEndDate?: string;
+  contractStatus: '견적작성' | '승인요청' | '계약체결' | '심사진행중' | '완료';
+
+  // 공식 서식 연동
+  weekendAuditData?: WeekendAuditReasonData;
+  certChangeData?: CertChangeApplicationData;
 }
 
 export interface AuditSchedule {
@@ -93,12 +215,12 @@ export interface AuditAttachment {
 
 export interface ChecklistItem {
   id: string;
-  clause: string; // 예: "4.1 조직과 그 상황의 이해"
+  clause: string;
   question: string;
   result: '적합' | '경부적합' | '중부적합' | '관찰사항' | '해당없음';
-  evidence: string; // 심사 발견사항 및 객관적 증거
-  requirementDetails?: string; // 세부 요구사항 가이드
-  attachments?: AuditAttachment[]; // 증빙 첨부파일 목록
+  evidence: string;
+  requirementDetails?: string;
+  attachments?: AuditAttachment[];
 }
 
 export interface AuditReport {
@@ -107,13 +229,13 @@ export interface AuditReport {
   companyName: string;
   auditType: AuditType;
   standards: StandardCode[];
-  startDate: string; // 심사 시작일 (입력 가능 기간 제어)
-  endDate: string;   // 심사 종료일
+  startDate: string;
+  endDate: string;
   auditDates: string;
   leadAuditor: string;
   auditTeam: string[];
-  provisionalAuditors?: string[]; // 심사원보
-  technicalReviewer?: string;     // 검증 심사원
+  provisionalAuditors?: string[];
+  technicalReviewer?: string;
   
   // 종합 내용
   executiveSummary: string;
@@ -125,7 +247,6 @@ export interface AuditReport {
     observation: number;
   };
   
-  // 공식 Remark 양식 서브 섹션
   meetingAgendas: {
     openingChecked: boolean;
     closingChecked: boolean;
@@ -136,6 +257,18 @@ export interface AuditReport {
   signatures: SignatureLog[];
   pdfUrl?: string;
   updatedAt: string;
+}
+
+export interface AuditorReassignmentLog {
+  id: string;
+  date: string;
+  prevAuditorId: string;
+  prevAuditorName: string;
+  newAuditorId: string;
+  newAuditorName: string;
+  reasonCategory: '이해상충(Conflict of Interest)' | '심사일정 중복' | '전문분야(IAF) 불일치' | '심사원 신병/개인사정' | '기타';
+  reasonDetail: string;
+  processedBy: string;
 }
 
 export interface AuditProject {
@@ -159,6 +292,20 @@ export interface AuditProject {
   finalFee: number;
   adjustmentReason?: string;
   
+  // 사무국 심사비 조정 승인 워크플로우
+  feeAdjustmentStatus?: '승인불필요' | '승인대기' | '승인완료' | '반려';
+  feeAdjustmentRequestedFee?: number;
+  feeAdjustmentApprovedBy?: string;
+  feeAdjustmentApprovedAt?: string;
+  
+  // 이해상충 등 심사원 변경 이력
+  reassignmentHistory?: AuditorReassignmentLog[];
+  
+  // 인증심의위원회 심의 상태
+  committeeStatus?: '심의대기' | '심의상정' | '심의진행' | '등록승인' | '조건부승인' | '보류' | '인증불가';
+  committeeDecisionDate?: string;
+  committeeDecisionNote?: string;
+
   // 계획서 및 수납
   planSentDate?: string;
   paymentStatus: PaymentStatus;
@@ -168,6 +315,70 @@ export interface AuditProject {
   
   // 심사보고서 ID
   reportId?: string;
+}
+
+export interface AuditorSettlement {
+  id: string;
+  auditorId: string;
+  auditorName: string;
+  projectId: string;
+  companyName: string;
+  auditType: AuditType;
+  auditDates: string;
+  standards: StandardCode[];
+  year: number;
+  settlementDate: string;
+  totalAuditFee: number;
+  appliedMd: number;
+  payoutAmount: number;
+  taxWithheld: number; // 3.3%
+  netPayout: number;
+  payoutStatus: '정산대기' | '지급완료' | '보류';
+  paidDate?: string;
+}
+
+export type CommitteeDecision = '인증등록승인' | '조건부승인' | '인증보류' | '인증불가';
+
+export interface CommitteeAgenda {
+  id: string;
+  projectId: string;
+  companyId: string;
+  companyName: string;
+  standards: StandardCode[];
+  auditType: AuditType;
+  leadAuditorName: string;
+  auditDates: string;
+  majorCount: number;
+  minorCount: number;
+  observationCount: number;
+  leadRecommendation: '인증등록 추천' | '시정조치 후 추천' | '재심사 추천';
+  decision?: CommitteeDecision;
+  reviewNote?: string;
+  decidedAt?: string;
+}
+
+export interface CommitteeMeeting {
+  id: string;
+  meetingNumber: string;
+  meetingDate: string;
+  chairperson: string;
+  attendees: string[];
+  status: '예정' | '진행중' | '의결완료';
+  agendas: CommitteeAgenda[];
+  resolutionDocNumber?: string;
+}
+
+export interface EmailDispatchLog {
+  id: string;
+  sentAt: string;
+  templateType: '심사계획서' | '심사원배정통보' | '심사원변경통보' | '심사비승인통보' | '인증심의결과안내';
+  senderEmail: string;
+  senderName: string;
+  recipientEmail: string;
+  recipientName: string;
+  subject: string;
+  bodySummary: string;
+  status: '발송완료' | '발송대기';
 }
 
 export interface BackupRecord {

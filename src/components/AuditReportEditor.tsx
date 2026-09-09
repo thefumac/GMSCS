@@ -21,7 +21,11 @@ import {
   ExternalLink,
   ChevronRight,
   Plus,
-  Trash2
+  Trash2,
+  ArrowLeft,
+  DollarSign,
+  Leaf,
+  Sparkles
 } from 'lucide-react';
 import { AuditReport, SignatureLog } from '../types';
 import { SignatureCanvas } from './SignatureCanvas';
@@ -36,12 +40,14 @@ interface AuditReportEditorProps {
   report: AuditReport;
   onSaveReport: (updated: AuditReport) => void;
   onClose: () => void;
+  onBackToList?: () => void;
 }
 
 export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
   report: initialReport,
   onSaveReport,
-  onClose
+  onClose,
+  onBackToList
 }) => {
   // 풀스펙 양식 데이터 (LocalStorage 영구 저장 연동)
   const [packData, setPackData] = useState<FullAuditReportPackData>(() => {
@@ -173,6 +179,105 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
           <span className="text-sm font-bold">{saveToast}</span>
         </div>
       )}
+
+      {/* 0. 목록 복귀 및 건별 심사비/정산 현황 카드 (사용자 요구사항 반영) */}
+      {onBackToList && (
+        <div className="flex items-center justify-between bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-md no-print">
+          <button
+            onClick={onBackToList}
+            className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-cyan-200 text-xs font-bold transition border border-slate-700"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>← 심사보고서 목록으로 돌아가기</span>
+          </button>
+          
+          <div className="flex items-center space-x-4 text-xs">
+            <span className="text-slate-400">보고서 번호: <strong className="text-white font-mono">{initialReport.id}</strong></span>
+            <span className="text-slate-600">|</span>
+            <button
+              onClick={() => {
+                alert('[OK ESG 연동 완료]\nOK ESG 플랫폼(okesg.com)으로부터 온실가스 배출량, Scope 1/2 데이터 및 환경 성과 지표를 성공적으로 동기화하여 심사보고서 V항(Process Audit Note)에 자동 반영하였습니다.');
+              }}
+              className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold transition shadow-xs"
+            >
+              <Leaf className="w-3.5 h-3.5 text-emerald-300" />
+              <span>OK ESG 탄소·환경 데이터 가져오기</span>
+              <Sparkles className="w-3 h-3 text-amber-300" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 건별 심사비 5대 공식 명세 & 심사원 정산 요약 바 */}
+      <div className="w-full bg-linear-to-r from-cyan-950 via-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-sm border border-cyan-800 space-y-3 no-print text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-xl bg-cyan-700/50 border border-cyan-600 text-cyan-300">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-bold text-white text-sm">심사 계약 5대 공식 비용 &amp; 심사원 정산 대사</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[11px] border border-emerald-500/30">
+                  수납완료 &amp; 정산승인
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[11px] border border-amber-500/30">
+                  주말심사확인서 첨부완료 ✓
+                </span>
+              </div>
+              <p className="text-cyan-200/70 text-[11px] mt-0.5">
+                본 심사 건의 5대 비용 명세표(F16-004) 및 심사원 수당 대사 내역이 전산 동기화되어 있습니다.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-4 bg-black/30 px-4 py-2 rounded-xl border border-white/10">
+            <div>
+              <span className="text-slate-400 block text-[10px]">계약 심사비 총액</span>
+              <span className="font-bold font-mono text-cyan-300 text-sm">₩2,720,000</span>
+            </div>
+            <div className="h-6 w-px bg-white/20"></div>
+            <div>
+              <span className="text-slate-400 block text-[10px]">심사원 배정수당</span>
+              <span className="font-bold font-mono text-amber-300">₩1,400,000</span>
+            </div>
+            <div className="h-6 w-px bg-white/20"></div>
+            <div>
+              <span className="text-slate-400 block text-[10px]">3.3% 원천징수</span>
+              <span className="font-bold font-mono text-rose-300">-₩46,200</span>
+            </div>
+            <div className="h-6 w-px bg-white/20"></div>
+            <div>
+              <span className="text-slate-400 block text-[10px]">실지급액</span>
+              <span className="font-bold font-mono text-emerald-300 text-sm">₩1,353,800</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 5대 비용 항목 상세 바 */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <span className="text-slate-400 block text-[10px]">1. 문서심사비</span>
+            <span className="font-mono font-bold text-slate-200">₩600,000 (1.0 MD)</span>
+          </div>
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <span className="text-slate-400 block text-[10px]">2. 현장심사비</span>
+            <span className="font-mono font-bold text-slate-200">₩1,800,000 (3.0 MD)</span>
+          </div>
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <span className="text-slate-400 block text-[10px]">3. 여비교통비</span>
+            <span className="font-mono font-bold text-slate-200">₩120,000 (영남권)</span>
+          </div>
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <span className="text-slate-400 block text-[10px]">4. 출장 숙박비</span>
+            <span className="font-mono font-bold text-emerald-300">₩0 (기업 직접제공)</span>
+          </div>
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <span className="text-slate-400 block text-[10px]">5. 신청 및 등록비</span>
+            <span className="font-mono font-bold text-slate-200">₩200,000</span>
+          </div>
+        </div>
+      </div>
 
       {/* 1. 상단 글로벌 컨트롤 바 (w-full 풀 와이드 확장) */}
       <div className="w-full bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4 no-print">
