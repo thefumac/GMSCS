@@ -171,11 +171,11 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
         updatedAt: nowStr,
       };
       onSaveReport(updated);
-      alert('[사무국 제출 완료]\n심사보고서가 사무국에 성공적으로 제출되었습니다.\n사무국의 내용 적정성 검토(승인)가 완료되면 인증 심의 안건으로 자동 상정됩니다.');
+      alert('[보고서 제출 완료]\n심사보고서가 성공적으로 제출되었습니다.\n내용 적정성 검토(승인)가 완료되면 인증 심의 안건으로 자동 상정됩니다.');
     }
   };
 
-  // 사무국 검토 결정 핸들러 (승인 or 보완요청)
+  // 적정성 검토 결정 핸들러 (승인 or 보완요청)
   const handlePerformSecretariatDecision = (decision: '검토승인' | '보완요청') => {
     const reviewerName = currentUserRole === 'admin' ? '남경호 원장' : '정현일 이사';
     if (onSecretariatReview) {
@@ -193,8 +193,8 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
       };
       onSaveReport(updated);
       alert(decision === '검토승인' 
-        ? '[사무국 검토 승인 완료]\n적정성 검토가 승인되어 인증 심의 대기로 전환되었습니다. [인증심의위원회]로 안건이 이관됩니다.' 
-        : '[사무국 보완 요청 완료]\n심사팀에 보완 요청이 전달되었습니다.'
+        ? '[적정성 검토 승인 완료]\n적정성 검토가 승인되어 인증 심의 대기로 전환되었습니다. [인증심의위원회]로 안건이 이관됩니다.' 
+        : '[보완 요청 완료]\n심사팀에 보완 요청이 전달되었습니다.'
       );
     }
     setShowSecretariatReviewModal(false);
@@ -613,14 +613,14 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             )}
           </div>
 
-          {/* 사무국 제출 & 검토 액션 버튼 */}
+          {/* 보고서 제출 & 적정성 검토 액션 버튼 */}
           {(!initialReport.secretariatReviewStatus || initialReport.secretariatReviewStatus === '작성중' || initialReport.secretariatReviewStatus === '보완요청') && (
             <button
               onClick={handleTriggerSubmitToSecretariat}
               className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>사무국 제출 (검토 요청)</span>
+              <span>보고서 제출 (검토 요청)</span>
             </button>
           )}
 
@@ -628,7 +628,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             <div className="flex items-center space-x-2">
               <span className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
                 <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
-                <span>사무국 적정성 검토 대기</span>
+                <span>보고서 적정성 검토 대기</span>
               </span>
               {currentUserRole !== '비상근심사원' && (
                 <button
@@ -636,7 +636,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
                   className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition cursor-pointer animate-pulse"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>사무국 검토 수행</span>
+                  <span>적정성 검토 수행</span>
                 </button>
               )}
             </div>
@@ -646,7 +646,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             <div className="flex items-center space-x-2">
               <span className="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                <span>사무국 승인완료 (심의대기)</span>
+                <span>검토 승인완료 (심의대기)</span>
               </span>
               {currentUserRole !== '비상근심사원' && (
                 <button
@@ -701,7 +701,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
           <div className="font-extrabold flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-rose-800">
               <AlertTriangle className="w-4 h-4 text-rose-600" />
-              <span>[사무국 보완 요청] 심사보고서 수정 및 증빙 보완이 필요합니다 ({initialReport.secretariatReviewer || '사무국'} - {initialReport.secretariatReviewedAt})</span>
+              <span>[보고서 보완 요청] 심사보고서 수정 및 증빙 보완이 필요합니다 ({initialReport.secretariatReviewer || '본원'} - {initialReport.secretariatReviewedAt})</span>
             </span>
             <span className="px-2 py-0.5 rounded bg-rose-200 text-rose-900 font-bold text-[11px]">반려됨</span>
           </div>
@@ -711,7 +711,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             </p>
           )}
           <p className="text-[11px] text-rose-800/90 font-medium">
-            지적된 보완 사항을 수정한 후 상단의 <strong>[사무국 제출 (검토 요청)]</strong> 버튼을 다시 클릭하여 재제출하십시오.
+            지적된 보완 사항을 수정한 후 상단의 <strong>[보고서 제출 (검토 요청)]</strong> 버튼을 다시 클릭하여 재제출하십시오.
           </p>
         </div>
       )}
@@ -721,14 +721,14 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
           <div className="space-y-0.5">
             <div className="font-extrabold flex items-center gap-1.5 text-emerald-900">
               <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 shrink-0" />
-              <span>사무국 심사보고서 적정성 검토 승인 완료 ({initialReport.secretariatReviewer || '사무국'} - {initialReport.secretariatReviewedAt})</span>
+              <span>심사보고서 적정성 검토 승인 완료 ({initialReport.secretariatReviewer || '본원'} - {initialReport.secretariatReviewedAt})</span>
             </div>
             <p className="text-[11.5px] text-emerald-800">
-              본 심사보고서는 사무국 적정성 확인을 완료하여 <strong>[인증심의위원회]</strong>에 정식 회부되었습니다. (독립 의결 대기)
+              본 심사보고서는 적정성 확인을 완료하여 <strong>[인증심의위원회]</strong>에 정식 회부되었습니다. (독립 의결 대기)
             </p>
             {initialReport.secretariatComment && (
               <div className="text-[11px] text-slate-600 font-medium pt-1">
-                사무국 의견: {initialReport.secretariatComment}
+                검토 의견: {initialReport.secretariatComment}
               </div>
             )}
           </div>
@@ -2243,7 +2243,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
                 <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
                   <ShieldCheck className="w-5 h-5" />
                 </span>
-                <span>사무국 심사보고서 내용 적정성 검토</span>
+                <span>심사보고서 내용 적정성 검토</span>
               </div>
               <button 
                 onClick={() => setShowSecretariatReviewModal(false)} 
@@ -2256,16 +2256,16 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             <div className="p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-100 text-xs text-indigo-950 space-y-1">
               <div className="font-bold flex items-center gap-1 text-indigo-900">
                 <Info className="w-4 h-4 text-indigo-600 shrink-0" />
-                <span>KAB 인정기준 &amp; 사무국 내부 통제 절차</span>
+                <span>KAB 인정기준 &amp; 내부 통제 절차</span>
               </div>
               <p className="text-[11px] text-indigo-900/80 leading-relaxed">
-                심사보고서가 시스템에 업로드되면, <strong>인증 심의위원회 상정 전</strong>에 사무국에서 심사보고서의 전반적인 적정성(표준 조항, 부적합 조치, 회의록 및 전자서명)을 사전 검토하여 승인하거나 보완을 요청합니다.
+                심사보고서가 시스템에 업로드되면, <strong>인증 심의위원회 상정 전</strong>에 심사보고서의 전반적인 적정성(표준 조항, 부적합 조치, 회의록 및 전자서명)을 사전 검토하여 승인하거나 보완을 요청합니다.
               </p>
             </div>
 
             {/* 4대 점검 체크리스트 */}
             <div className="space-y-2 text-xs">
-              <label className="font-bold text-slate-800 block mb-1">사무국 4대 필수 적정성 점검 항목</label>
+              <label className="font-bold text-slate-800 block mb-1">4대 필수 적정성 점검 항목</label>
               
               <label className="flex items-center space-x-2.5 p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition cursor-pointer">
                 <input
@@ -2308,9 +2308,9 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
               </label>
             </div>
 
-            {/* 사무국 종합 검토 의견 */}
+            {/* 종합 적정성 검토 의견 */}
             <div className="space-y-1 text-xs">
-              <label className="block font-bold text-slate-700">사무국 종합 검토 의견 (보완 사유 또는 심의 상정 의견)</label>
+              <label className="block font-bold text-slate-700">종합 적정성 검토 의견 (보완 사유 또는 심의 상정 의견)</label>
               <textarea
                 rows={3}
                 value={secretariatCommentInput}

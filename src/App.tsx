@@ -63,41 +63,6 @@ export function App() {
     return 'admin';
   });
 
-  const handleLogin = (roleId: string) => {
-    setCurrentUserRole(roleId);
-    setIsAuthenticated(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('gmscs_auth', 'true');
-      localStorage.setItem('gmscs_role', roleId);
-    }
-    const aud = auditors.find(a => a.id === roleId);
-    if (aud?.affiliation === '비상근심사원') {
-      setActiveCategory('auditor-mgmt');
-      setActiveTab('portal');
-    } else {
-      setActiveCategory('dashboard');
-      setActiveTab('calendar');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('gmscs_auth');
-    }
-  };
-  
-  // 2-Tier Navigation State
-  const [activeCategory, setActiveCategory] = useState<MainCategory>('dashboard');
-  const [activeTab, setActiveTab] = useState<ActiveTab>('calendar');
-
-  // 심사보고서 목록 관리 vs 세부 에디터 전환 상태
-  const [isEditingReport, setIsEditingReport] = useState<boolean>(false);
-  const [activeReportId, setActiveReportId] = useState<string>('rep-1');
-
-  // 일반관리 - 재무관리 하위 서브탭 ('settlements' | 'billing')
-  const [financeSubTab, setFinanceSubTab] = useState<'settlements' | 'billing'>('settlements');
-
   // Core Data States (36 Legacy Auditors & 572 Legacy Companies)
   const [auditors, setAuditors] = useState<Auditor[]>(() => getMergedAuditors());
   const [companies, setCompanies] = useState<Company[]>(() => getMergedCompanies());
@@ -108,6 +73,13 @@ export function App() {
   const [emailLogs, setEmailLogs] = useState<EmailDispatchLog[]>(mockEmailLogs);
   const [auditContracts, setAuditContracts] = useState<AuditContractRecord[]>(mockAuditContracts);
   
+  // 심사보고서 목록 관리 vs 세부 에디터 전환 상태
+  const [isEditingReport, setIsEditingReport] = useState<boolean>(false);
+  const [activeReportId, setActiveReportId] = useState<string>('rep-1');
+
+  // 일반관리 - 재무관리 하위 서브탭 ('settlements' | 'billing')
+  const [financeSubTab, setFinanceSubTab] = useState<'settlements' | 'billing'>('settlements');
+
   // 심사원 공지사항 상태 (사무국 4인 공식 공지 & 파일/저장링크)
   const [auditorNotices, setAuditorNotices] = useState<AuditorNotice[]>(mockAuditorNotices);
 
@@ -135,18 +107,170 @@ export function App() {
   const currentAuditorObj: Auditor = auditors.find(a => a.id === currentUserRole) 
     || (currentUserRole === 'admin' ? auditors.find(a => a.isSystemAdmin) || auditors[0] : auditors[0]);
 
-  const currentAffiliation: AuditorAffiliation = currentAuditorObj?.affiliation 
-    || (currentUserRole === 'admin' ? '사무국직원' : '비상근심사원');
+  const isStaff = currentAuditorObj?.isSystemAdmin || currentAuditorObj?.affiliation === '상근' || currentUserRole === 'admin';
+  const isRegularAuditor = !isStaff;
+  const isNonPermanent = isRegularAuditor; // 일반 심사원 전용 보안 격리
 
-  // 비상근 심사원 격리 여부 (사무국직원과 소속상근심사원은 전체 접근)
-  const isNonPermanent = currentAffiliation === '비상근심사원';
+  // 2-Tier Navigation State Helper
+  const getCategoryForTab = (tab: ActiveTab): MainCategory => {
+    switch (tab) {
+      case 'calendar':
+      case 'contracts':
+      case 'reports':
+      case 'projects':
+      case 'integrations':
+        return 'audit';
+      case 'committee':
+      case 'companies':
+      case 'surveillance':
+      case 'kab':
+        return 'certification';
+      case 'portal':
+      case 'auditors':
+        return 'auditor-mgmt';
+      case 'finance':
+      case 'notices':
+      case 'data':
+        return 'general-admin';
+      default:
+        return 'audit';
+    }
+  };
 
-  // 비상근 심사원일 경우 데이터 격리 필터링
-  const visibleProjects = isNonPermanent 
+  // URL Hash 생성 헬퍼
+  const buildHash = (tab: ActiveTab, isEditing: boolean, repId?: string, finSubTab?: 'settlements' | 'billing'): string => {
+    if (tab === 'reports' && isEditing && repId) {
+      return `#reports/edit/${repId}`;
+    }
+    if (tab === 'finance' && finSubTab) {
+      return `#finance/${finSubTab}`;
+    }
+    return `#${tab}`;
+  };
+
+  // URL Hash 파싱 헬퍼
+  const parseHashState = (hash: string) => {
+    const clean = hash.replace(/^#\/?/, '');
+    if (!clean) return null;
+    const parts = clean.split('/');
+    const tab = parts[0] as ActiveTab;
+
+    if (tab === 'reports' && parts[1] === 'edit' && parts[2]) {
+      return {
+        tab: 'reports' as ActiveTab,
+        category: 'audit' as MainCategory,
+        isEditingReport: true,
+        activeReportId: parts[2],
+        financeSubTab: 'settlements' as const
+      };
+    }
+    if (tab === 'finance' && (parts[1] === 'settlements' || parts[1] === 'billing')) {
+      return {
+        tab: 'finance' as ActiveTab,
+        category: 'general-admin' as MainCategory,
+        isEditingReport: false,
+        activeReportId: 'rep-1',
+        financeSubTab: parts[1] as 'settlements' | 'billing'
+      };
+    }
+    return {
+      tab,
+      category: getCategoryForTab(tab),
+      isEditingReport: false,
+      activeReportId: 'rep-1',
+      financeSubTab: 'settlements' as const
+    };
+  };
+
+  // 2-Tier Navigation State (일반 심사원은 'portal', 관리자는 'audit' / 'calendar' 기본)
+  const [activeCategory, setActiveCategory] = useState<MainCategory>(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const parsed = parseHashState(window.location.hash);
+      if (parsed) return parsed.category;
+    }
+    return isRegularAuditor ? 'auditor-mgmt' : 'audit';
+  });
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const parsed = parseHashState(window.location.hash);
+      if (parsed) return parsed.tab;
+    }
+    return isRegularAuditor ? 'portal' : 'calendar';
+  });
+
+  // 통합 네비게이션 함수 (Browser History pushState / replaceState 연동)
+  const navigateTo = React.useCallback((
+    tab: ActiveTab, 
+    category?: MainCategory, 
+    options?: {
+      isEditingReport?: boolean;
+      reportId?: string;
+      financeSubTab?: 'settlements' | 'billing';
+      replace?: boolean;
+    }
+  ) => {
+    const targetCategory = category || getCategoryForTab(tab);
+    const targetIsEditing = options?.isEditingReport !== undefined 
+      ? options.isEditingReport 
+      : (tab === 'reports' ? isEditingReport : false);
+    const targetReportId = options?.reportId || activeReportId;
+    const targetFinanceSubTab = options?.financeSubTab || financeSubTab;
+
+    setActiveCategory(targetCategory);
+    setActiveTab(tab);
+    setIsEditingReport(targetIsEditing);
+    if (options?.reportId) setActiveReportId(options.reportId);
+    if (options?.financeSubTab) setFinanceSubTab(options.financeSubTab);
+
+    const historyPayload = {
+      category: targetCategory,
+      tab,
+      isEditingReport: targetIsEditing,
+      activeReportId: targetReportId,
+      financeSubTab: targetFinanceSubTab,
+    };
+
+    const newHash = buildHash(tab, targetIsEditing, targetReportId, targetFinanceSubTab);
+
+    if (typeof window !== 'undefined') {
+      if (options?.replace || window.location.hash === newHash) {
+        window.history.replaceState(historyPayload, '', newHash);
+      } else {
+        window.history.pushState(historyPayload, '', newHash);
+      }
+    }
+  }, [activeReportId, financeSubTab, isEditingReport]);
+
+  const handleLogin = (roleId: string) => {
+    setCurrentUserRole(roleId);
+    setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gmscs_auth', 'true');
+      localStorage.setItem('gmscs_role', roleId);
+    }
+    const aud = auditors.find(a => a.id === roleId);
+    const isLoginStaff = aud?.isSystemAdmin || aud?.affiliation === '상근' || roleId === 'admin';
+    if (!isLoginStaff) {
+      navigateTo('portal', 'auditor-mgmt', { isEditingReport: false, replace: true });
+    } else {
+      navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gmscs_auth');
+    }
+  };
+
+  // 일반 심사원일 경우 데이터 격리 필터링 (본인 담당 기업 및 본인 배정 보고서/정산만)
+  const visibleProjects = isRegularAuditor 
     ? projects.filter(p => p.leadAuditorId === currentAuditorObj.id || p.leadAuditorName?.includes(currentAuditorObj.name))
     : projects;
 
-  const visibleReports = isNonPermanent
+  const visibleReports = isRegularAuditor
     ? Object.fromEntries(
         Object.entries(reports).filter(([_, rep]) => 
           rep.leadAuditor?.includes(currentAuditorObj.name) || 
@@ -157,31 +281,78 @@ export function App() {
       )
     : reports;
 
-  const visibleSettlements = isNonPermanent
+  const visibleSettlements = isRegularAuditor
     ? settlements.filter(s => s.auditorId === currentAuditorObj.id || s.auditorName.includes(currentAuditorObj.name))
     : settlements;
 
-  const visibleCompanies = isNonPermanent
+  const visibleCompanies = isRegularAuditor
     ? companies.filter(c => c.managingAuditorId === currentAuditorObj.id)
     : companies;
 
-  // 비상근 심사원의 비인가 탭 접근 방지 및 자동 리디렉션
+  // 일반 심사원의 비인가 탭 접근 방지 및 자동 리디렉션
   React.useEffect(() => {
-    if (isNonPermanent) {
-      const allowedTabs: ActiveTab[] = ['portal', 'reports', 'finance', 'notices'];
+    if (isRegularAuditor) {
+      const allowedTabs: ActiveTab[] = ['portal', 'reports', 'finance'];
       if (currentAuditorObj?.isCommitteeMember) {
         allowedTabs.push('committee');
       }
       if (!allowedTabs.includes(activeTab)) {
-        setActiveCategory('dashboard');
-        setActiveTab('portal');
+        navigateTo('portal', 'auditor-mgmt', { replace: true });
       }
-      // 비상근 심사원은 재무관리에서 세금계산서/수납(billing) 탭 접근 금지
+      // 일반 심사원은 재무관리에서 세금계산서/수납(billing) 탭 접근 금지
       if (financeSubTab === 'billing') {
-        setFinanceSubTab('settlements');
+        navigateTo('finance', 'general-admin', { financeSubTab: 'settlements', replace: true });
       }
     }
-  }, [currentUserRole, isNonPermanent, activeTab, financeSubTab, currentAuditorObj]);
+  }, [currentUserRole, isRegularAuditor, activeTab, financeSubTab, currentAuditorObj, navigateTo]);
+
+  // 브라우저 뒤로 가기 / 앞으로 가기 (popstate) 이벤트 핸들러 등록
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      let state = event.state;
+      if (!state && window.location.hash) {
+        state = parseHashState(window.location.hash);
+      }
+
+      if (state) {
+        setActiveCategory(state.category || getCategoryForTab(state.tab));
+        setActiveTab(state.tab);
+        setIsEditingReport(state.isEditingReport ?? false);
+        if (state.activeReportId) setActiveReportId(state.activeReportId);
+        if (state.financeSubTab) setFinanceSubTab(state.financeSubTab);
+      } else {
+        // 기본 시작 상태로 복귀
+        if (isRegularAuditor) {
+          setActiveCategory('auditor-mgmt');
+          setActiveTab('portal');
+          setIsEditingReport(false);
+        } else {
+          setActiveCategory('audit');
+          setActiveTab('calendar');
+          setIsEditingReport(false);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // 초기 마운트 시 현재 상태를 history.replaceState에 등록
+    const initialPayload = {
+      category: activeCategory,
+      tab: activeTab,
+      isEditingReport,
+      activeReportId,
+      financeSubTab,
+    };
+    const initialHash = buildHash(activeTab, isEditingReport, activeReportId, financeSubTab);
+    window.history.replaceState(initialPayload, '', initialHash);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isRegularAuditor]);
 
   // URL 파라미터 감지 (이메일 보안 링크 클릭 시 직행)
   React.useEffect(() => {
@@ -193,14 +364,15 @@ export function App() {
 
       if (mode === 'audit-entry' || tab === 'report' || tab === 'reports') {
         setIsAuthenticated(true);
-        setActiveCategory('audit');
-        setActiveTab('reports');
-        if (repId) setActiveReportId(repId);
-        setIsEditingReport(true);
         setIsEmailDirectEntry(true);
+        navigateTo('reports', 'audit', {
+          isEditingReport: true,
+          reportId: repId || 'rep-1',
+          replace: true
+        });
       }
     }
-  }, []);
+  }, [navigateTo]);
 
   // 긴급 알림 카운트 (D-30 이내)
   const urgentCount = mockContracts.filter(c => {
@@ -316,10 +488,10 @@ export function App() {
 
   // 심사보고서 목록에서 특정 보고서 상세 열기 (사용자 요구사항: 목록을 보고 클릭하여 세부 사항 열람)
   const handleOpenReportDetail = (reportId: string) => {
-    setActiveCategory('audit');
-    setActiveTab('reports');
-    setActiveReportId(reportId);
-    setIsEditingReport(true);
+    navigateTo('reports', 'audit', {
+      isEditingReport: true,
+      reportId: reportId
+    });
   };
 
   // 캘린더나 타 화면에서 보고서 열기
@@ -329,7 +501,11 @@ export function App() {
 
   // 심사보고서 목록으로 돌아가기
   const handleBackToReportList = () => {
-    setIsEditingReport(false);
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigateTo('reports', 'audit', { isEditingReport: false });
+    }
   };
 
   // 심사계획서 발송
@@ -673,13 +849,14 @@ export function App() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'reports') {
-            setIsEditingReport(false);
-          }
+          navigateTo(tab, activeCategory, {
+            isEditingReport: tab === 'reports' ? false : isEditingReport
+          });
         }}
         activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
+        setActiveCategory={(cat) => {
+          setActiveCategory(cat);
+        }}
         urgentAlertCount={urgentCount}
         currentUserRole={currentUserRole}
         onSelectUserRole={(role) => {
@@ -696,67 +873,11 @@ export function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Container - Expanded Full Width to eliminate wasted side margins */}
-      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4">
+      {/* Main Container - 85% Width for Balanced Layout & Comfortable Margins */}
+      <main className="flex-1 w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4 py-4">
         
-        {/* 사무국 심사보고서 적정성 검토 대기 알림 배너 */}
-        {!isNonPermanent && pendingSecretariatReviewCount > 0 && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs text-white flex items-center justify-center font-bold text-xl shrink-0 animate-pulse">
-                ⚠️
-              </div>
-              <div>
-                <div className="text-sm font-black flex items-center gap-2">
-                  <span>[사무국 심사보고서 적정성 검토 대기] {pendingSecretariatReviewCount}건의 보고서가 접수되었습니다.</span>
-                </div>
-                <div className="text-xs text-amber-100 mt-0.5">
-                  심사팀에서 작성을 마친 심사보고서의 4대 항목(심사범위, 부적합 조치, 회의록, 전자서명) 적정성을 검토해 주십시오. 승인 완료 시 인증심의위원회 안건으로 상정됩니다.
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setActiveCategory('audit');
-                setActiveTab('reports');
-                setIsEditingReport(false);
-              }}
-              className="px-4 py-2 bg-white text-amber-900 hover:bg-amber-50 rounded-xl text-xs font-extrabold shadow-sm transition whitespace-nowrap self-end sm:self-auto cursor-pointer"
-            >
-              보고서 검토하기 &rarr;
-            </button>
-          </div>
-        )}
-
-        {/* 비상근 심사원 보안 격리 모드 알림 배너 */}
-        {isNonPermanent && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
-                🛡️
-              </div>
-              <div>
-                <div className="text-sm font-extrabold text-amber-900 flex items-center gap-2">
-                  <span>[비상근 심사원 보안 격리 모드] {currentAuditorObj.name} ({currentAuditorObj.grade})</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
-                    권한 격리 적용 중
-                  </span>
-                </div>
-                <div className="text-xs text-amber-800 mt-0.5">
-                  심사원 본인에게 배정된 심사 일정, 담당 기업, 작성 보고서, 및 개인 심사비 정산원장(3.3% 원천징수)만 열람 가능합니다. (사무국 전체 계약/수납/300사 총괄 관리는 차단됨)
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <span className="text-xs font-bold text-amber-900 bg-white/90 px-3 py-1.5 rounded-xl border border-amber-300 shadow-2xs">
-                담당 기업: {visibleCompanies.length}개사 | 배정 보고서: {Object.keys(visibleReports).length}건
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* ========================================================= */}
-        {/* 1. 대시보드 (월간 달력 심사 일정 & 핵심 경영 지표) */}
+        {/* 1. 홈 / 월간 심사 일정 (로그인 랜딩 페이지) */}
         {/* ========================================================= */}
         {activeTab === 'calendar' && (
           <DashboardCalendar
@@ -765,6 +886,12 @@ export function App() {
             companies={companies}
             onOpenReport={handleOpenReport}
             onSendPlan={handleSendPlan}
+            onNavigateTab={(category, tab, subTab) => {
+              navigateTo(tab, category, {
+                isEditingReport: false,
+                financeSubTab: subTab
+              });
+            }}
           />
         )}
 
@@ -809,8 +936,7 @@ export function App() {
           <KabCalculator 
             isAdmin={currentUserRole === 'admin'} 
             onNavigateToContracts={() => {
-              setActiveCategory('audit');
-              setActiveTab('contracts');
+              navigateTo('contracts', 'audit');
             }}
           />
         )}
@@ -842,8 +968,7 @@ export function App() {
                 onSelectReport={handleOpenReportDetail}
                 onOpenIntegrations={() => {
                   if (!isNonPermanent) {
-                    setActiveCategory('audit');
-                    setActiveTab('integrations');
+                    navigateTo('integrations', 'audit');
                   }
                 }}
               />
@@ -931,7 +1056,7 @@ export function App() {
           />
         )}
 
-        {/* 4-2. 심사원 전용 포털 */}
+        {/* 4-2. 심사원 전용 포털 (나의 심사 관리 기업 목록 - 다가올 심사 순) */}
         {activeTab === 'portal' && currentAuditorObj && (
           <AuditorPortal
             currentAuditor={currentAuditorObj}
@@ -939,11 +1064,14 @@ export function App() {
             companies={companies}
             projects={projects}
             contracts={mockContracts}
+            settlements={settlements}
+            notices={auditorNotices}
             onOpenReport={handleOpenReport}
+            onNavigateToReports={() => {
+              navigateTo('reports', 'audit', { isEditingReport: false });
+            }}
             onNavigateToSettlement={() => {
-              setActiveCategory('general-admin');
-              setActiveTab('finance');
-              setFinanceSubTab('settlements');
+              navigateTo('finance', 'general-admin', { financeSubTab: 'settlements' });
             }}
             onRequestReassignment={handleRequestReassignment}
             onOpenEmailModal={handleOpenEmailModalWithPreset}
@@ -958,7 +1086,7 @@ export function App() {
           <div className="space-y-6 animate-in fade-in">
             <div className="flex items-center space-x-2 border-b border-slate-200 pb-3">
               <button
-                onClick={() => setFinanceSubTab('settlements')}
+                onClick={() => navigateTo('finance', 'general-admin', { financeSubTab: 'settlements' })}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
                   financeSubTab === 'settlements'
                     ? 'bg-slate-900 text-white shadow-sm'
@@ -969,7 +1097,7 @@ export function App() {
               </button>
               {!isNonPermanent && (
                 <button
-                  onClick={() => setFinanceSubTab('billing')}
+                  onClick={() => navigateTo('finance', 'general-admin', { financeSubTab: 'billing' })}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
                     financeSubTab === 'billing'
                       ? 'bg-slate-900 text-white shadow-sm'
@@ -1026,7 +1154,7 @@ export function App() {
 
       {/* Footer (okesg.com 사업자 및 플랫폼 정보 인용, 이용약관/개인정보처리방침 제외) */}
       <footer className="bg-slate-50 border-t border-slate-200 py-6 text-xs text-slate-500 no-print">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1.5 text-left">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-extrabold text-slate-800 text-sm tracking-tight">GMSCS</span>

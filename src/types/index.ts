@@ -42,16 +42,18 @@ export interface Company {
   createdAt: string;
 }
 
-export type AuditorAffiliation = '사무국직원' | '소속심사원' | '비상근심사원';
+export type AuditorAffiliation = '상근' | '비상근';
 
 export interface Auditor {
   id: string;
+  gmsNumber?: string; // GMS 심사원 등록번호 (예: GMS23001)
   name: string;
   mobile: string;
   email: string;
   grade: '선임심사원' | '정심사원' | '심사원보' | '검증심사원' | '기술전문가';
   status: '활동' | '휴식' | '자격만료임박';
-  affiliation: AuditorAffiliation; // 사무국 직원 / 소속 상근 / 비상근 구분
+  originType?: '상근' | '비상근'; // 원본 DB 구분: '상근' | '비상근'
+  affiliation: AuditorAffiliation; // 상근 / 비상근 구분 (4인만 상근)
   isSystemAdmin?: boolean; // 시스템 총괄 관리자 여부 (대표님 등)
   iafCodes: string[];
   registeredStandards: StandardCode[];

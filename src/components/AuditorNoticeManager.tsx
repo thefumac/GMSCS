@@ -40,8 +40,8 @@ export const AuditorNoticeManager: React.FC<AuditorNoticeManagerProps> = ({
 }) => {
   const currentAuditor = allAuditors.find(a => a.id === currentUserRole) || allAuditors[0];
   
-  // 사무국 직원 4인 여부 (대표이사, 부원장, 대리, 주임)
-  const isOfficeStaff = currentAuditor.affiliation === '사무국직원';
+  // 상근 4인 여부 (대표이사, 부원장, 대리, 주임)
+  const isOfficeStaff = currentAuditor.affiliation === '상근' || currentAuditor.isSystemAdmin;
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');

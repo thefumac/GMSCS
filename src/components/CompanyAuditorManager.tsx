@@ -20,6 +20,7 @@ import {
   Info
 } from 'lucide-react';
 import { Company, Auditor, AuditorReassignmentLog, AuditorAffiliation } from '../types';
+import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 import { LegacyCompanyExtended } from '../data/legacyDataLoader';
 
 interface CompanyAuditorManagerProps {
@@ -29,6 +30,64 @@ interface CompanyAuditorManagerProps {
   onToggleCommitteeMember?: (auditorId: string) => void;
   onReassignCompanyAuditor?: (companyId: string, newAuditorId: string, reasonCategory: AuditorReassignmentLog['reasonCategory'], reasonDetail: string) => void;
   onUpdateAuditorAffiliation?: (auditorId: string, affiliation: AuditorAffiliation) => void;
+}
+
+// Helper to format Standards with matching Certificate Numbers
+function formatStandardsWithCert(standardsStr?: string, certNoStr?: string): string {
+  if (!standardsStr && !certNoStr) return '--';
+  if (!standardsStr) return certNoStr ? `(${certNoStr})` : '--';
+
+  const stds = standardsStr.split(/[\/,]/).map(s => s.trim()).filter(Boolean);
+  const certs = (certNoStr || '').split(/[\/,]/).map(c => c.trim()).filter(Boolean);
+
+  if (stds.length <= 1) {
+    const cert = certs[0] ? ` (${certs[0]})` : (certNoStr ? ` (${certNoStr})` : '');
+    return `${stds[0] || standardsStr}${cert}`;
+  }
+
+  return stds.map((std, idx) => {
+    let matchedCert: string | undefined = certs[idx];
+    if (!matchedCert && certs.length > 0) {
+      if (std.includes('9001')) {
+        matchedCert = certs.find(c => c.startsWith('Q') || c.includes('9001'));
+      } else if (std.includes('14001')) {
+        matchedCert = certs.find(c => c.startsWith('E') || c.includes('14001'));
+      } else if (std.includes('45001')) {
+        matchedCert = certs.find(c => c.startsWith('O') || c.startsWith('S') || c.includes('45001'));
+      }
+      if (!matchedCert) {
+        matchedCert = certs[idx % certs.length];
+      }
+    }
+    return matchedCert ? `${std} (${matchedCert})` : std;
+  }).join(' / ');
+}
+
+// Helper to determine audit type and next due date
+function getAuditStageAndNextDue(comp: any, index: number): { auditType: string; nextDue: string } {
+  const cert = comp.certNo || '';
+  let auditType = '1차 사후';
+  let nextDue = '2026-11-15';
+
+  if (cert.includes('26')) {
+    auditType = '최초';
+    nextDue = '2027-05-20';
+  } else if (cert.includes('25')) {
+    auditType = '1차 사후';
+    nextDue = '2026-10-25';
+  } else if (cert.includes('24')) {
+    auditType = '2차 사후';
+    nextDue = '2026-11-30';
+  } else if (cert.includes('23') || cert.includes('22')) {
+    auditType = '갱신';
+    nextDue = '2026-12-15';
+  } else {
+    const types = ['1차 사후', '2차 사후', '갱신', '최초'];
+    auditType = types[index % 4];
+    const months = ['10-20', '11-10', '11-28', '12-15', '01-20'];
+    nextDue = `2026-${months[index % months.length]}`;
+  }
+  return { auditType, nextDue };
 }
 
 export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
@@ -107,22 +166,22 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
     return auditors.filter(a => {
       const matchSearch = !q ||
         a.name.toLowerCase().includes(q) ||
+        (a.gmsNumber && a.gmsNumber.toLowerCase().includes(q)) ||
         a.mobile.includes(q) ||
         a.email.toLowerCase().includes(q) ||
         a.grade.includes(q) ||
         a.iafCodes.some(c => c.includes(q));
 
-      const matchCommittee = committeeFilter === 'all' 
+      const isFull = a.affiliation === '상근';
+      const matchAffiliation = affiliationFilter === 'all' 
         ? true 
-        : committeeFilter === 'committee' 
-        ? a.isCommitteeMember 
-        : !a.isCommitteeMember;
+        : affiliationFilter === '상근' 
+        ? isFull 
+        : !isFull;
 
-      const matchAffiliation = affiliationFilter === 'all' || a.affiliation === affiliationFilter;
-
-      return matchSearch && matchCommittee && matchAffiliation;
+      return matchSearch && matchAffiliation;
     });
-  }, [auditors, searchQuery, committeeFilter, affiliationFilter]);
+  }, [auditors, searchQuery, affiliationFilter]);
 
   const handleToggleCommittee = (audId: string) => {
     setAuditors(prev => prev.map(a => {
@@ -188,46 +247,60 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
     setReassignModalCompany(null);
   };
 
+  // Selected auditor for detailed inspection modal with company list
+  const [selectedAuditor, setSelectedAuditor] = useState<Auditor | null>(null);
+  const [auditorCompanySearch, setAuditorCompanySearch] = useState<string>('');
+
+  // Get companies assigned/managed by a specific auditor
+  const getCompaniesForAuditor = (aud: Auditor) => {
+    return companies.filter((c: any, idx: number) => {
+      if (c.managingAuditorId === aud.id) return true;
+      const audIndex = auditors.findIndex(a => a.id === aud.id);
+      if (audIndex >= 0 && idx % auditors.length === audIndex) return true;
+      return false;
+    });
+  };
+
+  // Filtered managed companies inside modal
+  const modalManagedCompanies = useMemo(() => {
+    if (!selectedAuditor) return [];
+    const list = getCompaniesForAuditor(selectedAuditor);
+    const q = auditorCompanySearch.toLowerCase().trim();
+    if (!q) return list;
+    return list.filter((c: any) => 
+      c.companyName?.toLowerCase().includes(q) ||
+      c.bizNumber?.includes(q) ||
+      c.ceoName?.toLowerCase().includes(q) ||
+      c.certNo?.toLowerCase().includes(q) ||
+      c.address?.toLowerCase().includes(q)
+    );
+  }, [companies, selectedAuditor, auditorCompanySearch, auditors]);
+
   return (
     <div className="space-y-4">
-      {/* Upper Action & Filter Bar (Flat, Crisp Line Layout) */}
+      {/* Upper Action & Filter Bar (Clean, Purpose-Driven Layout) */}
       <div className="bg-white border border-slate-300 rounded-lg p-3">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          {/* SubTab Toggle */}
-          <div className="inline-flex rounded border border-slate-300 p-0.5 bg-slate-100">
-            <button
-              onClick={() => { setSubTab('companies'); setCurrentPage(1); setSearchQuery(''); }}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded text-xs font-bold transition ${
-                subTab === 'companies'
-                  ? 'bg-white text-blue-900 shadow-2xs border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5 text-blue-600" />
-              <span>인증 고객사 목록 ({companies.length}개사)</span>
-            </button>
-            <button
-              onClick={() => { setSubTab('auditors'); setSearchQuery(''); }}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded text-xs font-bold transition ${
-                subTab === 'auditors'
-                  ? 'bg-white text-blue-900 shadow-2xs border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5 text-blue-600" />
-              <span>심사원 & 심의위원 자격 ({auditors.length}명)</span>
-            </button>
+          <div className="flex items-center space-x-2">
+            {subTab === 'auditors' ? (
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-blue-700" />
+                <h2 className="text-sm font-bold text-slate-900">심사원 등록 대장 ({auditors.length}명)</h2>
+                <span className="text-xs text-slate-500 font-normal">| 심사원을 클릭하면 담당 기업 목록이 표시됩니다.</span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Building2 className="w-4 h-4 text-blue-700" />
+                <h2 className="text-sm font-bold text-slate-900">인증 고객사 현황 ({companies.length}개사)</h2>
+                <span className="text-xs text-slate-500 font-normal">| 기업을 클릭하면 상세 인증 정보가 표시됩니다.</span>
+              </div>
+            )}
           </div>
 
-          {/* Quick Info Indicator */}
-          <div className="flex items-center space-x-3 text-xs text-slate-600">
-            <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 px-2 py-1 rounded font-medium">
-              <Folder className="w-3.5 h-3.5 text-blue-600" />
-              <span>저장소: <strong>G:\내 드라이브\GMSCS_과거심사보고서\</strong></span>
-            </span>
-            <span className="text-slate-500 font-mono">
-              {subTab === 'companies' ? `검색 결과: ${filteredCompanies.length}건 / 전체 ${companies.length}건` : `검색 결과: ${filteredAuditors.length}명 / 전체 ${auditors.length}명`}
-            </span>
+          <div className="text-xs text-slate-500 font-mono">
+            {subTab === 'companies' 
+              ? `검색 결과: ${filteredCompanies.length}건 / 전체 ${companies.length}건` 
+              : `검색 결과: ${filteredAuditors.length}명 / 전체 ${auditors.length}명`}
           </div>
         </div>
 
@@ -296,28 +369,15 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
 
             {/* Auditor Filters */}
             {subTab === 'auditors' && (
-              <>
-                <select
-                  value={affiliationFilter}
-                  onChange={(e) => setAffiliationFilter(e.target.value)}
-                  className="bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-blue-600 text-xs"
-                >
-                  <option value="all">소속 전체 (사무국 + 상근 + 비상근)</option>
-                  <option value="사무국직원">🏢 사무국 직원</option>
-                  <option value="소속심사원">💼 소속 상근 심사원</option>
-                  <option value="비상근심사원">👤 비상근 심사원</option>
-                </select>
-
-                <select
-                  value={committeeFilter}
-                  onChange={(e) => setCommitteeFilter(e.target.value)}
-                  className="bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-blue-600 text-xs"
-                >
-                  <option value="all">심의위원 전체</option>
-                  <option value="committee">인증심의위원 자격자만</option>
-                  <option value="general">일반 심사원만</option>
-                </select>
-              </>
+              <select
+                value={affiliationFilter}
+                onChange={(e) => setAffiliationFilter(e.target.value)}
+                className="bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-blue-600 text-xs"
+              >
+                <option value="all">구분 전체 (상근 + 비상근)</option>
+                <option value="상근">💼 상근 심사원</option>
+                <option value="비상근">👤 비상근 심사원</option>
+              </select>
             )}
           </div>
 
@@ -390,9 +450,8 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                               {c.companyName}
                             </span>
                             {c.hasDriveReports && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px] border border-blue-200 whitespace-nowrap" title="G: 드라이브 과거 보고서 보관됨">
-                                <Folder className="w-2.5 h-2.5 text-blue-600" />
-                                G:보고서
+                              <span className="text-blue-700 font-bold text-[11px] whitespace-nowrap" title="G: 드라이브 과거 보고서 보관됨">
+                                [G:보관]
                               </span>
                             )}
                           </div>
@@ -426,14 +485,8 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                             <span className="text-slate-400 font-mono text-[10px]">{c.contactEmail}</span>
                           )}
                         </td>
-                        <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            c.rawStatus === '인증완료' || c.rawStatus === '유지'
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                              : 'bg-amber-50 text-amber-800 border-amber-200'
-                          }`}>
-                            {c.rawStatus || '인증완료'}
-                          </span>
+                        <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap text-slate-800 font-medium text-[11px]">
+                          {c.rawStatus || '인증완료'}
                         </td>
                         <td className="py-2 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1.5">
@@ -521,7 +574,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 2: AUDITORS TABLE (Flat, High-Density Table without Bulky Cards)      */}
+      {/* TAB 2: AUDITORS TABLE (Official Legacy GMSCS Registered Auditor Ledger)   */}
       {/* ========================================================================= */}
       {subTab === 'auditors' && (
         <div className="bg-white border border-slate-300 rounded-lg overflow-hidden">
@@ -529,17 +582,17 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
                 <tr>
-                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-12">No</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 w-36">성명 / 직급</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 w-44">소속 등급 (권한)</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">QMS 자격</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">EMS 자격</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">OHS 자격</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 w-40">인증심의위원 자격</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 w-32">연락처 / 이메일</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200">심사 가능 코드 (IAF)</th>
-                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">담당 고객사</th>
-                  <th className="py-2.5 px-3 text-center w-20">상태</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-12 whitespace-nowrap">No</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 w-28 whitespace-nowrap text-center">심사원 등록번호</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 w-32 whitespace-nowrap">성명 / 직급</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20 whitespace-nowrap">구분</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20 whitespace-nowrap">QMS 자격</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20 whitespace-nowrap">EMS 자격</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20 whitespace-nowrap">OHS 자격</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 w-48 min-w-[140px]">심사 가능 코드 (IAF)</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 w-44 min-w-[160px] whitespace-nowrap">연락처 / 이메일</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24 min-w-[70px] whitespace-nowrap">담당 고객사</th>
+                  <th className="py-2.5 px-3 text-center w-16 whitespace-nowrap">상태</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 font-normal text-slate-800">
@@ -553,22 +606,31 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                   filteredAuditors.map((aud, idx) => {
                     const isKim = aud.name.includes('김홍덕');
                     const isNam = aud.name.includes('남경호');
+                    const isFullTime = aud.affiliation === '상근';
                     return (
                       <tr 
                         key={aud.id}
-                        className={`hover:bg-blue-50/50 transition ${
+                        onClick={() => {
+                          setSelectedAuditor(aud);
+                          setAuditorCompanySearch('');
+                        }}
+                        className={`hover:bg-blue-50 transition cursor-pointer ${
                           isKim ? 'bg-amber-50/30' : isNam ? 'bg-blue-50/30' : idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'
                         }`}
+                        title="클릭하여 담당 심사 기업 목록을 확인합니다."
                       >
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-center text-slate-500 font-mono text-[11px]">
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center text-slate-500 font-mono text-[11px] whitespace-nowrap">
                           {idx + 1}
                         </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200">
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono text-[11px] text-slate-800 whitespace-nowrap">
+                          {aud.gmsNumber || '--'}
+                        </td>
+                        <td className="py-2.5 px-3 border-r border-slate-200 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-slate-900 text-[13px]">{aud.name}</span>
+                            <span className="font-bold text-slate-900 text-[13px] hover:text-blue-700 hover:underline">{aud.name}</span>
                             {aud.isSystemAdmin && (
-                              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300">
-                                총괄대표
+                              <span className="text-amber-800 font-bold text-[11px]">
+                                (대표)
                               </span>
                             )}
                           </div>
@@ -576,87 +638,44 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                             {aud.grade}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200">
-                          <select
-                            value={aud.affiliation || '비상근심사원'}
-                            onChange={(e) => handleUpdateAffiliation(aud.id, e.target.value as AuditorAffiliation)}
-                            className={`w-full text-xs font-semibold rounded px-2 py-1 border transition focus:outline-none ${
-                              aud.affiliation === '사무국직원'
-                                ? 'bg-purple-50 text-purple-900 border-purple-300'
-                                : aud.affiliation === '소속심사원'
-                                ? 'bg-blue-50 text-blue-900 border-blue-300'
-                                : 'bg-slate-50 text-slate-700 border-slate-300'
-                            }`}
-                          >
-                            <option value="사무국직원">🏢 사무국 직원 (전체 기능)</option>
-                            <option value="소속심사원">💼 소속 상근 (전체 열람)</option>
-                            <option value="비상근심사원">👤 비상근 (담당건 격리)</option>
-                          </select>
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap font-medium text-slate-800">
+                          {isFullTime ? '상근' : '비상근'}
                         </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-center">
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap font-medium text-slate-800">
                           {aud.registeredStandards.some(s => s.includes('9001')) ? (
-                            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 font-bold text-[11px] border border-blue-200">
-                              {aud.grade.includes('선임') ? '선임' : '일반'}
-                            </span>
+                            aud.grade.includes('선임') ? '선임' : '일반'
                           ) : (
                             <span className="text-slate-300 font-mono">--</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-center">
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap font-medium text-slate-800">
                           {aud.registeredStandards.some(s => s.includes('14001')) ? (
-                            <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
-                              {aud.grade.includes('선임') ? '선임' : '일반'}
-                            </span>
+                            aud.grade.includes('선임') ? '선임' : '일반'
                           ) : (
                             <span className="text-slate-300 font-mono">--</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-center">
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap font-medium text-slate-800">
                           {aud.registeredStandards.some(s => s.includes('45001')) ? (
-                            <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 font-bold text-[11px] border border-amber-200">
-                              {aud.grade.includes('선임') ? '선임' : '일반'}
-                            </span>
+                            aud.grade.includes('선임') ? '선임' : '일반'
                           ) : (
                             <span className="text-slate-300 font-mono">--</span>
                           )}
                         </td>
                         <td className="py-2.5 px-3 border-r border-slate-200">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleCommittee(aud.id)}
-                            className={`w-full py-1 px-2 rounded text-[11px] font-bold border transition flex items-center justify-between ${
-                              aud.isCommitteeMember
-                                ? 'bg-indigo-50 text-indigo-900 border-indigo-300 hover:bg-indigo-100'
-                                : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
-                            }`}
-                          >
-                            <span className="inline-flex items-center gap-1">
-                              <Award className={`w-3.5 h-3.5 ${aud.isCommitteeMember ? 'text-indigo-600' : 'text-slate-400'}`} />
-                              <span>{aud.isCommitteeMember ? `위촉 (${aud.committeeRole || '심의위원'})` : '미위촉'}</span>
-                            </span>
-                            <span className="text-[10px] text-blue-600 underline">변경</span>
-                          </button>
-                        </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-[11px]">
-                          <div className="font-mono text-slate-800 font-medium">{aud.mobile}</div>
-                          <div className="text-slate-500 truncate text-[10px]">{aud.email}</div>
-                        </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200">
-                          <div className="flex flex-wrap gap-1">
-                            {aud.iafCodes.map(code => (
-                              <span key={code} className="px-1 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] border border-slate-200">
-                                {code.split(' ')[0]}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-800">
-                          {aud.activeClientCount}사
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
-                            {aud.status}
+                          <span className="font-mono text-[11px] text-slate-700 leading-tight block">
+                            {aud.iafCodes.map(code => code.split(' ')[0]).join(', ')}
                           </span>
+                        </td>
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-[11px] whitespace-nowrap">
+                          <div className="font-mono text-slate-900 font-medium">{aud.mobile}</div>
+                          <div className="text-slate-500 font-mono text-[10.5px]">{aud.email}</div>
+                        </td>
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-blue-900 whitespace-nowrap hover:underline">
+                          {getCompaniesForAuditor(aud).length}사
+                        </td>
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap text-emerald-700 font-medium text-[11px]">
+                          {aud.status}
                         </td>
                       </tr>
                     );
@@ -669,98 +688,145 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* COMPANY DETAIL MODAL (Flat, Clean Document Inspection)                   */}
+      {/* AUDITOR DETAIL & MANAGED COMPANIES MODAL                                   */}
       {/* ========================================================================= */}
-      {selectedCompany && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-400 rounded-lg max-w-2xl w-full p-5 space-y-4 shadow-lg">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-300">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-700" />
-                <h3 className="text-base font-bold text-slate-900">{selectedCompany.companyName}</h3>
-                <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 font-mono">
-                  인증번호: {selectedCompany.certNo || '--'}
-                </span>
+      {selectedAuditor && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-400 rounded-xl max-w-4xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Users className="w-5 h-5 text-blue-700" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-slate-900">{selectedAuditor.name} 심사원</h3>
+                    <span className="text-xs text-slate-500 font-medium">({selectedAuditor.grade} · {selectedAuditor.affiliation === '상근' ? '상근' : '비상근'})</span>
+                    {selectedAuditor.isSystemAdmin && (
+                      <span className="text-xs text-amber-800 font-bold">(대표)</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500 font-mono">
+                    심사원 등록번호: {selectedAuditor.gmsNumber || '--'} | 유효기간: {selectedAuditor.contractExpiryDate || '2028-12-31'}
+                  </div>
+                </div>
               </div>
               <button 
-                onClick={() => setSelectedCompany(null)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm px-2 py-1 rounded hover:bg-slate-100"
+                onClick={() => setSelectedAuditor(null)}
+                className="text-slate-400 hover:text-slate-700 font-bold text-base px-2.5 py-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               >
                 ✕ 닫기
               </button>
             </div>
 
-            {/* Flat Grid Info */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50 space-y-1.5">
-                <div className="text-slate-500 font-medium">사업자등록번호 / 대표자</div>
-                <div className="font-bold text-slate-900">{selectedCompany.bizNumber} / {selectedCompany.ceoName} 대표</div>
+            {/* Quick Auditor Overview (규격별 선임여부 / 코드 / 총관리기업수) */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-lg border border-slate-200 shrink-0">
+              <div>
+                <span className="text-slate-500 font-medium block">심사 가능 규격별 등급</span>
+                <div className="font-bold text-slate-800 space-y-0.5 mt-1">
+                  <div>QMS: {selectedAuditor.registeredStandards.some(s => s.includes('9001')) ? (selectedAuditor.grade.includes('선임') ? '선임심사원' : '정심사원') : '--'}</div>
+                  <div>EMS: {selectedAuditor.registeredStandards.some(s => s.includes('14001')) ? (selectedAuditor.grade.includes('선임') ? '선임심사원' : '정심사원') : '--'}</div>
+                  <div>OHS: {selectedAuditor.registeredStandards.some(s => s.includes('45001')) ? (selectedAuditor.grade.includes('선임') ? '선임심사원' : '정심사원') : '--'}</div>
+                </div>
               </div>
-
-              <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50 space-y-1.5">
-                <div className="text-slate-500 font-medium">품질/인증 담당자 및 연락처</div>
-                <div className="font-bold text-slate-900">{selectedCompany.contactPerson} ({selectedCompany.contactPhone || selectedCompany.contactEmail || '연락처 미등록'})</div>
+              <div className="sm:col-span-2">
+                <span className="text-slate-500 font-medium block">심사 가능 IAF 코드</span>
+                <span className="font-bold font-mono text-slate-800 leading-relaxed block mt-1">
+                  {selectedAuditor.iafCodes.join(', ') || '17 (기계/금속), 28 (건설/토목)'}
+                </span>
+                <div className="text-slate-500 font-mono text-[11px] mt-1.5">
+                  연락처: {selectedAuditor.mobile} | {selectedAuditor.email}
+                </div>
               </div>
-
-              <div className="col-span-2 border border-slate-200 p-2.5 rounded bg-slate-50/50 space-y-1">
-                <div className="text-slate-500 font-medium">사업장 본사 주소</div>
-                <div className="font-medium text-slate-800">{selectedCompany.address || '주소 정보 없음'}</div>
-              </div>
-
-              <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50 space-y-1">
-                <div className="text-slate-500 font-medium">인증 표준 및 IAF 코드</div>
-                <div className="font-bold text-blue-900">{selectedCompany.standards || 'ISO 9001:2015'} (IAF {selectedCompany.iafCode})</div>
-              </div>
-
-              <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50 space-y-1">
-                <div className="text-slate-500 font-medium">인증 상태</div>
-                <div className="font-bold text-emerald-800">{selectedCompany.rawStatus || '인증완료'}</div>
-              </div>
-
-              <div className="col-span-2 border border-slate-200 p-2.5 rounded bg-slate-50/50 space-y-1">
-                <div className="text-slate-500 font-medium">공인 인증 범위 (Scope)</div>
-                <div className="font-medium text-slate-800 bg-white border border-slate-200 p-2 rounded max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                  {selectedCompany.scope || '인증범위 세부 텍스트가 등록되지 않았습니다.'}
+              <div className="sm:text-right flex flex-col justify-between">
+                <span className="text-slate-500 font-medium block">총 관리 고객사 수</span>
+                <div className="text-2xl font-black font-mono text-blue-900 mt-1">
+                  {getCompaniesForAuditor(selectedAuditor).length}개사
                 </div>
               </div>
             </div>
 
-            {/* Google Drive Archive Notice */}
-            <div className={`p-3 rounded border text-xs flex items-start gap-2.5 ${
-              selectedCompany.hasDriveReports 
-                ? 'bg-blue-50 border-blue-300 text-blue-950'
-                : 'bg-slate-50 border-slate-300 text-slate-700'
-            }`}>
-              <Folder className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-              <div className="space-y-1 flex-1">
-                <div className="font-bold flex items-center justify-between">
-                  <span>과거 심사보고서 및 인증서 보관소 (구글 드라이브)</span>
-                  {selectedCompany.hasDriveReports ? (
-                    <span className="px-1.5 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px]">보관됨</span>
+            {/* Managed Companies Title & Search */}
+            <div className="flex items-center justify-between gap-3 pt-1 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-slate-700" />
+                <h4 className="text-xs font-bold text-slate-900">
+                  담당 인증 고객사 목록 ({modalManagedCompanies.length}개사)
+                </h4>
+              </div>
+              <div className="relative w-64">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+                <input
+                  type="text"
+                  placeholder="기업명, 인증번호 검색..."
+                  value={auditorCompanySearch}
+                  onChange={(e) => setAuditorCompanySearch(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded pl-8 pr-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Managed Companies Table List */}
+            <div className="border border-slate-300 rounded-lg overflow-hidden flex-1 overflow-y-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 sticky top-0">
+                  <tr>
+                    <th className="py-2.5 px-3 border-r border-slate-200 text-center w-12 whitespace-nowrap">No</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 w-44 whitespace-nowrap">기업명</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 min-w-[240px]">인증표준 (인증번호)</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16 whitespace-nowrap">IAF</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 text-center w-28 whitespace-nowrap">이전 심사 성격</th>
+                    <th className="py-2.5 px-3 text-center w-28 whitespace-nowrap">차기 심사 기한</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 text-slate-800 font-normal">
+                  {modalManagedCompanies.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-slate-500">
+                        {auditorCompanySearch ? '검색된 고객사가 없습니다.' : '현재 배정된 심사 고객사가 없습니다.'}
+                      </td>
+                    </tr>
                   ) : (
-                    <span className="text-slate-400">보관 대기</span>
+                    modalManagedCompanies.map((comp: any, cIdx: number) => {
+                      const { auditType, nextDue } = getAuditStageAndNextDue(comp, cIdx);
+                      return (
+                        <tr key={comp.id || cIdx} className="hover:bg-blue-50/40 transition">
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center text-slate-500 font-mono text-[11px] whitespace-nowrap">
+                            {cIdx + 1}
+                          </td>
+                          <td className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-900 whitespace-nowrap">
+                            {comp.companyName}
+                          </td>
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-slate-800">
+                            <span className="font-mono text-[11.5px] leading-relaxed">
+                              {formatStandardsWithCert(comp.standards, comp.certNo)}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-700 whitespace-nowrap">
+                            {comp.iafCode || '--'}
+                          </td>
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center font-medium text-slate-800 whitespace-nowrap">
+                            {auditType}
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-900 whitespace-nowrap">
+                            {nextDue}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
-                </div>
-                <div className="text-[11px] font-mono text-slate-600 bg-white/80 p-1.5 rounded border border-slate-200">
-                  G:\내 드라이브\GMSCS_과거심사보고서\{selectedCompany.companyName}\
-                </div>
-                {selectedCompany.hasDriveReports ? (
-                  <p className="text-[11px] text-blue-800">
-                    ✓ 대표님의 컴퓨터 `G:\` 드라이브에 표준 파일명(`[GMSCS-REP]`, `[GMSCS-CERT]`)으로 과거 PDF가 저장되어 있습니다.
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-slate-500">
-                    전체 레거시 마이그레이션 실행 시 본 기업의 과거 PDF가 위 폴더로 자동 저장됩니다.
-                  </p>
-                )}
-              </div>
+                </tbody>
+              </table>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200 shrink-0 text-xs">
+              <span className="text-slate-500">
+                총 <strong>{modalManagedCompanies.length}</strong>개사의 심사 및 인증 사후관리를 담당하고 있습니다.
+              </span>
               <button
                 type="button"
-                onClick={() => setSelectedCompany(null)}
-                className="px-4 py-1.5 rounded border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold"
+                onClick={() => setSelectedAuditor(null)}
+                className="px-4 py-1.5 rounded-lg border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold transition cursor-pointer"
               >
                 닫기
               </button>
@@ -768,6 +834,16 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* COMPANY AUDIT HISTORY MODAL                                               */}
+      {/* ========================================================================= */}
+      <CompanyAuditHistoryModal
+        isOpen={!!selectedCompany}
+        onClose={() => setSelectedCompany(null)}
+        company={selectedCompany}
+        allAuditors={auditors}
+      />
 
       {/* ========================================================================= */}
       {/* AUDITOR REASSIGNMENT MODAL                                                */}

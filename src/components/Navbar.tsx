@@ -9,13 +9,10 @@ import {
   HardDrive, 
   Layers, 
   ShieldCheck, 
-  Server, 
-  Usb, 
   Mail, 
   Award, 
   DollarSign, 
   UserCheck, 
-  LayoutDashboard, 
   CheckCircle2, 
   FileCheck,
   LogOut,
@@ -26,22 +23,20 @@ import {
 import { Auditor } from '../types';
 
 export type MainCategory = 
-  | 'dashboard'
   | 'certification'
   | 'audit'
   | 'auditor-mgmt'
   | 'general-admin';
 
 export type ActiveTab = 
-  // 대시보드
-  | 'calendar'
   // 인증관리
-  | 'committee' 
   | 'companies' 
+  | 'committee' 
   | 'surveillance' 
   | 'kab' 
   // 심사관리
-  | 'contracts' // 심사 계약 관리 (신규 & 유지/추가/변경)
+  | 'calendar'
+  | 'contracts'
   | 'reports' 
   | 'projects' 
   | 'integrations'
@@ -49,10 +44,9 @@ export type ActiveTab =
   | 'auditors' 
   | 'portal'
   // 일반관리
-  | 'notices' // 심사원 공지사항 관리 (사무국 4인 공지 등록 & 파일/저장링크 배포)
-  | 'finance' // 재무관리 (정산 + 수납/계산서)
-  | 'data';   // 자료관리 (백업 + 서버설정)
-
+  | 'finance'
+  | 'data'
+  | 'notices';
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -77,7 +71,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveCategory,
   urgentAlertCount,
   currentUserRole,
-  onSelectUserRole,
   allAuditors,
   pendingAdjustmentCount = 1,
   pendingCommitteeCount = 2,
@@ -86,82 +79,35 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout
 }) => {
   const currentAuditorObj = allAuditors.find(a => a.id === currentUserRole) || allAuditors[0];
-  const isExternalAuditor = currentAuditorObj?.affiliation === '비상근심사원';
-  const isStaffOrFullTime = !isExternalAuditor;
+  const isStaff = currentAuditorObj?.isSystemAdmin || currentAuditorObj?.affiliation === '상근' || currentUserRole === 'admin';
+  const isRegularAuditor = !isStaff;
 
-  // 1-Tier: 상위 카테고리 정의 (비상근 심사원 vs 사무국/상근 심사원 분기)
-  const mainCategories = isExternalAuditor ? [
-    { 
-      id: 'auditor-mgmt' as MainCategory, 
-      label: '나의 심사업무(포털)', 
-      icon: UserCheck,
-      defaultTab: 'portal' as ActiveTab,
-      description: '담당 관리기업·심사일정·이해상충'
-    },
-    { 
-      id: 'audit' as MainCategory, 
-      label: '나의 심사보고서', 
-      icon: FileText,
-      defaultTab: 'reports' as ActiveTab,
-      description: '배정 심사보고서 작성 및 서명'
-    },
-    { 
-      id: 'general-admin' as MainCategory, 
-      label: '나의 심사비 정산', 
-      icon: DollarSign,
-      defaultTab: 'finance' as ActiveTab,
-      description: '심사 수당 정산 명세서 및 3.3% 원천징수'
-    },
-    ...(currentAuditorObj.isCommitteeMember ? [{
-      id: 'certification' as MainCategory, 
-      label: '인증심의위원회', 
-      icon: Award,
-      defaultTab: 'committee' as ActiveTab,
-      badge: pendingCommitteeCount,
-      badgeColor: 'bg-indigo-600',
-      description: '심의위원 안건 의결'
-    }] : []),
-    { 
-      id: 'dashboard' as MainCategory, 
-      label: '심사 캘린더', 
-      icon: LayoutDashboard,
-      defaultTab: 'calendar' as ActiveTab,
-      description: '월간 심사 일정'
-    },
-  ] : [
-    { 
-      id: 'dashboard' as MainCategory, 
-      label: '대시보드', 
-      icon: LayoutDashboard,
-      defaultTab: 'calendar' as ActiveTab,
-      description: '월간 일정 달력 및 경영 현황'
-    },
+  // 1-Tier: 상위 카테고리 정의 (상근 4인 전용 vs 비상근 심사원)
+  const mainCategories: { id: MainCategory; label: string; icon: React.ComponentType<{ className?: string }>; defaultTab: ActiveTab; badge?: number; badgeColor?: string; description: string }[] = isRegularAuditor ? [] : [
     { 
       id: 'certification' as MainCategory, 
       label: '인증관리', 
-      icon: ShieldCheck,
-      defaultTab: 'committee' as ActiveTab,
-      badge: (pendingCommitteeCount || 0) + (urgentAlertCount || 0),
-      badgeColor: 'bg-indigo-600',
-      description: '심의위원회·인증현황·사후만료·KAB인정'
+      icon: Award,
+      defaultTab: 'companies' as ActiveTab,
+      description: '고객사현황·심의위원회·사후만료·KAB인정'
     },
     { 
       id: 'audit' as MainCategory, 
       label: '심사관리', 
       icon: Briefcase,
-      defaultTab: 'contracts' as ActiveTab,
+      defaultTab: 'calendar' as ActiveTab,
       badge: ((pendingAdjustmentCount || 0) + (pendingSecretariatReviewCount || 0)) > 0 
         ? ((pendingAdjustmentCount || 0) + (pendingSecretariatReviewCount || 0)) 
         : undefined,
       badgeColor: 'bg-amber-600',
-      description: '심사계약·보고서·일정진행·OK ESG'
+      description: '월간일정·심사계약·보고서·OK ESG'
     },
     { 
       id: 'auditor-mgmt' as MainCategory, 
       label: '심사원 관리', 
       icon: Users,
       defaultTab: 'auditors' as ActiveTab,
-      description: '자격코드·심의위원·심사원 전용포털'
+      description: '자격대장·심의위원·심사원 포털'
     },
     { 
       id: 'general-admin' as MainCategory, 
@@ -182,38 +128,29 @@ export const Navbar: React.FC<NavbarProps> = ({
     onClick?: () => void;
   }
 
-  const subMenusByCategory: Record<MainCategory, SubMenuItem[]> = isExternalAuditor ? {
-    'dashboard': [
-      { id: 'calendar', label: '나의 배정 심사 일정 달력', icon: Calendar },
-    ],
-    'certification': [
-      { id: 'committee', label: '인증심의위원회', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' },
-      { id: 'kab', label: 'KAB 인정기준 조회', icon: Calculator },
+  const subMenus: Record<MainCategory, SubMenuItem[]> = isRegularAuditor ? {
+    'auditor-mgmt': [
+      { id: 'portal', label: '나의 관리 대상 기업 목록 (다가올 심사 순)', icon: UserCheck },
     ],
     'audit': [
-      { id: 'reports', label: '나의 심사 보고서 관리', icon: FileText },
-      { id: 'projects', label: '나의 심사 진행현황', icon: CheckCircle2 },
-      { id: 'email-dispatch', label: '스마트 메일 발송', icon: Mail, onClick: onOpenEmailModal },
-    ],
-    'auditor-mgmt': [
-      { id: 'portal', label: '나의 관리업체 & 배정 일정 & 이해상충 변경', icon: UserCheck },
+      { id: 'reports', label: '나의 심사보고서 (작성 및 전자서명)', icon: FileText },
+      { id: 'email-dispatch', label: '심사계획서/공문 메일 발송', icon: Mail, onClick: onOpenEmailModal },
     ],
     'general-admin': [
-      { id: 'notices', label: '심사원 공지사항 (사무국 지침·서식 다운로드)', icon: Megaphone },
       { id: 'finance', label: '나의 심사비 정산 명세서 (3.3% 원천징수)', icon: DollarSign },
-      { id: 'email-dispatch', label: '스마트 메일 발송', icon: Mail, onClick: onOpenEmailModal },
-    ]
-  } : {
-    'dashboard': [
-      { id: 'calendar', label: '월간 심사 일정 달력', icon: Calendar },
     ],
+    'certification': currentAuditorObj.isCommitteeMember ? [
+      { id: 'committee', label: '인증심의위원회 안건 의결', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' }
+    ] : [],
+  } : {
     'certification': [
-      { id: 'committee', label: '인증심의위원회', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' },
       { id: 'companies', label: '고객사 인증현황 (572개사 전수)', icon: Building2 },
+      { id: 'committee', label: '인증심의위원회', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' },
       { id: 'surveillance', label: '사후 / 만료 관리 (D-Day)', icon: BellRing, badge: urgentAlertCount, badgeColor: 'bg-rose-600' },
       { id: 'kab', label: 'KAB 인정기관 관리 (공인기준·MD)', icon: Calculator },
     ],
     'audit': [
+      { id: 'calendar', label: '월간 심사 일정 (달력 & 핵심지표)', icon: Calendar },
       { id: 'contracts', label: '심사 계약 관리 (신규·유지·추가·변경)', icon: FileCheck, badge: pendingAdjustmentCount, badgeColor: 'bg-amber-600' },
       { 
         id: 'reports', 
@@ -231,9 +168,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       { id: 'portal', label: '심사원 전용 포털 (배정업체·일정·이해상충)', icon: UserCheck },
     ],
     'general-admin': [
-      { id: 'notices', label: '심사원 공지사항 관리 (사무국 4인 공지 등록·파일 링크)', icon: Megaphone },
       { id: 'finance', label: '재무관리 (심사비용 수납 & 심사원 정산원장)', icon: DollarSign },
       { id: 'data', label: '자료관리 (주서버 & 외장 USB 백업·설정)', icon: HardDrive },
+      { id: 'notices', label: '심사원 공지사항 (공지 등록·서식 배포)', icon: Megaphone },
       { id: 'email-dispatch', label: '스마트 메일 발송 센터', icon: Mail, onClick: onOpenEmailModal },
     ]
   };
@@ -247,7 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const currentSubItems = subMenusByCategory[activeCategory] || [];
+  const currentSubItems = subMenus[activeCategory] || [];
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">
@@ -256,18 +193,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 1. 시스템 타이틀 영역 (Top System Bar) */}
       {/* ========================================================================= */}
       <div className="border-b border-slate-200 bg-white">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4">
           <div className="flex items-center justify-between h-16">
             
             {/* Logo & Platform Name */}
             <div 
               className="flex items-center space-x-3 cursor-pointer group" 
               onClick={() => {
-                if (isExternalAuditor) {
+                if (isRegularAuditor) {
                   setActiveCategory('auditor-mgmt');
                   setActiveTab('portal');
                 } else {
-                  setActiveCategory('dashboard');
+                  setActiveCategory('audit');
                   setActiveTab('calendar');
                 }
               }}
@@ -286,74 +223,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* 주서버 및 외장 백업 상태 표시등 (버튼 형태가 아닌 정교한 LED 상태 표시등) */}
-            <div className="hidden md:flex items-center space-x-3 bg-slate-50 border border-slate-200/90 px-3.5 py-1.5 rounded-full shadow-2xs">
-              <div className="flex items-center space-x-2 text-slate-700">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <Server className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-[11px] font-bold text-slate-700">주서버 정상</span>
-              </div>
-              
-              <span className="text-slate-300 font-light">|</span>
-              
-              <div className="flex items-center space-x-2 text-slate-700">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                </span>
-                <Usb className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-[11px] font-bold text-slate-700">외장 USB 백업 연결</span>
-              </div>
-            </div>
-
-            {/* Right: Current User & Role Switcher + Logout Button */}
+            {/* Right: Current User Info + Logout Button */}
             <div className="flex items-center space-x-3">
-              <div className="text-right hidden sm:block">
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  접속 계정
-                </div>
-                <div className="text-xs font-black text-slate-800 flex items-center gap-1 justify-end">
-                  {currentAuditorObj?.isSystemAdmin && <span>👑</span>}
-                  <span>{currentAuditorObj?.name}</span>
-                  <span className="text-slate-400 font-normal text-[11px]">({currentAuditorObj?.grade})</span>
-                </div>
+              <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-full shadow-2xs">
+                {currentAuditorObj?.isSystemAdmin ? (
+                  <span className="text-amber-600 font-bold text-xs flex items-center gap-1">
+                    👑 {currentAuditorObj.name} (상근)
+                  </span>
+                ) : (
+                  <span className="text-slate-800 font-bold text-xs flex items-center gap-1">
+                    👤 {currentAuditorObj?.name} ({currentAuditorObj?.grade} · {currentAuditorObj?.affiliation === '상근' ? '상근' : '비상근'})
+                  </span>
+                )}
               </div>
-
-              {/* Role Switcher Select */}
-              <select
-                value={currentUserRole}
-                onChange={(e) => {
-                  const role = e.target.value;
-                  onSelectUserRole(role);
-                  const aud = allAuditors.find(a => a.id === role);
-                  if (aud?.affiliation === '비상근심사원') {
-                    setActiveCategory('auditor-mgmt');
-                    setActiveTab('portal');
-                  } else {
-                    setActiveCategory('dashboard');
-                    setActiveTab('calendar');
-                  }
-                }}
-                className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-cyan-500 cursor-pointer shadow-2xs transition"
-                title="계정 전환"
-              >
-                {allAuditors.map(aud => {
-                  const badgeIcon = aud.isSystemAdmin ? '👑' : 
-                                    aud.affiliation === '사무국직원' ? '🏢' :
-                                    aud.affiliation === '소속심사원' ? '💼' : '👤';
-                  const roleDesc = aud.isSystemAdmin ? '사무국직원 · 시스템 총괄' :
-                                   aud.affiliation === '사무국직원' ? '사무국 심사원' :
-                                   aud.affiliation === '소속심사원' ? '소속 상근' : '비상근 (격리)';
-                  return (
-                    <option key={aud.id} value={aud.id}>
-                      {badgeIcon} {aud.name} ({roleDesc})
-                    </option>
-                  );
-                })}
-              </select>
 
               {/* Logout Button */}
               {onLogout && (
@@ -361,10 +243,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   onClick={onLogout}
                   title="시스템 로그아웃"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-300 hover:border-rose-200 text-xs font-bold transition shadow-2xs cursor-pointer"
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-300 hover:border-rose-200 text-xs font-bold transition shadow-2xs cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5 text-slate-500 hover:text-rose-500" />
-                  <span className="hidden sm:inline">로그아웃</span>
+                  <span>로그아웃</span>
                 </button>
               )}
             </div>
@@ -373,69 +255,64 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. 주 메뉴 영역 (Tier-1 Main Navigation Bar) */}
+      {/* 2. 주 메뉴 영역 (Tier-1 Main Navigation Bar - 상근 4인 전용) */}
       {/* ========================================================================= */}
-      <div className="bg-slate-900 text-slate-100 border-b border-slate-800">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* Primary Category Tabs */}
-            <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar py-2">
-              {mainCategories.map((cat) => {
-                const Icon = cat.icon;
-                const isSelected = activeCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleCategorySelect(cat.id)}
-                    className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap cursor-pointer ${
-                      isSelected
-                        ? 'bg-cyan-600 text-white shadow-md shadow-cyan-900/40 ring-1 ring-cyan-400/50'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
-                    <span>{cat.label}</span>
-                    {cat.badge && cat.badge > 0 ? (
-                      <span className={`px-1.5 py-0.2 text-[10px] font-extrabold rounded-full text-white ${cat.badgeColor || 'bg-rose-500'}`}>
-                        {cat.badge}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </nav>
+      {isStaff && (
+        <div className="bg-slate-900 text-slate-100 border-b border-slate-800">
+          <div className="w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4">
+            <div className="flex items-center justify-between">
+              {/* Primary Category Tabs */}
+              <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar py-2">
+                {mainCategories.map((cat) => {
+                  const Icon = cat.icon;
+                  const isSelected = activeCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleCategorySelect(cat.id)}
+                      className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap cursor-pointer ${
+                        isSelected
+                          ? 'bg-cyan-600 text-white shadow-md shadow-cyan-900/40 ring-1 ring-cyan-400/50'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                      <span>{cat.label}</span>
+                      {cat.badge && cat.badge > 0 ? (
+                        <span className={`px-1.5 py-0.2 text-[10px] font-extrabold rounded-full text-white ${cat.badgeColor || 'bg-rose-500'}`}>
+                          {cat.badge}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </nav>
 
-            {/* Right: Quick Action & User Affiliation Tag */}
-            <div className="hidden lg:flex items-center space-x-3 py-1">
-              <button
-                type="button"
-                onClick={onOpenEmailModal}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-900/80 text-cyan-300 border border-slate-700 hover:border-cyan-500/50 text-xs font-bold transition cursor-pointer"
-                title="공문 심사계획서 및 전자문서 발송"
-              >
-                <Mail className="w-3.5 h-3.5 text-cyan-400" />
-                <span>스마트 메일</span>
-              </button>
+              {/* Right: Quick Action & User Affiliation Tag */}
+              <div className="hidden lg:flex items-center space-x-3 py-1">
+                <button
+                  onClick={onOpenEmailModal}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 border border-cyan-500/40 text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5 text-cyan-300" />
+                  <span>스마트 메일</span>
+                </button>
 
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
-                currentAuditorObj.isSystemAdmin ? 'bg-purple-900/40 text-purple-200 border-purple-500/50' :
-                currentAuditorObj.affiliation === '사무국직원' ? 'bg-blue-900/40 text-blue-200 border-blue-500/50' :
-                currentAuditorObj.affiliation === '소속심사원' ? 'bg-emerald-900/40 text-emerald-200 border-emerald-500/50' :
-                'bg-amber-900/40 text-amber-200 border-amber-500/50'
-              }`}>
-                {currentAuditorObj.name} · {currentAuditorObj.affiliation}{currentAuditorObj.isSystemAdmin ? ' (시스템 총괄)' : ''}
-              </span>
+                <span className="px-3 py-1 text-xs font-bold rounded-full border bg-amber-900/40 text-amber-200 border-amber-500/50">
+                  {currentAuditorObj.name} · 상근
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================================= */}
-      {/* 3. 하위 메뉴 영역 (Tier-2 Sub Navigation Bar) */}
+      {/* 3. 하위 메뉴 영역 (Tier-2 Sub Navigation Bar - 상근 4인 전용) */}
       {/* ========================================================================= */}
-      {currentSubItems.length > 0 && (
+      {isStaff && currentSubItems.length > 0 && (
         <div className="bg-slate-100/90 border-b border-slate-200 shadow-2xs">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-2">
+          <div className="w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4 py-2">
             <nav className="flex space-x-1.5 overflow-x-auto no-scrollbar text-xs">
               {currentSubItems.map((item) => {
                 const Icon = item.icon;
@@ -473,7 +350,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
-
     </header>
   );
 };

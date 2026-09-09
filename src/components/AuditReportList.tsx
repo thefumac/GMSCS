@@ -63,12 +63,12 @@ export const AuditReportList: React.FC<AuditReportListProps> = ({
                 </h2>
                 {pendingReviewCount > 0 && (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white shadow-xs animate-pulse">
-                    사무국 검토 대기 {pendingReviewCount}건
+                    적정성 검토 대기 {pendingReviewCount}건
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                현장 심사 보고서 작성(종료일+7일 마감) &middot; 사무국 사전 적정성 검토 &middot; 심사비 정산 및 <strong>OK ESG 데이터 연동</strong>을 지원합니다.
+                현장 심사 보고서 작성(종료일+7일 마감) &middot; 보고서 적정성 검토 &middot; 심사비 정산 및 <strong>OK ESG 데이터 연동</strong>을 지원합니다.
               </p>
             </div>
           </div>
@@ -127,7 +127,7 @@ export const AuditReportList: React.FC<AuditReportListProps> = ({
                 : 'bg-slate-50 border-slate-300 text-slate-800'
             }`}
           >
-            <option value="all">사무국 검토 상태 (전체)</option>
+            <option value="all">적정성 검토 상태 (전체)</option>
             <option value="검토대기">⚠️ 검토대기</option>
             <option value="보완요청">❌ 보완요청 (반려)</option>
             <option value="검토승인">✅ 검토승인 (심의대기)</option>
@@ -152,7 +152,7 @@ export const AuditReportList: React.FC<AuditReportListProps> = ({
                 <th className="p-3.5">심사팀 (팀장/팀원)</th>
                 <th className="p-3.5 text-center">부적합 사항</th>
                 <th className="p-3.5">서명 진행상태</th>
-                <th className="p-3.5">사무국 적정성 검토</th>
+                <th className="p-3.5">보고서 적정성 검토</th>
                 <th className="p-3.5">건별 심사비 / 심사원 정산</th>
                 <th className="p-3.5 text-right">상세 작성 / 서명</th>
               </tr>
@@ -228,11 +228,11 @@ export const AuditReportList: React.FC<AuditReportListProps> = ({
                         </span>
                       </div>
                     </td>
-                    {/* 사무국 적정성 검토 상태 */}
+                    {/* 보고서 적정성 검토 상태 */}
                     <td className="p-3.5">
                       {secStatus === '검토대기' ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-xs animate-pulse">
-                          <span>⚠️</span> 사무국 검토대기
+                          <span>⚠️</span> 적정성 검토대기
                         </span>
                       ) : secStatus === '보완요청' ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">

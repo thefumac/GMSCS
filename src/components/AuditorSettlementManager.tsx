@@ -93,7 +93,7 @@ export const AuditorSettlementManager: React.FC<AuditorSettlementManagerProps> =
                     <strong>{currentAuditor.name}</strong> 님의 연도별/기간별 심사 수당 및 원천징수 명세서
                   </span>
                 ) : (
-                  <span>사무국 총괄 심사원별 수당 정산 및 원천징수(3.3%) 대사 원장</span>
+                  <span>심사원별 수당 정산 및 원천징수(3.3%) 대사 원장</span>
                 )}
               </p>
             </div>
@@ -285,7 +285,7 @@ export const AuditorSettlementManager: React.FC<AuditorSettlementManagerProps> =
                 <th className="p-3.5 text-right">원천세 (3.3%)</th>
                 <th className="p-3.5 text-right">실지급액 (원)</th>
                 <th className="p-3.5 text-center">지급 상태</th>
-                {!currentAuditor && <th className="p-3.5 text-right">사무국 조치</th>}
+                {!currentAuditor && <th className="p-3.5 text-right">지급 조치</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

@@ -50,7 +50,7 @@ export const EmailDispatchModal: React.FC<EmailDispatchModalProps> = ({
     setTemplateType(type);
     if (type === '심사계획서') {
       setSubject(`[GMSCS 인증원] ${recipientName || '고객사'} 심사계획서 송부의 건`);
-      setBody(`안녕하십니까, GMSCS 인증원 사무국입니다.
+      setBody(`안녕하십니까, GMSCS 인증원입니다.
 
 귀사의 무궁한 발전을 기원합니다.
 신청하신 인증 심사와 관련하여 아래와 같이 심사계획서를 송부드리오니 확인 및 협조 부탁드립니다.
@@ -61,13 +61,13 @@ export const EmailDispatchModal: React.FC<EmailDispatchModalProps> = ({
 4. 심사 일정: 2026년 09월 14일(월) ~ 15일(화)
 5. 준비 사항: 시작회의 참석자 명단 및 심사 장소(회의실) 안내
 
-심사 일정이나 심사팀에 대해 이해상충이나 이의가 있으실 경우 즉시 사무국(02-2658-0296)으로 연락 주시기 바랍니다.
+심사 일정이나 심사팀에 대해 이해상충이나 이의가 있으실 경우 즉시 인증원(02-2658-0296)으로 연락 주시기 바랍니다.
 
 감사합니다.
-GMSCS 인증원 사무국 배상`);
+GMSCS 인증원 배상`);
     } else if (type === '심사원변경통보') {
       setSubject(`[GMSCS 인증원] 담당 심사원 교체 배정 안내 (독립성/이해상충 방지)`);
-      setBody(`안녕하십니까, GMSCS 인증원 사무국입니다.
+      setBody(`안녕하십니까, GMSCS 인증원입니다.
 
 인증 심사의 객관성 및 KAB 공정성 가이드라인(제3자 독립성 원칙)에 따라,
 귀사의 차기 심사 담당 심사팀장이 아래와 같이 변경되었음을 통지하여 드립니다.
@@ -81,22 +81,22 @@ GMSCS 인증원 사무국 배상`);
 원활하고 신뢰성 높은 인증 서비스를 제공해 드리겠습니다.
 
 감사합니다.
-GMSCS 인증원 사무국 배상`);
+GMSCS 인증원 배상`);
     } else if (type === '심사비승인통보') {
       setSubject(`[GMSCS 인증원] 심사비용 조정 승인 결과 안내`);
-      setBody(`안녕하십니까, GMSCS 인증원 사무국입니다.
+      setBody(`안녕하십니까, GMSCS 인증원입니다.
 
-신청하신 심사비용 조정 요청 건에 대해 사무국 내부 심의 및 승인이 완료되었습니다.
+신청하신 심사비용 조정 요청 건에 대해 내부 심의 및 승인이 완료되었습니다.
 
 1. 대상 프로젝트: (주)한성정밀공업 사후관리 2차
 2. 표준 산정 수수료: 2,000,000원 (VAT 별도)
 3. 최종 승인 심사비: 1,700,000원 (VAT 별도 / 15% 우대할인 확정)
-4. 승인권자: 사무국장 남경호
+4. 승인권자: 대표 남경호
 
-수정된 전자세금계산서 및 입금 안내는 회계팀을 통해 순차 발행될 예정입니다.
+수정된 전자세금계산서 및 입금 안내는 순차 발행될 예정입니다.
 
 감사합니다.
-GMSCS 인증원 사무국 배상`);
+GMSCS 인증원 배상`);
     } else if (type === '인증심의결과안내') {
       setSubject(`[GMSCS 인증원] 인증심의위원회 심의 의결 완료 및 인증서 발행 통보`);
       setBody(`안녕하십니까, GMSCS 인증원입니다.
@@ -135,7 +135,7 @@ GMSCS 인증원장 남경호 배상`);
         sentAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
         templateType,
         senderEmail: 'admin@gmscs.co.kr',
-        senderName: 'GMSCS 인증원 사무국',
+        senderName: 'GMSCS 인증원',
         recipientEmail,
         recipientName: recipientName || recipientEmail,
         subject,
@@ -267,7 +267,7 @@ GMSCS 인증원장 남경호 배상`);
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-slate-700 font-bold">메일 본문 (편집 가능)</label>
-              <span className="text-[11px] text-slate-400">발신: admin@gmscs.co.kr (GMSCS 사무국)</span>
+              <span className="text-[11px] text-slate-400">발신: admin@gmscs.co.kr (GMSCS 인증원)</span>
             </div>
             <textarea
               rows={9}

@@ -111,7 +111,7 @@ export const KabCalculator: React.FC<KabCalculatorProps> = ({
         <div className="flex items-center space-x-3">
           <HelpCircle className="w-5 h-5 text-cyan-600 shrink-0" />
           <span>
-            <strong>[실무 프로세스 안내]</strong> 본 화면은 KAB 공인 표준 산정 테이블 및 사전 상담 모의 견적 도구입니다. 특정 고객사의 실제 적용 MD 수동 조정, 할인 합의 및 사무국 승인은 <strong>[심사관리 &gt; 심사계약]</strong> 메뉴에서 개별 계약 건으로 진행됩니다.
+            <strong>[실무 프로세스 안내]</strong> 본 화면은 KAB 공인 표준 산정 테이블 및 사전 상담 모의 견적 도구입니다. 특정 고객사의 실제 적용 MD 수동 조정, 할인 합의 및 내부 승인은 <strong>[심사관리 &gt; 심사계약]</strong> 메뉴에서 개별 계약 건으로 진행됩니다.
           </span>
         </div>
         <div className="flex items-center space-x-1 bg-white p-1 rounded-xl border border-cyan-200 text-[11px]">

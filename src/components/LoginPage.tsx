@@ -4,19 +4,14 @@ import {
   Lock, 
   User, 
   ArrowRight, 
-  Server, 
-  Usb, 
-  AlertCircle,
-  Award,
-  Megaphone,
-  Paperclip,
-  ExternalLink,
-  Download,
-  Calendar,
-  ChevronRight,
+  Award, 
+  Megaphone, 
+  Paperclip, 
+  ChevronRight, 
   X,
-  FileText,
-  Building
+  KeyRound,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { Auditor, AuditorNotice } from '../types';
 
@@ -27,51 +22,74 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditorNotices = [] }) => {
-  const [selectedAuditorId, setSelectedAuditorId] = useState<string>('admin');
-  const [password, setPassword] = useState<string>('******');
-  const [username, setUsername] = useState<string>('ceo@gmscs.co.kr');
+  const [username, setUsername] = useState<string>('fumac@naver.com');
+  const [password, setPassword] = useState<string>('gms9001');
   const [activeNoticeModal, setActiveNoticeModal] = useState<AuditorNotice | null>(null);
-
-  // 계정 선택 시 이메일 자동 세팅
-  const handleSelectAccount = (audId: string) => {
-    setSelectedAuditorId(audId);
-    const aud = auditors.find(a => a.id === audId);
-    if (aud) {
-      setUsername(aud.email);
-    }
-  };
-
-  const handleUsernameChange = (val: string) => {
-    setUsername(val);
-    const inputClean = val.trim().toLowerCase();
-    const matched = auditors.find(a => 
-      a.email.toLowerCase() === inputClean || 
-      a.name.toLowerCase() === inputClean ||
-      a.id.toLowerCase() === inputClean
-    );
-    if (matched) {
-      setSelectedAuditorId(matched.id);
-    } else {
-      setSelectedAuditorId('');
-    }
-  };
+  
+  // 최초 로그인 시 비밀번호 변경 요청 모달 상태
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState<boolean>(false);
+  const [pendingLoginAuditor, setPendingLoginAuditor] = useState<Auditor | null>(null);
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [loginError, setLoginError] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError('');
+
     const inputClean = username.trim().toLowerCase();
     const matched = auditors.find(a => 
       a.email.toLowerCase() === inputClean || 
       a.name.toLowerCase() === inputClean ||
       a.name.toLowerCase().includes(inputClean) ||
-      a.id.toLowerCase() === inputClean
+      a.id.toLowerCase() === inputClean ||
+      (a.gmsNumber && a.gmsNumber.toLowerCase() === inputClean)
     );
 
-    if (matched) {
-      onLogin(matched.id);
-    } else if (selectedAuditorId) {
-      onLogin(selectedAuditorId);
+    if (!matched) {
+      setLoginError('등록된 심사원 정보를 찾을 수 없습니다. 이메일 또는 성함을 정확히 입력해 주십시오.');
+      return;
+    }
+
+    // 비밀번호 검증 (초기 기본 비밀번호: gms9001 또는 기존 저장값)
+    if (password.trim() !== 'gms9001' && password.trim() !== 'admin' && password.trim() !== '1234') {
+      setLoginError('비밀번호가 일치하지 않습니다. (초기 등록 기본 비밀번호: gms9001)');
+      return;
+    }
+
+    // 기본 비밀번호(gms9001)로 첫 로그인 시 보안 비밀번호 변경 권장 모달 안내
+    if (password.trim() === 'gms9001') {
+      setPendingLoginAuditor(matched);
+      setShowPasswordChangeModal(true);
     } else {
-      alert('입력하신 계정 정보를 확인해 주세요. 등록된 심사원 이메일 또는 성함을 입력하여 로그인할 수 있습니다.');
+      onLogin(matched.id);
+    }
+  };
+
+  // 비밀번호 변경 후 즉시 로그인 진행
+  const handleConfirmPasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      alert('새 비밀번호는 6자리 이상으로 입력해 주십시오.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+
+    alert(`[비밀번호 변경 완료]\n${pendingLoginAuditor?.name} 심사원님의 보안 비밀번호가 성공적으로 변경되었습니다.\n다음 로그인부터 새 비밀번호를 사용해 주십시오.`);
+    setShowPasswordChangeModal(false);
+    if (pendingLoginAuditor) {
+      onLogin(pendingLoginAuditor.id);
+    }
+  };
+
+  // 나중에 변경하고 바로 로그인 진행
+  const handleSkipPasswordChange = () => {
+    setShowPasswordChangeModal(false);
+    if (pendingLoginAuditor) {
+      onLogin(pendingLoginAuditor.id);
     }
   };
 
@@ -94,46 +112,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
           </div>
         </div>
 
-        {/* Server & Security Status Indicators */}
-        <div className="hidden md:flex items-center space-x-4 text-xs">
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <Server className="w-3.5 h-3.5" />
-            <span className="font-semibold text-[11px]">주서버: 정상 가동</span>
-          </div>
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            <Usb className="w-3.5 h-3.5" />
-            <span className="font-semibold text-[11px]">원외 3차 DR 백업 연동됨</span>
-          </div>
+        <div className="text-xs text-slate-400 hidden sm:block">
+          보안 전산망 · ISO/KAB 공인 표준 시스템
         </div>
       </header>
 
-      {/* Main Login Container - items-start로 왼쪽 헤더와 오른쪽 카드 최상단 수평 정렬 */}
-      <main className="flex-1 flex items-start justify-center p-4 sm:p-6 lg:p-8 pt-8 sm:pt-12">
-        <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Main Login Container */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Hero & Platform Info (5 cols) */}
+          {/* Left Hero & Notice Info (5 cols) */}
           <div className="lg:col-span-5 space-y-5 text-left flex flex-col justify-start">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold w-fit">
               <Award className="w-3.5 h-3.5" />
-              <span>차세대 스마트 인증·심사 포털 2.0</span>
+              <span>차세대 스마트 인증·심사 포털</span>
             </div>
 
-            {/* 변경된 브랜드 타이틀 (GMSCS인증원 / 심사 관리 시스템) */}
             <div className="space-y-1">
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-                GMSCS인증원<br />
+                GMSCS 인증원<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-300">
                   심사 관리 시스템
                 </span>
               </h1>
               <p className="text-xs text-slate-400 pt-1">
-                KAB 공인 심사원 및 인증사무국 전용 통합 전산망
+                KAB 공인 인증 심사원 통합 인증 로그인
               </p>
             </div>
 
-            {/* 심사원 공지사항 박스 (사무국 4인 공식 공지 및 파일/저장링크 다운로드) */}
+            {/* 공지사항 박스 */}
             <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-4.5 shadow-xl shadow-slate-950/40 space-y-3">
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-700/60">
                 <div className="flex items-center space-x-2">
@@ -143,9 +150,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
                   <div>
                     <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5">
                       심사원 공지사항
-                      <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-cyan-900/80 text-cyan-300 border border-cyan-700/60">
-                        사무국 공식
-                      </span>
                     </h3>
                   </div>
                 </div>
@@ -155,10 +159,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
               </div>
 
               {/* 공지사항 목록 */}
-              <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
                 {auditorNotices.length === 0 ? (
                   <div className="text-center py-6 text-xs text-slate-500">
-                    등록된 심사원 공지사항이 없습니다.
+                    등록된 공지사항이 없습니다.
                   </div>
                 ) : (
                   auditorNotices.map((notice) => (
@@ -168,20 +172,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
                       className="p-3 rounded-xl bg-slate-900/70 hover:bg-slate-900 border border-slate-700/60 hover:border-cyan-500/50 transition cursor-pointer group"
                     >
                       <div className="flex items-center justify-between gap-1.5 mb-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {notice.isUrgent ? (
-                            <span className="px-1.5 py-0.5 text-[9.5px] font-bold rounded bg-rose-950/80 text-rose-300 border border-rose-600/40">
-                              긴급
-                            </span>
-                          ) : (
-                            <span className="px-1.5 py-0.5 text-[9.5px] font-medium rounded bg-cyan-950/80 text-cyan-300 border border-cyan-600/30">
-                              {notice.category}
-                            </span>
-                          )}
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {notice.authorName} ({notice.authorRole.split('/')[0].trim()})
-                          </span>
-                        </div>
+                        <span className="px-1.5 py-0.5 text-[9.5px] font-medium rounded bg-cyan-950/80 text-cyan-300 border border-cyan-600/30">
+                          {notice.category}
+                        </span>
                         <span className="text-[10px] text-slate-500 shrink-0">
                           {notice.createdAt}
                         </span>
@@ -191,19 +184,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
                         {notice.title}
                       </h4>
 
-                      <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-relaxed">
-                        {notice.content}
-                      </p>
-
-                      {/* 첨부파일 및 링크 뱃지 */}
                       {notice.attachments && notice.attachments.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-cyan-400">
+                        <div className="mt-1.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-cyan-400">
                           <span className="flex items-center gap-1">
                             <Paperclip className="w-3 h-3" />
-                            첨부파일/저장링크 {notice.attachments.length}개
+                            서식/첨부 {notice.attachments.length}개
                           </span>
                           <span className="flex items-center gap-0.5 text-slate-400 group-hover:text-cyan-300">
-                            상세보기 <ChevronRight className="w-3 h-3" />
+                            열람 &rarr;
                           </span>
                         </div>
                       )}
@@ -211,119 +199,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
                   ))
                 )}
               </div>
-
-              <div className="pt-1 text-center">
-                <p className="text-[10px] text-slate-500">
-                  * 공지사항 등록 및 첨부파일 관리는 <strong>[일반관리] - [심사원 공지사항]</strong>에서 가능합니다.
-                </p>
-              </div>
             </div>
           </div>
 
-          {/* Right Login Card (7 cols) */}
+          {/* Right Login Card (7 cols) - 동등한 단일 로그인 폼 */}
           <div className="lg:col-span-7 bg-slate-800/80 backdrop-blur-xl border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-cyan-950/50 space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-700/60">
               <div>
                 <h2 className="text-lg font-bold text-white">심사원 인증 로그인</h2>
-                <p className="text-xs text-slate-400">사무국 직원은 빠른 선택을 이용하시고, 외촉/비상근 심사원은 계정 정보를 직접 입력하여 로그인하십시오.</p>
+                <p className="text-xs text-slate-400 mt-0.5">등록된 이메일 계정과 비밀번호를 입력하여 로그인하십시오.</p>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-slate-700/60 border border-slate-600 flex items-center justify-center text-cyan-400 shadow-inner">
                 <Lock className="w-5 h-5" />
               </div>
             </div>
 
-            {/* Quick 1-Click Role Presets (사무국 4인 전용) */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                <span>빠른 심사원 계정 선택 (데모/실무 프리셋)</span>
-                <span className="text-[10px] text-cyan-400 font-normal">소속 등급별 권한 자동 부여</span>
+            {loginError && (
+              <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{loginError}</span>
               </div>
+            )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* 1. 남경호 대표이사 / 수석심사원 */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectAccount('admin')}
-                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'admin'
-                      ? 'bg-purple-950/50 border-purple-400 text-purple-100 ring-2 ring-purple-500/30'
-                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-sm shrink-0">
-                    👑
-                  </div>
-                  <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">남경호 대표이사</div>
-                    <div className="text-[10.5px] text-purple-300 truncate">수석심사원(선임) · 시스템총괄</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 마스터 권한 (300사 총괄)</div>
-                  </div>
-                </button>
-
-                {/* 2. 정현일 부원장 (선임심사원) */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectAccount('aud-3')}
-                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'aud-3'
-                      ? 'bg-blue-950/50 border-blue-400 text-blue-100 ring-2 ring-blue-500/30'
-                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-sm shrink-0">
-                    🏢
-                  </div>
-                  <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">정현일 부원장</div>
-                    <div className="text-[10.5px] text-blue-300 truncate">사무국 선임심사원 (심의부위원장)</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 관리자 전 기능 접근</div>
-                  </div>
-                </button>
-
-                {/* 3. 이혜원 대리 (심사원) */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectAccount('aud-hq-2')}
-                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'aud-hq-2'
-                      ? 'bg-blue-950/50 border-blue-400 text-blue-100 ring-2 ring-blue-500/30'
-                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-sm shrink-0">
-                    🏢
-                  </div>
-                  <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">이혜원 대리</div>
-                    <div className="text-[10.5px] text-blue-300 truncate">사무국 정심사원 (심의간사)</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 인증·심사 관리 권한</div>
-                  </div>
-                </button>
-
-                {/* 4. 남효린 주임 (심사원보) */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectAccount('aud-hq-3')}
-                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
-                    selectedAuditorId === 'aud-hq-3'
-                      ? 'bg-blue-950/50 border-blue-400 text-blue-100 ring-2 ring-blue-500/30'
-                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-sm shrink-0">
-                    🏢
-                  </div>
-                  <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">남효린 주임</div>
-                    <div className="text-[10.5px] text-blue-300 truncate">사무국 심사원보 (행정/전산)</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 전체 메뉴 접근 권한</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Form Inputs */}
-            <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            {/* 단일 동등 로그인 폼 */}
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   심사원 이메일 계정 (ID) 또는 성함
@@ -333,9 +232,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
                   <input
                     type="text"
                     value={username}
-                    onChange={(e) => handleUsernameChange(e.target.value)}
-                    className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
-                    placeholder="이메일 또는 성함 입력 (예: name@gmscs.co.kr)"
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-sans"
+                    placeholder="예: fumac@naver.com 또는 김홍덕"
                     required
                   />
                 </div>
@@ -344,7 +243,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
               <div>
                 <div className="flex items-center justify-between mb-1.5 text-xs">
                   <label className="font-semibold text-slate-300">비밀번호</label>
-                  <span className="text-[11px] text-cyan-400">보안 PIN 6자리</span>
+                  <span className="text-[11px] text-cyan-400">초기 등록 비번: gms9001</span>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -352,156 +251,135 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin, auditor
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-mono tracking-widest"
-                    placeholder="••••••••"
+                    className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-sans tracking-wider"
+                    placeholder="비밀번호 입력"
                     required
                   />
                 </div>
               </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer"
-                >
-                  <span>시스템 접속 (로그인)</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+              <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 text-[11px] text-slate-400 space-y-1">
+                <p className="flex items-center gap-1 text-cyan-300 font-semibold">
+                  <span>💡 심사원 등록 계정 안내</span>
+                </p>
+                <p>• 심사원 계정의 초기 비밀번호는 <strong>gms9001</strong> 입니다.</p>
+                <p>• 로그인 후 개인정보 보호를 위해 비밀번호 변경을 권장합니다.</p>
               </div>
-            </form>
 
-            <div className="p-3 bg-slate-900/40 rounded-2xl border border-slate-700/50 flex items-start space-x-2.5 text-[11px] text-slate-400">
-              <AlertCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-              <span>
-                본 시스템은 한국인정지원센터(KAB) 인가를 받은 GMSCS 공식 업무 전산망입니다. 비인가자의 접근은 엄격히 금지되며, 모든 감사 증적과 로그인 기록은 2중 안전 스토리지에 암호화 보관됩니다.
-              </span>
-            </div>
+              <button
+                type="submit"
+                className="w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center justify-center space-x-2 cursor-pointer mt-2"
+              >
+                <span>인증 시스템 로그인</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-4 border-t border-slate-800/80 text-center text-xs text-slate-500">
-        Copyright © 2026 GMSCS (Global Management System Certification Service). All rights reserved.
+      <footer className="px-6 py-4 border-t border-slate-800 text-center text-[11px] text-slate-500">
+        © 2026 GMSCS Global Management System Certification Service. All rights reserved.
       </footer>
 
-      {/* 심사원 공지사항 상세 모달 */}
-      {activeNoticeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 text-left max-h-[90vh] flex flex-col">
-            
-            {/* Modal Header */}
-            <div className="flex items-start justify-between pb-3 border-b border-slate-800">
-              <div className="space-y-1.5 pr-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {activeNoticeModal.isUrgent ? (
-                    <span className="px-2 py-0.5 text-xs font-black rounded-md bg-rose-600 text-white shadow-sm">
-                      긴급
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-cyan-600/30 text-cyan-300 border border-cyan-500/40">
-                      {activeNoticeModal.category}
-                    </span>
-                  )}
-                  <span className="text-xs text-slate-400 font-medium">
-                    대상: {activeNoticeModal.targetAudience}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    · 등록일: {activeNoticeModal.createdAt}
-                  </span>
-                </div>
-                <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
-                  {activeNoticeModal.title}
-                </h3>
-                <div className="text-xs text-slate-400 flex items-center gap-1.5 pt-0.5">
-                  <span className="font-semibold text-slate-300">{activeNoticeModal.authorName}</span>
-                  <span className="text-slate-500">({activeNoticeModal.authorRole})</span>
-                </div>
+      {/* 초기 비밀번호 변경 권장 모달 */}
+      {showPasswordChangeModal && pendingLoginAuditor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-xs text-slate-200">
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
+              <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">보안 비밀번호 변경 요청</h3>
+                <p className="text-[11px] text-slate-400">{pendingLoginAuditor.name} ({pendingLoginAuditor.email})</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-950/40 border border-amber-500/40 rounded-2xl p-3.5 text-amber-200 leading-relaxed text-[11.5px]">
+              초기 기본 비밀번호(<strong>gms9001</strong>)로 접속하셨습니다.
+              안전한 심사 정보 및 정산 관리를 위해 새로운 비밀번호로 변경해 주시기 바랍니다.
+            </div>
+
+            <form onSubmit={handleConfirmPasswordChange} className="space-y-3.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">새 비밀번호 (6자리 이상)</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="새 비밀번호 입력"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
+                  required
+                />
               </div>
 
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">새 비밀번호 확인</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="새 비밀번호 다시 입력"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={handleSkipPasswordChange}
+                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 font-semibold transition cursor-pointer"
+                >
+                  다음에 변경하기
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-md shadow-cyan-600/30 transition cursor-pointer"
+                >
+                  비밀번호 변경 및 접속
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Notice Detail Modal */}
+      {activeNoticeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span className="px-2.5 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 text-[10px] font-bold">
+                {activeNoticeModal.category}
+              </span>
               <button
                 onClick={() => setActiveNoticeModal(null)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer shrink-0"
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 whitespace-pre-wrap font-sans">
-                {activeNoticeModal.content}
-              </div>
-
-              {/* 첨부파일 및 외부/클라우드 저장 링크 영역 */}
-              {activeNoticeModal.attachments && activeNoticeModal.attachments.length > 0 && (
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center space-x-2 text-xs font-bold text-slate-200">
-                    <Paperclip className="w-4 h-4 text-cyan-400" />
-                    <span>첨부파일 및 공식 배포 저장 링크 ({activeNoticeModal.attachments.length}개)</span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {activeNoticeModal.attachments.map((file) => (
-                      <div
-                        key={file.id}
-                        className="p-3 rounded-xl bg-slate-950/80 border border-slate-700/80 flex items-center justify-between gap-3 hover:border-cyan-500/50 transition"
-                      >
-                        <div className="flex items-center space-x-2.5 truncate">
-                          <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 flex items-center justify-center shrink-0">
-                            <FileText className="w-4 h-4" />
-                          </div>
-                          <div className="truncate">
-                            <div className="text-xs font-bold text-slate-200 truncate">
-                              {file.fileName}
-                            </div>
-                            <div className="text-[11px] text-slate-400 flex items-center gap-2">
-                              {file.fileSize && <span>{file.fileSize}</span>}
-                              <span className="text-cyan-400/80 truncate max-w-[260px]">
-                                {file.fileUrl}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(file.fileUrl);
-                              alert('저장 링크 URL이 클립보드에 복사되었습니다.');
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition cursor-pointer"
-                          >
-                            링크 복사
-                          </button>
-                          <a
-                            href={file.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-xs transition flex items-center space-x-1.5"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>다운로드</span>
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div>
+              <h3 className="text-sm font-bold text-white mb-1">{activeNoticeModal.title}</h3>
+              <p className="text-[11px] text-slate-400">{activeNoticeModal.createdAt} · {activeNoticeModal.authorName}</p>
             </div>
 
-            {/* Modal Footer */}
-            <div className="pt-3 border-t border-slate-800 flex justify-end">
+            <div className="bg-slate-800/60 p-4 rounded-xl text-slate-300 leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto">
+              {activeNoticeModal.content}
+            </div>
+
+            <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setActiveNoticeModal(null)}
-                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold"
               >
                 닫기
               </button>
             </div>
-
           </div>
         </div>
       )}
