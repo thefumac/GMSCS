@@ -11,7 +11,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  Clock
+  Clock,
+  Briefcase
 } from 'lucide-react';
 import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement } from '../types';
 
@@ -25,6 +26,8 @@ export interface CompanyAuditHistoryModalProps {
   settlements?: AuditorSettlement[];
   allAuditors?: Auditor[];
   onOpenReport?: (reportId: string) => void;
+  onOpenPlanInvoiceModal?: (company: Company) => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
 }
 
 // 심사 성격 계산
@@ -101,7 +104,9 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   projects = [],
   reports = {},
   allAuditors = [],
-  onOpenReport
+  onOpenReport,
+  onOpenPdfReport,
+  onOpenPlanInvoiceModal
 }) => {
   if (!isOpen || !company) return null;
 
@@ -154,6 +159,56 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* 0. 심사 업무 통합 실행 바 (계획서·청구서 확인, 심사보고서 작성/열람) */}
+        <div className="bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 text-white p-4 rounded-2xl shadow-md border border-cyan-800/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                현재 심사 단계: {stageText}
+              </span>
+              <span className="text-slate-300 text-xs font-mono">
+                차기 예정일: {dueDate} <strong className="text-cyan-400 font-bold">({dday.text})</strong>
+              </span>
+            </div>
+            <h4 className="text-sm font-black text-white mt-1.5 flex items-center gap-1.5">
+              <span>{company.companyName}</span>
+              <span className="text-xs text-slate-400 font-normal">심사·보고서·계획 통합 관리</span>
+            </h4>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {onOpenPlanInvoiceModal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenPlanInvoiceModal(company);
+                }}
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                title="사무국 수립 심사계획서 및 심사비 청구서 확인/동의"
+              >
+                <FileText className="w-4 h-4" />
+                <span>계획·청구서 확인</span>
+              </button>
+            )}
+
+            {onOpenReport && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenReport(reportId || 'rep-1');
+                }}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-cyan-500/30 cursor-pointer"
+                title="심사보고서 작성 및 체크리스트 입력 / 열람"
+              >
+                <FileText className="w-4 h-4 text-slate-950" />
+                <span>심사보고서 작성/열람</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 1. 기업 및 인증 기본 현황 카드 그리드 */}
@@ -210,6 +265,28 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
           </div>
         </div>
 
+                  {/* 3. 영업 유치 / 컨설턴트 (영업비 정산 대상) */}
+          <div className="bg-amber-50/70 p-3 rounded-xl border border-amber-200/80">
+            <span className="text-[11px] text-amber-900 font-bold block flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-amber-600" />
+              <span>영업 유치 / 컨설턴트 (영업비 정산 대상)</span>
+            </span>
+            <div className="mt-1 font-bold text-slate-900 text-xs flex items-center justify-between">
+              <span className="text-sm text-slate-900">
+                {company.consultant || '사무국직접'}
+                <span className="text-slate-500 font-normal text-xs ml-1.5">
+                  ({company.agency || 'HQ사무국'})
+                </span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full border border-amber-300">
+                {company.salesType || '협력기관'}
+              </span>
+            </div>
+            <p className="text-[10.5px] text-amber-800 font-medium mt-1">
+              💼 심사비 입금 시 컨설팅/영업수수료 지급 및 정산 대상자입니다.
+            </p>
+          </div>
+
         {/* 2. 전체 심사 이력 및 경과 타임라인 */}
         <div className="space-y-3 pt-1">
           <div className="flex items-center justify-between">
@@ -222,33 +299,83 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
             </span>
           </div>
 
-          <div className="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200">
+          <div className="space-y-2.5 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200">
             
             {/* 2024년 최초 심사 */}
-            <div className="relative flex items-start space-x-3 pl-1">
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0">
+            <div 
+              onClick={() => {
+                onClose();
+                if (onOpenPdfReport) {
+                  onOpenPdfReport({
+                    title: `[과거보고서] 2024년 최초 인증 심사보고서`,
+                    companyName: company.companyName,
+                    standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
+                    auditType: '최초 인증심사 (1단계/2단계)',
+                    auditDate: contract?.initialCertDate || '2024-10-18'
+                  });
+                } else if (onOpenReport) {
+                  onOpenReport(reportId || 'rep-1');
+                }
+              }}
+              className="relative flex items-start space-x-3 pl-1 group cursor-pointer"
+              title="클릭 시 2024년 최초 인증 심사보고서(PDF)를 확인합니다."
+            >
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0 group-hover:scale-110 transition-transform shadow-xs">
                 ✓
               </div>
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex-1">
+              <div className="bg-slate-50 group-hover:bg-cyan-50/50 p-3 rounded-xl border border-slate-200 group-hover:border-cyan-300 flex-1 transition shadow-2xs">
                 <div className="flex items-center justify-between font-bold text-slate-900">
-                  <span>2024년 최초 인증 심사 (1단계/2단계)</span>
-                  <span className="text-emerald-700 text-[11px]">인증등록 완료 (2024-10-18)</span>
+                  <span className="text-xs group-hover:text-cyan-900 flex items-center gap-1.5">
+                    <span>2024년 최초 인증 심사 (1단계/2단계)</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-700 text-[11px] font-bold">인증등록 완료 ({contract?.initialCertDate || '2024-10-18'})</span>
+                    <span className="text-[11px] font-bold text-cyan-700 bg-cyan-100 group-hover:bg-cyan-600 group-hover:text-white px-2 py-0.5 rounded-md transition flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      <span>PDF 보고서 열람</span>
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-600 mt-1">
-                  심사팀장: {managingAuditor.name} · 부적합 0건 · 인증위원회 심의 원안 통과
+                  심사팀장: {managingAuditor.name} (영업/컨설턴트: {company.consultant || '사무국직접'}) · 부적합 0건 · 인증위원회 심의 원안 통과
                 </p>
               </div>
             </div>
 
             {/* 2025년 1차 사후관리 */}
-            <div className="relative flex items-start space-x-3 pl-1">
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0">
+            <div 
+              onClick={() => {
+                onClose();
+                if (onOpenPdfReport) {
+                  onOpenPdfReport({
+                    title: `[과거보고서] 2025년 1차 사후관리 심사보고서`,
+                    companyName: company.companyName,
+                    standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
+                    auditType: '1차 사후관리 심사',
+                    auditDate: '2025-10-15'
+                  });
+                } else if (onOpenReport) {
+                  onOpenReport(reportId || 'rep-1');
+                }
+              }}
+              className="relative flex items-start space-x-3 pl-1 group cursor-pointer"
+              title="클릭 시 2025년 1차 사후관리 심사보고서(PDF)를 확인합니다."
+            >
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0 group-hover:scale-110 transition-transform shadow-xs">
                 ✓
               </div>
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex-1">
+              <div className="bg-slate-50 group-hover:bg-cyan-50/50 p-3 rounded-xl border border-slate-200 group-hover:border-cyan-300 flex-1 transition shadow-2xs">
                 <div className="flex items-center justify-between font-bold text-slate-900">
-                  <span>2025년 1차 사후관리 심사</span>
-                  <span className="text-emerald-700 text-[11px]">인증유지 완료 (2025-10-15)</span>
+                  <span className="text-xs group-hover:text-cyan-900 flex items-center gap-1.5">
+                    <span>2025년 1차 사후관리 심사</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-700 text-[11px] font-bold">인증유지 완료 (2025-10-15)</span>
+                    <span className="text-[11px] font-bold text-cyan-700 bg-cyan-100 group-hover:bg-cyan-600 group-hover:text-white px-2 py-0.5 rounded-md transition flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      <span>PDF 보고서 열람</span>
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-600 mt-1">
                   심사팀장: {managingAuditor.name} · 경부적합 1건(문서관리) 시정조치 확인 완료
@@ -256,36 +383,35 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
               </div>
             </div>
 
+
             {/* 2026년 차기/현재 심사 */}
-            <div className="relative flex items-start space-x-3 pl-1">
-              <div className="w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0">
+            <div 
+              onClick={() => {
+                onClose();
+                if (onOpenReport) onOpenReport(reportId || 'rep-1');
+              }}
+              className="relative flex items-start space-x-3 pl-1 group cursor-pointer"
+              title="클릭 시 2026년 심사보고서 작성 및 열람 화면으로 이동합니다."
+            >
+              <div className="w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0 group-hover:scale-110 transition-transform shadow-xs">
                 ★
               </div>
-              <div className="bg-cyan-50/60 p-3.5 rounded-xl border border-cyan-200 flex-1 space-y-1.5">
+              <div className="bg-cyan-50/70 group-hover:bg-cyan-100/60 p-3.5 rounded-xl border border-cyan-200 group-hover:border-cyan-400 flex-1 space-y-1.5 transition shadow-2xs">
                 <div className="flex items-center justify-between font-bold text-cyan-950">
                   <span className="text-xs font-black">2026년 {stageText} (현재 대상)</span>
-                  <span className="text-[11px] font-extrabold text-cyan-800">
-                    [{latestProject?.status || '심사준비'}]
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-extrabold text-cyan-900 bg-cyan-100 px-2 py-0.5 rounded border border-cyan-200">
+                      [{latestProject?.status || '심사진행중'}]
+                    </span>
+                    <span className="text-xs font-bold text-white bg-cyan-600 group-hover:bg-cyan-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>심사보고서 작성/열람</span>
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-cyan-900">
-                  차기 심사 기한: <strong className="font-mono text-cyan-950">{dueDate}</strong> ({dday.text})
+                  차기 심사 기한: <strong className="font-mono text-cyan-950">{dueDate}</strong> ({dday.text}) · 배정팀장: <strong>{managingAuditor.name}</strong>
                 </p>
-                {reportId && onOpenReport && (
-                  <div className="pt-1.5 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onClose();
-                        onOpenReport(reportId);
-                      }}
-                      className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>심사보고서 바로가기</span>
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 

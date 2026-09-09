@@ -1,40 +1,51 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Building2, 
-  FileText, 
-  CheckCircle2, 
-  Search, 
-  Send, 
-  AlertCircle, 
-  ArrowUpDown, 
-  ArrowUp, 
-  ArrowDown, 
-  Calendar as CalendarIcon, 
-  Layers, 
-  X, 
+import {
+  Building2,
+  Briefcase,
+  FileText,
+  CheckCircle2,
+  Search,
+  Send,
+  AlertCircle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Calendar as CalendarIcon,
+  Layers,
+  X,
   Megaphone,
   BellRing,
   ChevronLeft,
   ChevronRight,
-  Award
+  Award,
+  ExternalLink,
+  DollarSign,
+  CreditCard,
+  ShieldCheck,
+  BadgeCheck,
+  Download,
+  Printer,
+  UserCheck,
+  Clock,
+  Calculator,
+  Info,
+  Sliders,
+  Check,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 import { Auditor, Company, AuditProject, CertContract, AuditorSettlement, AuditReport, AuditorNotice } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 
-export type AuditLifecycleState = 
-  | '심사준비' 
-  | '계획수립중' 
-  | '심사중' 
-  | '보고서작성중' 
-  | '심사보고' 
-  | '보고서보완' 
-  | '보고서승인' 
+export type AuditLifecycleState =
+  | '심사 중'
+  | '심사준비'
   | '인증유지';
 
-export type SettlementLifecycleState = 
-  | '입금확인중' 
-  | '입금확인' 
-  | '9월 25일 입금예정' 
+export type SettlementLifecycleState =
+  | '입금확인중'
+  | '입금확인완료'
+  | '9월 25일 입금예정'
   | '10월 25일 입금예정'
   | '입금완료';
 
@@ -49,10 +60,31 @@ export interface CompanyWithStatus {
   stageText: string;
   stdAndCerts: { std: string; certNo: string }[];
   dueDate: string;
-  prepStartDate: string; // 심사준비 진입일 (기한 4개월 전)
+  prepStartDate: string;
   auditStartDate?: string;
   auditEndDate?: string;
   dday: { days: number; text: string; isUrgent: boolean; isOverdue: boolean };
+}
+
+// 심사 일정 단위 행 인터페이스
+// 심사일정이 같으면 1개 행으로 통합되고, 일정이 다르면 별개 행으로 관리되며 각자의 진행상태를 가짐
+export interface AuditScheduleRow {
+  rowId: string;
+  companyId: string;
+  companyName: string;
+  ceoName: string;
+  bizNumber: string;
+  companyWithStatus: CompanyWithStatus;
+  standardsText: string;
+  certNo: string;
+  iafCode: string;
+  stageText: '1차 사후' | '2차 사후' | '갱신';
+  dueDate: string;
+  dday: { days: number; text: string; isUrgent: boolean; isOverdue: boolean };
+  auditorRole: '팀장' | '심사원' | '심사원보' | '협력기관';
+  consultant: string;
+  auditState: AuditLifecycleState;
+  isIntegrated: boolean; // 통합심사 여부
 }
 
 interface AuditorPortalProps {
@@ -64,61 +96,79 @@ interface AuditorPortalProps {
   settlements?: AuditorSettlement[];
   notices?: AuditorNotice[];
   onOpenReport: (reportId: string) => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
   onNavigateToSettlement?: () => void;
   onNavigateToReports?: () => void;
   onRequestReassignment?: (projectId: string, log: any) => void;
   onOpenEmailModal: (recipientName?: string, recipientEmail?: string, templateType?: any) => void;
 }
 
-// 심사 단계 계산 (최초, 1차사후, 2차사후, 갱신)
-function getAuditStageText(company: Company, contract?: CertContract, project?: AuditProject): string {
-  if (project?.auditType) {
-    if (project.auditType.includes('최초')) return '최초심사';
-    if (project.auditType.includes('1차')) return '1차 사후';
-    if (project.auditType.includes('2차')) return '2차 사후';
-    if (project.auditType.includes('갱신')) return '갱신심사';
-    return project.auditType;
+// 심사 단계 판별
+function getAuditStageText(company: Company, contract?: CertContract, project?: AuditProject): '1차 사후' | '2차 사후' | '갱신' {
+  const compName = company.companyName;
+
+  // 송이실업: 2026년 9월 갱신심사 완료 -> 차기 1차 사후
+  if (compName.includes('송이실업')) {
+    return '1차 사후';
   }
+
+  // 2026년 완료된 기업들 -> 차기 갱신심사
+  if (compName.includes('디아이엔바이로') || compName.includes('디아이앤바이로') ||
+      compName.includes('두성토건') || compName.includes('케이원메탈') ||
+      compName.includes('케이엠텍') || compName.includes('한창종합물류')) {
+    return '갱신';
+  }
+
+  // 올해 심사 예정인 기업들 -> 2차 사후 또는 1차 사후
+  if (compName.includes('정인') || compName.includes('디와이메탈')) {
+    return '2차 사후';
+  }
+  if (compName.includes('동원시스템즈')) {
+    return '1차 사후';
+  }
+
+  if (project && project.status === '인증발행') {
+    if (project.auditType.includes('2차')) return '갱신';
+    if (project.auditType.includes('1차')) return '2차 사후';
+    if (project.auditType.includes('갱신')) return '1차 사후';
+    if (project.auditType.includes('최초')) return '1차 사후';
+  }
+
+  if (project?.auditType) {
+    if (project.auditType.includes('갱신') || project.auditType.includes('3차')) return '갱신';
+    if (project.auditType.includes('2차')) return '2차 사후';
+    return '1차 사후';
+  }
+
   if (contract?.initialCertDate) {
     const certYear = parseInt(contract.initialCertDate.substring(0, 4), 10);
     const currentYear = 2026;
     const diff = currentYear - certYear;
-    if (diff <= 0) return '최초심사';
+    if (diff <= 0) return '1차 사후';
     if (diff % 3 === 1) return '1차 사후';
     if (diff % 3 === 2) return '2차 사후';
-    return '갱신심사';
+    return '갱신';
   }
   return '1차 사후';
 }
 
-// 인증 규격 및 인증번호 매핑
-function formatStandardsWithCert(comp: Company, contract?: CertContract): { std: string; certNo: string }[] {
-  const stds = contract?.standards && contract.standards.length > 0 
-    ? contract.standards 
-    : ['ISO 9001:2015'];
-  
-  const baseCert = contract?.certNumber || 'Q260101';
-  
-  return stds.map((s: string, idx: number) => {
-    let prefix = 'Q';
-    if (s.includes('14001')) prefix = 'E';
-    else if (s.includes('45001')) prefix = 'O';
-    else if (s.includes('27001')) prefix = 'IS';
-    else if (s.includes('13485')) prefix = 'M';
-    else if (s.includes('22000')) prefix = 'FS';
-
-    const numPart = baseCert.replace(/^[A-Za-z]+/, '');
-    const certNum = `${prefix}${numPart ? (parseInt(numPart, 10) + idx * 2).toString().padStart(6, '0') : '260' + (100 + idx)}`;
-    return { std: s, certNo: certNum };
-  });
+// D-Day 계산
+// 타임존 오차 없는 순수 로컬 기준 날짜 파서 (낮 12시 기준 생성으로 자정 경계 오차 원천 차단)
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0, 0);
 }
 
-// D-Day 계산
+// 두 날짜 간 일수 차이 (toDate - fromDate)
+function getDayDiff(fromDateStr: string, toDateStr: string): number {
+  const f = parseLocalDate(fromDateStr);
+  const t = parseLocalDate(toDateStr);
+  return Math.round((t.getTime() - f.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// D-Day 계산 (오늘: 2026년 9월 10일 기준)
 function calculateDDay(targetDateStr: string): { days: number; text: string; isUrgent: boolean; isOverdue: boolean } {
-  const target = new Date(targetDateStr);
-  const now = new Date(2026, 8, 9); // 기준일 2026-09-09
-  const diffTime = target.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = getDayDiff('2026-09-10', targetDateStr);
 
   if (diffDays < 0) {
     return { days: diffDays, text: `D+${Math.abs(diffDays)}일 경과`, isUrgent: true, isOverdue: true };
@@ -129,91 +179,201 @@ function calculateDDay(targetDateStr: string): { days: number; text: string; isU
   }
 }
 
-// 심사 기한 4개월 전 날짜 계산
-function getPrepStartDate(dueDateStr: string): string {
-  const d = new Date(dueDateStr);
-  d.setMonth(d.getMonth() - 4);
-  return d.toISOString().substring(0, 10);
+// 사무국 심사준비 돌입 설정 (갱신 120일 전, 그 외 90일 전)
+export interface AuditPrepThresholdConfig {
+  after2ndSurveillanceDays: number; // 2차 사후 후 갱신 준비: 120일 전
+  defaultPrepDays: number;          // 그 외 일반 심사 준비: 90일 전
 }
 
-// 심사 진행 상태 판별 로직 (준비상태 전까지는 모두 '인증유지')
+export const DEFAULT_AUDIT_PREP_CONFIG: AuditPrepThresholdConfig = {
+  after2ndSurveillanceDays: 120,
+  defaultPrepDays: 90,
+};
+
+// 3단계 생애주기 판별 (심사 중 > 심사준비 > 인증유지)
 function computeAuditState(
-  daysToDue: number, 
-  project?: AuditProject
+  ddayDays: number,
+  stageText: string,
+  project?: AuditProject,
+  prepConfig: AuditPrepThresholdConfig = DEFAULT_AUDIT_PREP_CONFIG,
+  compName: string = ''
 ): AuditLifecycleState {
+  // 송이실업은 이번 주 갱신심사 완료 -> 인증유지
+  if (compName.includes('송이실업')) {
+    return '인증유지';
+  }
+
   if (project) {
-    if (project.committeeStatus === '등록승인' || project.status === '인증발행') {
-      return '인증유지';
+    const pStatus = project.status;
+    if (['심사진행중', '보고서작성', '보고서제출', '위원회심의'].includes(pStatus)) {
+      // 인증발행된 프로젝트는 이미 완료된 상태
+      if (pStatus === '인증발행') return '인증유지';
+      return '심사 중';
     }
-    if (project.status === '보완요청') {
-      return '보고서보완';
-    }
-    if (project.status === '심의대기' || project.status === '심의진행') {
-      return '보고서승인';
-    }
-    if (project.status === '사무국검토대기') {
-      return '심사보고';
-    }
-    if (project.status === '보고서작성' || project.status === '서명대기' || project.status === '서명완료') {
-      return '보고서작성중';
-    }
-    if (project.status === '심사진행중') {
-      return '심사중';
-    }
-    if (project.status === '계획수립' || project.status === '계획서발송') {
-      return '계획수립중';
+    if (['계획수립', '계획서발송'].includes(pStatus)) {
+      return '심사준비';
     }
   }
 
-  // 4개월(120일) 이내 진입 시 '심사준비', 그 전 평시는 모두 '인증유지'
-  if (daysToDue <= 120 && daysToDue > 30) {
-    return '심사준비';
-  } else if (daysToDue <= 30 && daysToDue >= 0) {
-    return '계획수립중';
-  } else if (daysToDue < 0) {
+  const thresholdDays = stageText === '갱신'
+    ? prepConfig.after2ndSurveillanceDays
+    : prepConfig.defaultPrepDays;
+
+  if (ddayDays < 0) {
     return '심사준비';
   }
+
+  if (ddayDays <= thresholdDays) {
+    return '심사준비';
+  }
+
   return '인증유지';
 }
 
-// 정산 상태 판별 로직
-function computeSettlementState(
-  auditState: AuditLifecycleState,
-  project?: AuditProject,
-  settlement?: AuditorSettlement
-): SettlementLifecycleState {
-  if (settlement) {
-    if (settlement.payoutStatus === '지급완료') {
-      return '입금완료';
-    }
-    if (settlement.payoutStatus === '정산대기') {
-      return '9월 25일 입금예정';
-    }
-  }
-
-  if (project) {
-    if (project.paymentStatus === '입금완료') {
-      if (['보고서승인', '인증유지'].includes(auditState)) {
-        return '9월 25일 입금예정';
-      }
-      return '입금확인';
-    }
-    return '입금확인중';
-  }
-
-  if (auditState === '인증유지') {
-    return '입금완료';
-  }
-  if (auditState === '보고서승인' || auditState === '심사보고') {
-    return '9월 25일 입금예정';
-  }
-  if (auditState === '심사중' || auditState === '보고서작성중') {
-    return '입금확인';
-  }
-  return '입금확인중';
+// 규격명 표준화 함수
+export function normalizeStandardKey(raw: string): string {
+  const upper = raw.toUpperCase().replace(/\s+/g, '');
+  if (upper.includes('9001') || upper.includes('QMS')) return 'ISO 9001';
+  if (upper.includes('14001') || upper.includes('EMS')) return 'ISO 14001';
+  if (upper.includes('45001') || upper.includes('OHSMS') || upper.includes('OH')) return 'ISO 45001';
+  if (upper.includes('22000') || upper.includes('FSMS')) return 'ISO 22000';
+  if (upper.includes('27001') || upper.includes('ISMS')) return 'ISO 27001';
+  if (upper.includes('13485')) return 'ISO 13485';
+  return raw.trim().split(':')[0].trim();
 }
 
-type SortField = 'auditState' | 'no' | 'companyName' | 'standards' | 'iafCode' | 'stageText' | 'dueDate' | 'settlementState';
+// 기업별 심사 일정 및 규격 데이터 정의
+// 심사일정이 동일한 규격들은 1개 행(통합심사)으로 묶이고, 일정이 다른 규격은 별개의 행으로 분리되어 각각의 진행상태를 가짐
+interface CertScheduleItem {
+  standards: string[];
+  certNos: string[];
+  iafCode: string;
+  stageText: '1차 사후' | '2차 사후' | '갱신';
+  dueDate: string;
+}
+
+const COMPANY_CERT_SCHEDULES: Record<string, CertScheduleItem[]> = {
+  // 송이실업: 2026.09 갱신심사 완료 -> 차기 1차 사후 (2027-09-08)
+  '송이실업': [
+    {
+      standards: ['ISO 9001:2015'],
+      certNos: ['Q240237'],
+      iafCode: '04',
+      stageText: '1차 사후',
+      dueDate: '2027-09-07'
+    }
+  ],
+  // 정인 H&SP: 2차 사후 심사준비 (2026-10-15, D-35일)
+  '정인': [
+    {
+      standards: ['ISO 9001:2015'],
+      certNos: ['Q240236'],
+      iafCode: '17',
+      stageText: '2차 사후',
+      dueDate: '2026-10-15'
+    }
+  ],
+  // 디와이메탈: 9001, 14001, 45001 동일 일정(2026-11-20) 통합심사 -> 1개 행 (D-71일 심사준비)
+  '디와이메탈': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['E240150', 'OH240278'],
+      iafCode: '17',
+      stageText: '2차 사후',
+      dueDate: '2026-11-20'
+    }
+  ],
+  // 동원시스템즈: 9001 (Q230020) & 45001 (23-F-1123) 동일 일정(2026-09-23) 통합심사 -> 1개 행 (D-13일 심사준비)
+  '동원시스템즈': [
+    {
+      standards: ['ISO 9001:2015 (QMS)', 'ISO 45001:2018'],
+      certNos: ['Q230020', '23-F-1123'],
+      iafCode: '14',
+      stageText: '1차 사후',
+      dueDate: '2026-09-23'
+    }
+  ],
+  // 디아이엔바이로: 9001, 14001, 45001 동일 일정(2027-03-15) 통합 갱신 -> 1개 행 (인증유지)
+  '디아이엔바이로': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['Q140188', 'OH260415'],
+      iafCode: '14',
+      stageText: '갱신',
+      dueDate: '2027-03-15'
+    }
+  ],
+  '디아이앤바이로': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['Q140188', 'OH260415'],
+      iafCode: '14',
+      stageText: '갱신',
+      dueDate: '2027-03-15'
+    }
+  ],
+  // 두성토건: 9001, 14001, 45001 동일 일정(2027-05-15) 통합 갱신 -> 1개 행 (인증유지)
+  '두성토건': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['E240150', 'OH240150'],
+      iafCode: '28',
+      stageText: '갱신',
+      dueDate: '2027-05-15'
+    }
+  ],
+  // 케이원메탈 1공장: 동일 일정(2027-06-20) 통합 갱신 -> 1개 행 (인증유지)
+  '케이원메탈1공장': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['EQ211105', 'ESG250376'],
+      iafCode: '17',
+      stageText: '갱신',
+      dueDate: '2027-06-20'
+    }
+  ],
+  // 케이원메탈 2공장: 동일 일정(2027-06-20) 통합 갱신 -> 1개 행 (인증유지)
+  '케이원메탈2공장': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['EQ240166', 'OH240235'],
+      iafCode: '17',
+      stageText: '갱신',
+      dueDate: '2027-06-20'
+    }
+  ],
+  // 케이엠텍: 2027-07-15 갱신 -> 1개 행 (인증유지)
+  '케이엠텍': [
+    {
+      standards: ['ISO 9001:2015'],
+      certNos: ['Q240233'],
+      iafCode: '18',
+      stageText: '갱신',
+      dueDate: '2027-07-15'
+    }
+  ],
+  // 한창종합물류: 2027-08-15 통합 갱신 -> 1개 행 (인증유지)
+  '한창종합물류': [
+    {
+      standards: ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018'],
+      certNos: ['QEO240216'],
+      iafCode: '31',
+      stageText: '갱신',
+      dueDate: '2027-08-15'
+    }
+  ]
+};
+
+// 정렬 가능 컬럼 타입
+type SortField =
+  | 'auditState'
+  | 'companyName'
+  | 'standards'
+  | 'iafCode'
+  | 'stageText'
+  | 'dueDate'
+  | 'auditorRole'
+  | 'consultant';
 
 export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   currentAuditor,
@@ -224,194 +384,322 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   settlements = [],
   notices = [],
   onOpenReport,
-  onNavigateToReports,
+  onOpenPdfReport,
   onOpenEmailModal,
 }) => {
-  // 상단 뷰 모드: 'ledger' (업체 대장) vs 'monthly' (월간 심사 일정 달력)
-  const [activeView, setActiveView] = useState<'ledger' | 'monthly'>('ledger');
+  // 5대 탭 메뉴:
+  // 1. ledger: 나의 심사 업체 대장
+  // 2. monthly: 월간 심사 일정 (달력)
+  // 3. settlement: 비용정산
+  // 4. qualification: 심사자격관리 (심사코드관리에서 명칭 변경)
+  // 5. auditMd: 심사MD (신규: 규격별 인원수 MD 산정표 & 할인규칙 안내)
+  const [activeTab, setActiveTab] = useState<'ledger' | 'monthly' | 'settlement' | 'qualification' | 'auditMd'>('ledger');
 
-  // 월간 일정 선택 년/월 (기본: 2026-09)
+  // 월간 일정 캘린더 년/월 (기본: 2026-09)
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<number>(9);
 
+  // 검색 및 필터
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>('all');
-  
-  // 정렬 상태
-  const [sortField, setSortField] = useState<SortField>('dueDate');
+  const [settlementFilter, setSettlementFilter] = useState<string>('all');
+
+  // 심사MD 산정기 대화형 상태
+  const [calcEmpCount, setCalcEmpCount] = useState<number>(45);
+  const [calcStandards, setCalcStandards] = useState<string[]>(['ISO 9001', 'ISO 14001']);
+  const [calcStage, setCalcStage] = useState<'사후' | '갱신' | '최초'>('사후');
+
+  // 사무국 심사준비 일수 변수 (2차 사후 후 120일, 그 외 90일)
+  const [prepConfig] = useState<AuditPrepThresholdConfig>(DEFAULT_AUDIT_PREP_CONFIG);
+
+  // 정렬
+  const [sortField, setSortField] = useState<SortField>('auditState');
   const [sortAsc, setSortAsc] = useState<boolean>(true);
 
-  // 모달 상태: 심사 이력 팝업
+  // 팝업 모달 상태
   const [historyModalCompany, setHistoryModalCompany] = useState<CompanyWithStatus | null>(null);
-
-  // 모달 상태: 심사계획서 & 심사비 청구서 확인 및 동의
   const [planInvoiceModalCompany, setPlanInvoiceModalCompany] = useState<CompanyWithStatus | null>(null);
-  const [isAgreedAndSent, setIsAgreedAndSent] = useState<boolean>(false);
-
-  // 모달 상태: 공지사항 상세 팝업
+  const [isAgreedAndSent, setIsAgreedAndSent] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState<AuditorNotice | null>(null);
+  const [selectedSettlementDetail, setSelectedSettlementDetail] = useState<any | null>(null);
 
-  // 1. 내 담당 기업 목록
+  // 1. 김홍덕 심사원 배정 기업만 정확히 선별 (영업 유치자 or 심사원/팀장)
   const myCompanyIds = useMemo(() => {
     const ids = new Set<string>();
     companies.forEach(c => {
-      if (c.managingAuditorId === currentAuditor.id) ids.add(c.id);
-    });
-    projects.forEach(p => {
-      if (p.leadAuditorId === currentAuditor.id || p.leadAuditorName?.includes(currentAuditor.name)) {
-        ids.add(p.companyId);
+      const cAny = c as any;
+      const assigned = cAny.assignedAuditorName || cAny.assignedAuditor || '';
+      const consultant = cAny.consultant || '';
+      const history: string[] = cAny.auditorHistory || [];
+
+      const isAuditor = assigned.includes(currentAuditor.name) || 
+                        history.some((a: string) => a.includes(currentAuditor.name));
+      const isSales = consultant.includes(currentAuditor.name);
+
+      if (isAuditor || isSales) {
+        ids.add(c.id);
       }
     });
-    return ids;
-  }, [companies, projects, currentAuditor.id, currentAuditor.name]);
 
-  // 2. 통합 데이터 모델링
+    if (ids.size === 0 && companies.length > 0) {
+      companies.slice(0, 10).forEach(c => ids.add(c.id));
+    }
+
+    return ids;
+  }, [companies, currentAuditor.name]);
+
+  // 심사역할 판별 함수
+  const getAuditorRole = (comp: Company): '팀장' | '심사원' | '심사원보' | '협력기관' => {
+    const cAny = comp as any;
+    const assigned = cAny.assignedAuditorName || cAny.assignedAuditor || '';
+    const consultant = cAny.consultant || '';
+    const isSales = consultant.includes(currentAuditor.name);
+
+    const audList = assigned.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const audIdx = audList.findIndex((a: string) => a.includes(currentAuditor.name));
+
+    if (audIdx === -1) {
+      if (isSales) return '협력기관';
+      return '심사원';
+    }
+
+    if (audIdx === 0) return '팀장';
+    if (audIdx === 1) return '심사원';
+    return '심사원보';
+  };
+
+  // 2. 회사별 CompanyWithStatus 매핑 (팝업 모달 연동용)
   const allCompanyItems: CompanyWithStatus[] = useMemo(() => {
     return companies
       .filter(c => myCompanyIds.has(c.id))
-      .map(comp => {
-        const contract = contracts.find(c => c.companyId === comp.id);
-        const project = projects.find(p => p.companyId === comp.id && (p.leadAuditorId === currentAuditor.id || p.leadAuditorName?.includes(currentAuditor.name)));
-        const settlement = settlements.find(s => s.companyName === comp.companyName && (s.auditorId === currentAuditor.id || s.auditorName.includes(currentAuditor.name)));
-        
-        const stageText = getAuditStageText(comp, contract, project);
-        const stdAndCerts = formatStandardsWithCert(comp, contract);
-        const dueDate = contract?.surveillanceDueDate || contract?.validUntil || (project?.endDate || '2026-10-31');
-        const prepStartDate = getPrepStartDate(dueDate);
-        const dday = calculateDDay(dueDate);
+      .map((company, idx) => {
+        const contract = contracts.find(ct => ct.companyId === company.id);
+        const project = projects.find(p => p.companyId === company.id);
+        const settlement = settlements.find(s => s.projectId === project?.id);
 
-        const auditState = computeAuditState(dday.days, project);
-        const settlementState = computeSettlementState(auditState, project, settlement);
-
-        // 심사 프로젝트 일정 (시작일, 종료일)
-        let auditStartDate = project?.startDate;
-        let auditEndDate = project?.endDate;
-        if (!auditStartDate && auditState === '계획수립중') {
-          // 계획수립중일 때 예정 심사일정 2일간
-          auditStartDate = dueDate;
-          const endD = new Date(dueDate);
-          endD.setDate(endD.getDate() + 1);
-          auditEndDate = endD.toISOString().substring(0, 10);
+        const stageText = getAuditStageText(company, contract, project);
+        let dueDate = contract?.surveillanceDueDate || contract?.validUntil || '2027-06-20';
+        if (company.companyName.includes('송이실업')) {
+          dueDate = '2027-09-08';
+        } else if (company.companyName.includes('정인')) {
+          dueDate = '2026-10-15';
         }
 
+        const dday = calculateDDay(dueDate);
+        const auditState = computeAuditState(dday.days, stageText, project, prepConfig, company.companyName);
+
+        const prepDays = stageText === '갱신' ? prepConfig.after2ndSurveillanceDays : prepConfig.defaultPrepDays;
+        const dueObj = new Date(dueDate);
+        const prepObj = new Date(dueObj.getTime() - (prepDays * 24 * 60 * 60 * 1000));
+        const prepStartDate = prepObj.toISOString().split('T')[0];
+
+        const stdAndCerts = [{
+          std: (company as any).standards || (contract?.standards ? contract.standards.join(', ') : 'ISO 9001:2015'),
+          certNo: (company as any).certNo || contract?.certNumber || `Q240${idx + 10}`
+        }];
+
         return {
-          company: comp,
+          company,
           contract,
           project,
           settlement,
           auditState,
-          settlementState,
+          settlementState: '입금완료',
           stageText,
           stdAndCerts,
           dueDate,
           prepStartDate,
-          auditStartDate,
-          auditEndDate,
-          dday,
+          auditStartDate: project?.startDate,
+          auditEndDate: project?.endDate,
+          dday
         };
       });
-  }, [companies, myCompanyIds, contracts, projects, settlements, currentAuditor]);
+  }, [companies, myCompanyIds, contracts, projects, settlements, prepConfig]);
 
-  // 3. 3대 핵심 지표 계산
-  const totalCompanyCount = allCompanyItems.length;
-  const totalCertCount = useMemo(() => {
-    return allCompanyItems.reduce((acc, item) => acc + item.stdAndCerts.length, 0);
-  }, [allCompanyItems]);
+  // 3. 심사 일정 단위 테이블 행 생성
+  // 규격이 달라도 심사일정이 같으면 1개 행(통합심사), 일정이 다르면 별개의 행으로 각자의 진행상태를 가짐
+  const auditScheduleRows: AuditScheduleRow[] = useMemo(() => {
+    const rows: AuditScheduleRow[] = [];
+
+    companies.filter(c => myCompanyIds.has(c.id)).forEach((company) => {
+      const compName = company.companyName;
+      const contract = contracts.find(ct => ct.companyId === company.id);
+      const project = projects.find(p => p.companyId === company.id);
+      const compStatus = allCompanyItems.find(item => item.company.id === company.id)!;
+
+      const auditorRole = getAuditorRole(company);
+      const consultant = (company as any).consultant || (auditorRole === '협력기관' ? currentAuditor.name : '사무국직접');
+
+      // 등록된 기업별 일정/규격 스케줄 조회
+      let matchedKey = Object.keys(COMPANY_CERT_SCHEDULES).find(k => compName.includes(k));
+      const schedules = matchedKey ? COMPANY_CERT_SCHEDULES[matchedKey] : null;
+
+      if (schedules && schedules.length > 0) {
+        schedules.forEach((sch, sIdx) => {
+          const dday = calculateDDay(sch.dueDate);
+          const auditState = computeAuditState(dday.days, sch.stageText, project, prepConfig, compName);
+          const isIntegrated = sch.standards.length > 1;
+
+          rows.push({
+            rowId: `${company.id}-sch-${sIdx}`,
+            companyId: company.id,
+            companyName: company.companyName,
+            ceoName: company.ceoName,
+            bizNumber: company.bizNumber,
+            companyWithStatus: compStatus,
+            standardsText: sch.standards.join(', '),
+            certNo: sch.certNos.join(' / '),
+            iafCode: sch.iafCode,
+            stageText: sch.stageText,
+            dueDate: sch.dueDate,
+            dday,
+            auditorRole,
+            consultant,
+            auditState,
+            isIntegrated
+          });
+        });
+      } else {
+        const stageText = getAuditStageText(company, contract, project);
+        const dueDate = contract?.surveillanceDueDate || contract?.validUntil || '2027-06-20';
+        const dday = calculateDDay(dueDate);
+        const auditState = computeAuditState(dday.days, stageText, project, prepConfig, compName);
+
+        rows.push({
+          rowId: `${company.id}-default`,
+          companyId: company.id,
+          companyName: company.companyName,
+          ceoName: company.ceoName,
+          bizNumber: company.bizNumber,
+          companyWithStatus: compStatus,
+          standardsText: (company as any).standards || 'ISO 9001:2015',
+          certNo: (company as any).certNo || contract?.certNumber || 'Q240236',
+          iafCode: company.iafCode || '14',
+          stageText,
+          dueDate,
+          dday,
+          auditorRole,
+          consultant,
+          auditState,
+          isIntegrated: false
+        });
+      }
+    });
+
+    return rows;
+  }, [companies, myCompanyIds, contracts, projects, currentAuditor, prepConfig, allCompanyItems]);
+
+  // 4. 상단 핵심 지표 계산 (규격명 표준화)
+  const totalCompanyCount = useMemo(() => {
+    return new Set(auditScheduleRows.map(r => r.companyId)).size;
+  }, [auditScheduleRows]);
+
+  const totalScheduleCount = auditScheduleRows.length;
 
   const standardBreakdown = useMemo(() => {
     const counts: Record<string, number> = {};
-    allCompanyItems.forEach(item => {
-      item.stdAndCerts.forEach(sc => {
-        const stdKey = sc.std.includes('9001') ? 'ISO 9001' :
-                       sc.std.includes('14001') ? 'ISO 14001' :
-                       sc.std.includes('45001') ? 'ISO 45001' :
-                       sc.std.includes('27001') ? 'ISO 27001' :
-                       sc.std.includes('13485') ? 'ISO 13485' : sc.std;
-        counts[stdKey] = (counts[stdKey] || 0) + 1;
+    const companyStandardsMap = new Map<string, Set<string>>();
+
+    auditScheduleRows.forEach(r => {
+      if (!companyStandardsMap.has(r.companyId)) {
+        companyStandardsMap.set(r.companyId, new Set<string>());
+      }
+      const set = companyStandardsMap.get(r.companyId)!;
+      r.standardsText.split(/[/,;]+/).forEach(s => {
+        const norm = normalizeStandardKey(s);
+        if (norm) set.add(norm);
       });
     });
+
+    companyStandardsMap.forEach(stds => {
+      stds.forEach(std => {
+        counts[std] = (counts[std] || 0) + 1;
+      });
+    });
+
     return counts;
-  }, [allCompanyItems]);
+  }, [auditScheduleRows]);
 
-  // 4. 진행 중인 심사 실시간 알림 목록 (텍스트 라인)
+  // 5. 상단 실시간 심사 진행 알림 (테이블 상태와 100% 일치: 심사준비 또는 심사 중인 건만 정확히 노출)
   const activeAlertItems = useMemo(() => {
-    return allCompanyItems.filter(item => 
-      ['심사준비', '계획수립중', '심사중', '보고서작성중', '심사보고', '보고서보완', '보고서승인'].includes(item.auditState)
-    ).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }, [allCompanyItems]);
+    return auditScheduleRows
+      .filter(r => ['심사준비', '심사 중'].includes(r.auditState))
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  }, [auditScheduleRows]);
 
-  // 5. 필터링 & 소팅 (대장 뷰)
-  const filteredItems = useMemo(() => {
-    return allCompanyItems.filter(item => {
-      const { company, stdAndCerts, auditState } = item;
-      const matchesSearch = 
-        company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.ceoName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.bizNumber.includes(searchTerm);
-      
-      const matchesStd = selectedStandard === 'all' || stdAndCerts.some(sc => sc.std.includes(selectedStandard));
-      const matchesState = selectedStateFilter === 'all' || auditState === selectedStateFilter;
+  // 6. 필터링
+  const filteredRows = useMemo(() => {
+    return auditScheduleRows.filter(row => {
+      const cleanSearch = searchTerm.replace(/\s+/g, '').toLowerCase();
+      const cleanCompName = row.companyName.replace(/\s+/g, '').toLowerCase();
+      const cleanCeo = row.ceoName.replace(/\s+/g, '').toLowerCase();
+      const cleanBiz = row.bizNumber.replace(/[-\s]/g, '');
+
+      const matchesSearch = !cleanSearch ||
+        cleanCompName.includes(cleanSearch) ||
+        cleanCeo.includes(cleanSearch) ||
+        cleanBiz.includes(cleanSearch) ||
+        row.certNo.replace(/[-\s]/g, '').toLowerCase().includes(cleanSearch) ||
+        row.standardsText.replace(/\s+/g, '').toLowerCase().includes(cleanSearch);
+
+      const matchesStd = selectedStandard === 'all' || row.standardsText.includes(selectedStandard);
+      const matchesState = selectedStateFilter === 'all' || row.auditState === selectedStateFilter;
 
       return matchesSearch && matchesStd && matchesState;
     });
-  }, [allCompanyItems, searchTerm, selectedStandard, selectedStateFilter]);
+  }, [auditScheduleRows, searchTerm, selectedStandard, selectedStateFilter]);
 
-  const sortedItems = useMemo(() => {
-    return [...filteredItems].sort((a, b) => {
-      let valA: string | number = '';
-      let valB: string | number = '';
-
+  // 7. 정렬 (초기 기본: 심사 중 -> 심사준비 -> 인증유지)
+  const sortedRows = useMemo(() => {
+    return [...filteredRows].sort((a, b) => {
       switch (sortField) {
         case 'auditState': {
           const statePriority: Record<AuditLifecycleState, number> = {
-            '심사준비': 1,
-            '계획수립중': 2,
-            '심사중': 3,
-            '보고서작성중': 4,
-            '심사보고': 5,
-            '보고서보완': 6,
-            '보고서승인': 7,
-            '인증유지': 8,
+            '심사 중': 1,
+            '심사준비': 2,
+            '인증유지': 3,
           };
-          valA = statePriority[a.auditState] || 99;
-          valB = statePriority[b.auditState] || 99;
-          break;
+          const pA = statePriority[a.auditState] || 99;
+          const pB = statePriority[b.auditState] || 99;
+          if (pA !== pB) return sortAsc ? pA - pB : pB - pA;
+          return a.dueDate.localeCompare(b.dueDate);
         }
         case 'companyName':
-          valA = a.company.companyName;
-          valB = b.company.companyName;
-          break;
+          return sortAsc
+            ? a.companyName.localeCompare(b.companyName)
+            : b.companyName.localeCompare(a.companyName);
         case 'standards':
-          valA = a.stdAndCerts.map(s => s.std).join(',');
-          valB = b.stdAndCerts.map(s => s.std).join(',');
-          break;
+          return sortAsc
+            ? a.standardsText.localeCompare(b.standardsText)
+            : b.standardsText.localeCompare(a.standardsText);
         case 'iafCode':
-          valA = a.company.iafCode || '';
-          valB = b.company.iafCode || '';
-          break;
+          return sortAsc
+            ? a.iafCode.localeCompare(b.iafCode)
+            : b.iafCode.localeCompare(a.iafCode);
         case 'stageText':
-          valA = a.stageText;
-          valB = b.stageText;
-          break;
+          return sortAsc
+            ? a.stageText.localeCompare(b.stageText)
+            : b.stageText.localeCompare(a.stageText);
         case 'dueDate':
-          valA = a.dueDate;
-          valB = b.dueDate;
-          break;
-        case 'settlementState':
-          valA = a.settlementState;
-          valB = b.settlementState;
-          break;
+          return sortAsc
+            ? a.dueDate.localeCompare(b.dueDate)
+            : b.dueDate.localeCompare(a.dueDate);
+        case 'auditorRole':
+          return sortAsc
+            ? a.auditorRole.localeCompare(b.auditorRole)
+            : b.auditorRole.localeCompare(a.auditorRole);
+        case 'consultant':
+          return sortAsc
+            ? a.consultant.localeCompare(b.consultant)
+            : b.consultant.localeCompare(a.consultant);
         default:
-          valA = a.dueDate;
-          valB = b.dueDate;
+          return sortAsc
+            ? a.dueDate.localeCompare(b.dueDate)
+            : b.dueDate.localeCompare(a.dueDate);
       }
-
-      if (valA < valB) return sortAsc ? -1 : 1;
-      if (valA > valB) return sortAsc ? 1 : -1;
-      return 0;
     });
-  }, [filteredItems, sortField, sortAsc]);
+  }, [filteredRows, sortField, sortAsc]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -426,26 +714,20 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     if (sortField !== field) {
       return <ArrowUpDown className="w-3 h-3 text-slate-400 opacity-60 inline ml-1" />;
     }
-    return sortAsc 
+    return sortAsc
       ? <ArrowUp className="w-3 h-3 text-cyan-600 inline ml-1 font-bold" />
       : <ArrowDown className="w-3 h-3 text-cyan-600 inline ml-1 font-bold" />;
   };
 
-  // =========================================================================
-  // 달력 렌더링 데이터 계산 (월간 캘린더 그리드)
-  // =========================================================================
+  // 8. 달력 데이터 계산 (오늘: 2026년 9월 10일 기준, 달력 내 오늘 강조 유지, 상단 오늘 버튼 완전 제거)
   const calendarDays = useMemo(() => {
     const year = selectedYear;
-    const month = selectedMonth; // 1-12
-    
-    // First day of the month
-    const firstDay = new Date(year, month - 1, 1);
-    const startDayOfWeek = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
-    
-    // Last date of the month
-    const lastDate = new Date(year, month, 0).getDate(); // 28-31
+    const month = selectedMonth;
 
-    // Previous month last date for leading days
+    // 로컬 날짜 정오(12:00) 기준으로 요일 계산하여 시간대(UTC/KST) 변환 오차 원천 방지
+    const firstDay = new Date(year, month - 1, 1, 12, 0, 0);
+    const startDayOfWeek = firstDay.getDay(); // 0: 일, 1: 월, 2: 화, 3: 수, 4: 목, 5: 금, 6: 토
+    const lastDate = new Date(year, month, 0).getDate();
     const prevMonthLastDate = new Date(year, month - 1, 0).getDate();
 
     const days: {
@@ -455,146 +737,301 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       isToday: boolean;
       events: {
         id: string;
-        item: CompanyWithStatus;
-        type: 'audit-period' | 'prep-start' | 'due-date';
         title: string;
         stage: string;
-        isMultiDay: boolean;
-        isStartDay: boolean;
-        isEndDay: boolean;
+        type: 'completed' | 'in-progress' | 'prep' | 'scheduled';
         dayIndexText?: string;
-        state: AuditLifecycleState;
+        extraNote?: string;
+        compStatus?: CompanyWithStatus;
       }[];
     }[] = [];
 
-    // Leading days from prev month
+    // 김홍덕 심사원 피심사 업체의 프로젝트
+    const myProjects = projects.filter(p => myCompanyIds.has(p.companyId));
+
+    // 이전 달 잔여 일자 (일요일 시작)
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      const dNum = prevMonthLastDate - i;
+      const d = prevMonthLastDate - i;
       const prevM = month === 1 ? 12 : month - 1;
       const prevY = month === 1 ? year - 1 : year;
-      const dateStr = `${prevY}-${String(prevM).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`;
-      days.push({
-        dayNumber: dNum,
-        dateStr,
-        isCurrentMonth: false,
-        isToday: false,
-        events: []
-      });
+      const dateStr = `${prevY}-${String(prevM).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      days.push({ dayNumber: d, dateStr, isCurrentMonth: false, isToday: false, events: [] });
     }
 
-    // Current month days
+    // 당월 일자 (오늘: 2026-09-10 목요일)
     for (let d = 1; d <= lastDate; d++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const isToday = dateStr === '2026-09-09';
-      
-      // Find events matching this date
-      const events: any[] = [];
+      const isToday = dateStr === '2026-09-10';
+      const events: typeof days[0]['events'] = [];
+      const addedKeys = new Set<string>();
 
-      allCompanyItems.forEach(item => {
-        // 1. 심사 기간 (2일 이상인 경우 연속 기간 표시)
-        if (item.auditStartDate && item.auditEndDate) {
-          const start = item.auditStartDate;
-          const end = item.auditEndDate;
-          if (dateStr >= start && dateStr <= end) {
-            const isStartDay = dateStr === start;
-            const isEndDay = dateStr === end;
-            const isMultiDay = start !== end;
-            
-            // 일차 계산
-            const startD = new Date(start);
-            const curD = new Date(dateStr);
-            const endD = new Date(end);
-            const totalDays = Math.ceil((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-            const curDayIdx = Math.ceil((curD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      // 1) 해당 날짜에 진행/완료된 심사 프로젝트
+      myProjects.forEach(p => {
+        if (p.startDate && p.endDate) {
+          if (dateStr >= p.startDate && dateStr <= p.endDate) {
+            const totalDays = getDayDiff(p.startDate, p.endDate) + 1;
+            const curDayIdx = getDayDiff(p.startDate, dateStr) + 1;
+            const isCompleted = p.status === '인증발행';
+            const isInProgress = ['심사진행중', '보고서작성', '보고서제출', '위원회심의'].includes(p.status);
+            const compStatus = allCompanyItems.find(item => item.company.id === p.companyId);
+
+            const eventType: 'completed' | 'in-progress' | 'prep' | 'scheduled' = isCompleted
+              ? 'completed'
+              : isInProgress
+              ? 'in-progress'
+              : 'prep';
+            const key = `${p.companyId}-${dateStr}`;
+            addedKeys.add(key);
+
+            let dayIndexText: string | undefined = undefined;
+            let extraNote: string | undefined = undefined;
+
+            if (p.companyName.includes('송이실업')) {
+              extraNote = '남경호 원장 (2MD)';
+            } else if (totalDays > 1) {
+              dayIndexText = `${curDayIdx}/${totalDays}일차`;
+            }
 
             events.push({
-              id: `audit-${item.company.id}-${dateStr}`,
-              item,
-              type: 'audit-period',
-              title: item.company.companyName,
-              stage: item.stageText,
-              isMultiDay,
-              isStartDay,
-              isEndDay,
-              dayIndexText: isMultiDay ? `(${curDayIdx}/${totalDays}일차)` : '',
-              state: item.auditState
+              id: `${p.id}-${dateStr}`,
+              title: p.companyName,
+              stage: p.auditType,
+              type: eventType,
+              dayIndexText,
+              extraNote,
+              compStatus
             });
           }
-        } else if (item.dueDate === dateStr && item.auditState !== '인증유지') {
-          // 심사 기한일 단일 표시
-          events.push({
-            id: `due-${item.company.id}`,
-            item,
-            type: 'due-date',
-            title: item.company.companyName,
-            stage: item.stageText,
-            isMultiDay: false,
-            isStartDay: true,
-            isEndDay: true,
-            state: item.auditState
-          });
-        }
-
-        // 2. 심사준비 돌입일 (기한 4개월 전)
-        if (item.prepStartDate === dateStr) {
-          events.push({
-            id: `prep-${item.company.id}`,
-            item,
-            type: 'prep-start',
-            title: item.company.companyName,
-            stage: item.stageText,
-            isMultiDay: false,
-            isStartDay: true,
-            isEndDay: true,
-            state: '심사준비'
-          });
         }
       });
 
-      days.push({
-        dayNumber: d,
-        dateStr,
-        isCurrentMonth: true,
-        isToday,
-        events
+      // 2) 대장의 차기 심사 예정일 (프로젝트에 아직 미등록된 예정 일정만 추가)
+      auditScheduleRows.forEach(row => {
+        if (row.dueDate === dateStr) {
+          const key = `${row.companyId}-${dateStr}`;
+          if (!addedKeys.has(key)) {
+            events.push({
+              id: `${row.rowId}-due`,
+              title: row.companyName,
+              stage: row.stageText,
+              type: row.auditState === '심사준비' ? 'prep' : 'scheduled',
+              compStatus: row.companyWithStatus
+            });
+          }
+        }
       });
+
+      days.push({ dayNumber: d, dateStr, isCurrentMonth: true, isToday, events });
     }
 
-    // Trailing days to fill 7 columns (up to 35 or 42 cells)
+    // 다음 달 잔여 일자 채우기
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const nextM = month === 12 ? 1 : month + 1;
       const nextY = month === 12 ? year + 1 : year;
       const dateStr = `${nextY}-${String(nextM).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      days.push({
-        dayNumber: i,
-        dateStr,
-        isCurrentMonth: false,
-        isToday: false,
-        events: []
-      });
+      days.push({ dayNumber: i, dateStr, isCurrentMonth: false, isToday: false, events: [] });
     }
 
     return days;
-  }, [allCompanyItems, selectedYear, selectedMonth]);
+  }, [allCompanyItems, auditScheduleRows, projects, myCompanyIds, selectedYear, selectedMonth]);
 
-  // 상태별 텍스트 색상 및 볼드 스타일 (단추 박스 제거)
+  // 9. 비용정산 탭 데이터 (송이실업 갱신 완료 반영)
+  const settlementList = useMemo(() => {
+    return [
+      {
+        id: 'set-01',
+        auditDate: '2026-09-08 ~ 09',
+        companyName: '주식회사 송이실업',
+        standards: 'ISO 9001:2015 (Q240237)',
+        stageText: '갱신심사',
+        role: '심사원',
+        md: 2.0,
+        baseFee: 1000000,
+        travelFee: 100000,
+        totalFee: 1100000,
+        status: '입금예정',
+        dueDate: '2026-09-25',
+        reportSubmitted: true
+      },
+      {
+        id: 'set-02',
+        auditDate: '2026-07-15 ~ 16',
+        companyName: '케이엠텍주식회사',
+        standards: 'ISO 9001:2015 (Q240233)',
+        stageText: '2차 사후',
+        role: '팀장',
+        md: 2.0,
+        baseFee: 1200000,
+        travelFee: 120000,
+        totalFee: 1320000,
+        status: '입금완료',
+        dueDate: '2026-07-25',
+        reportSubmitted: true
+      },
+      {
+        id: 'set-03',
+        auditDate: '2026-06-18 ~ 20',
+        companyName: '(주)케이원메탈1공장',
+        standards: 'ISO 9001/14001/45001 (EQ211105 / ESG250376)',
+        stageText: '2차 사후',
+        role: '심사원',
+        md: 2.5,
+        baseFee: 1250000,
+        travelFee: 150000,
+        totalFee: 1400000,
+        status: '입금완료',
+        dueDate: '2026-06-25',
+        reportSubmitted: true
+      },
+      {
+        id: 'set-04',
+        auditDate: '2026-06-18 ~ 20',
+        companyName: '(주)케이원메탈2공장',
+        standards: 'ISO 9001/14001/45001 (EQ240166 / OH240235)',
+        stageText: '2차 사후',
+        role: '팀장',
+        md: 2.5,
+        baseFee: 1500000,
+        travelFee: 150000,
+        totalFee: 1650000,
+        status: '입금완료',
+        dueDate: '2026-06-25',
+        reportSubmitted: true
+      },
+      {
+        id: 'set-05',
+        auditDate: '2026-05-12 ~ 14',
+        companyName: '주식회사 두성토건',
+        standards: 'ISO 9001/14001/45001 (E240150 / OH240150)',
+        stageText: '2차 사후',
+        role: '심사원',
+        md: 2.5,
+        baseFee: 1250000,
+        travelFee: 120000,
+        totalFee: 1370000,
+        status: '입금완료',
+        dueDate: '2026-05-25',
+        reportSubmitted: true
+      },
+      {
+        id: 'set-06',
+        auditDate: '2026-03-18 ~ 20',
+        companyName: '(주)디아이엔바이로',
+        standards: 'ISO 9001/14001/45001 (Q140188 / OH260415)',
+        stageText: '2차 사후',
+        role: '팀장',
+        md: 2.5,
+        baseFee: 1500000,
+        travelFee: 100000,
+        totalFee: 1600000,
+        status: '입금완료',
+        dueDate: '2026-03-25',
+        reportSubmitted: true
+      },
+      {
+        id: 'set-07',
+        auditDate: '2026-10-15 (예정)',
+        companyName: '정인 H&SP',
+        standards: 'ISO 9001:2015 (Q240236)',
+        stageText: '2차 사후',
+        role: '팀장',
+        md: 1.5,
+        baseFee: 900000,
+        travelFee: 100000,
+        totalFee: 1000000,
+        status: '정산대기',
+        dueDate: '2026-10-25',
+        reportSubmitted: false
+      },
+      {
+        id: 'set-08',
+        auditDate: '2026-11-20 (예정)',
+        companyName: '주식회사 디와이메탈',
+        standards: 'ISO 9001/14001/45001 (E240150 / OH240278)',
+        stageText: '2차 사후',
+        role: '팀장',
+        md: 2.0,
+        baseFee: 1200000,
+        travelFee: 120000,
+        totalFee: 1320000,
+        status: '정산대기',
+        dueDate: '2026-11-25',
+        reportSubmitted: false
+      }
+    ];
+  }, []);
+
+  const settlementSummary = useMemo(() => {
+    let totalAll = 0;
+    let totalPaid = 0;
+    let totalPending = 0;
+
+    settlementList.forEach(item => {
+      totalAll += item.totalFee;
+      if (item.status === '입금완료') totalPaid += item.totalFee;
+      if (item.status === '입금예정') totalPending += item.totalFee;
+    });
+
+    return { totalAll, totalPaid, totalPending, count: settlementList.length };
+  }, [settlementList]);
+
+  // 10. 심사MD 시뮬레이터 계산 로직 (KAB 가이드라인 준용)
+  const calculatedMdResult = useMemo(() => {
+    const emp = calcEmpCount;
+    // 기본 최초 심사 MD (9001 기준)
+    let baseMd = 1.5;
+    if (emp <= 5) baseMd = 1.5;
+    else if (emp <= 10) baseMd = 2.0;
+    else if (emp <= 15) baseMd = 2.5;
+    else if (emp <= 25) baseMd = 3.0;
+    else if (emp <= 45) baseMd = 4.0;
+    else if (emp <= 65) baseMd = 5.0;
+    else if (emp <= 85) baseMd = 6.0;
+    else if (emp <= 125) baseMd = 7.0;
+    else if (emp <= 175) baseMd = 8.0;
+    else baseMd = 9.0;
+
+    // 규격별 기본 가산
+    let totalStdMd = 0;
+    calcStandards.forEach(std => {
+      if (std === 'ISO 9001') totalStdMd += baseMd;
+      else if (std === 'ISO 14001') totalStdMd += baseMd * 1.0;
+      else if (std === 'ISO 45001') totalStdMd += baseMd * 1.1;
+      else totalStdMd += baseMd * 1.0;
+    });
+
+    // 통합심사 할인율 (IAF MD 11: 2규격 20%, 3규격 30%)
+    let discountRate = 0;
+    if (calcStandards.length === 2) discountRate = 0.20;
+    else if (calcStandards.length >= 3) discountRate = 0.30;
+
+    const integratedInitialMd = totalStdMd * (1 - discountRate);
+
+    // 심사 종류별 비율 (최초 100%, 갱신 67%, 사후 33%)
+    let stageRatio = 1.0;
+    if (calcStage === '사후') stageRatio = 0.333;
+    else if (calcStage === '갱신') stageRatio = 0.667;
+
+    const finalMd = Math.round((integratedInitialMd * stageRatio) * 2) / 2; // 0.5단위 반올림
+    const feeEstimate = finalMd * 800000; // 80만원/MD 기준
+
+    return {
+      baseMd,
+      totalStdMd: Math.round(totalStdMd * 10) / 10,
+      discountPercent: discountRate * 100,
+      finalMd: Math.max(1.0, finalMd),
+      feeEstimate
+    };
+  }, [calcEmpCount, calcStandards, calcStage]);
+
+  // 스타일 헬퍼
   const getAuditStateTextClass = (state: AuditLifecycleState) => {
     switch (state) {
+      case '심사 중':
+        return 'text-rose-700 font-black';
       case '심사준비':
         return 'text-amber-700 font-extrabold';
-      case '계획수립중':
-        return 'text-blue-700 font-extrabold';
-      case '심사중':
-        return 'text-purple-700 font-black';
-      case '보고서작성중':
-        return 'text-orange-700 font-extrabold';
-      case '심사보고':
-        return 'text-indigo-700 font-extrabold';
-      case '보고서보완':
-        return 'text-rose-700 font-extrabold';
-      case '보고서승인':
-        return 'text-teal-700 font-extrabold';
       case '인증유지':
         return 'text-emerald-700 font-bold';
       default:
@@ -602,36 +1039,20 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     }
   };
 
-  const getSettlementStateTextClass = (state: SettlementLifecycleState) => {
-    switch (state) {
-      case '입금확인중':
-        return 'text-slate-500 font-medium';
-      case '입금확인':
-        return 'text-blue-700 font-bold';
-      case '9월 25일 입금예정':
-      case '10월 25일 입금예정':
-        return 'text-amber-700 font-bold';
-      case '입금완료':
-        return 'text-emerald-700 font-bold';
-      default:
-        return 'text-slate-600 font-medium';
-    }
-  };
-
   return (
     <div className="space-y-4">
-      
+
       {/* ========================================================================= */}
-      {/* 1. 상단: 인증원 공지사항 & 자동 심사 진행 알림 (단추 박스 없는 깔끔한 텍스트 리스트) */}
+      {/* 1. 상단 알림: 실시간 심사진행알림 (목록과 100% 일치) & 인증원 공지사항             */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        
-        {/* 1-A: 실시간 심사 진행 알림 (순수 텍스트 라인) */}
+
+        {/* 1-A: 실시간 심사진행알림 (현재 심사준비/심사중인 실제 대상만 표시) */}
         <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 shadow-2xs">
           <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 mb-2">
             <div className="flex items-center space-x-1.5 text-amber-900 font-extrabold text-xs">
               <BellRing className="w-3.5 h-3.5 text-amber-600" />
-              <span>실시간 심사 진행 알림 (심사준비~완료)</span>
+              <span>실시간 심사진행알림 (심사준비 대상)</span>
             </div>
             <span className="text-[11px] font-bold text-amber-800">
               총 {activeAlertItems.length}건
@@ -641,28 +1062,30 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1 text-xs">
             {activeAlertItems.length === 0 ? (
               <p className="text-slate-500 text-[11px] py-2 text-center">
-                현재 심사준비 및 진행 중인 기업이 없습니다. (모두 인증유지 상태)
+                현재 심사준비 및 진행 중인 일정이 없습니다. (모두 인증유지 상태)
               </p>
             ) : (
               activeAlertItems.map((item) => (
-                <div 
-                  key={item.company.id}
-                  onClick={() => setHistoryModalCompany(item)}
+                <div
+                  key={item.rowId}
+                  onClick={() => setHistoryModalCompany(item.companyWithStatus)}
                   className="flex items-center justify-between py-1 px-1.5 hover:bg-amber-100/50 rounded-lg text-[11.5px] cursor-pointer transition"
                 >
                   <div className="flex items-center space-x-1.5 truncate">
                     <span className="text-amber-600 font-black">•</span>
-                    <span className={`text-[11px] ${getAuditStateTextClass(item.auditState)}`}>
-                      [{item.auditState}]
-                    </span>
-                    <span className="text-slate-900 font-bold truncate">{item.company.companyName}</span>
-                    <span className="text-slate-500 text-[10.5px]">({item.stageText})</span>
+                    <span className="text-amber-800 font-bold">[{item.auditState}]</span>
+                    <span className="font-bold text-slate-800 truncate">{item.companyName}</span>
+                    <span className="text-slate-500 text-[11px]">({item.stageText})</span>
                   </div>
-                  <div className="flex items-center space-x-2 shrink-0 text-[10.5px] font-mono">
-                    <span className={item.dday.isOverdue ? 'text-red-600 font-bold' : item.dday.isUrgent ? 'text-amber-700 font-bold' : 'text-slate-600 font-medium'}>
+                  <div className="flex items-center space-x-2 shrink-0 ml-2">
+                    <span className={`font-mono text-[11px] font-bold ${
+                      item.dday.isOverdue ? 'text-rose-600' : 'text-amber-700'
+                    }`}>
                       {item.dday.text}
                     </span>
-                    <span className="text-slate-400">· 기한: {item.dueDate}</span>
+                    <span className="text-slate-400 font-mono text-[10.5px]">
+                      기한: {item.dueDate}
+                    </span>
                   </div>
                 </div>
               ))
@@ -670,24 +1093,22 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           </div>
         </div>
 
-        {/* 1-B: 인증원 공지사항 & 심사지침 (순수 텍스트 라인) */}
+        {/* 1-B: 인증원 공지사항 & 심사지침 */}
         <div className="bg-cyan-50/60 border border-cyan-200/80 rounded-2xl p-3.5 shadow-2xs">
           <div className="flex items-center justify-between pb-2 border-b border-cyan-200/60 mb-2">
-            <div className="flex items-center space-x-1.5 text-cyan-950 font-extrabold text-xs">
-              <Megaphone className="w-3.5 h-3.5 text-cyan-700" />
+            <div className="flex items-center space-x-1.5 text-cyan-900 font-extrabold text-xs">
+              <Megaphone className="w-3.5 h-3.5 text-cyan-600" />
               <span>인증원 공지사항 &amp; 심사지침</span>
             </div>
-            <span className="text-[11px] font-bold text-cyan-800">
-              최신 공지
-            </span>
+            <span className="text-[11px] text-cyan-700 font-medium">최신 공지</span>
           </div>
 
           <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1 text-xs">
             {notices.length === 0 ? (
               <p className="text-slate-500 text-[11px] py-2 text-center">등록된 공지사항이 없습니다.</p>
             ) : (
-              notices.slice(0, 3).map((n) => (
-                <div 
+              notices.slice(0, 4).map((n) => (
+                <div
                   key={n.id}
                   onClick={() => setSelectedNotice(n)}
                   className="flex items-center justify-between py-1 px-1.5 hover:bg-cyan-100/50 rounded-lg text-[11.5px] cursor-pointer transition"
@@ -712,12 +1133,12 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. 3대 핵심 지표 바 & 뷰 전환 버튼 (나의 심사 업체 대장 vs 월간 심사 일정)        */}
+      {/* 2. 핵심 지표 바 & 상단 5대 탭 메뉴 바 (심사자격관리, 심사MD 포함)                 */}
       {/* ========================================================================= */}
-      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
         
-        {/* 3대 핵심 지표 (관리업체수 / 총인증수 / 규격별 관리기업수) */}
-        <div className="flex flex-wrap items-center gap-3 text-xs w-full md:w-auto">
+        {/* 3대 핵심 지표 (관리업체수 / 총심사일정수 / 규격별 관리현황 통합) */}
+        <div className="flex flex-wrap items-center gap-3 text-xs w-full xl:w-auto">
           {/* 1. 관리 업체수 */}
           <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
             <Building2 className="w-4 h-4 text-cyan-600" />
@@ -727,16 +1148,16 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             </div>
           </div>
 
-          {/* 2. 총 인증수 */}
+          {/* 2. 총 심사일정 건수 */}
           <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
             <Award className="w-4 h-4 text-indigo-600" />
             <div>
-              <span className="text-[10px] text-slate-400 block font-medium">총 인증 규격수</span>
-              <span className="text-xs font-black text-indigo-900 font-mono">{totalCertCount}건</span>
+              <span className="text-[10px] text-slate-400 block font-medium">심사 일정 건수</span>
+              <span className="text-xs font-black text-indigo-900 font-mono">{totalScheduleCount}건</span>
             </div>
           </div>
 
-          {/* 3. 규격별 관리기업수 */}
+          {/* 3. 규격별 관리 현황 */}
           <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
             <Layers className="w-4 h-4 text-emerald-600" />
             <div>
@@ -746,7 +1167,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   <span key={std} className="inline-flex items-center">
                     <span className="text-slate-600 font-sans text-[10.5px]">{std.replace('ISO ', '')}:</span>
                     <strong className="text-cyan-800 ml-0.5">{count}사</strong>
-                    {idx < Object.keys(standardBreakdown).length - 1 && <span className="text-slate-300 mx-1">/</span>}
+                    {idx < Object.keys(standardBreakdown).length - 1 && <span className="text-slate-300 mx-1">|</span>}
                   </span>
                 ))}
               </div>
@@ -754,15 +1175,15 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           </div>
         </div>
 
-        {/* 2대 뷰 메뉴 전환 버튼: [나의 심사 업체 대장] vs [월간 심사 일정 (달력)] */}
-        <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+        {/* 5대 탭 메뉴: [나의 심사 업체 대장] [월간 심사 일정] [비용정산] [심사자격관리] [심사MD] */}
+        <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0 flex-wrap gap-1">
           <button
             type="button"
-            onClick={() => setActiveView('ledger')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeView === 'ledger'
-                ? 'bg-cyan-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            onClick={() => setActiveTab('ledger')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'ledger'
+                ? 'bg-cyan-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -771,282 +1192,293 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveView('monthly')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeView === 'monthly'
-                ? 'bg-cyan-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            onClick={() => setActiveTab('monthly')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'monthly'
+                ? 'bg-cyan-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <CalendarIcon className="w-3.5 h-3.5" />
             <span>월간 심사 일정 (달력)</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('settlement')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'settlement'
+                ? 'bg-cyan-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <DollarSign className="w-3.5 h-3.5" />
+            <span>비용정산</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('qualification')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'qualification'
+                ? 'bg-cyan-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>심사자격관리</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('auditMd')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'auditMd'
+                ? 'bg-cyan-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Calculator className="w-3.5 h-3.5" />
+            <span>심사MD</span>
+          </button>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 3-A. [나의 심사 업체 대장] 테이블 뷰                                         */}
+      {/* 3-A. [나의 심사 업체 대장] 뷰 (동일 일정 1개 행 통합, 일정 다르면 별개 행 관리)   */}
       {/* ========================================================================= */}
-      {activeView === 'ledger' && (
+      {activeTab === 'ledger' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
           
-          {/* 검색 및 필터 컨트롤러 */}
-          <div className="p-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 text-xs">
+          {/* 검색 및 필터 컨트롤 바 */}
+          <div className="p-3 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <div className="relative min-w-[240px]">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
+                  placeholder="업체명, 대표자, 사업자번호 검색"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="업체명, 대표자, 사업자번호 검색"
-                  className="pl-8 pr-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-cyan-500 w-52"
+                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
                 />
               </div>
 
-              {/* 진행 상태 필터 */}
+              {/* 진행상태 필터 */}
               <select
                 value={selectedStateFilter}
                 onChange={(e) => setSelectedStateFilter(e.target.value)}
-                className="bg-white px-3 py-1.5 rounded-xl border border-slate-300 text-slate-800 font-semibold focus:outline-none cursor-pointer"
+                className="py-1.5 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 font-medium focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
               >
-                <option value="all">심사 진행상태 (전체)</option>
-                <option value="심사준비">심사준비 (4개월 이내)</option>
-                <option value="계획수립중">계획수립중</option>
-                <option value="심사중">심사중</option>
-                <option value="보고서작성중">보고서작성중</option>
-                <option value="심사보고">심사보고 (제출완료)</option>
-                <option value="보고서보완">보고서보완 (반려)</option>
-                <option value="보고서승인">보고서승인</option>
-                <option value="인증유지">인증유지 (평시)</option>
+                <option value="all">진행상태 (전체)</option>
+                <option value="심사 중">심사 중</option>
+                <option value="심사준비">심사준비</option>
+                <option value="인증유지">인증유지</option>
               </select>
 
-              {/* 규격 필터 */}
+              {/* 인증 규격 필터 */}
               <select
                 value={selectedStandard}
                 onChange={(e) => setSelectedStandard(e.target.value)}
-                className="bg-white px-3 py-1.5 rounded-xl border border-slate-300 text-slate-800 font-medium focus:outline-none cursor-pointer"
+                className="py-1.5 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 font-medium focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
               >
                 <option value="all">전체 인증 규격</option>
-                <option value="9001">ISO 9001 (QMS)</option>
-                <option value="14001">ISO 14001 (EMS)</option>
-                <option value="45001">ISO 45001 (OHS)</option>
-                <option value="27001">ISO 27001 (ISMS)</option>
+                <option value="9001">ISO 9001</option>
+                <option value="14001">ISO 14001</option>
+                <option value="45001">ISO 45001</option>
               </select>
             </div>
 
-            <div className="text-xs text-slate-500 font-medium">
-              표시: <strong className="text-cyan-700 font-bold">{sortedItems.length}</strong> / {allCompanyItems.length}개사
-              <span className="ml-2 text-slate-400 text-[11px]">(컬럼명을 클릭하면 정렬됩니다)</span>
+            <div className="text-[11px] text-slate-500 font-mono">
+              표시: <strong>{sortedRows.length}</strong> / {totalScheduleCount}개 심사일정 ({totalCompanyCount}개사)
             </div>
           </div>
 
-          {/* 테이블 본문 */}
+          {/* 메인 심사 업체 대장 테이블 (9개 컬럼, 동일 일정 통합, 개별 일정 독립 진행상태) */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 select-none">
-                  {/* 1. 진행 상태 (가장 왼쪽 컬럼) */}
-                  <th 
-                    onClick={() => handleSort('auditState')} 
-                    className="py-3 px-3.5 text-center min-w-[105px] cursor-pointer hover:bg-slate-200/80 transition"
+                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 select-none text-xs">
+                  {/* 1. 진행상태 */}
+                  <th
+                    onClick={() => handleSort('auditState')}
+                    className="py-3 px-3 text-center min-w-[95px] cursor-pointer hover:bg-slate-200/80 transition"
                   >
-                    심사 진행상태 {renderSortIcon('auditState')}
+                    진행상태 {renderSortIcon('auditState')}
                   </th>
 
                   {/* 2. No. */}
                   <th className="py-3 px-2 text-center w-10 text-slate-500">No</th>
 
                   {/* 3. 기업명 (대표자) */}
-                  <th 
-                    onClick={() => handleSort('companyName')} 
-                    className="py-3 px-3.5 min-w-[160px] cursor-pointer hover:bg-slate-200/80 transition"
+                  <th
+                    onClick={() => handleSort('companyName')}
+                    className="py-3 px-3.5 min-w-[170px] cursor-pointer hover:bg-slate-200/80 transition"
                   >
                     기업명 (대표자) {renderSortIcon('companyName')}
                   </th>
 
-                  {/* 4. 인증표준 (인증번호) */}
-                  <th 
-                    onClick={() => handleSort('standards')} 
-                    className="py-3 px-3.5 min-w-[190px] cursor-pointer hover:bg-slate-200/80 transition"
+                  {/* 4. 인증규격 (인증번호) */}
+                  <th
+                    onClick={() => handleSort('standards')}
+                    className="py-3 px-3.5 min-w-[195px] cursor-pointer hover:bg-slate-200/80 transition"
                   >
-                    인증표준 (인증번호) {renderSortIcon('standards')}
+                    인증규격 (인증번호) {renderSortIcon('standards')}
                   </th>
 
-                  {/* 5. IAF 코드 */}
-                  <th 
-                    onClick={() => handleSort('iafCode')} 
-                    className="py-3 px-2 text-center w-16 cursor-pointer hover:bg-slate-200/80 transition"
+                  {/* 5. 코드 (IAF) */}
+                  <th
+                    onClick={() => handleSort('iafCode')}
+                    className="py-3 px-2 text-center w-14 cursor-pointer hover:bg-slate-200/80 transition"
                   >
-                    IAF {renderSortIcon('iafCode')}
+                    코드 {renderSortIcon('iafCode')}
                   </th>
 
-                  {/* 6. 심사 성격 */}
-                  <th 
-                    onClick={() => handleSort('stageText')} 
+                  {/* 6. 차기심사 */}
+                  <th
+                    onClick={() => handleSort('stageText')}
                     className="py-3 px-2.5 text-center min-w-[85px] cursor-pointer hover:bg-slate-200/80 transition"
                   >
-                    심사 성격 {renderSortIcon('stageText')}
+                    차기심사 {renderSortIcon('stageText')}
                   </th>
 
-                  {/* 7. 차기 심사 기한 */}
-                  <th 
-                    onClick={() => handleSort('dueDate')} 
-                    className="py-3 px-3.5 min-w-[145px] cursor-pointer hover:bg-slate-200/80 transition"
+                  {/* 7. 차기심사일 */}
+                  <th
+                    onClick={() => handleSort('dueDate')}
+                    className="py-3 px-3 min-w-[125px] cursor-pointer hover:bg-slate-200/80 transition text-center"
                   >
-                    차기 심사 기한 {renderSortIcon('dueDate')}
+                    차기심사일 {renderSortIcon('dueDate')}
                   </th>
 
-                  {/* 8. 심사보고서 */}
-                  <th className="py-3 px-3 text-center min-w-[130px]">
-                    심사보고서 &amp; 계획
-                  </th>
-
-                  {/* 9. 정산 상태 (마지막 컬럼) */}
-                  <th 
-                    onClick={() => handleSort('settlementState')} 
-                    className="py-3 px-3.5 text-center min-w-[125px] cursor-pointer hover:bg-slate-200/80 transition"
+                  {/* 8. 심사역할 */}
+                  <th
+                    onClick={() => handleSort('auditorRole')}
+                    className="py-3 px-2.5 text-center min-w-[85px] cursor-pointer hover:bg-slate-200/80 transition text-slate-800"
                   >
-                    심사비 / 정산 상태 {renderSortIcon('settlementState')}
+                    심사역할 {renderSortIcon('auditorRole')}
+                  </th>
+
+                  {/* 9. 협력기관 */}
+                  <th
+                    onClick={() => handleSort('consultant')}
+                    className="py-3 px-3 text-center min-w-[95px] cursor-pointer hover:bg-slate-200/80 transition"
+                  >
+                    협력기관 {renderSortIcon('consultant')}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {sortedItems.length === 0 ? (
+                {sortedRows.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-slate-400">
-                      <AlertCircle className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                      해당 조건의 심사 업체를 찾을 수 없습니다.
+                      검색 조건에 일치하는 심사 일정이 없습니다.
                     </td>
                   </tr>
                 ) : (
-                  sortedItems.map((item, idx) => {
-                    const { company, project, auditState, settlementState, stageText, stdAndCerts, dueDate, dday } = item;
-                    const reportId = project?.reportId || (project ? `rep-${project.id}` : undefined);
+                  sortedRows.map((row, idx) => (
+                    <tr key={row.rowId} className="hover:bg-slate-50/80 transition">
+                      {/* 1. 진행상태 (해당 심사일정의 실제 상태 표시) */}
+                      <td className="py-3 px-3 text-center align-middle">
+                        <span className={`text-[12.5px] ${getAuditStateTextClass(row.auditState)}`}>
+                          {row.auditState}
+                        </span>
+                      </td>
 
-                    return (
-                      <tr 
-                        key={company.id} 
-                        className="hover:bg-cyan-50/30 transition group"
-                      >
-                        {/* 1. 진행 상태 (가장 왼쪽 컬럼) */}
-                        <td className="py-3 px-3 text-center">
-                          <span className={`text-[12px] ${getAuditStateTextClass(auditState)}`}>
-                            {auditState}
-                          </span>
-                        </td>
+                      {/* 2. No */}
+                      <td className="py-3 px-2 text-center font-mono text-slate-400 align-middle">
+                        {idx + 1}
+                      </td>
 
-                        {/* 2. No */}
-                        <td className="py-3 px-2 text-center font-mono text-slate-400 text-[11px]">
-                          {idx + 1}
-                        </td>
-
-                        {/* 3. 기업명 (대표자) - 클릭 시 심사 이력 팝업 */}
-                        <td 
-                          className="py-3 px-3.5 cursor-pointer"
-                          onClick={() => setHistoryModalCompany(item)}
+                      {/* 3. 기업명 (대표자) */}
+                      <td className="py-3 px-3.5 align-middle">
+                        <button
+                          type="button"
+                          onClick={() => setHistoryModalCompany(row.companyWithStatus)}
+                          className="text-left group cursor-pointer"
                         >
                           <div className="font-extrabold text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5">
-                            <span>{company.companyName}</span>
+                            <span className="underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
+                              {row.companyName}
+                            </span>
+                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
                           </div>
-                          <div className="text-[11px] text-slate-500">
-                            {company.ceoName} 대표 {company.bizNumber ? `(${company.bizNumber})` : ''}
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            {row.ceoName} 대표 {row.bizNumber ? `(${row.bizNumber})` : ''}
                           </div>
-                        </td>
+                        </button>
+                      </td>
 
-                        {/* 4. 인증표준 (인증번호) */}
-                        <td className="py-3 px-3.5 leading-snug">
-                          {stdAndCerts.map((sc, sIdx) => (
-                            <div key={sIdx} className="text-slate-800 text-[11.5px]">
-                              <span className="font-bold text-cyan-950">{sc.std}</span>{' '}
-                              <span className="text-slate-500 font-mono text-[10.5px]">({sc.certNo})</span>
-                            </div>
-                          ))}
-                        </td>
-
-                        {/* 5. IAF 코드 */}
-                        <td className="py-3 px-2 text-center font-mono text-slate-700 font-bold text-[11.5px]">
-                          {company.iafCode || '14'}
-                        </td>
-
-                        {/* 6. 심사 성격 */}
-                        <td className="py-3 px-2.5 text-center">
-                          <span className="font-semibold text-slate-800">
-                            {stageText}
-                          </span>
-                        </td>
-
-                        {/* 7. 차기 심사 기한 */}
-                        <td className="py-3 px-3.5">
-                          <div className="font-mono font-bold text-slate-900 flex items-center gap-1.5">
-                            <span>{dueDate}</span>
+                      {/* 4. 인증규격 (인증번호) - 통합심사 배지 포함 */}
+                      <td className="py-3 px-3.5 leading-snug">
+                        <div className="text-slate-800 text-[11.5px]">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-cyan-950">{row.standardsText}</span>
+                            {row.isIntegrated && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold shrink-0">
+                                통합심사
+                              </span>
+                            )}
                           </div>
+                          <div className="text-slate-500 font-mono text-[10.5px] mt-0.5">
+                            ({row.certNo})
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 5. 코드 (IAF) */}
+                      <td className="py-3 px-2 text-center font-mono text-slate-700 font-bold text-[11.5px]">
+                        {row.iafCode}
+                      </td>
+
+                      {/* 6. 차기심사 (갱신은 파란색) */}
+                      <td className="py-3 px-2.5 text-center whitespace-nowrap">
+                        <span className={`text-xs ${
+                          row.stageText === '갱신' 
+                            ? 'text-blue-600 font-extrabold' 
+                            : 'text-slate-800 font-bold'
+                        }`}>
+                          {row.stageText}
+                        </span>
+                      </td>
+
+                      {/* 7. 차기심사일 (심사준비/심사중일 때만 D-Day 표시) */}
+                      <td className="py-3 px-3 text-center">
+                        <div className="font-mono font-bold text-slate-900 text-xs">
+                          {row.dueDate}
+                        </div>
+                        {['심사준비', '심사 중'].includes(row.auditState) && (
                           <div className="mt-0.5 text-[11px] font-bold">
                             <span className={
-                              dday.isOverdue
+                              row.dday.isOverdue
                                 ? 'text-red-600'
-                                : dday.isUrgent
+                                : row.dday.isUrgent
                                 ? 'text-amber-700'
                                 : 'text-slate-500'
                             }>
-                              {dday.text}
+                              {row.dday.text}
                             </span>
                           </div>
-                        </td>
+                        )}
+                      </td>
 
-                        {/* 8. 심사보고서 & 계획 확인 버튼 */}
-                        <td className="py-3 px-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {/* 계획서 & 청구서 확인 버튼 */}
-                            {(auditState === '계획수립중' || auditState === '심사준비') && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setPlanInvoiceModalCompany(item);
-                                  setIsAgreedAndSent(false);
-                                }}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-blue-700 hover:border-blue-300 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-slate-200 cursor-pointer shadow-2xs"
-                                title="계획서 및 청구서 확인/동의"
-                              >
-                                <FileText className="w-3 h-3 text-blue-600" />
-                                <span>계획·청구서</span>
-                              </button>
-                            )}
+                      {/* 8. 심사역할 */}
+                      <td className="py-3 px-2.5 text-center whitespace-nowrap">
+                        {(() => {
+                          if (row.auditorRole === '팀장') return <span className="text-xs font-black text-indigo-700">팀장</span>;
+                          if (row.auditorRole === '심사원') return <span className="text-xs font-bold text-cyan-800">심사원</span>;
+                          if (row.auditorRole === '심사원보') return <span className="text-xs font-semibold text-slate-600">심사원보</span>;
+                          return <span className="text-xs font-bold text-amber-700">협력기관</span>;
+                        })()}
+                      </td>
 
-                            {/* 심사보고서 버튼 */}
-                            {reportId ? (
-                              <button
-                                type="button"
-                                onClick={() => onOpenReport(reportId)}
-                                className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-extrabold transition flex items-center gap-1 shadow-2xs cursor-pointer"
-                                title="심사보고서 작성 및 열람"
-                              >
-                                <FileText className="w-3 h-3" />
-                                <span>심사보고서</span>
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={onNavigateToReports}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 border border-slate-200 cursor-pointer"
-                                title="신규 심사보고서 작성으로 이동"
-                              >
-                                <FileText className="w-3 h-3 text-slate-400" />
-                                <span>심사보고서</span>
-                              </button>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* 9. 정산 상태 (마지막 컬럼) */}
-                        <td className="py-3 px-3.5 text-center">
-                          <span className={`text-[12px] ${getSettlementStateTextClass(settlementState)}`}>
-                            {settlementState}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
+                      {/* 9. 협력기관 */}
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <span className="font-bold text-slate-800 text-xs">
+                          {row.consultant || '사무국직접'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -1054,22 +1486,20 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
 
           <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
             <div>
-              * 기업명을 클릭하면 해당 업체의 <strong>[전체 심사 이력]</strong>을 확인할 수 있습니다.
+              * 기업명을 클릭하면 해당 업체의 <strong>[전체 심사 이력]</strong>을 확인할 수 있습니다. 규격별 심사일정이 같으면 1개 행으로 통합 관리됩니다.
             </div>
             <div className="font-mono text-[11px] text-slate-600">
-              총 {allCompanyItems.length}개사 중 {sortedItems.length}개사 표시 중
+              총 {totalCompanyCount}개사 ({totalScheduleCount}개 심사일정) 중 {sortedRows.length}개 표시 중
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 3-B. [월간 심사 일정 (달력 뷰)] - 2일 이상 심사 기간 걸쳐서 표시                 */}
+      {/* 3-B. [월간 심사 일정 (달력 뷰)]                                                */}
       {/* ========================================================================= */}
-      {activeView === 'monthly' && (
+      {activeTab === 'monthly' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3 animate-in fade-in">
-          
-          {/* 달력 헤더: 년/월 이동 컨트롤러 */}
           <div className="flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-2">
             <div className="flex items-center space-x-2.5">
               <div className="w-8 h-8 rounded-xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
@@ -1080,12 +1510,11 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   {selectedYear}년 {selectedMonth}월 심사 일정 캘린더
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  2일 이상 심사는 기간에 걸쳐 표시되며, 4개월 전 <strong>[심사준비]</strong> 돌입 일정 및 예정 일정을 제공합니다.
+                  심사 예정일 및 심사준비 돌입 일정이 달력에 표시됩니다.
                 </p>
               </div>
             </div>
 
-            {/* 년/월 이동 컨트롤러 */}
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-1 border border-slate-300 rounded-lg p-0.5 bg-white">
                 <button
@@ -1102,11 +1531,9 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                
                 <span className="font-mono font-bold text-xs text-slate-800 px-2">
                   {selectedYear}년 {String(selectedMonth).padStart(2, '0')}월
                 </span>
-
                 <button
                   type="button"
                   onClick={() => {
@@ -1122,131 +1549,665 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
+
             </div>
           </div>
 
-          {/* 달력 그리드 (일 ~ 토) */}
-          <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-100/40">
-            {/* 요일 헤더 */}
-            <div className="grid grid-cols-7 text-center font-bold text-xs border-b border-slate-200 bg-slate-100 text-slate-700 py-2">
-              <div className="text-rose-600">일</div>
-              <div>월</div>
-              <div>화</div>
-              <div>수</div>
-              <div>목</div>
-              <div>금</div>
-              <div className="text-blue-600">토</div>
+          {/* 달력 범례 (완료, 진행, 준비, 예정) */}
+          <div className="flex items-center gap-3.5 text-[11px] font-bold text-slate-600 px-1 py-0.5 flex-wrap">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>
+              <span>심사완료 (완료보고서/인증발행)</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-xs bg-rose-500"></span>
+              <span>심사진행중 (보고서작성)</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>
+              <span>심사준비 (D-30/계획)</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-xs bg-slate-500"></span>
+              <span>차기 예정일</span>
+            </span>
+          </div>
+
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="grid grid-cols-7 bg-slate-100 border-b border-slate-200 text-center text-xs font-extrabold py-2 text-slate-700">
+              <span className="text-red-600">일</span>
+              <span>월</span>
+              <span>화</span>
+              <span>수</span>
+              <span>목</span>
+              <span>금</span>
+              <span className="text-blue-600">토</span>
             </div>
 
-            {/* 날짜 셀 그리드 */}
-            <div className="grid grid-cols-7 gap-[1px] bg-slate-200 text-xs">
-              {calendarDays.map((cell, idx) => (
+            <div className="grid grid-cols-7 divide-x divide-y divide-slate-200">
+              {calendarDays.map((day, idx) => (
                 <div
                   key={idx}
-                  className={`min-h-[110px] p-1.5 flex flex-col justify-between transition ${
-                    cell.isCurrentMonth ? 'bg-white' : 'bg-slate-50/70 text-slate-400'
-                  } ${cell.isToday ? 'ring-2 ring-cyan-500 ring-inset bg-cyan-50/20' : ''}`}
+                  className={`min-h-[105px] p-1.5 transition ${
+                    day.isCurrentMonth ? 'bg-white' : 'bg-slate-50/60 text-slate-400'
+                  } ${day.isToday ? 'ring-2 ring-cyan-500 ring-inset bg-cyan-50/30' : ''}`}
                 >
-                  {/* 날짜 번호 */}
-                  <div className="flex items-center justify-between pb-1">
-                    <span className={`font-mono font-bold text-[12px] inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                      cell.isToday 
-                        ? 'bg-cyan-600 text-white shadow-2xs' 
-                        : idx % 7 === 0 
-                        ? 'text-rose-600' 
-                        : idx % 7 === 6 
-                        ? 'text-blue-600' 
-                        : 'text-slate-800'
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-xs font-bold font-mono ${
+                      idx % 7 === 0 ? 'text-red-600' : idx % 7 === 6 ? 'text-blue-600' : 'text-slate-800'
                     }`}>
-                      {cell.dayNumber}
+                      {day.dayNumber}
                     </span>
-                    {cell.isToday && (
-                      <span className="text-[10px] font-bold text-cyan-700 bg-cyan-100 px-1.5 rounded">오늘</span>
+                    {day.isToday && (
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-cyan-600 text-white leading-none">
+                        오늘
+                      </span>
                     )}
                   </div>
 
-                  {/* 해당 날짜 이벤트 바 (2일 이상 심사는 기간에 걸쳐 연속 표시) */}
-                  <div className="space-y-1 flex-1 overflow-y-auto max-h-[75px] no-scrollbar">
-                    {cell.events.map((ev) => (
-                      <div
-                        key={ev.id}
-                        onClick={() => setHistoryModalCompany(ev.item)}
-                        title={`${ev.title} - ${ev.stage} (${ev.state})`}
-                        className={`text-[10px] p-1 cursor-pointer transition truncate flex items-center gap-1 font-medium ${
-                          ev.type === 'audit-period'
-                            ? ev.isMultiDay
-                              ? `${ev.isStartDay ? 'rounded-l-md' : ''} ${ev.isEndDay ? 'rounded-r-md' : ''} bg-cyan-600 text-white shadow-2xs font-bold border-y border-cyan-700`
-                              : 'rounded-md bg-cyan-100 text-cyan-900 border border-cyan-300 font-bold'
-                            : ev.type === 'prep-start'
-                            ? 'rounded-md bg-amber-100 text-amber-900 border border-amber-300 font-bold'
-                            : 'rounded-md bg-slate-100 text-slate-800 border border-slate-300'
-                        }`}
-                      >
-                        {ev.type === 'audit-period' && (
-                          <span className="truncate">
-                            🏢 {ev.title} {ev.dayIndexText}
+                  <div className="space-y-1">
+                    {day.events.map((ev, eIdx) => {
+                      let bgClass = 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200';
+                      let badgeClass = 'bg-slate-600 text-white';
+                      let badgeText = '예정';
+
+                      if (ev.type === 'completed') {
+                        bgClass = 'bg-emerald-100 text-emerald-950 border-emerald-300 hover:bg-emerald-200';
+                        badgeClass = 'bg-emerald-600 text-white';
+                        badgeText = '완료';
+                      } else if (ev.type === 'in-progress') {
+                        bgClass = 'bg-rose-100 text-rose-950 border-rose-300 hover:bg-rose-200';
+                        badgeClass = 'bg-rose-600 text-white';
+                        badgeText = '진행';
+                      } else if (ev.type === 'prep') {
+                        bgClass = 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200';
+                        badgeClass = 'bg-amber-600 text-white';
+                        badgeText = '준비';
+                      }
+
+                      return (
+                        <div
+                          key={eIdx}
+                          onClick={() => {
+                            if (ev.compStatus) setHistoryModalCompany(ev.compStatus);
+                          }}
+                          className={`p-1 rounded border text-[10.5px] font-bold cursor-pointer transition truncate ${bgClass}`}
+                          title={`${ev.title} (${ev.stage}) ${ev.dayIndexText || ''}`}
+                        >
+                          <span className={`text-[9px] px-1 rounded mr-1 leading-none ${badgeClass}`}>
+                            {badgeText}
                           </span>
-                        )}
-                        {ev.type === 'prep-start' && (
-                          <span className="truncate text-amber-900">
-                            🔔 [준비] {ev.title}
-                          </span>
-                        )}
-                        {ev.type === 'due-date' && (
-                          <span className="truncate">
-                            ⏳ [기한] {ev.title}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                          <span>{ev.title}</span>
+                          <span className="text-[10px] ml-1 font-normal opacity-90">({ev.stage})</span>
+                          {ev.dayIndexText && (
+                            <span className="text-[9px] ml-1 font-mono font-medium">[{ev.dayIndexText}]</span>
+                          )}
+                          {ev.extraNote && (
+                            <span className="text-[9px] ml-1 font-mono font-semibold px-1 rounded bg-emerald-200/80 text-emerald-900 border border-emerald-300">[{ev.extraNote}]</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* 달력 범례 안내 */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-500">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-cyan-600 inline-block"></span>
-                <span>현장 심사 기간 (2일 이상 연속 표기)</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300 inline-block"></span>
-                <span>심사준비 진입일 (기한 4개월 전)</span>
-              </span>
+      {/* ========================================================================= */}
+      {/* 3-C. [비용정산] 탭                                                            */}
+      {/* ========================================================================= */}
+      {activeTab === 'settlement' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 animate-in fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
+              <div className="flex items-center justify-between text-slate-500 text-xs">
+                <span>총 누적 정산 대상액</span>
+                <DollarSign className="w-4 h-4 text-slate-400" />
+              </div>
+              <div className="text-xl font-black text-slate-900 font-mono mt-1">
+                {settlementSummary.totalAll.toLocaleString()}원
+              </div>
+              <div className="text-[11px] text-slate-500 mt-0.5">총 {settlementSummary.count}건의 심사 실적</div>
             </div>
-            <span className="text-slate-400 font-mono">
-              * 일정을 클릭하면 해당 기업의 상세 심사 이력 팝업이 열립니다.
-            </span>
+
+            <div className="bg-emerald-50/60 border border-emerald-200 p-3.5 rounded-xl">
+              <div className="flex items-center justify-between text-emerald-800 text-xs">
+                <span>기지급 완료액</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div className="text-xl font-black text-emerald-700 font-mono mt-1">
+                {settlementSummary.totalPaid.toLocaleString()}원
+              </div>
+              <div className="text-[11px] text-emerald-700/80 mt-0.5">원천징수 영수증 발급완료</div>
+            </div>
+
+            <div className="bg-amber-50/60 border border-amber-200 p-3.5 rounded-xl">
+              <div className="flex items-center justify-between text-amber-800 text-xs">
+                <span>9월 25일 입금 예정액</span>
+                <Clock className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="text-xl font-black text-amber-700 font-mono mt-1">
+                {settlementSummary.totalPending.toLocaleString()}원
+              </div>
+              <div className="text-[11px] text-amber-800 mt-0.5">송이실업 갱신심사 수당 반영</div>
+            </div>
+
+            <div className="bg-indigo-50/60 border border-indigo-200 p-3.5 rounded-xl">
+              <div className="flex items-center justify-between text-indigo-800 text-xs">
+                <span>정산 처리 계좌</span>
+                <CreditCard className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div className="text-xs font-black text-indigo-900 font-mono mt-1.5 truncate">
+                기업은행 110-***-123456
+              </div>
+              <div className="text-[11px] text-indigo-700/80 mt-0.5">예금주: 김홍덕 (비상근)</div>
+            </div>
+          </div>
+
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-slate-800 text-xs">심사 수당 및 출장비 명세 대장</span>
+                <span className="text-[11px] text-slate-500 font-mono">총 {settlementList.length}건</span>
+              </div>
+              <select
+                value={settlementFilter}
+                onChange={(e) => setSettlementFilter(e.target.value)}
+                className="py-1 px-2.5 bg-white border border-slate-300 rounded-lg text-xs"
+              >
+                <option value="all">전체 지급상태</option>
+                <option value="입금완료">입금완료</option>
+                <option value="입금예정">입금예정</option>
+                <option value="정산대기">정산대기</option>
+              </select>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-xs">
+                    <th className="py-2.5 px-3 text-center w-10 text-slate-500">No</th>
+                    <th className="py-2.5 px-3 min-w-[100px]">심사일자</th>
+                    <th className="py-2.5 px-3.5 min-w-[150px]">심사 기업명</th>
+                    <th className="py-2.5 px-3.5 min-w-[160px]">인증규격 (인증번호)</th>
+                    <th className="py-2.5 px-2.5 text-center w-20">심사구분</th>
+                    <th className="py-2.5 px-2 text-center w-16">역할</th>
+                    <th className="py-2.5 px-2 text-center w-14">MD</th>
+                    <th className="py-2.5 px-3 text-right">기본 심사비</th>
+                    <th className="py-2.5 px-3 text-right">여비/출장비</th>
+                    <th className="py-2.5 px-3 text-right font-extrabold text-slate-900">지급합계</th>
+                    <th className="py-2.5 px-2.5 text-center w-24">지급상태</th>
+                    <th className="py-2.5 px-2.5 text-center w-20">명세서</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {settlementList
+                    .filter(s => settlementFilter === 'all' || s.status === settlementFilter)
+                    .map((item, idx) => (
+                      <tr key={item.id} className="hover:bg-slate-50 transition">
+                        <td className="py-2.5 px-3 text-center font-mono text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-mono text-slate-800 text-[11px] whitespace-nowrap">{item.auditDate}</td>
+                        <td className="py-2.5 px-3.5 font-bold text-slate-900">{item.companyName}</td>
+                        <td className="py-2.5 px-3.5 text-slate-600 text-[11px]">{item.standards}</td>
+                        <td className="py-2.5 px-2.5 text-center font-bold text-slate-800 whitespace-nowrap">{item.stageText}</td>
+                        <td className="py-2.5 px-2 text-center font-bold text-cyan-800 whitespace-nowrap">{item.role}</td>
+                        <td className="py-2.5 px-2 text-center font-mono font-bold text-slate-700">{item.md}</td>
+                        <td className="py-2.5 px-3 text-right font-mono text-slate-700">{item.baseFee.toLocaleString()}원</td>
+                        <td className="py-2.5 px-3 text-right font-mono text-slate-700">{item.travelFee.toLocaleString()}원</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900">{item.totalFee.toLocaleString()}원</td>
+                        <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                            item.status === '입금완료'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : item.status === '입금예정'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSettlementDetail(item)}
+                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition"
+                          >
+                            상세
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 팝업 모달 1: 기업 심사 이력 팝업 (통합 공통 모달)                              */}
+      {/* 3-D. [심사자격관리] 탭 (심사원카드 등록, 규격 코드관리, 주기적 갱신 관리)          */}
+      {/* ========================================================================= */}
+      {activeTab === 'qualification' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5 animate-in fade-in">
+          
+          {/* 심사원증 / 심사원 카드 (KAB 공인 심사원 카드 등록 정보) */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 p-6 rounded-2xl text-white gap-5 shadow-md">
+            <div className="flex items-start sm:items-center space-x-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 border-2 border-cyan-400/40 flex items-center justify-center text-cyan-300 font-black shadow-inner shrink-0">
+                <UserCheck className="w-9 h-9" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xl font-black tracking-tight">{currentAuditor.name} 선임심사원</h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold">
+                    KAB 공인 선임심사원증 등록완료
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-200 text-[10.5px] font-medium font-mono">
+                    KAB-CARD-2018-0914
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  소속: <strong>비상근 선임심사원</strong> | 인증원: <strong>(주)지엠에스인증원 (GMSCS)</strong> | 등록번호: <strong className="font-mono">KAB-QMS-09-0418</strong>
+                </p>
+                <div className="text-[11.5px] text-slate-300 flex items-center gap-3 pt-0.5 flex-wrap">
+                  <span>최초 등록일: <strong className="font-mono text-slate-200">2018-04-10</strong></span>
+                  <span>자격 유효기간: <strong className="font-mono text-cyan-300">2027-12-31</strong> (D-477일, 정상 유지)</span>
+                  <span className="text-emerald-400 font-bold">• 사무국 DB 실시간 연동완료</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => alert('모바일 심사원증이 고해상도 PDF로 다운로드됩니다.')}
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>심사원증 발급/저장</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => alert('심사원 자격증명서 및 이력카드가 출력됩니다.')}
+                className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>자격증명서 인쇄</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 보유 심사 규격별 자격 등급 카드 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-blue-50/60 border border-blue-200 p-4 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-blue-900">ISO 9001 (품질)</span>
+                <span className="px-2 py-0.5 rounded bg-blue-600 text-white text-[10.5px] font-black">선임심사원</span>
+              </div>
+              <div className="text-[11.5px] text-slate-700 leading-relaxed">
+                • 등록일: 2018-04-10 (KAB 등록)<br />
+                • 보수교육: 2026년 16시간 이수완료<br />
+                • 누적 실적: 24.5 MD 달성 (자격유지 적격)
+              </div>
+            </div>
+
+            <div className="bg-emerald-50/60 border border-emerald-200 p-4 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-900">ISO 14001 (환경)</span>
+                <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10.5px] font-black">선임심사원</span>
+              </div>
+              <div className="text-[11.5px] text-slate-700 leading-relaxed">
+                • 등록일: 2019-06-15 (KAB 등록)<br />
+                • 보수교육: 2026년 16시간 이수완료<br />
+                • 누적 실적: 16.0 MD 달성 (자격유지 적격)
+              </div>
+            </div>
+
+            <div className="bg-amber-50/60 border border-amber-200 p-4 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-900">ISO 45001 (안전보건)</span>
+                <span className="px-2 py-0.5 rounded bg-amber-600 text-white text-[10.5px] font-black">심사원</span>
+              </div>
+              <div className="text-[11.5px] text-slate-700 leading-relaxed">
+                • 등록일: 2021-02-20 (KAB 등록)<br />
+                • 보수교육: 2026년 16시간 이수완료<br />
+                • 누적 실적: 8.0 MD (선임심사원 승급 요건 충족 중)
+              </div>
+            </div>
+          </div>
+
+          {/* 공인 심사 가능 분야 (IAF Code) 테이블 */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-slate-900 text-xs">KAB 등록 전문 심사 코드 (IAF / EA 산업분야)</span>
+                <span className="text-[11px] text-slate-500 font-mono">총 6개 산업분야 승인</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => alert('신규 심사분야(IAF 코드) 추가 승인 신청 양식이 열립니다.')}
+                className="px-2.5 py-1 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white font-bold text-[11px] transition"
+              >
+                + 신규 코드 승인 신청
+              </button>
+            </div>
+
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-xs">
+                  <th className="py-2.5 px-3 text-center w-16">IAF 코드</th>
+                  <th className="py-2.5 px-3.5">산업 및 기술 분야명</th>
+                  <th className="py-2.5 px-3 text-center w-28">승인 규격</th>
+                  <th className="py-2.5 px-3 text-center w-24">자격 등급</th>
+                  <th className="py-2.5 px-3 text-center w-28">적격성 평가일</th>
+                  <th className="py-2.5 px-3 text-center w-24">상태</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700">
+                {[
+                  { code: '04', name: '화학물질, 화학제품 및 인조섬유 (정인 H&SP 등)', stds: 'ISO 9001, 14001', grade: '선임심사원', date: '2024-03-15', status: '유효' },
+                  { code: '14', name: '고무 및 플라스틱 제품 제조업 (디아이엔바이로 등)', stds: 'ISO 9001, 14001, 45001', grade: '선임심사원', date: '2024-03-15', status: '유효' },
+                  { code: '17', name: '기본 금속 및 가공 금속제품 제조업 (디와이메탈, 케이원메탈)', stds: 'ISO 9001, 14001, 45001', grade: '선임심사원', date: '2024-03-15', status: '유효' },
+                  { code: '18', name: '기계 및 장비 제조업 (일반 기계, 케이엠텍 등)', stds: 'ISO 9001, 14001', grade: '선임심사원', date: '2024-03-15', status: '유효' },
+                  { code: '28', name: '건설업 및 토목공사 (두성토건 등)', stds: 'ISO 9001, 14001, 45001', grade: '선임심사원', date: '2024-03-15', status: '유효' },
+                  { code: '31', name: '운송, 보관 및 통신업 (한창종합물류 등)', stds: 'ISO 9001, 14001, 45001', grade: '선임심사원', date: '2024-03-15', status: '유효' },
+                ].map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 transition">
+                    <td className="py-2.5 px-3 text-center font-mono font-black text-cyan-800">{row.code}</td>
+                    <td className="py-2.5 px-3.5 font-bold text-slate-800">{row.name}</td>
+                    <td className="py-2.5 px-3 text-center font-mono text-[11px] text-slate-600">{row.stds}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-indigo-800">{row.grade}</td>
+                    <td className="py-2.5 px-3 text-center font-mono text-slate-500">{row.date}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px]">
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 3년 주기 자격 갱신 요건 달성 현황 */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <h4 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+              <BadgeCheck className="w-4 h-4 text-emerald-600" />
+              <span>주기적 자격 갱신 및 유지 실적 (3년 주기 적격성 검증 요건)</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="bg-white p-3 rounded-lg border border-slate-200">
+                <span className="text-slate-500 text-[11px] block">KAB 필수 연간 보수교육(CPD)</span>
+                <strong className="text-emerald-700 font-mono text-sm block mt-1">16 / 16시간 (100% 이수)</strong>
+                <span className="text-[10.5px] text-slate-400">2026년도 이수완료 증명 제출됨</span>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-slate-200">
+                <span className="text-slate-500 text-[11px] block">최근 3개년 심사공수 실적</span>
+                <strong className="text-indigo-700 font-mono text-sm block mt-1">48.5 MD (기준 15 MD 달성)</strong>
+                <span className="text-[10.5px] text-slate-400">의무 실적 대비 323% 초과 달성</span>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-slate-200">
+                <span className="text-slate-500 text-[11px] block">차기 적격성 재평가 예정일</span>
+                <strong className="text-slate-900 font-mono text-sm block mt-1">2027년 11월</strong>
+                <span className="text-[10.5px] text-cyan-700 font-medium">자격 유지 상태: 정상 (Active)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3-E. [심사MD] 탭 (KAB 기준 인원수별 심사MD 산정표 및 통합 할인규칙 안내)       */}
+      {/* ========================================================================= */}
+      {activeTab === 'auditMd' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5 animate-in fade-in">
+          
+          {/* 상단 안내 배너 */}
+          <div className="bg-cyan-50/80 border border-cyan-200 p-4 rounded-2xl flex items-start space-x-3 text-cyan-950">
+            <Calculator className="w-5 h-5 text-cyan-700 mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <h3 className="font-black text-sm text-cyan-900">
+                공인 심사MD 산정 기준 및 통합심사 할인 규칙 안내 (KAB / IAF MD 가이드라인)
+              </h3>
+              <p className="text-xs text-cyan-800 leading-relaxed">
+                한국인정지원센터(KAB) 및 국제인정포럼(IAF MD 5, MD 11) 규정에 근거하여 산출되는 공식 심사공수 산정 기준표입니다.
+                본 기준은 <strong>인증원 사무국과 심사원에게 동일하게 공유·적용</strong>되며 계약 및 심사 계획 수립의 기초가 됩니다.
+              </p>
+            </div>
+          </div>
+
+          {/* 대화형 심사MD 시뮬레이터 */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center space-x-2">
+                <Sliders className="w-4 h-4 text-cyan-700" />
+                <span className="font-extrabold text-slate-900 text-xs">실시간 심사MD 산정 시뮬레이터</span>
+              </div>
+              <span className="text-[11px] text-slate-500 font-mono">단가: 800,000원/MD (KAB 기준단가)</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              {/* 인원수 설정 */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700 flex justify-between">
+                  <span>종업원 수 (상시 근로자)</span>
+                  <strong className="text-cyan-800 font-mono text-sm">{calcEmpCount}명</strong>
+                </label>
+                <input
+                  type="range"
+                  min={1}
+                  max={250}
+                  value={calcEmpCount}
+                  onChange={(e) => setCalcEmpCount(parseInt(e.target.value, 10))}
+                  className="w-full accent-cyan-700"
+                />
+                <div className="flex justify-between text-[10.5px] text-slate-400 font-mono">
+                  <span>1인</span>
+                  <span>50인</span>
+                  <span>100인</span>
+                  <span>250인</span>
+                </div>
+              </div>
+
+              {/* 적용 규격 선택 */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700">신청 / 심사 규격 (다중 선택)</label>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {['ISO 9001', 'ISO 14001', 'ISO 45001'].map(std => {
+                    const isSelected = calcStandards.includes(std);
+                    return (
+                      <button
+                        key={std}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            if (calcStandards.length > 1) {
+                              setCalcStandards(calcStandards.filter(s => s !== std));
+                            }
+                          } else {
+                            setCalcStandards([...calcStandards, std]);
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                          isSelected
+                            ? 'bg-cyan-700 text-white shadow-xs'
+                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3" />}
+                        <span>{std}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 심사 차수 선택 */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700">심사 구분</label>
+                <div className="flex gap-1.5 pt-0.5">
+                  {(['사후', '갱신', '최초'] as const).map(stg => (
+                    <button
+                      key={stg}
+                      type="button"
+                      onClick={() => setCalcStage(stg)}
+                      className={`flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        calcStage === stg
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {stg === '사후' ? '사후관리 (1/3)' : stg === '갱신' ? '갱신심사 (2/3)' : '최초심사 (100%)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 시뮬레이션 결과 박스 */}
+            <div className="bg-white border border-cyan-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="font-bold text-slate-500">산출 공수 요약:</span>
+                  <span className="text-slate-700">규격합계 {calculatedMdResult.totalStdMd} MD</span>
+                  {calculatedMdResult.discountPercent > 0 && (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10.5px]">
+                      통합심사 {calculatedMdResult.discountPercent}% 감축
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  * 산정 공식: (규격별 기본공수 합산) × (1 - 통합감축률) × 심사차수 비율
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <span className="text-[11px] text-slate-500 block">최종 적용 심사공수</span>
+                <strong className="text-2xl font-black text-cyan-800 font-mono">
+                  {calculatedMdResult.finalMd} MD
+                </strong>
+                <span className="text-xs font-mono font-bold text-slate-700 ml-2">
+                  (약 {calculatedMdResult.feeEstimate.toLocaleString()}원)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* KAB 인원수별 심사공수(MD) 기준표 */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-slate-900 text-xs">KAB 인원수 구간별 표준 심사 MD 기준표</span>
+                <span className="text-[11px] text-slate-500">(최초 심사 1+2단계 기준)</span>
+              </div>
+            </div>
+
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-xs">
+                  <th className="py-2.5 px-3 text-center w-28">종업원 수 구간</th>
+                  <th className="py-2.5 px-3 text-center">ISO 9001 (품질)</th>
+                  <th className="py-2.5 px-3 text-center">ISO 14001 (환경)</th>
+                  <th className="py-2.5 px-3 text-center">ISO 45001 (안전)</th>
+                  <th className="py-2.5 px-3 text-center">사후심사 공수 (약 1/3)</th>
+                  <th className="py-2.5 px-3 text-center">갱신심사 공수 (약 2/3)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
+                {[
+                  { range: '1 ~ 5인', qms: '1.5 MD', ems: '1.5 MD', ohsms: '2.0 MD', surv: '1.0 MD', recert: '1.5 MD' },
+                  { range: '6 ~ 10인', qms: '2.0 MD', ems: '2.0 MD', ohsms: '2.5 MD', surv: '1.0 MD', recert: '1.5 MD' },
+                  { range: '11 ~ 15인', qms: '2.5 MD', ems: '2.5 MD', ohsms: '3.0 MD', surv: '1.0 MD', recert: '2.0 MD' },
+                  { range: '16 ~ 25인', qms: '3.0 MD', ems: '3.0 MD', ohsms: '3.5 MD', surv: '1.5 MD', recert: '2.0 MD' },
+                  { range: '26 ~ 45인', qms: '4.0 MD', ems: '4.0 MD', ohsms: '4.5 MD', surv: '1.5 MD', recert: '2.5 MD' },
+                  { range: '46 ~ 65인', qms: '5.0 MD', ems: '5.0 MD', ohsms: '5.5 MD', surv: '2.0 MD', recert: '3.5 MD' },
+                  { range: '66 ~ 85인', qms: '6.0 MD', ems: '6.0 MD', ohsms: '6.5 MD', surv: '2.0 MD', recert: '4.0 MD' },
+                  { range: '86 ~ 125인', qms: '7.0 MD', ems: '7.0 MD', ohsms: '7.5 MD', surv: '2.5 MD', recert: '5.0 MD' },
+                  { range: '126 ~ 175인', qms: '8.0 MD', ems: '8.0 MD', ohsms: '8.5 MD', surv: '3.0 MD', recert: '5.5 MD' },
+                  { range: '176 ~ 275인', qms: '9.0 MD', ems: '9.0 MD', ohsms: '9.5 MD', surv: '3.0 MD', recert: '6.0 MD' },
+                ].map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 transition text-center">
+                    <td className="py-2 px-3 font-bold text-slate-900 bg-slate-50/50">{row.range}</td>
+                    <td className="py-2 px-3 text-cyan-900">{row.qms}</td>
+                    <td className="py-2 px-3 text-emerald-900">{row.ems}</td>
+                    <td className="py-2 px-3 text-amber-900">{row.ohsms}</td>
+                    <td className="py-2 px-3 text-slate-600 font-bold">{row.surv}</td>
+                    <td className="py-2 px-3 text-indigo-700 font-bold">{row.recert}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 통합심사 할인 및 감축/가산 규칙 카드 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+              <h4 className="font-black text-slate-900 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>통합심사(Integrated Audit) 공수 감축 규칙 (IAF MD 11)</span>
+              </h4>
+              <p className="text-slate-600 leading-relaxed text-[11.5px]">
+                단일 통합 관리시스템을 운영하는 조직에 대하여 동시 심사를 수행할 경우 다음과 같이 총 공수를 감축 적용합니다:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-slate-700 font-medium pl-1 text-[11.5px]">
+                <li><strong>2개 규격 통합 (예: 9001 + 14001):</strong> 최대 <strong>20% 감축</strong></li>
+                <li><strong>3개 규격 통합 (예: 9001 + 14001 + 45001):</strong> 최대 <strong>30% 감축</strong></li>
+                <li><strong>조건:</strong> 단일 통합 방침 및 경영검토, 통합 내부심사 절차 보유 필수</li>
+              </ul>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+              <h4 className="font-black text-slate-900 flex items-center gap-1.5">
+                <Info className="w-4 h-4 text-cyan-600" />
+                <span>다사업장(Multi-site) 및 리스크별 가감 규칙</span>
+              </h4>
+              <p className="text-slate-600 leading-relaxed text-[11.5px]">
+                사업장 분소 및 공정 특성에 따라 공수가 가감될 수 있습니다:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-slate-700 font-medium pl-1 text-[11.5px]">
+                <li><strong>다사업장 샘플링:</strong> 본사 심사 + 지사/공장은 √n 공식으로 샘플링 심사</li>
+                <li><strong>단순 공정 할인:</strong> 설계/개발 제외 및 비제조 단순 서비스업 10~20% 감축</li>
+                <li><strong>위험 공정 가산:</strong> 중대재해 고위험 분야 또는 복합 외주 공정 보유 시 10~20% 가산</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 팝업 모달 1: 기업 심사 이력 팝업                                              */}
       {/* ========================================================================= */}
       <CompanyAuditHistoryModal
-        isOpen={!!historyModalCompany}
+        isOpen={Boolean(historyModalCompany)}
         onClose={() => setHistoryModalCompany(null)}
-        company={historyModalCompany ? historyModalCompany.company : null}
+        company={historyModalCompany?.company || null}
         contracts={contracts}
         projects={projects}
         settlements={settlements}
         allAuditors={_allAuditors}
         onOpenReport={onOpenReport}
+        onOpenPdfReport={onOpenPdfReport}
+        onOpenPlanInvoiceModal={(comp) => {
+          const found = allCompanyItems.find(item => item.company.id === comp.id);
+          if (found) {
+            setPlanInvoiceModalCompany(found);
+            setIsAgreedAndSent(false);
+          }
+        }}
       />
 
       {/* ========================================================================= */}
-      {/* 팝업 모달 2: 심사계획서 & 심사비 청구서 확인 및 동의 발송 모달                 */}
+      {/* 팝업 모달 2: 심사계획서 및 심사비 청구서 사전 확인 모달                         */}
       {/* ========================================================================= */}
       {planInvoiceModalCompany && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl p-6 space-y-4 text-xs animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -1261,7 +2222,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               <button
                 type="button"
                 onClick={() => setPlanInvoiceModalCompany(null)}
-                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1379,6 +2340,90 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
               >
                 확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 팝업 모달 4: 비용정산 상세 명세서 확인 팝업                                    */}
+      {/* ========================================================================= */}
+      {selectedSettlementDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4 text-xs animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">심사비 수당 정산 명세서</h3>
+                  <p className="text-[11px] text-slate-500">{selectedSettlementDetail.companyName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSettlementDetail(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
+              <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                <span className="text-slate-500">심사 기업명</span>
+                <strong className="text-slate-900">{selectedSettlementDetail.companyName}</strong>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                <span className="text-slate-500">심사 표준 / 인증번호</span>
+                <span className="text-slate-800 font-mono text-[11px]">{selectedSettlementDetail.standards}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                <span className="text-slate-500">심사일자 및 차수</span>
+                <span className="text-slate-800 font-mono">{selectedSettlementDetail.auditDate} ({selectedSettlementDetail.stageText})</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                <span className="text-slate-500">심사역할 및 공수(MD)</span>
+                <span className="text-cyan-800 font-bold">{selectedSettlementDetail.role} ({selectedSettlementDetail.md} MD)</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                <span className="text-slate-500">기본 심사 수당</span>
+                <span className="font-mono text-slate-800">{selectedSettlementDetail.baseFee.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                <span className="text-slate-500">출장 여비 / 숙박비</span>
+                <span className="font-mono text-slate-800">{selectedSettlementDetail.travelFee.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between items-center pt-1 text-sm">
+                <span className="font-extrabold text-slate-800">지급 합계액</span>
+                <strong className="text-emerald-700 font-mono text-base">{selectedSettlementDetail.totalFee.toLocaleString()}원</strong>
+              </div>
+              <div className="text-[10.5px] text-slate-400 text-right">
+                * 사업소득세 (3.3%) 원천징수 전 금액입니다.
+              </div>
+            </div>
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900">
+              지급 상태: <strong>{selectedSettlementDetail.status}</strong> (지급예정일: {selectedSettlementDetail.dueDate})
+            </div>
+
+            <div className="pt-2 border-t border-slate-200 flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => alert('명세서 영수증 인쇄 화면으로 이동합니다.')}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>인쇄</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedSettlementDetail(null)}
+                className="px-4 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold cursor-pointer"
+              >
+                닫기
               </button>
             </div>
           </div>

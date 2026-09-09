@@ -1,6 +1,6 @@
 import legacyAuditorsRaw from './legacyAuditors.json';
 import legacyCompaniesRaw from './legacyCompanies.json';
-import { Auditor, Company, StandardCode, AuditorAffiliation } from '../types';
+import { Auditor, Company, StandardCode, AuditorAffiliation, CertContract, AuditProject, AuditType, AuditStatus } from '../types';
 
 // Map legacy auditors to Auditor[]
 export function getMergedAuditors(): Auditor[] {
@@ -68,6 +68,12 @@ export interface LegacyCompanyExtended extends Company {
   rawStatus?: string;
   regionCode?: string;
   hasDriveReports?: boolean;
+  consultant?: string;
+  agency?: string;
+  salesType?: string;
+  assignedAuditorName?: string;
+  isAuditorChanged?: boolean;
+  auditorHistory?: string[];
 }
 
 // Map legacy companies to Company[]
@@ -119,7 +125,224 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       scope: lc.scope,
       rawStatus: lc.status,
       regionCode: lc.region,
-      hasDriveReports: isDrive
+      hasDriveReports: isDrive,
+      consultant: (lc as any).consultant || '사무국직접',
+      agency: (lc as any).agency || 'HQ사무국',
+      salesType: (lc as any).salesType || 'HQ업체',
+      assignedAuditorName: (lc as any).assignedAuditor || assignedAuditor.name,
+      isAuditorChanged: (lc as any).isAuditorChanged || false,
+      auditorHistory: (lc as any).auditorHistory || []
+    };
+  });
+}
+
+// Map legacy companies to CertContract[]
+export function getMergedContracts(): CertContract[] {
+  const companies = getMergedCompanies();
+  return companies.map((c, idx) => {
+    const stdList: StandardCode[] = [];
+    if (c.standards) {
+      if (c.standards.includes('9001')) stdList.push('ISO 9001:2015');
+      if (c.standards.includes('14001')) stdList.push('ISO 14001:2015');
+      if (c.standards.includes('45001')) stdList.push('ISO 45001:2018');
+    }
+    if (stdList.length === 0) stdList.push('ISO 9001:2015');
+
+    const name = c.companyName;
+    const isDiEnviro = name.includes('디아이엔바이로') || name.includes('디아이앤바이로');
+    const isSongi = name.includes('송이실업');
+    const isKmTech = name.includes('케이엠텍');
+    const isDoosung = name.includes('두성토건');
+    const isK1Metal1 = name.includes('케이원메탈1공장');
+    const isK1Metal2 = name.includes('케이원메탈2공장');
+    const isDyMetal = name.includes('디와이메탈');
+    const isJungin = name.includes('정인');
+    const isDongwon = name.includes('동원시스템즈') || name.includes('동원');
+    const isDongchang = name.includes('동창산업');
+
+    const month = (idx % 12) + 1;
+    const day = (idx % 25) + 1;
+    const initialYear = 2024 - (idx % 3);
+    let initialDate = `${initialYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    let nextDueDate = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    // 실제 실적 기반 정확한 일정 매핑 (단일 진실 공급원)
+    if (isDiEnviro) {
+      initialDate = '2024-03-20';
+      nextDueDate = '2027-03-15'; // 2026.03 2차사후 완료 -> 차기 2027.03 갱신
+    } else if (isKmTech) {
+      initialDate = '2024-07-20';
+      nextDueDate = '2027-07-15'; // 2026.07 심사완료 -> 차기 2027.07 갱신
+    } else if (isDoosung) {
+      initialDate = '2024-05-15';
+      nextDueDate = '2027-05-15'; // 2026.05 심사 모두완료 -> 차기 2027.05 갱신
+    } else if (isK1Metal1 || isK1Metal2) {
+      initialDate = '2024-06-20';
+      nextDueDate = '2027-06-20'; // 2026.06 2차사후 완료 -> 차기 2027.06 갱신
+    } else if (isDongchang) {
+      initialDate = '2024-08-15';
+      nextDueDate = '2027-08-15'; // 2026.08 2차사후 완료 -> 차기 2027.08 갱신
+    } else if (isSongi) {
+      initialDate = '2023-09-07';
+      nextDueDate = '2027-09-07'; // 2026.09.07 갱신심사 완료(남경호 원장과 2MD 시행) -> 차기 1차 사후 2027-09-07
+    } else if (isDongwon) {
+      initialDate = '2024-09-23';
+      nextDueDate = '2026-09-23'; // 2026.09.23 1차 사후 (수요일, D-13 심사준비)
+    } else if (isDyMetal) {
+      initialDate = '2024-11-20';
+      nextDueDate = '2026-11-20'; // 11월 예정 (심사준비, D-71)
+    } else if (isJungin) {
+      initialDate = '2024-10-15';
+      nextDueDate = '2026-10-15'; // 10월 예정 (심사준비, D-35)
+    } else if (month < 9) {
+      nextDueDate = `2027-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    const expiryDate = `${parseInt(nextDueDate.substring(0, 4), 10) + 1}-12-31`;
+
+    return {
+      id: `cont-${c.id}`,
+      companyId: c.id,
+      companyName: c.companyName,
+      certNumber: c.certNo || `Q24${String(idx + 100).padStart(4, '0')}`,
+      issuerName: 'GMSCS',
+      standards: stdList,
+      scope: c.scope || '제품 및 서비스의 개발, 제조 및 부가서비스',
+      initialCertDate: initialDate,
+      validUntil: expiryDate,
+      surveillanceDueDate: nextDueDate,
+      status: '유효'
+    };
+  });
+}
+
+// Map legacy companies to AuditProject[]
+export function getMergedProjects(): AuditProject[] {
+  const companies = getMergedCompanies();
+  const auditors = getMergedAuditors();
+  
+  return companies.map((c, idx) => {
+    const assignedAuditor = auditors.find(a => a.id === c.managingAuditorId) || auditors[idx % auditors.length];
+    
+    const name = c.companyName;
+    const isDiEnviro = name.includes('디아이엔바이로') || name.includes('디아이앤바이로');
+    const isSongi = name.includes('송이실업');
+    const isKmTech = name.includes('케이엠텍');
+    const isDoosung = name.includes('두성토건');
+    const isK1Metal1 = name.includes('케이원메탈1공장');
+    const isK1Metal2 = name.includes('케이원메탈2공장');
+    const isDyMetal = name.includes('디와이메탈');
+    const isJungin = name.includes('정인');
+    const isDongwon = name.includes('동원시스템즈') || name.includes('동원');
+    const isDongchang = name.includes('동창산업');
+
+    const typeIdx = idx % 4;
+    const auditTypes: AuditType[] = ['사후관리 1차', '사후관리 2차', '갱신심사', '최초 2단계'];
+    let auditType = auditTypes[typeIdx];
+
+    const month = (idx % 12) + 1;
+    const startDay = (idx % 20) + 1;
+    let startDate = `2026-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
+    let endDate = `2026-${String(month).padStart(2, '0')}-${String(startDay + 1).padStart(2, '0')}`;
+    let status: AuditStatus = '인증발행';
+    let appliedMd = 1.5;
+
+    if (isDiEnviro) {
+      auditType = '사후관리 2차';
+      startDate = '2026-03-18';
+      endDate = '2026-03-20';
+      status = '인증발행';
+      appliedMd = 2.5;
+    } else if (isKmTech) {
+      auditType = '사후관리 2차';
+      startDate = '2026-07-15';
+      endDate = '2026-07-17';
+      status = '인증발행';
+      appliedMd = 2.0;
+    } else if (isDoosung) {
+      auditType = '사후관리 2차';
+      startDate = '2026-05-12';
+      endDate = '2026-05-14';
+      status = '인증발행';
+      appliedMd = 2.5;
+    } else if (isK1Metal1 || isK1Metal2) {
+      auditType = '사후관리 2차';
+      startDate = '2026-06-18';
+      endDate = '2026-06-20';
+      status = '인증발행';
+      appliedMd = 2.5;
+    } else if (isDongchang) {
+      auditType = '사후관리 2차';
+      startDate = '2026-08-18';
+      endDate = '2026-08-20';
+      status = '인증발행';
+      appliedMd = 2.5;
+    } else if (isSongi) {
+      auditType = '갱신심사';
+      startDate = '2026-09-07';
+      endDate = '2026-09-07'; // 2026.09.07 1일간 남경호 원장과 2MD 시행 완료
+      status = '인증발행';
+      appliedMd = 2.0;
+    } else if (isDongwon) {
+      auditType = '사후관리 1차';
+      startDate = '2026-09-23';
+      endDate = '2026-09-24'; // 2026.09.23 ~ 09.24 평일(수~목) 1차 사후 심사준비 (D-13)
+      status = '계획수립';
+      appliedMd = 2.0;
+    } else if (isDyMetal) {
+      auditType = '사후관리 2차';
+      startDate = '2026-11-20';
+      endDate = '2026-11-21';
+      status = '계획수립';
+      appliedMd = 2.5;
+    } else if (isJungin) {
+      auditType = '사후관리 2차';
+      startDate = '2026-10-15';
+      endDate = '2026-10-16';
+      status = '계획수립';
+      appliedMd = 1.5;
+    } else if (month < 9) {
+      status = '인증발행';
+    } else if (month === 9) {
+      status = (idx % 2 === 0) ? '심사진행중' : '보고서작성';
+    } else {
+      status = (idx % 2 === 0) ? '계획수립' : '계획서발송';
+    }
+
+    const stdList: StandardCode[] = [];
+    if (c.standards) {
+      if (c.standards.includes('9001')) stdList.push('ISO 9001:2015');
+      if (c.standards.includes('14001')) stdList.push('ISO 14001:2015');
+      if (c.standards.includes('45001')) stdList.push('ISO 45001:2018');
+    }
+    if (stdList.length === 0) stdList.push('ISO 9001:2015');
+
+    const fee = (stdList.length * 1200000) + 300000;
+    const isFinished = status === '인증발행';
+
+    return {
+      id: `proj-${c.id}`,
+      contractId: `cont-${c.id}`,
+      companyId: c.id,
+      companyName: c.companyName,
+      issuerName: 'GMSCS',
+      auditType,
+      standards: stdList,
+      leadAuditorId: assignedAuditor.id,
+      leadAuditorName: assignedAuditor.name,
+      startDate,
+      endDate,
+      status,
+      kabStandardMd: stdList.length > 1 ? 2.5 : 1.5,
+      appliedMd: stdList.length > 1 ? 2.5 : 1.5,
+      standardFee: fee,
+      finalFee: fee,
+      paymentStatus: (idx % 2 === 0 || isFinished) ? '입금완료' : '미입금',
+      taxInvoiceStatus: (idx % 2 === 0 || isFinished) ? '영수발행' : '청구발행',
+      billedAmount: fee,
+      paidAmount: (idx % 2 === 0 || isFinished) ? fee : 0,
+      reportId: `rep-${c.id}`,
+      committeeStatus: '등록승인'
     };
   });
 }

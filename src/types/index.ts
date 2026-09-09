@@ -40,6 +40,12 @@ export interface Company {
   iafCode: string;
   riskLevel: 'High' | 'Medium' | 'Low';
   createdAt: string;
+  consultant?: string;       // 영업 유치자 / 컨설턴트명
+  agency?: string;           // 유치 기관 (협력기관 / HQ사무국)
+  salesType?: string;        // 영업구분 (협력기관, HQ업체 등)
+  assignedAuditorName?: string; // 배정된 심사원명
+  isAuditorChanged?: boolean;   // 심사원 교체 여부
+  auditorHistory?: string[];    // 역대 심사원 이력
 }
 
 export type AuditorAffiliation = '상근' | '비상근';

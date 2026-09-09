@@ -417,6 +417,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                   <th className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap">지역</th>
                   <th className="py-2.5 px-3 border-r border-slate-200 whitespace-nowrap">인증표준</th>
                   <th className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap">IAF</th>
+                  <th className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap bg-slate-100">영업/컨설턴트</th>
                   <th className="py-2.5 px-3 border-r border-slate-200 whitespace-nowrap">품질담당자 / 연락처</th>
                   <th className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap">현상태</th>
                   <th className="py-2.5 px-3 text-center whitespace-nowrap">과거기록/관리</th>

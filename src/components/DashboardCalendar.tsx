@@ -15,6 +15,7 @@ interface DashboardCalendarProps {
   auditors: Auditor[];
   companies: Company[];
   onOpenReport: (reportId: string) => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
   onSendPlan: (projectId: string) => void;
   onNavigateTab?: (category: MainCategory, tab: ActiveTab, subTab?: 'settlements' | 'billing') => void;
 }
@@ -24,6 +25,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   auditors,
   companies,
   onOpenReport,
+  onOpenPdfReport,
   onSendPlan: _onSendPlan,
   onNavigateTab
 }) => {
@@ -303,6 +305,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         projects={projects}
         allAuditors={auditors}
         onOpenReport={onOpenReport}
+        onOpenPdfReport={onOpenPdfReport}
       />
     </div>
   );

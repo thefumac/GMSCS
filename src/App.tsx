@@ -16,6 +16,7 @@ import { CommitteeManager } from './components/CommitteeManager';
 import { EmailDispatchModal, EmailDispatchData } from './components/EmailDispatchModal';
 import { LoginPage } from './components/LoginPage';
 import { AuditorNoticeManager } from './components/AuditorNoticeManager';
+import { PdfViewerModal } from './components/PdfViewerModal';
 
 import { 
   mockAuditors, 
@@ -29,7 +30,7 @@ import {
   mockAuditContracts,
   mockAuditorNotices
 } from './data/mockData';
-import { getMergedAuditors, getMergedCompanies } from './data/legacyDataLoader';
+import { getMergedAuditors, getMergedCompanies, getMergedContracts, getMergedProjects } from './data/legacyDataLoader';
 import { 
   AuditReport, 
   AuditProject, 
@@ -37,6 +38,7 @@ import {
   TaxInvoiceStatus,
   Auditor,
   Company,
+  CertContract,
   AuditorSettlement,
   CommitteeMeeting,
   CommitteeDecision,
@@ -66,7 +68,8 @@ export function App() {
   // Core Data States (36 Legacy Auditors & 572 Legacy Companies)
   const [auditors, setAuditors] = useState<Auditor[]>(() => getMergedAuditors());
   const [companies, setCompanies] = useState<Company[]>(() => getMergedCompanies());
-  const [projects, setProjects] = useState<AuditProject[]>(mockProjects);
+  const [contracts, setContracts] = useState<CertContract[]>(() => getMergedContracts());
+  const [projects, setProjects] = useState<AuditProject[]>(() => getMergedProjects());
   const [reports, setReports] = useState<Record<string, AuditReport>>(mockReports);
   const [settlements, setSettlements] = useState<AuditorSettlement[]>(mockSettlements);
   const [committeeMeetings, setCommitteeMeetings] = useState<CommitteeMeeting[]>(mockCommitteeMeetings);
@@ -102,6 +105,21 @@ export function App() {
   });
 
   const [isEmailDirectEntry, setIsEmailDirectEntry] = useState<boolean>(false);
+
+  // 과거 심사보고서 및 인증서 PDF 뷰어 모달 상태
+  const [pdfModalState, setPdfModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    pdfUrl?: string;
+    companyName: string;
+    standard?: string;
+    auditType?: string;
+    auditDate?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    companyName: ''
+  });
 
   // 현재 로그인한 심사원 객체 및 권한 체계
   const currentAuditorObj: Auditor = auditors.find(a => a.id === currentUserRole) 
@@ -885,6 +903,17 @@ export function App() {
             auditors={auditors}
             companies={companies}
             onOpenReport={handleOpenReport}
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate,
+                pdfUrl: info.pdfUrl
+              });
+            }}
             onSendPlan={handleSendPlan}
             onNavigateTab={(category, tab, subTab) => {
               navigateTo(tab, category, {
@@ -1063,7 +1092,7 @@ export function App() {
             allAuditors={auditors}
             companies={companies}
             projects={projects}
-            contracts={mockContracts}
+            contracts={contracts}
             settlements={settlements}
             notices={auditorNotices}
             onOpenReport={handleOpenReport}
@@ -1150,6 +1179,18 @@ export function App() {
         onClose={() => setIsEmailModalOpen(false)}
         initialData={emailModalData}
         onLogSent={(log) => setEmailLogs(prev => [log, ...prev])}
+      />
+
+      {/* 과거 심사보고서 및 공인인증서 PDF 뷰어 모달 */}
+      <PdfViewerModal
+        isOpen={pdfModalState.isOpen}
+        onClose={() => setPdfModalState(prev => ({ ...prev, isOpen: false }))}
+        title={pdfModalState.title}
+        pdfUrl={pdfModalState.pdfUrl}
+        companyName={pdfModalState.companyName}
+        standard={pdfModalState.standard}
+        auditType={pdfModalState.auditType}
+        auditDate={pdfModalState.auditDate}
       />
 
       {/* Footer (okesg.com 사업자 및 플랫폼 정보 인용, 이용약관/개인정보처리방침 제외) */}
