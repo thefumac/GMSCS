@@ -14,6 +14,7 @@ import { AuditorPortal } from './components/AuditorPortal';
 import { AuditorSettlementManager } from './components/AuditorSettlementManager';
 import { CommitteeManager } from './components/CommitteeManager';
 import { EmailDispatchModal, EmailDispatchData } from './components/EmailDispatchModal';
+import { LoginPage } from './components/LoginPage';
 
 import { 
   mockAuditors, 
@@ -44,7 +45,43 @@ import {
 
 export function App() {
   // Session & Role Management
-  const [currentUserRole, setCurrentUserRole] = useState<string>('admin'); // 'admin' | 'aud-1' | 'aud-2' etc.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gmscs_auth') === 'true';
+    }
+    return false;
+  });
+
+  const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gmscs_role') || 'admin';
+    }
+    return 'admin';
+  });
+
+  const handleLogin = (roleId: string) => {
+    setCurrentUserRole(roleId);
+    setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gmscs_auth', 'true');
+      localStorage.setItem('gmscs_role', roleId);
+    }
+    const aud = auditors.find(a => a.id === roleId);
+    if (aud?.affiliation === '비상근심사원') {
+      setActiveCategory('auditor-mgmt');
+      setActiveTab('portal');
+    } else {
+      setActiveCategory('dashboard');
+      setActiveTab('calendar');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gmscs_auth');
+    }
+  };
   
   // 2-Tier Navigation State
   const [activeCategory, setActiveCategory] = useState<MainCategory>('dashboard');
@@ -136,6 +173,7 @@ export function App() {
       const repId = params.get('reportId');
 
       if (mode === 'audit-entry' || tab === 'report' || tab === 'reports') {
+        setIsAuthenticated(true);
         setActiveCategory('audit');
         setActiveTab('reports');
         if (repId) setActiveReportId(repId);
@@ -486,6 +524,10 @@ export function App() {
     setIsEmailModalOpen(true);
   };
 
+  if (!isAuthenticated) {
+    return <LoginPage auditors={auditors} onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-cyan-500 selection:text-white">
       {/* Global Hierarchical Navigation Bar */}
@@ -501,11 +543,17 @@ export function App() {
         setActiveCategory={setActiveCategory}
         urgentAlertCount={urgentCount}
         currentUserRole={currentUserRole}
-        onSelectUserRole={setCurrentUserRole}
+        onSelectUserRole={(role) => {
+          setCurrentUserRole(role);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('gmscs_role', role);
+          }
+        }}
         allAuditors={auditors}
         pendingAdjustmentCount={pendingAdjustmentCount}
         pendingCommitteeCount={pendingCommitteeCount}
         onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
+        onLogout={handleLogout}
       />
 
       {/* Main Container */}
