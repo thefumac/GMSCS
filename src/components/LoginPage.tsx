@@ -131,7 +131,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* 1. 남경호 대표이사 */}
+                {/* 1. 남경호 대표이사 / 수석심사원 */}
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('admin')}
@@ -146,12 +146,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                   </div>
                   <div className="truncate text-xs">
                     <div className="font-extrabold text-white truncate">남경호 대표이사</div>
-                    <div className="text-[10.5px] text-purple-300 truncate">사무국직원 · 시스템 총괄</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">전체 마스터 권한 (전체 300사)</div>
+                    <div className="text-[10.5px] text-purple-300 truncate">수석심사원(선임) · 시스템총괄</div>
+                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 마스터 권한 (300사 총괄)</div>
                   </div>
                 </button>
 
-                {/* 2. 박민우 선임심사원 (사무국 직원) */}
+                {/* 2. 정현일 부원장 (선임심사원) */}
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('aud-3')}
@@ -165,13 +165,53 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                     🏢
                   </div>
                   <div className="truncate text-xs">
-                    <div className="font-extrabold text-white truncate">박민우 선임심사원</div>
-                    <div className="text-[10.5px] text-blue-300 truncate">사무국 직원 (사무국 심사원)</div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">전체 관리자 기능 접근</div>
+                    <div className="font-extrabold text-white truncate">정현일 부원장</div>
+                    <div className="text-[10.5px] text-blue-300 truncate">사무국 선임심사원 (심의부위원장)</div>
+                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 관리자 전 기능 접근</div>
                   </div>
                 </button>
 
-                {/* 3. 김철수 선임심사원 (소속 상근 심사원) */}
+                {/* 3. 이혜원 대리 (심사원) */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectAccount('aud-hq-2')}
+                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
+                    selectedAuditorId === 'aud-hq-2'
+                      ? 'bg-blue-950/50 border-blue-400 text-blue-100 ring-2 ring-blue-500/30'
+                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-sm shrink-0">
+                    🏢
+                  </div>
+                  <div className="truncate text-xs">
+                    <div className="font-extrabold text-white truncate">이혜원 대리</div>
+                    <div className="text-[10.5px] text-blue-300 truncate">사무국 정심사원 (심의간사)</div>
+                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 인증·심사 관리 권한</div>
+                  </div>
+                </button>
+
+                {/* 4. 남효린 주임 (심사원보) */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectAccount('aud-hq-3')}
+                  className={`p-3 rounded-2xl border text-left transition flex items-start space-x-3 cursor-pointer ${
+                    selectedAuditorId === 'aud-hq-3'
+                      ? 'bg-blue-950/50 border-blue-400 text-blue-100 ring-2 ring-blue-500/30'
+                      : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:bg-slate-700/40 hover:border-slate-600'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-sm shrink-0">
+                    🏢
+                  </div>
+                  <div className="truncate text-xs">
+                    <div className="font-extrabold text-white truncate">남효린 주임</div>
+                    <div className="text-[10.5px] text-blue-300 truncate">사무국 심사원보 (행정/전산)</div>
+                    <div className="text-[9.5px] text-slate-400 mt-0.5">사무국 전체 메뉴 접근 권한</div>
+                  </div>
+                </button>
+
+                {/* 5. 김철수 선임심사원 (소속 상근 심사원) */}
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('aud-1')}
@@ -191,7 +231,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
                   </div>
                 </button>
 
-                {/* 4. 이영희 심사원 (비상근 심사원) */}
+                {/* 6. 이영희 심사원 (비상근 심사원) */}
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('aud-2')}

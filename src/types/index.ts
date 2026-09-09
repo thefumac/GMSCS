@@ -60,7 +60,7 @@ export interface Auditor {
   
   // 인증심의위원 자격
   isCommitteeMember: boolean;
-  committeeRole?: '심의위원장' | '심의위원' | '전문심의위원';
+  committeeRole?: '심의위원장' | '심의부위원장' | '심의위원' | '심의간사' | '전문심의위원';
   committeeAppointmentDate?: string;
   
   // 정산 관련 계좌 및 MD 단가
