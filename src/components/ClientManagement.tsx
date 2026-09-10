@@ -20,6 +20,60 @@ export interface ClientManagementProps {
 
 const PAGE_SIZE = 20;
 
+// 지역(광역자치명 및 해외국가명) 추출 헬퍼 함수
+const getRegionDisplay = (comp: Company): string => {
+  const compAny = comp as any;
+  const reg = (compAny.region || compAny.regionCode || '').trim();
+  const addr = (comp.address || compAny.address || '').trim();
+
+  // 1. 해외 국가 체크
+  if (addr.includes('베트남') || reg.includes('베트남') || reg.includes('VN') || addr.includes('Vietnam')) return '베트남';
+  if (addr.includes('중국') || reg.includes('중국') || reg.includes('CN') || addr.includes('China')) return '중국';
+  if (addr.includes('인도네시아') || reg.includes('인니') || addr.includes('Indonesia')) return '인도네시아';
+  if (addr.includes('미국') || reg.includes('USA') || addr.includes('USA')) return '미국';
+  if (addr.includes('일본') || reg.includes('JP') || addr.includes('Japan')) return '일본';
+  if (addr.includes('인도') || reg.includes('인도') || addr.includes('India')) return '인도';
+
+  // 2. 국내 광역자치명 정규화 매핑
+  const regionsMap: [string, string][] = [
+    ['서울', '서울'],
+    ['경기', '경기'],
+    ['인천', '인천'],
+    ['부산', '부산'],
+    ['대구', '대구'],
+    ['광주', '광주'],
+    ['대전', '대전'],
+    ['울산', '울산'],
+    ['세종', '세종'],
+    ['강원', '강원'],
+    ['충북', '충북'],
+    ['충청북도', '충북'],
+    ['충남', '충남'],
+    ['충청남도', '충남'],
+    ['전북', '전북'],
+    ['전라북도', '전북'],
+    ['전남', '전남'],
+    ['전라남도', '전남'],
+    ['경북', '경북'],
+    ['경상북도', '경북'],
+    ['경남', '경남'],
+    ['경상남도', '경남'],
+    ['제주', '제주']
+  ];
+
+  // reg 필드 우선 매칭
+  for (const [key, val] of regionsMap) {
+    if (reg === key || reg.startsWith(key)) return val;
+  }
+
+  // address 필드 앞부분 매칭
+  for (const [key, val] of regionsMap) {
+    if (addr.startsWith(key) || addr.includes(key)) return val;
+  }
+
+  return reg || '경기';
+};
+
 export const ClientManagement: React.FC<ClientManagementProps> = ({
   companies,
   auditors,
@@ -66,7 +120,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     const totalStandards = (has9001 ? 1 : 0) + (has14001 ? 1 : 0) + (has45001 ? 1 : 0);
 
     if (totalStandards <= 1) {
-      // 단일 규격인 경우 날짜만 깔끔하게 표시
+      // 단일 규격인 경우 날짜만 표시
       return [{ label: '', date: datesMap['9001'] || baseDate }];
     }
 
@@ -157,7 +211,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             <option value="45001">ISO 45001</option>
           </select>
 
-          {/* 최초계약 구분 필터 */}
+          {/* 구분 필터 (신규, 전환, 재인증) */}
           <select
             value={selectedContractType}
             onChange={(e) => {
@@ -166,10 +220,10 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             }}
             className="py-1 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
           >
-            <option value="all">전체 계약구분</option>
+            <option value="all">전체 구분</option>
             <option value="신규">신규</option>
             <option value="전환">전환</option>
-            <option value="재인증(부활)">재인증(부활)</option>
+            <option value="재인증">재인증</option>
           </select>
         </div>
 
@@ -203,7 +257,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         </div>
       </div>
 
-      {/* 2. 고객관리 엑셀 목록형 테이블 (회사명 외 볼드 제거, 불필요 컬럼 제거) */}
+      {/* 2. 고객관리 엑셀 목록형 테이블 */}
       <div className="bg-white rounded-xl border border-slate-300 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse border border-slate-300">
@@ -212,33 +266,39 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                 <th className="py-2.5 px-2 text-center w-10 text-slate-500 font-normal border-r border-slate-300">
                   No
                 </th>
-                <th className="py-2.5 px-3 min-w-[160px] font-normal border-r border-slate-300">
+                <th className="py-2.5 px-3 min-w-[155px] font-normal border-r border-slate-300">
                   고객사명 (대표자 / 사업자번호)
                 </th>
-                <th className="py-2.5 px-3 min-w-[150px] font-normal border-r border-slate-300">
+                <th className="py-2.5 px-3 min-w-[145px] font-normal border-r border-slate-300">
                   인증규격 (인증번호)
                 </th>
-                <th className="py-2.5 px-2.5 text-center min-w-[90px] font-normal border-r border-slate-300">
-                  최초계약 구분
-                </th>
-                <th className="py-2.5 px-3 text-center min-w-[130px] font-normal border-r border-slate-300">
-                  최초 계약일 (규격별)
+                <th className="py-2.5 px-2 text-center w-14 font-normal border-r border-slate-300">
+                  지역
                 </th>
                 <th className="py-2.5 px-2 text-center min-w-[65px] font-normal border-r border-slate-300">
+                  구분
+                </th>
+                <th className="py-2.5 px-3 text-center min-w-[125px] font-normal border-r border-slate-300">
+                  최초 계약일 (규격별)
+                </th>
+                <th className="py-2.5 px-2 text-center min-w-[60px] font-normal border-r border-slate-300">
                   직원수
                 </th>
-                <th className="py-2.5 px-3 min-w-[210px] font-normal border-r border-slate-300">
+                <th className="py-2.5 px-3 min-w-[190px] font-normal border-r border-slate-300">
                   인증범위 및 IAF 코드
                 </th>
-                <th className="py-2.5 px-2.5 text-center min-w-[95px] font-normal">
-                  담당 심사원 (영업기관)
+                <th className="py-2.5 px-2 text-center min-w-[80px] font-normal border-r border-slate-300">
+                  담당 심사원
+                </th>
+                <th className="py-2.5 px-2 text-center min-w-[85px] font-normal">
+                  영업/협력기관
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-700 font-normal">
               {paginatedCompanies.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 font-normal">
+                  <td colSpan={10} className="py-12 text-center text-slate-400 font-normal">
                     검색 조건에 일치하는 고객사 내역이 없습니다.
                   </td>
                 </tr>
@@ -254,6 +314,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                   const employees = comp.totalEmployees || compAny.employees || 10;
                   const iafCode = comp.iafCode || compAny.iafCode || '17';
                   const scope = comp.scope || compAny.scope || comp.industry || '제품 및 서비스의 개발, 제조 및 부가서비스';
+                  const region = getRegionDisplay(comp);
 
                   return (
                     <tr
@@ -290,11 +351,14 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         </div>
                       </td>
 
-                      {/* 최초계약 구분 (신규, 전환, 재인증(부활)) */}
-                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal">
-                        <span className="text-slate-700 font-normal">
-                          {contractType}
-                        </span>
+                      {/* 지역 (광역자치명 또는 해외국가명) */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700">
+                        {region}
+                      </td>
+
+                      {/* 구분 (신규, 전환, 재인증) */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700">
+                        {contractType}
                       </td>
 
                       {/* 최초 계약일 (규격별) */}
@@ -326,12 +390,14 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         </div>
                       </td>
 
-                      {/* 담당 심사원 (영업기관) */}
-                      <td className="py-2.5 px-2.5 text-center whitespace-nowrap align-middle text-xs font-normal text-slate-700">
-                        <div className="font-normal text-slate-800">{managingAuditor.name}</div>
-                        <div className="text-[11px] text-slate-400 font-normal mt-0.5">
-                          {compAny.agency || compAny.salesType || 'HQ직영'}
-                        </div>
+                      {/* 담당 심사원 (독립 컬럼) */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700">
+                        {managingAuditor.name}
+                      </td>
+
+                      {/* 영업/협력기관 (독립 컬럼) */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs font-normal text-slate-700">
+                        {compAny.agency || compAny.salesType || 'HQ직영'}
                       </td>
                     </tr>
                   );
