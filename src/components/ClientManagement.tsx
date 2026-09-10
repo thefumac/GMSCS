@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Company, Auditor, CertContract, AuditProject, AuditContractRecord } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
 
 export interface ClientManagementProps {
   companies: Company[];
@@ -291,7 +292,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                   담당 심사원
                 </th>
                 <th className="py-2.5 px-2 text-center min-w-[85px] font-normal">
-                  영업/협력기관
+                  협력기관
                 </th>
               </tr>
             </thead>
@@ -315,6 +316,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                   const iafCode = comp.iafCode || compAny.iafCode || '17';
                   const scope = comp.scope || compAny.scope || comp.industry || '제품 및 서비스의 개발, 제조 및 부가서비스';
                   const region = getRegionDisplay(comp);
+                  const agencyDisplay = getAgencyDisplayName(comp.consultant || compAny.consultant, managingAuditor.name);
 
                   return (
                     <tr
@@ -395,9 +397,13 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         {managingAuditor.name}
                       </td>
 
-                      {/* 영업/협력기관 (독립 컬럼) */}
+                      {/* 협력기관 (독립 컬럼, 이해충돌 방지 적용) */}
                       <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs font-normal text-slate-700">
-                        {compAny.agency || compAny.salesType || 'HQ직영'}
+                        {agencyDisplay === '—' ? (
+                          <span className="text-slate-400 font-mono" title="이해충돌 방지 (담당심사원과 동일)">—</span>
+                        ) : (
+                          <span>{agencyDisplay}</span>
+                        )}
                       </td>
                     </tr>
                   );

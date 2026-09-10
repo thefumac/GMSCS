@@ -15,6 +15,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement } from '../types';
+import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 
 export interface CompanyAuditHistoryModalProps {
   isOpen: boolean;
@@ -266,27 +267,52 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
           </div>
         </div>
 
-                  {/* 3. 영업 유치 / 컨설턴트 (영업비 정산 대상) */}
-          <div className="bg-amber-50/70 p-3 rounded-xl border border-amber-200/80">
-            <span className="text-[11px] text-amber-900 font-bold block flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-amber-600" />
-              <span>영업 유치 / 컨설턴트 (영업비 정산 대상)</span>
-            </span>
-            <div className="mt-1 font-bold text-slate-900 text-xs flex items-center justify-between">
-              <span className="text-sm text-slate-900">
-                {company.consultant || '사무국직접'}
-                <span className="text-slate-500 font-normal text-xs ml-1.5">
-                  ({company.agency || 'HQ사무국'})
-                </span>
-              </span>
-              <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full border border-amber-300">
-                {company.salesType || '협력기관'}
-              </span>
-            </div>
-            <p className="text-[10.5px] text-amber-800 font-medium mt-1">
-              💼 심사비 입금 시 컨설팅/영업수수료 지급 및 정산 대상자입니다.
-            </p>
-          </div>
+                  {/* 3. 영업 유치 / 협력기관 */}
+          {(() => {
+            const compAny = company as any;
+            const consultantName = company.consultant || compAny.consultant;
+            const isConflict = isConflictOfInterest(consultantName, managingAuditor.name);
+            const agencyDisplayName = getAgencyDisplayName(consultantName, managingAuditor.name);
+
+            return (
+              <div className={`p-3 rounded-xl border ${isConflict ? 'bg-slate-50 border-slate-200' : 'bg-amber-50/70 border-amber-200/80'}`}>
+                <div className={`text-[11px] flex items-center justify-between ${isConflict ? 'text-slate-600 font-normal' : 'text-amber-900 font-bold'}`}>
+                  <span className="flex items-center gap-1.5">
+                    <Briefcase className={`w-3.5 h-3.5 ${isConflict ? 'text-slate-400' : 'text-amber-600'}`} />
+                    <span>협력기관 / 영업 유치</span>
+                  </span>
+                  {isConflict && (
+                    <span className="text-[10px] px-2 py-0.5 bg-slate-200 text-slate-700 font-normal rounded-full">
+                      이해충돌 방지 (N/A)
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 text-slate-900 text-xs flex items-center justify-between">
+                  <span className="text-sm text-slate-900 font-normal">
+                    {isConflict ? (
+                      <span className="text-slate-400 font-mono">— (N/A)</span>
+                    ) : (
+                      <span>{agencyDisplayName}</span>
+                    )}
+                  </span>
+                  {!isConflict && (
+                    <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 font-normal rounded-full border border-amber-300">
+                      {company.salesType || '협력기관'}
+                    </span>
+                  )}
+                </div>
+                {isConflict ? (
+                  <p className="text-[10.5px] text-slate-500 font-normal mt-1">
+                    ⚠️ 담당 심사원과 협력기관/유치자가 동일인이므로 심사 공정성 및 이해충돌 방지 규정에 따라 협력기관이 미표기(N/A)됩니다.
+                  </p>
+                ) : (
+                  <p className="text-[10.5px] text-amber-800 font-normal mt-1">
+                    💼 심사비 입금 시 컨설팅/영업수수료 지급 및 정산 대상자입니다.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
 
         {/* 2. 전체 심사 이력 및 경과 타임라인 */}
         <div className="space-y-3 pt-1">
