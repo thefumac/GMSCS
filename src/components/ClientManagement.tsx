@@ -151,8 +151,8 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         agencies.add(agencyName);
       }
     });
-    const list = Array.from(agencies).filter(a => a !== 'HQ직영').sort((a, b) => a.localeCompare(b, 'ko'));
-    return ['HQ직영', ...list];
+    const list = Array.from(agencies).filter(a => a !== 'HQ').sort((a, b) => a.localeCompare(b, 'ko'));
+    return ['HQ', ...list];
   }, [companies, auditorMap]);
 
   // Helper: Get standard initial contract dates

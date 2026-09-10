@@ -4,14 +4,14 @@
  * 규칙:
  * 1. 담당심사원과 협력기관(컨설턴트/유치자)이 동일인이거나 포함되는 경우 이해충돌 방지를 위해 협력기관을 노출하지 않고 '—' (N/A)로 처리합니다.
  * 2. 원래 협력기관 데이터(consultant)가 있는 경우 해당 명칭을 표시합니다.
- * 3. '사무국직접' 또는 'HQ사무국' 등 본원 직영인 경우 'HQ직영'으로 표시합니다.
+ * 3. '사무국직접', 'HQ사무국', 'HQ직영', 'HQ업체' 등 본원 직영인 경우 'HQ'로 통일하여 표시합니다.
  */
 
 export function isConflictOfInterest(consultantName?: string, auditorName?: string): boolean {
   if (!consultantName || !auditorName) return false;
   
   const cleanConsultant = consultantName.replace(/\s+/g, '');
-  if (!cleanConsultant || cleanConsultant === '사무국직접' || cleanConsultant === 'HQ사무국' || cleanConsultant === 'HQ직영') {
+  if (!cleanConsultant || cleanConsultant === '사무국직접' || cleanConsultant === 'HQ사무국' || cleanConsultant === 'HQ직영' || cleanConsultant === 'HQ' || cleanConsultant === 'HQ업체') {
     return false;
   }
 
@@ -30,8 +30,8 @@ export function isConflictOfInterest(consultantName?: string, auditorName?: stri
 export function getAgencyDisplayName(consultantName?: string, auditorName?: string): string {
   const clean = (consultantName || '').trim();
   
-  if (!clean || clean === '사무국직접' || clean === 'HQ사무국' || clean === 'HQ직영') {
-    return 'HQ직영';
+  if (!clean || clean === '사무국직접' || clean === 'HQ사무국' || clean === 'HQ직영' || clean === 'HQ' || clean === 'HQ업체') {
+    return 'HQ';
   }
 
   if (isConflictOfInterest(clean, auditorName)) {
