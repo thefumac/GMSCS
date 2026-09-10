@@ -231,7 +231,34 @@ export function getMergedContracts(): CertContract[] {
   });
 }
 
-// Map real GMS audit projects to AuditProject[]
+// Map real GMS audit projects to AuditProject[] with defensive deduplication
 export function getMergedProjects(): AuditProject[] {
-  return realAuditProjectsRaw as unknown as AuditProject[];
+  const rawList = realAuditProjectsRaw as unknown as AuditProject[];
+  const map = new Map<string, AuditProject>();
+
+  rawList.forEach(p => {
+    // 키: 회사명 + 시작일 + 종료일 + 심사유형
+    const key = [p.companyName.trim(), p.startDate, p.endDate, p.auditType].join('__');
+    if (!map.has(key)) {
+      map.set(key, { ...p, standards: [...(p.standards || [])], teamAuditorNames: [...(p.teamAuditorNames || [])] });
+    } else {
+      const existing = map.get(key)!;
+      // 규격 합집합 병합
+      (p.standards || []).forEach(s => {
+        if (!existing.standards.includes(s)) existing.standards.push(s);
+      });
+      // 심사팀 합집합 병합
+      if (!existing.teamAuditorNames) {
+        existing.teamAuditorNames = [];
+      }
+      (p.teamAuditorNames || []).forEach(t => {
+        if (!existing.teamAuditorNames!.includes(t)) existing.teamAuditorNames!.push(t);
+      });
+      // 금액 등 유효값 우선 보존
+      if ((!existing.finalFee || existing.finalFee === 0) && p.finalFee) existing.finalFee = p.finalFee;
+      if ((!existing.billedAmount || existing.billedAmount === 0) && p.billedAmount) existing.billedAmount = p.billedAmount;
+    }
+  });
+
+  return Array.from(map.values());
 }

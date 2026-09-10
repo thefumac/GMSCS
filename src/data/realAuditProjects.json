@@ -23,8 +23,8 @@
       "2026-01-26"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -54,8 +54,8 @@
       "2026-01-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -90,8 +90,8 @@
       "2026-01-15"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -99,42 +99,6 @@
     "billedAmount": 2100000,
     "paidAmount": 2100000,
     "intNum": "733",
-    "certNo": "E250403"
-  },
-  {
-    "id": "proj-real-732",
-    "contractId": "contract-real-732",
-    "companyId": "comp-legacy-223",
-    "companyName": "주식회사 웰스테크",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-31",
-    "leadAuditorName": "권혁일",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-05",
-    "endDate": "2026-01-15",
-    "auditDates": [
-      "2026-01-05",
-      "2026-01-12",
-      "2026-01-13",
-      "2026-01-14",
-      "2026-01-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "732",
     "certNo": "E250403"
   },
   {
@@ -162,8 +126,8 @@
       "2026-01-15"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -195,8 +159,8 @@
       "2026-01-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -205,111 +169,6 @@
     "paidAmount": 1400000,
     "intNum": "711",
     "certNo": "E250397"
-  },
-  {
-    "id": "proj-real-712",
-    "contractId": "contract-real-712",
-    "companyId": "comp-legacy-84",
-    "companyName": "(주)아하",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-05",
-    "endDate": "2026-01-06",
-    "auditDates": [
-      "2026-01-05",
-      "2026-01-06"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "712",
-    "certNo": "E250397"
-  },
-  {
-    "id": "proj-real-731",
-    "contractId": "contract-real-731",
-    "companyId": "comp-legacy-223",
-    "companyName": "주식회사 웰스테크",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-31",
-    "leadAuditorName": "권혁일",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-05",
-    "endDate": "2026-01-15",
-    "auditDates": [
-      "2026-01-05",
-      "2026-01-12",
-      "2026-01-13",
-      "2026-01-14",
-      "2026-01-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "731",
-    "certNo": "E250403"
-  },
-  {
-    "id": "proj-real-728",
-    "contractId": "contract-real-728",
-    "companyId": "comp-legacy-51",
-    "companyName": "샘텍E&C (이엔씨)",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-05",
-    "endDate": "2026-01-15",
-    "auditDates": [
-      "2026-01-05",
-      "2026-01-12",
-      "2026-01-13",
-      "2026-01-14",
-      "2026-01-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "728",
-    "certNo": "E250406"
   },
   {
     "id": "proj-real-518",
@@ -331,8 +190,8 @@
       "2026-01-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -363,8 +222,8 @@
       "2026-01-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -393,8 +252,8 @@
       "2026-01-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -456,8 +315,8 @@
       "2026-01-08"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -489,8 +348,8 @@
       "2026-01-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -522,8 +381,8 @@
       "2026-01-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -588,8 +447,8 @@
       "2026-01-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -664,36 +523,6 @@
     "certNo": "OH240255"
   },
   {
-    "id": "proj-real-479",
-    "contractId": "contract-real-479",
-    "companyId": "comp-legacy-164",
-    "companyName": "(주)위드인",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-13",
-    "endDate": "2026-01-13",
-    "auditDates": [
-      "2026-01-13"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
-    "standardFee": 800000,
-    "finalFee": 700000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 700000,
-    "paidAmount": 700000,
-    "intNum": "479",
-    "certNo": "OH240255"
-  },
-  {
     "id": "proj-real-478",
     "contractId": "contract-real-478",
     "companyId": "comp-legacy-284",
@@ -713,8 +542,8 @@
       "2026-01-15"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -777,8 +606,8 @@
       "2026-01-21"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -802,15 +631,17 @@
     ],
     "leadAuditorId": "aud-33",
     "leadAuditorName": "이상진",
-    "teamAuditorNames": [],
+    "teamAuditorNames": [
+      "곽숙이"
+    ],
     "startDate": "2026-01-19",
     "endDate": "2026-01-19",
     "auditDates": [
       "2026-01-19"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -818,74 +649,6 @@
     "billedAmount": 700000,
     "paidAmount": 700000,
     "intNum": "166",
-    "certNo": "E230107"
-  },
-  {
-    "id": "proj-real-165",
-    "contractId": "contract-real-165",
-    "companyId": "comp-legacy-219",
-    "companyName": "(주)선우컨스텍",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-22",
-    "leadAuditorName": "이윤호",
-    "teamAuditorNames": [
-      "곽숙이"
-    ],
-    "startDate": "2026-01-19",
-    "endDate": "2026-01-19",
-    "auditDates": [
-      "2026-01-19"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "165",
-    "certNo": "E230107"
-  },
-  {
-    "id": "proj-real-164",
-    "contractId": "contract-real-164",
-    "companyId": "comp-legacy-219",
-    "companyName": "(주)선우컨스텍",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-22",
-    "leadAuditorName": "이윤호",
-    "teamAuditorNames": [
-      "곽숙이"
-    ],
-    "startDate": "2026-01-19",
-    "endDate": "2026-01-19",
-    "auditDates": [
-      "2026-01-19"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "164",
     "certNo": "E230107"
   },
   {
@@ -910,8 +673,8 @@
       "2026-01-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -952,39 +715,6 @@
     "billedAmount": 1050000,
     "paidAmount": 1050000,
     "intNum": "476",
-    "certNo": "E230096"
-  },
-  {
-    "id": "proj-real-475",
-    "contractId": "contract-real-475",
-    "companyId": "comp-legacy-432",
-    "companyName": "나노테크미쿠니㈜",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [
-      "정현일"
-    ],
-    "startDate": "2026-01-19",
-    "endDate": "2026-01-19",
-    "auditDates": [
-      "2026-01-19"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "475",
     "certNo": "E230096"
   },
   {
@@ -1058,41 +788,6 @@
     "certNo": "E240248"
   },
   {
-    "id": "proj-real-509",
-    "contractId": "contract-real-509",
-    "companyId": "comp-legacy-285",
-    "companyName": "(주)신안플랜트",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-34",
-    "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-20",
-    "endDate": "2026-01-23",
-    "auditDates": [
-      "2026-01-20",
-      "2026-01-21",
-      "2026-01-22",
-      "2026-01-23"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "509",
-    "certNo": "E240248"
-  },
-  {
     "id": "proj-real-472",
     "contractId": "contract-real-472",
     "companyId": "comp-legacy-311",
@@ -1111,8 +806,8 @@
       "2026-01-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -1211,8 +906,8 @@
       "2026-01-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1220,38 +915,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "754",
-    "certNo": "E260420"
-  },
-  {
-    "id": "proj-real-753",
-    "contractId": "contract-real-753",
-    "companyId": "comp-legacy-44",
-    "companyName": "(주)지인HP 안산공장",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-22",
-    "endDate": "2026-01-23",
-    "auditDates": [
-      "2026-01-22",
-      "2026-01-23"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "753",
     "certNo": "E260420"
   },
   {
@@ -1275,8 +938,8 @@
       "2026-02-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1307,8 +970,8 @@
       "2026-02-02"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1390,42 +1053,6 @@
     "certNo": "OH240116"
   },
   {
-    "id": "proj-real-495",
-    "contractId": "contract-real-495",
-    "companyId": "comp-legacy-304",
-    "companyName": "삼일프론테크",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-01-27",
-    "endDate": "2026-01-29",
-    "auditDates": [
-      "2026-01-27",
-      "2026-01-28",
-      "2026-01-29"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "495",
-    "certNo": "OH240116"
-  },
-  {
     "id": "proj-real-490",
     "contractId": "contract-real-490",
     "companyId": "comp-legacy-421",
@@ -1446,8 +1073,8 @@
       "2026-01-29"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1456,75 +1083,6 @@
     "paidAmount": 1400000,
     "intNum": "490",
     "certNo": "Q240123"
-  },
-  {
-    "id": "proj-real-726",
-    "contractId": "contract-real-726",
-    "companyId": "comp-legacy-421",
-    "companyName": "씨이에프건설(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015"
-    ],
-    "leadAuditorId": "aud-34",
-    "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-01-27",
-    "endDate": "2026-01-29",
-    "auditDates": [
-      "2026-01-27",
-      "2026-01-28",
-      "2026-01-29"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "726",
-    "certNo": "Q240123"
-  },
-  {
-    "id": "proj-real-494",
-    "contractId": "contract-real-494",
-    "companyId": "comp-legacy-304",
-    "companyName": "삼일프론테크",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-16",
-    "leadAuditorName": "이예원",
-    "teamAuditorNames": [
-      "송인선",
-      "남경호"
-    ],
-    "startDate": "2026-01-27",
-    "endDate": "2026-01-29",
-    "auditDates": [
-      "2026-01-27",
-      "2026-01-28",
-      "2026-01-29"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 4.8,
-    "appliedMd": 4.8,
-    "standardFee": 3840000,
-    "finalFee": 3360000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 3360000,
-    "paidAmount": 3360000,
-    "intNum": "494",
-    "certNo": "OH240116"
   },
   {
     "id": "proj-real-171",
@@ -1545,8 +1103,8 @@
       "2026-01-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -1609,8 +1167,8 @@
       "2026-02-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1642,8 +1200,8 @@
       "2026-02-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1708,8 +1266,8 @@
       "2026-02-09"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1717,40 +1275,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "755",
-    "certNo": "E260422"
-  },
-  {
-    "id": "proj-real-756",
-    "contractId": "contract-real-756",
-    "companyId": "comp-legacy-43",
-    "companyName": "주식회사 디폰스",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [
-      "송인선"
-    ],
-    "startDate": "2026-02-03",
-    "endDate": "2026-02-09",
-    "auditDates": [
-      "2026-02-03",
-      "2026-02-09"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "756",
     "certNo": "E260422"
   },
   {
@@ -1773,8 +1297,8 @@
       "2026-02-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1804,8 +1328,8 @@
       "2026-02-05"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1813,37 +1337,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "198",
-    "certNo": "Q240127"
-  },
-  {
-    "id": "proj-real-311",
-    "contractId": "contract-real-311",
-    "companyId": "comp-legacy-436",
-    "companyName": "㈜일광종합기술단",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015"
-    ],
-    "leadAuditorId": "aud-34",
-    "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-02-04",
-    "endDate": "2026-02-05",
-    "auditDates": [
-      "2026-02-04",
-      "2026-02-05"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "311",
     "certNo": "Q240127"
   },
   {
@@ -1868,8 +1361,8 @@
       "2026-02-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1931,8 +1424,8 @@
       "2026-02-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1963,8 +1456,8 @@
       "2026-02-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -1996,8 +1489,8 @@
       "2026-02-11"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2005,39 +1498,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "764",
-    "certNo": "E260431"
-  },
-  {
-    "id": "proj-real-763",
-    "contractId": "contract-real-763",
-    "companyId": "comp-legacy-38",
-    "companyName": "회명워터젠(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-02-09",
-    "endDate": "2026-02-11",
-    "auditDates": [
-      "2026-02-09",
-      "2026-02-10",
-      "2026-02-11"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "763",
     "certNo": "E260431"
   },
   {
@@ -2059,8 +1519,8 @@
       "2026-02-09"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2089,8 +1549,8 @@
       "2026-02-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2146,38 +1606,6 @@
     ],
     "leadAuditorId": "aud-34",
     "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-02-11",
-    "endDate": "2026-02-12",
-    "auditDates": [
-      "2026-02-11",
-      "2026-02-12"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "738",
-    "certNo": "E240119"
-  },
-  {
-    "id": "proj-real-737",
-    "contractId": "contract-real-737",
-    "companyId": "comp-legacy-418",
-    "companyName": "경원전자㈜",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-16",
-    "leadAuditorName": "이예원",
     "teamAuditorNames": [
       "정현일"
     ],
@@ -2188,15 +1616,15 @@
       "2026-02-12"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
+    "standardFee": 1600000,
+    "finalFee": 1400000,
     "paymentStatus": "입금완료",
     "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "737",
+    "billedAmount": 1400000,
+    "paidAmount": 1400000,
+    "intNum": "738",
     "certNo": "E240119"
   },
   {
@@ -2287,8 +1715,8 @@
       "2026-02-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2322,8 +1750,8 @@
       "2026-02-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2352,8 +1780,8 @@
       "2026-02-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2383,8 +1811,8 @@
       "2026-02-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2413,8 +1841,8 @@
       "2026-02-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2510,8 +1938,8 @@
       "2026-02-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2542,8 +1970,8 @@
       "2026-02-26"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2574,8 +2002,8 @@
       "2026-02-26"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2608,8 +2036,8 @@
       "2026-02-27"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -2670,8 +2098,8 @@
       "2026-02-27"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2700,8 +2128,8 @@
       "2026-03-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2730,8 +2158,8 @@
       "2026-03-04"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2760,8 +2188,8 @@
       "2026-03-04"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -2791,8 +2219,8 @@
       "2026-03-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2822,8 +2250,8 @@
       "2026-03-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2854,8 +2282,8 @@
       "2026-03-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2886,8 +2314,8 @@
       "2026-03-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -2930,38 +2358,6 @@
     "certNo": "E260438"
   },
   {
-    "id": "proj-real-548",
-    "contractId": "contract-real-548",
-    "companyId": "comp-legacy-117",
-    "companyName": "주식회사 디탭",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-26",
-    "leadAuditorName": "성해준",
-    "teamAuditorNames": [
-      "임다영"
-    ],
-    "startDate": "2026-03-06",
-    "endDate": "2026-03-06",
-    "auditDates": [
-      "2026-03-06"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "548",
-    "certNo": "E260438"
-  },
-  {
     "id": "proj-real-766",
     "contractId": "contract-real-766",
     "companyId": "comp-legacy-232",
@@ -2983,8 +2379,8 @@
       "2026-03-11"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3016,8 +2412,8 @@
       "2026-03-12"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3046,8 +2442,8 @@
       "2026-03-12"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -3076,8 +2472,8 @@
       "2026-03-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -3119,40 +2515,6 @@
     "billedAmount": 1050000,
     "paidAmount": 1050000,
     "intNum": "515",
-    "certNo": "E230054"
-  },
-  {
-    "id": "proj-real-516",
-    "contractId": "contract-real-516",
-    "companyId": "comp-legacy-235",
-    "companyName": "디와이산업개발 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-03-16",
-    "endDate": "2026-03-16",
-    "auditDates": [
-      "2026-03-16"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "516",
     "certNo": "E230054"
   },
   {
@@ -3209,8 +2571,8 @@
       "2026-03-18"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3241,8 +2603,8 @@
       "2026-03-27"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3250,38 +2612,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "783",
-    "certNo": "OH260440"
-  },
-  {
-    "id": "proj-real-782",
-    "contractId": "contract-real-782",
-    "companyId": "comp-legacy-35",
-    "companyName": "주식회사 경기전력",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-31",
-    "leadAuditorName": "권혁일",
-    "teamAuditorNames": [],
-    "startDate": "2026-03-19",
-    "endDate": "2026-03-27",
-    "auditDates": [
-      "2026-03-19",
-      "2026-03-26",
-      "2026-03-27"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "782",
     "certNo": "OH260440"
   },
   {
@@ -3318,39 +2648,6 @@
     "certNo": "E240153"
   },
   {
-    "id": "proj-real-239",
-    "contractId": "contract-real-239",
-    "companyId": "comp-legacy-406",
-    "companyName": "케이알이앤씨 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [
-      "우종광"
-    ],
-    "startDate": "2026-03-19",
-    "endDate": "2026-03-19",
-    "auditDates": [
-      "2026-03-19"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "239",
-    "certNo": "E240153"
-  },
-  {
     "id": "proj-real-257",
     "contractId": "contract-real-257",
     "companyId": "comp-legacy-314",
@@ -3370,8 +2667,8 @@
       "2026-03-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3401,8 +2698,8 @@
       "2026-03-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -3467,8 +2764,8 @@
       "2026-03-26"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3534,8 +2831,8 @@
       "2026-03-26"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3543,38 +2840,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "210",
-    "certNo": "E240134"
-  },
-  {
-    "id": "proj-real-209",
-    "contractId": "contract-real-209",
-    "companyId": "comp-legacy-367",
-    "companyName": "DAISIN VINA CO., LTD.",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-34",
-    "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-03-25",
-    "endDate": "2026-03-26",
-    "auditDates": [
-      "2026-03-25",
-      "2026-03-26"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "209",
     "certNo": "E240134"
   },
   {
@@ -3599,8 +2864,8 @@
       "2026-03-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3646,76 +2911,6 @@
     "certNo": "E240180"
   },
   {
-    "id": "proj-real-512",
-    "contractId": "contract-real-512",
-    "companyId": "comp-legacy-199",
-    "companyName": "(주)에스얜에스",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-03-26",
-    "endDate": "2026-03-27",
-    "auditDates": [
-      "2026-03-26",
-      "2026-03-27"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "512",
-    "certNo": "E240180"
-  },
-  {
-    "id": "proj-real-511",
-    "contractId": "contract-real-511",
-    "companyId": "comp-legacy-199",
-    "companyName": "(주)에스얜에스",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-03-26",
-    "endDate": "2026-03-27",
-    "auditDates": [
-      "2026-03-26",
-      "2026-03-27"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "511",
-    "certNo": "E240180"
-  },
-  {
     "id": "proj-real-500",
     "contractId": "contract-real-500",
     "companyId": "comp-legacy-136",
@@ -3735,8 +2930,8 @@
       "2026-03-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -3815,78 +3010,6 @@
     "certNo": "E260443"
   },
   {
-    "id": "proj-real-789",
-    "contractId": "contract-real-789",
-    "companyId": "comp-legacy-31",
-    "companyName": "(주)세진엔지니어링",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "정현일"
-    ],
-    "startDate": "2026-03-30",
-    "endDate": "2026-04-01",
-    "auditDates": [
-      "2026-03-30",
-      "2026-03-31",
-      "2026-04-01"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "789",
-    "certNo": "E260443"
-  },
-  {
-    "id": "proj-real-788",
-    "contractId": "contract-real-788",
-    "companyId": "comp-legacy-31",
-    "companyName": "(주)세진엔지니어링",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "정현일"
-    ],
-    "startDate": "2026-03-30",
-    "endDate": "2026-04-01",
-    "auditDates": [
-      "2026-03-30",
-      "2026-03-31",
-      "2026-04-01"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "788",
-    "certNo": "E260443"
-  },
-  {
     "id": "proj-real-544",
     "contractId": "contract-real-544",
     "companyId": "comp-legacy-119",
@@ -3941,8 +3064,8 @@
       "2026-03-31"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4020,41 +3143,6 @@
     "certNo": "E260449"
   },
   {
-    "id": "proj-real-795",
-    "contractId": "contract-real-795",
-    "companyId": "comp-legacy-28",
-    "companyName": "주식회사 에이알알루미늄",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준",
-      "홍진호"
-    ],
-    "startDate": "2026-04-01",
-    "endDate": "2026-04-10",
-    "auditDates": [
-      "2026-04-01",
-      "2026-04-09",
-      "2026-04-10"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 4.8,
-    "appliedMd": 4.8,
-    "standardFee": 3840000,
-    "finalFee": 3360000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 3360000,
-    "paidAmount": 3360000,
-    "intNum": "795",
-    "certNo": "E260449"
-  },
-  {
     "id": "proj-real-540",
     "contractId": "contract-real-540",
     "companyId": "comp-legacy-121",
@@ -4100,37 +3188,6 @@
     ],
     "leadAuditorId": "aud-34",
     "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-04-02",
-    "endDate": "2026-04-03",
-    "auditDates": [
-      "2026-04-02",
-      "2026-04-03"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "262",
-    "certNo": "OH240168"
-  },
-  {
-    "id": "proj-real-261",
-    "contractId": "contract-real-261",
-    "companyId": "comp-legacy-435",
-    "companyName": "㈜세광플러스",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
     "teamAuditorNames": [
       "정현일"
     ],
@@ -4141,15 +3198,15 @@
       "2026-04-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
     "taxInvoiceStatus": "영수발행",
     "billedAmount": 1400000,
     "paidAmount": 1400000,
-    "intNum": "261",
+    "intNum": "262",
     "certNo": "OH240168"
   },
   {
@@ -4206,8 +3263,8 @@
       "2026-04-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -4252,40 +3309,6 @@
     "certNo": "E260448"
   },
   {
-    "id": "proj-real-793",
-    "contractId": "contract-real-793",
-    "companyId": "comp-legacy-29",
-    "companyName": "서도에너젠 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-04-03",
-    "endDate": "2026-04-17",
-    "auditDates": [
-      "2026-04-03",
-      "2026-04-15",
-      "2026-04-16",
-      "2026-04-17"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "793",
-    "certNo": "E260448"
-  },
-  {
     "id": "proj-real-259",
     "contractId": "contract-real-259",
     "companyId": "comp-legacy-204",
@@ -4304,8 +3327,8 @@
       "2026-04-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -4335,8 +3358,8 @@
       "2026-04-08"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4399,8 +3422,8 @@
       "2026-04-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -4432,8 +3455,8 @@
       "2026-04-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4498,8 +3521,8 @@
       "2026-04-14"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4530,8 +3553,8 @@
       "2026-04-16"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4630,8 +3653,8 @@
       "2026-04-16"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4675,39 +3698,6 @@
     "certNo": "C240157"
   },
   {
-    "id": "proj-real-524",
-    "contractId": "contract-real-524",
-    "companyId": "comp-legacy-303",
-    "companyName": "주식회사 피앤더블유인터네셔널",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-04-15",
-    "endDate": "2026-04-15",
-    "auditDates": [
-      "2026-04-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "524",
-    "certNo": "C240157"
-  },
-  {
     "id": "proj-real-526",
     "contractId": "contract-real-526",
     "companyId": "comp-legacy-303",
@@ -4727,8 +3717,8 @@
       "2026-04-16"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -4793,8 +3783,8 @@
       "2026-04-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -4823,8 +3813,8 @@
       "2026-04-17"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -4870,41 +3860,6 @@
     "certNo": "E260446"
   },
   {
-    "id": "proj-real-791",
-    "contractId": "contract-real-791",
-    "companyId": "comp-legacy-30",
-    "companyName": "DAE HWA GLOBAL CO., LTD.",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-05",
-    "leadAuditorName": "송우범",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-04-18",
-    "endDate": "2026-04-25",
-    "auditDates": [
-      "2026-04-18",
-      "2026-04-24",
-      "2026-04-25"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "791",
-    "certNo": "E260446"
-  },
-  {
     "id": "proj-real-236",
     "contractId": "contract-real-236",
     "companyId": "comp-legacy-317",
@@ -4938,78 +3893,6 @@
     "billedAmount": 2520000,
     "paidAmount": 2520000,
     "intNum": "236",
-    "certNo": "E240150"
-  },
-  {
-    "id": "proj-real-235",
-    "contractId": "contract-real-235",
-    "companyId": "comp-legacy-317",
-    "companyName": "주식회사 두성토건",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-10",
-    "leadAuditorName": "김홍덕",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-04-20",
-    "endDate": "2026-04-22",
-    "auditDates": [
-      "2026-04-20",
-      "2026-04-21",
-      "2026-04-22"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "235",
-    "certNo": "E240150"
-  },
-  {
-    "id": "proj-real-234",
-    "contractId": "contract-real-234",
-    "companyId": "comp-legacy-317",
-    "companyName": "주식회사 두성토건",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-10",
-    "leadAuditorName": "김홍덕",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-04-20",
-    "endDate": "2026-04-22",
-    "auditDates": [
-      "2026-04-20",
-      "2026-04-21",
-      "2026-04-22"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "234",
     "certNo": "E240150"
   },
   {
@@ -5085,80 +3968,6 @@
     "certNo": "E260455"
   },
   {
-    "id": "proj-real-804",
-    "contractId": "contract-real-804",
-    "companyId": "comp-legacy-27",
-    "companyName": "이콰트로 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-04-22",
-    "endDate": "2026-05-06",
-    "auditDates": [
-      "2026-04-22",
-      "2026-05-04",
-      "2026-05-05",
-      "2026-05-06"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 4.8,
-    "appliedMd": 4.8,
-    "standardFee": 3840000,
-    "finalFee": 3360000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 3360000,
-    "paidAmount": 3360000,
-    "intNum": "804",
-    "certNo": "E260455"
-  },
-  {
-    "id": "proj-real-803",
-    "contractId": "contract-real-803",
-    "companyId": "comp-legacy-27",
-    "companyName": "이콰트로 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-04-22",
-    "endDate": "2026-05-06",
-    "auditDates": [
-      "2026-04-22",
-      "2026-05-04",
-      "2026-05-05",
-      "2026-05-06"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 4.8,
-    "appliedMd": 4.8,
-    "standardFee": 3840000,
-    "finalFee": 3360000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 3360000,
-    "paidAmount": 3360000,
-    "intNum": "803",
-    "certNo": "E260455"
-  },
-  {
     "id": "proj-real-593",
     "contractId": "contract-real-593",
     "companyId": "comp-legacy-97",
@@ -5179,8 +3988,8 @@
       "2026-04-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -5210,8 +4019,8 @@
       "2026-04-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -5241,8 +4050,8 @@
       "2026-04-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -5275,8 +4084,8 @@
       "2026-05-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -5305,8 +4114,8 @@
       "2026-04-29"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -5340,8 +4149,8 @@
       "2026-05-08"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -5349,41 +4158,6 @@
     "billedAmount": 2100000,
     "paidAmount": 2100000,
     "intNum": "818",
-    "certNo": "SKORE-0047"
-  },
-  {
-    "id": "proj-real-817",
-    "contractId": "contract-real-817",
-    "companyId": "comp-legacy-23",
-    "companyName": "주식회사 피제이산업(영천지점)",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [
-      "김우종"
-    ],
-    "startDate": "2026-04-30",
-    "endDate": "2026-05-08",
-    "auditDates": [
-      "2026-04-30",
-      "2026-05-07",
-      "2026-05-08"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "817",
     "certNo": "SKORE-0047"
   },
   {
@@ -5423,78 +4197,6 @@
     "certNo": "E260464"
   },
   {
-    "id": "proj-real-813",
-    "contractId": "contract-real-813",
-    "companyId": "comp-legacy-24",
-    "companyName": "(주)이에스티 경주사업장",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-05-04",
-    "endDate": "2026-05-27",
-    "auditDates": [
-      "2026-05-04",
-      "2026-05-26",
-      "2026-05-27"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "813",
-    "certNo": "E260464"
-  },
-  {
-    "id": "proj-real-812",
-    "contractId": "contract-real-812",
-    "companyId": "comp-legacy-24",
-    "companyName": "(주)이에스티 경주사업장",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-05-04",
-    "endDate": "2026-05-27",
-    "auditDates": [
-      "2026-05-04",
-      "2026-05-26",
-      "2026-05-27"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "812",
-    "certNo": "E260464"
-  },
-  {
     "id": "proj-real-816",
     "contractId": "contract-real-816",
     "companyId": "comp-legacy-258",
@@ -5513,8 +4215,8 @@
       "2026-05-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -5543,8 +4245,8 @@
       "2026-05-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -5574,8 +4276,8 @@
       "2026-05-08"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -5605,8 +4307,8 @@
       "2026-05-08"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -5691,42 +4393,6 @@
     "certNo": "EO250324"
   },
   {
-    "id": "proj-real-799",
-    "contractId": "contract-real-799",
-    "companyId": "comp-legacy-103",
-    "companyName": "극동일렉트릭 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-05-07",
-    "endDate": "2026-05-09",
-    "auditDates": [
-      "2026-05-07",
-      "2026-05-08",
-      "2026-05-09"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "799",
-    "certNo": "EO250324"
-  },
-  {
     "id": "proj-real-224",
     "contractId": "contract-real-224",
     "companyId": "comp-legacy-209",
@@ -5792,78 +4458,6 @@
     "billedAmount": 2520000,
     "paidAmount": 2520000,
     "intNum": "811",
-    "certNo": "E260461"
-  },
-  {
-    "id": "proj-real-810",
-    "contractId": "contract-real-810",
-    "companyId": "comp-legacy-25",
-    "companyName": "주식회사 이에스티",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-05-11",
-    "endDate": "2026-06-05",
-    "auditDates": [
-      "2026-05-11",
-      "2026-06-04",
-      "2026-06-05"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "810",
-    "certNo": "E260461"
-  },
-  {
-    "id": "proj-real-809",
-    "contractId": "contract-real-809",
-    "companyId": "comp-legacy-25",
-    "companyName": "주식회사 이에스티",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-05-11",
-    "endDate": "2026-06-05",
-    "auditDates": [
-      "2026-05-11",
-      "2026-06-04",
-      "2026-06-05"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "809",
     "certNo": "E260461"
   },
   {
@@ -5950,8 +4544,8 @@
       "2026-05-12"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -5980,8 +4574,8 @@
       "2026-05-12"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -6047,8 +4641,8 @@
       "2026-05-15"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6056,39 +4650,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "820",
-    "certNo": "E260467"
-  },
-  {
-    "id": "proj-real-819",
-    "contractId": "contract-real-819",
-    "companyId": "comp-legacy-22",
-    "companyName": "(주)비엔텍",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-05-13",
-    "endDate": "2026-05-15",
-    "auditDates": [
-      "2026-05-13",
-      "2026-05-14",
-      "2026-05-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "819",
     "certNo": "E260467"
   },
   {
@@ -6148,8 +4709,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -6157,78 +4718,6 @@
     "billedAmount": 2100000,
     "paidAmount": 2100000,
     "intNum": "823",
-    "certNo": "E260469"
-  },
-  {
-    "id": "proj-real-822",
-    "contractId": "contract-real-822",
-    "companyId": "comp-legacy-21",
-    "companyName": "주식회사 유진테크놀로지",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-05-18",
-    "endDate": "2026-05-22",
-    "auditDates": [
-      "2026-05-18",
-      "2026-05-19",
-      "2026-05-20",
-      "2026-05-21",
-      "2026-05-22"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "822",
-    "certNo": "E260469"
-  },
-  {
-    "id": "proj-real-821",
-    "contractId": "contract-real-821",
-    "companyId": "comp-legacy-21",
-    "companyName": "주식회사 유진테크놀로지",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-05-18",
-    "endDate": "2026-05-22",
-    "auditDates": [
-      "2026-05-18",
-      "2026-05-19",
-      "2026-05-20",
-      "2026-05-21",
-      "2026-05-22"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "821",
     "certNo": "E260469"
   },
   {
@@ -6253,8 +4742,8 @@
       "2026-05-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6283,8 +4772,8 @@
       "2026-05-20"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -6314,8 +4803,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6345,8 +4834,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6377,8 +4866,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6407,8 +4896,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -6437,8 +4926,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -6467,8 +4956,8 @@
       "2026-05-22"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -6515,42 +5004,6 @@
     "certNo": "QE250307"
   },
   {
-    "id": "proj-real-826",
-    "contractId": "contract-real-826",
-    "companyId": "comp-legacy-115",
-    "companyName": "(주)제이솔루션",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-31",
-    "leadAuditorName": "권혁일",
-    "teamAuditorNames": [
-      "이창집",
-      "이기영"
-    ],
-    "startDate": "2026-05-26",
-    "endDate": "2026-05-27",
-    "auditDates": [
-      "2026-05-26",
-      "2026-05-27"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "826",
-    "certNo": "QE250307"
-  },
-  {
     "id": "proj-real-830",
     "contractId": "contract-real-830",
     "companyId": "comp-legacy-89",
@@ -6572,8 +5025,8 @@
       "2026-06-01"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6606,8 +5059,8 @@
       "2026-05-29"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6637,8 +5090,8 @@
       "2026-05-29"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6715,39 +5168,6 @@
     "certNo": "OH250312"
   },
   {
-    "id": "proj-real-827",
-    "contractId": "contract-real-827",
-    "companyId": "comp-legacy-111",
-    "companyName": "(주)문화",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-06-01",
-    "endDate": "2026-06-02",
-    "auditDates": [
-      "2026-06-01",
-      "2026-06-02"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "827",
-    "certNo": "OH250312"
-  },
-  {
     "id": "proj-real-589",
     "contractId": "contract-real-589",
     "companyId": "comp-legacy-100",
@@ -6766,8 +5186,8 @@
       "2026-06-02"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -6864,8 +5284,8 @@
       "2026-06-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6898,8 +5318,8 @@
       "2026-06-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -6907,40 +5327,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "386",
-    "certNo": "ESG250376"
-  },
-  {
-    "id": "proj-real-331",
-    "contractId": "contract-real-331",
-    "companyId": "comp-legacy-190",
-    "companyName": "(주)케이원메탈1공장",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-10",
-    "leadAuditorName": "김홍덕",
-    "teamAuditorNames": [],
-    "startDate": "2026-06-08",
-    "endDate": "2026-06-10",
-    "auditDates": [
-      "2026-06-08",
-      "2026-06-09",
-      "2026-06-10"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "331",
     "certNo": "ESG250376"
   },
   {
@@ -6979,76 +5365,6 @@
     "certNo": "E250346"
   },
   {
-    "id": "proj-real-615",
-    "contractId": "contract-real-615",
-    "companyId": "comp-legacy-87",
-    "companyName": "주식회사 제이엔와이종합건설",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-07",
-    "leadAuditorName": "정순화",
-    "teamAuditorNames": [],
-    "startDate": "2026-06-08",
-    "endDate": "2026-06-11",
-    "auditDates": [
-      "2026-06-08",
-      "2026-06-09",
-      "2026-06-10",
-      "2026-06-11"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "615",
-    "certNo": "E250346"
-  },
-  {
-    "id": "proj-real-614",
-    "contractId": "contract-real-614",
-    "companyId": "comp-legacy-87",
-    "companyName": "주식회사 제이엔와이종합건설",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-07",
-    "leadAuditorName": "정순화",
-    "teamAuditorNames": [],
-    "startDate": "2026-06-08",
-    "endDate": "2026-06-11",
-    "auditDates": [
-      "2026-06-08",
-      "2026-06-09",
-      "2026-06-10",
-      "2026-06-11"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "614",
-    "certNo": "E250346"
-  },
-  {
     "id": "proj-real-576",
     "contractId": "contract-real-576",
     "companyId": "comp-legacy-429",
@@ -7073,8 +5389,8 @@
       "2026-06-11"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -7109,8 +5425,8 @@
       "2026-06-11"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -7118,42 +5434,6 @@
     "billedAmount": 2100000,
     "paidAmount": 2100000,
     "intNum": "338",
-    "certNo": "E240185"
-  },
-  {
-    "id": "proj-real-575",
-    "contractId": "contract-real-575",
-    "companyId": "comp-legacy-429",
-    "companyName": "화인프로세스㈜",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-34",
-    "leadAuditorName": "정현일",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-06-09",
-    "endDate": "2026-06-11",
-    "auditDates": [
-      "2026-06-09",
-      "2026-06-10",
-      "2026-06-11"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
-    "standardFee": 2400000,
-    "finalFee": 2100000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2100000,
-    "paidAmount": 2100000,
-    "intNum": "575",
     "certNo": "E240185"
   },
   {
@@ -7180,8 +5460,8 @@
       "2026-06-11"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -7214,8 +5494,8 @@
       "2026-06-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -7245,8 +5525,8 @@
       "2026-06-25"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -7255,40 +5535,6 @@
     "paidAmount": 1400000,
     "intNum": "833",
     "certNo": "Q260474"
-  },
-  {
-    "id": "proj-real-321",
-    "contractId": "contract-real-321",
-    "companyId": "comp-legacy-191",
-    "companyName": "(주)케이원메탈2공장",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-10",
-    "leadAuditorName": "김홍덕",
-    "teamAuditorNames": [],
-    "startDate": "2026-06-11",
-    "endDate": "2026-06-13",
-    "auditDates": [
-      "2026-06-11",
-      "2026-06-12",
-      "2026-06-13"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "321",
-    "certNo": "OH240235"
   },
   {
     "id": "proj-real-276",
@@ -7365,43 +5611,6 @@
     "certNo": "E240177"
   },
   {
-    "id": "proj-real-273",
-    "contractId": "contract-real-273",
-    "companyId": "comp-legacy-361",
-    "companyName": "(주)태승이엔씨",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "남경호",
-      "정현일"
-    ],
-    "startDate": "2026-06-15",
-    "endDate": "2026-06-17",
-    "auditDates": [
-      "2026-06-15",
-      "2026-06-16",
-      "2026-06-17"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 4.2,
-    "appliedMd": 4.2,
-    "standardFee": 3360000,
-    "finalFee": 2940000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2940000,
-    "paidAmount": 2940000,
-    "intNum": "273",
-    "certNo": "E240177"
-  },
-  {
     "id": "proj-real-282",
     "contractId": "contract-real-282",
     "companyId": "comp-legacy-198",
@@ -7436,40 +5645,6 @@
     "certNo": "E240189"
   },
   {
-    "id": "proj-real-281",
-    "contractId": "contract-real-281",
-    "companyId": "comp-legacy-198",
-    "companyName": "시앤파워텍(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-06-15",
-    "endDate": "2026-06-15",
-    "auditDates": [
-      "2026-06-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "281",
-    "certNo": "E240189"
-  },
-  {
     "id": "proj-real-297",
     "contractId": "contract-real-297",
     "companyId": "comp-legacy-197",
@@ -7500,40 +5675,6 @@
     "paidAmount": 1050000,
     "intNum": "297",
     "certNo": "OH240194"
-  },
-  {
-    "id": "proj-real-280",
-    "contractId": "contract-real-280",
-    "companyId": "comp-legacy-198",
-    "companyName": "시앤파워텍(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-06-15",
-    "endDate": "2026-06-15",
-    "auditDates": [
-      "2026-06-15"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "280",
-    "certNo": "E240189"
   },
   {
     "id": "proj-real-567",
@@ -7627,8 +5768,8 @@
       "2026-06-19"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -7673,74 +5814,6 @@
     "certNo": "E250359"
   },
   {
-    "id": "proj-real-646",
-    "contractId": "contract-real-646",
-    "companyId": "comp-legacy-76",
-    "companyName": "주식회사 에스에이치에너지",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-06-17",
-    "endDate": "2026-06-17",
-    "auditDates": [
-      "2026-06-17"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "646",
-    "certNo": "E250359"
-  },
-  {
-    "id": "proj-real-645",
-    "contractId": "contract-real-645",
-    "companyId": "comp-legacy-76",
-    "companyName": "주식회사 에스에이치에너지",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-06-17",
-    "endDate": "2026-06-17",
-    "auditDates": [
-      "2026-06-17"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "645",
-    "certNo": "E250359"
-  },
-  {
     "id": "proj-real-248",
     "contractId": "contract-real-248",
     "companyId": "comp-legacy-348",
@@ -7760,8 +5833,8 @@
       "2026-06-18"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -7769,37 +5842,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "248",
-    "certNo": "E240158"
-  },
-  {
-    "id": "proj-real-247",
-    "contractId": "contract-real-247",
-    "companyId": "comp-legacy-348",
-    "companyName": "(주)대영통운",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [],
-    "startDate": "2026-06-17",
-    "endDate": "2026-06-18",
-    "auditDates": [
-      "2026-06-17",
-      "2026-06-18"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "247",
     "certNo": "E240158"
   },
   {
@@ -7823,8 +5865,8 @@
       "2026-06-19"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -7891,8 +5933,8 @@
       "2026-06-30"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -7981,37 +6023,6 @@
     ],
     "leadAuditorId": "aud-34",
     "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-06-22",
-    "endDate": "2026-06-23",
-    "auditDates": [
-      "2026-06-22",
-      "2026-06-23"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "836",
-    "certNo": "OH240209"
-  },
-  {
-    "id": "proj-real-571",
-    "contractId": "contract-real-571",
-    "companyId": "comp-legacy-255",
-    "companyName": "강호정보통신(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
     "teamAuditorNames": [
       "정현일"
     ],
@@ -8022,15 +6033,15 @@
       "2026-06-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
     "taxInvoiceStatus": "영수발행",
     "billedAmount": 1400000,
     "paidAmount": 1400000,
-    "intNum": "571",
+    "intNum": "836",
     "certNo": "OH240209"
   },
   {
@@ -8055,8 +6066,8 @@
       "2026-06-29"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8120,8 +6131,8 @@
       "2026-06-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -8166,40 +6177,6 @@
     "certNo": "OH240131"
   },
   {
-    "id": "proj-real-838",
-    "contractId": "contract-real-838",
-    "companyId": "comp-legacy-215",
-    "companyName": "켄코아에어로스페이스(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-06-24",
-    "endDate": "2026-06-26",
-    "auditDates": [
-      "2026-06-24",
-      "2026-06-25",
-      "2026-06-26"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "838",
-    "certNo": "OH240131"
-  },
-  {
     "id": "proj-real-324",
     "contractId": "contract-real-324",
     "companyId": "comp-legacy-196",
@@ -8232,76 +6209,6 @@
     "billedAmount": 1750000,
     "paidAmount": 1750000,
     "intNum": "324",
-    "certNo": "E240196"
-  },
-  {
-    "id": "proj-real-302",
-    "contractId": "contract-real-302",
-    "companyId": "comp-legacy-196",
-    "companyName": "유니퀘스트(주)/NBLESS",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-24",
-    "leadAuditorName": "이기영",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-06-25",
-    "endDate": "2026-06-26",
-    "auditDates": [
-      "2026-06-25",
-      "2026-06-26"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "302",
-    "certNo": "E240196"
-  },
-  {
-    "id": "proj-real-323",
-    "contractId": "contract-real-323",
-    "companyId": "comp-legacy-196",
-    "companyName": "유니퀘스트(주)/NBLESS",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-24",
-    "leadAuditorName": "이기영",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-06-25",
-    "endDate": "2026-06-26",
-    "auditDates": [
-      "2026-06-25",
-      "2026-06-26"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "323",
     "certNo": "E240196"
   },
   {
@@ -8358,8 +6265,8 @@
       "2026-06-30"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8456,8 +6363,8 @@
       "2026-07-03"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8490,8 +6397,8 @@
       "2026-07-15"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -8521,8 +6428,8 @@
       "2026-07-06"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -8619,8 +6526,8 @@
       "2026-07-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8628,39 +6535,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "914",
-    "certNo": "SKOR/OH&SMS/00019/11809"
-  },
-  {
-    "id": "proj-real-913",
-    "contractId": "contract-real-913",
-    "companyId": "comp-legacy-253",
-    "companyName": "(주)선진이디에스",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-35",
-    "leadAuditorName": "곽현철",
-    "teamAuditorNames": [],
-    "startDate": "2026-07-08",
-    "endDate": "2026-07-10",
-    "auditDates": [
-      "2026-07-08",
-      "2026-07-09",
-      "2026-07-10"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "913",
     "certNo": "SKOR/OH&SMS/00019/11809"
   },
   {
@@ -8683,8 +6557,8 @@
       "2026-07-09"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8717,8 +6591,8 @@
       "2026-07-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 3.0,
-    "appliedMd": 3.0,
+    "kabStandardMd": 3,
+    "appliedMd": 3,
     "standardFee": 2400000,
     "finalFee": 2100000,
     "paymentStatus": "입금완료",
@@ -8748,8 +6622,8 @@
       "2026-07-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8778,8 +6652,8 @@
       "2026-07-10"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -8809,8 +6683,8 @@
       "2026-07-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -8839,8 +6713,8 @@
       "2026-07-13"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -8870,8 +6744,8 @@
       "2026-07-14"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8900,8 +6774,8 @@
       "2026-07-15"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -8931,8 +6805,8 @@
       "2026-07-18"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -8975,38 +6849,6 @@
     "certNo": "E240186"
   },
   {
-    "id": "proj-real-294",
-    "contractId": "contract-real-294",
-    "companyId": "comp-legacy-347",
-    "companyName": "주식회사 페어윈드",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-07-20",
-    "endDate": "2026-07-20",
-    "auditDates": [
-      "2026-07-20"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "294",
-    "certNo": "E240186"
-  },
-  {
     "id": "proj-real-612",
     "contractId": "contract-real-612",
     "companyId": "comp-legacy-88",
@@ -9037,39 +6879,6 @@
     "billedAmount": 1050000,
     "paidAmount": 1050000,
     "intNum": "612",
-    "certNo": "E250344"
-  },
-  {
-    "id": "proj-real-611",
-    "contractId": "contract-real-611",
-    "companyId": "comp-legacy-88",
-    "companyName": "주식회사 이씨아이",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-07-20",
-    "endDate": "2026-07-20",
-    "auditDates": [
-      "2026-07-20"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1050000,
-    "paidAmount": 1050000,
-    "intNum": "611",
     "certNo": "E250344"
   },
   {
@@ -9106,39 +6915,6 @@
     "certNo": "E250355"
   },
   {
-    "id": "proj-real-639",
-    "contractId": "contract-real-639",
-    "companyId": "comp-legacy-81",
-    "companyName": "선진뷰티사이언스(주)",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-07-21",
-    "endDate": "2026-07-22",
-    "auditDates": [
-      "2026-07-21",
-      "2026-07-22"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1750000,
-    "paidAmount": 1750000,
-    "intNum": "639",
-    "certNo": "E250355"
-  },
-  {
     "id": "proj-real-863",
     "contractId": "contract-real-863",
     "companyId": "comp-legacy-95",
@@ -9160,8 +6936,8 @@
       "2026-07-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9191,8 +6967,8 @@
       "2026-07-23"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9222,8 +6998,8 @@
       "2026-07-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9253,8 +7029,8 @@
       "2026-07-24"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9284,8 +7060,8 @@
       "2026-07-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9315,8 +7091,8 @@
       "2026-07-28"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9345,8 +7121,8 @@
       "2026-07-29"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -9376,8 +7152,8 @@
       "2026-07-30"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9424,78 +7200,6 @@
     "certNo": "E260497"
   },
   {
-    "id": "proj-real-883",
-    "contractId": "contract-real-883",
-    "companyId": "comp-legacy-7",
-    "companyName": "이케이에너지",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-07-30",
-    "endDate": "2026-08-14",
-    "auditDates": [
-      "2026-07-30",
-      "2026-08-13",
-      "2026-08-14"
-    ],
-    "status": "심의진행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "부분입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 2520000,
-    "paidAmount": 1260000,
-    "intNum": "883",
-    "certNo": "E260497"
-  },
-  {
-    "id": "proj-real-882",
-    "contractId": "contract-real-882",
-    "companyId": "comp-legacy-7",
-    "companyName": "이케이에너지",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-07-30",
-    "endDate": "2026-08-14",
-    "auditDates": [
-      "2026-07-30",
-      "2026-08-13",
-      "2026-08-14"
-    ],
-    "status": "심의진행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "부분입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 2520000,
-    "paidAmount": 1260000,
-    "intNum": "882",
-    "certNo": "E260497"
-  },
-  {
     "id": "proj-real-875",
     "contractId": "contract-real-875",
     "companyId": "comp-legacy-13",
@@ -9517,8 +7221,8 @@
       "2026-08-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9526,39 +7230,6 @@
     "billedAmount": 1400000,
     "paidAmount": 1400000,
     "intNum": "875",
-    "certNo": "E260492"
-  },
-  {
-    "id": "proj-real-862",
-    "contractId": "contract-real-862",
-    "companyId": "comp-legacy-13",
-    "companyName": "주식회사 아이티아이넥서스",
-    "issuerName": "GMSCS",
-    "auditType": "최초 1단계",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-09",
-    "leadAuditorName": "박금태",
-    "teamAuditorNames": [],
-    "startDate": "2026-07-30",
-    "endDate": "2026-08-07",
-    "auditDates": [
-      "2026-07-30",
-      "2026-08-06",
-      "2026-08-07"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 1400000,
-    "paidAmount": 1400000,
-    "intNum": "862",
     "certNo": "E260492"
   },
   {
@@ -9615,8 +7286,8 @@
       "2026-08-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9645,8 +7316,8 @@
       "2026-07-31"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -9677,8 +7348,8 @@
       "2026-08-19"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -9708,8 +7379,8 @@
       "2026-08-01"
     ],
     "status": "인증발행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "입금완료",
@@ -9742,8 +7413,8 @@
       "2026-08-04"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9774,8 +7445,8 @@
       "2026-08-07"
     ],
     "status": "인증발행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "입금완료",
@@ -9840,8 +7511,8 @@
       "2026-08-13"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -9871,8 +7542,8 @@
       "2026-08-10"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -9919,42 +7590,6 @@
     "certNo": "OH230003"
   },
   {
-    "id": "proj-real-854",
-    "contractId": "contract-real-854",
-    "companyId": "comp-legacy-428",
-    "companyName": "㈜통광",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-01",
-    "leadAuditorName": "이석원",
-    "teamAuditorNames": [
-      "남경호",
-      "정현일"
-    ],
-    "startDate": "2026-08-06",
-    "endDate": "2026-08-07",
-    "auditDates": [
-      "2026-08-06",
-      "2026-08-07"
-    ],
-    "status": "인증발행",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "입금완료",
-    "taxInvoiceStatus": "영수발행",
-    "billedAmount": 2520000,
-    "paidAmount": 2520000,
-    "intNum": "854",
-    "certNo": "OH230003"
-  },
-  {
     "id": "proj-real-877",
     "contractId": "contract-real-877",
     "companyId": "comp-legacy-9",
@@ -9975,8 +7610,8 @@
       "2026-08-21"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10007,8 +7642,8 @@
       "2026-08-18"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10039,8 +7674,8 @@
       "2026-08-14"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10069,8 +7704,8 @@
       "2026-08-10"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10099,8 +7734,8 @@
       "2026-08-10"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10130,8 +7765,8 @@
       "2026-08-11"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10174,76 +7809,6 @@
     "billedAmount": 1750000,
     "paidAmount": 875000,
     "intNum": "392",
-    "certNo": "E240226"
-  },
-  {
-    "id": "proj-real-369",
-    "contractId": "contract-real-369",
-    "companyId": "comp-legacy-179",
-    "companyName": "(주)민성",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-08-11",
-    "endDate": "2026-08-12",
-    "auditDates": [
-      "2026-08-11",
-      "2026-08-12"
-    ],
-    "status": "심의진행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "부분입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 1750000,
-    "paidAmount": 875000,
-    "intNum": "369",
-    "certNo": "E240226"
-  },
-  {
-    "id": "proj-real-391",
-    "contractId": "contract-real-391",
-    "companyId": "comp-legacy-179",
-    "companyName": "(주)민성",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-20",
-    "leadAuditorName": "임다영",
-    "teamAuditorNames": [
-      "성해준"
-    ],
-    "startDate": "2026-08-11",
-    "endDate": "2026-08-12",
-    "auditDates": [
-      "2026-08-11",
-      "2026-08-12"
-    ],
-    "status": "심의진행",
-    "kabStandardMd": 2.5,
-    "appliedMd": 2.5,
-    "standardFee": 2000000,
-    "finalFee": 1750000,
-    "paymentStatus": "부분입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 1750000,
-    "paidAmount": 875000,
-    "intNum": "391",
     "certNo": "E240226"
   },
   {
@@ -10298,8 +7863,8 @@
       "2026-08-12"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10328,8 +7893,8 @@
       "2026-08-12"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10360,8 +7925,8 @@
       "2026-08-14"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10390,8 +7955,8 @@
       "2026-08-13"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10421,8 +7986,8 @@
       "2026-08-13"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10453,8 +8018,8 @@
       "2026-08-18"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10484,8 +8049,8 @@
       "2026-08-19"
     ],
     "status": "심의진행",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "부분입금",
@@ -10546,8 +8111,8 @@
       "2026-08-20"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10576,8 +8141,8 @@
       "2026-08-20"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10606,8 +8171,8 @@
       "2026-08-21"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10636,8 +8201,8 @@
       "2026-08-21"
     ],
     "status": "심의진행",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "부분입금",
@@ -10734,8 +8299,8 @@
       "2026-08-28"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -10765,8 +8330,8 @@
       "2026-08-28"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -10798,8 +8363,8 @@
       "2026-09-02"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -10807,39 +8372,6 @@
     "billedAmount": 1400000,
     "paidAmount": 0,
     "intNum": "662",
-    "certNo": "E250371"
-  },
-  {
-    "id": "proj-real-661",
-    "contractId": "contract-real-661",
-    "companyId": "comp-legacy-71",
-    "companyName": "주식회사 에이치엠티",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 2차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-18",
-    "leadAuditorName": "조항채",
-    "teamAuditorNames": [],
-    "startDate": "2026-08-31",
-    "endDate": "2026-09-02",
-    "auditDates": [
-      "2026-08-31",
-      "2026-09-01",
-      "2026-09-02"
-    ],
-    "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 1400000,
-    "paidAmount": 0,
-    "intNum": "661",
     "certNo": "E250371"
   },
   {
@@ -10894,8 +8426,8 @@
       "2026-09-01"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -10924,8 +8456,8 @@
       "2026-09-02"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -10972,78 +8504,6 @@
     "certNo": "E230018"
   },
   {
-    "id": "proj-real-585",
-    "contractId": "contract-real-585",
-    "companyId": "comp-legacy-250",
-    "companyName": "노바메저링인스트루먼트코리아 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-16",
-    "leadAuditorName": "이예원",
-    "teamAuditorNames": [
-      "이석원",
-      "정현일"
-    ],
-    "startDate": "2026-09-02",
-    "endDate": "2026-09-03",
-    "auditDates": [
-      "2026-09-02",
-      "2026-09-03"
-    ],
-    "status": "보고서작성",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 2520000,
-    "paidAmount": 0,
-    "intNum": "585",
-    "certNo": "E230018"
-  },
-  {
-    "id": "proj-real-584",
-    "contractId": "contract-real-584",
-    "companyId": "comp-legacy-250",
-    "companyName": "노바메저링인스트루먼트코리아 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015",
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-16",
-    "leadAuditorName": "이예원",
-    "teamAuditorNames": [
-      "이석원",
-      "정현일"
-    ],
-    "startDate": "2026-09-02",
-    "endDate": "2026-09-03",
-    "auditDates": [
-      "2026-09-02",
-      "2026-09-03"
-    ],
-    "status": "보고서작성",
-    "kabStandardMd": 3.6,
-    "appliedMd": 3.6,
-    "standardFee": 2880000,
-    "finalFee": 2520000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "청구발행",
-    "billedAmount": 2520000,
-    "paidAmount": 0,
-    "intNum": "584",
-    "certNo": "E230018"
-  },
-  {
     "id": "proj-real-656",
     "contractId": "contract-real-656",
     "companyId": "comp-legacy-74",
@@ -11063,8 +8523,8 @@
       "2026-09-04"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11096,8 +8556,8 @@
       "2026-09-04"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11198,8 +8658,8 @@
       "2026-09-09"
     ],
     "status": "보고서작성",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11300,8 +8760,8 @@
       "2026-09-18"
     ],
     "status": "심사진행중",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11331,8 +8791,8 @@
       "2026-09-11"
     ],
     "status": "심사진행중",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11394,8 +8854,8 @@
       "2026-09-21"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11425,8 +8885,8 @@
       "2026-09-12"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11555,8 +9015,8 @@
       "2026-09-15"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11564,38 +9024,6 @@
     "billedAmount": 1400000,
     "paidAmount": 0,
     "intNum": "899",
-    "certNo": "E230025"
-  },
-  {
-    "id": "proj-real-898",
-    "contractId": "contract-real-898",
-    "companyId": "comp-legacy-280",
-    "companyName": "전원산업",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-34",
-    "leadAuditorName": "정현일",
-    "teamAuditorNames": [],
-    "startDate": "2026-09-14",
-    "endDate": "2026-09-15",
-    "auditDates": [
-      "2026-09-14",
-      "2026-09-15"
-    ],
-    "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "미발행",
-    "billedAmount": 1400000,
-    "paidAmount": 0,
-    "intNum": "898",
     "certNo": "E230025"
   },
   {
@@ -11617,8 +9045,8 @@
       "2026-09-15"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -11650,8 +9078,8 @@
       "2026-09-15"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11681,8 +9109,8 @@
       "2026-09-16"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -11744,8 +9172,8 @@
       "2026-09-17"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -11777,8 +9205,8 @@
       "2026-09-17"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11841,8 +9269,8 @@
       "2026-09-23"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11978,8 +9406,8 @@
       "2026-09-22"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -11987,37 +9415,6 @@
     "billedAmount": 1400000,
     "paidAmount": 0,
     "intNum": "650",
-    "certNo": "OH250362"
-  },
-  {
-    "id": "proj-real-649",
-    "contractId": "contract-real-649",
-    "companyId": "comp-legacy-77",
-    "companyName": "신성에프에이 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 45001:2018"
-    ],
-    "leadAuditorId": "aud-36",
-    "leadAuditorName": "남경호",
-    "teamAuditorNames": [],
-    "startDate": "2026-09-21",
-    "endDate": "2026-09-22",
-    "auditDates": [
-      "2026-09-21",
-      "2026-09-22"
-    ],
-    "status": "계획서발송",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "미발행",
-    "billedAmount": 1400000,
-    "paidAmount": 0,
-    "intNum": "649",
     "certNo": "OH250362"
   },
   {
@@ -12054,39 +9451,6 @@
     "certNo": "E250378"
   },
   {
-    "id": "proj-real-681",
-    "contractId": "contract-real-681",
-    "companyId": "comp-legacy-66",
-    "companyName": "솔벡일렉트릭 주식회사",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 9001:2015",
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-21",
-    "leadAuditorName": "남미현",
-    "teamAuditorNames": [
-      "이기영"
-    ],
-    "startDate": "2026-09-22",
-    "endDate": "2026-09-22",
-    "auditDates": [
-      "2026-09-22"
-    ],
-    "status": "계획서발송",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "미발행",
-    "billedAmount": 1050000,
-    "paidAmount": 0,
-    "intNum": "681",
-    "certNo": "E250378"
-  },
-  {
     "id": "proj-real-672",
     "contractId": "contract-real-672",
     "companyId": "comp-legacy-67",
@@ -12106,8 +9470,8 @@
       "2026-09-22"
     ],
     "status": "계획서발송",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -12136,8 +9500,8 @@
       "2026-09-28"
     ],
     "status": "계획수립",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
@@ -12200,8 +9564,8 @@
       "2026-10-01"
     ],
     "status": "계획수립",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -12306,8 +9670,8 @@
       "2026-10-15"
     ],
     "status": "계획수립",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -12315,39 +9679,6 @@
     "billedAmount": 1400000,
     "paidAmount": 0,
     "intNum": "624",
-    "certNo": "E230004"
-  },
-  {
-    "id": "proj-real-888",
-    "contractId": "contract-real-888",
-    "companyId": "comp-legacy-279",
-    "companyName": "(주)동연특수",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-10-14",
-    "endDate": "2026-10-15",
-    "auditDates": [
-      "2026-10-14",
-      "2026-10-15"
-    ],
-    "status": "계획수립",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
-    "standardFee": 1600000,
-    "finalFee": 1400000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "미발행",
-    "billedAmount": 1400000,
-    "paidAmount": 0,
-    "intNum": "888",
     "certNo": "E230004"
   },
   {
@@ -12383,38 +9714,6 @@
     "certNo": "E250366"
   },
   {
-    "id": "proj-real-657",
-    "contractId": "contract-real-657",
-    "companyId": "comp-legacy-73",
-    "companyName": "주식회사 더좋은",
-    "issuerName": "GMSCS",
-    "auditType": "사후관리 1차",
-    "standards": [
-      "ISO 14001:2015"
-    ],
-    "leadAuditorId": "aud-27",
-    "leadAuditorName": "송인선",
-    "teamAuditorNames": [
-      "남경호"
-    ],
-    "startDate": "2026-10-20",
-    "endDate": "2026-10-20",
-    "auditDates": [
-      "2026-10-20"
-    ],
-    "status": "계획수립",
-    "kabStandardMd": 1.5,
-    "appliedMd": 1.5,
-    "standardFee": 1200000,
-    "finalFee": 1050000,
-    "paymentStatus": "미입금",
-    "taxInvoiceStatus": "미발행",
-    "billedAmount": 1050000,
-    "paidAmount": 0,
-    "intNum": "657",
-    "certNo": "E250366"
-  },
-  {
     "id": "proj-real-892",
     "contractId": "contract-real-892",
     "companyId": "comp-legacy-294",
@@ -12437,8 +9736,8 @@
       "2026-10-28"
     ],
     "status": "계획수립",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -12468,8 +9767,8 @@
       "2026-10-30"
     ],
     "status": "계획수립",
-    "kabStandardMd": 2.0,
-    "appliedMd": 2.0,
+    "kabStandardMd": 2,
+    "appliedMd": 2,
     "standardFee": 1600000,
     "finalFee": 1400000,
     "paymentStatus": "미입금",
@@ -12498,8 +9797,8 @@
       "2026-10-29"
     ],
     "status": "계획수립",
-    "kabStandardMd": 1.0,
-    "appliedMd": 1.0,
+    "kabStandardMd": 1,
+    "appliedMd": 1,
     "standardFee": 800000,
     "finalFee": 700000,
     "paymentStatus": "미입금",
