@@ -4,7 +4,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Clock, 
-  DollarSign
+  DollarSign,
+  CheckCircle2
 } from 'lucide-react';
 import { AuditProject, Auditor, Company } from '../types';
 import { ActiveTab, MainCategory } from './Navbar';
@@ -87,25 +88,52 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
     return map;
   }, [committeeSchedules]);
 
-  // 대시보드 통계 계산
+  // 대시보드 통계 계산 (실제 DB 기반 완전 동적 산출)
   const stats = useMemo(() => {
+    const todayStr = '2026-09-10'; // 시스템 현재 기준일
+
+    // 1. 당해년도(2026년) 전체 심사 및 시행 완료 건수
+    const yearProjects = projects.filter(p => p.startDate && p.startDate.startsWith(String(currentYear)));
+    const totalYearCount = yearProjects.length;
+
+    // 시행 완료: 오늘 이전 심사일정이거나, 보고서작성/서명완료/심의/인증발행 상태인 심사
+    const completedProjects = yearProjects.filter(p => {
+      const isPastDate = (p.endDate && p.endDate <= todayStr) || (p.startDate && p.startDate <= todayStr);
+      const isFinishedStatus = p.status === '인증발행' || p.status === '심의진행' || p.status === '보고서작성' || p.status === '서명완료' || p.status === '사무국검토대기';
+      return isPastDate || isFinishedStatus;
+    });
+    const completedCount = completedProjects.length;
+    const yearCompletionRate = totalYearCount > 0 ? ((completedCount / totalYearCount) * 100).toFixed(1) : '0.0';
+
+    // 2. 당월 심사
     const thisMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    const thisMonthProjects = projects.filter(p => p.startDate?.startsWith(thisMonthPrefix));
+
+    // 3. 익월 심사 (제목에서 '예정' 제외)
     const nextMonthVal = currentMonth === 12 ? 1 : currentMonth + 1;
     const nextYearVal = currentMonth === 12 ? currentYear + 1 : currentYear;
     const nextMonthPrefix = `${nextYearVal}-${String(nextMonthVal).padStart(2, '0')}`;
-
-    const thisMonthProjects = projects.filter(p => p.startDate?.startsWith(thisMonthPrefix));
     const nextMonthProjects = projects.filter(p => p.startDate?.startsWith(nextMonthPrefix));
-    
-    // 심사비 미수금 건수
+
+    // 4. 심사비 미수금 건수 및 미수 총액
     const unpaidProjects = projects.filter(p => p.paymentStatus === '미입금' || p.paymentStatus === '부분입금');
+    const unpaidCount = unpaidProjects.length;
+    const unpaidTotal = unpaidProjects.reduce((sum, p) => {
+      const fee = p.finalFee || p.billedAmount || p.standardFee || 0;
+      const paid = p.paidAmount || 0;
+      return sum + Math.max(0, fee - paid);
+    }, 0);
 
     return {
+      totalYearCount,
+      completedCount,
+      yearCompletionRate,
       thisMonthCount: thisMonthProjects.length,
       nextMonthCount: nextMonthProjects.length,
       nextMonth: nextMonthVal,
       nextYear: nextYearVal,
-      unpaid: unpaidProjects.length,
+      unpaidCount,
+      unpaidTotal
     };
   }, [projects, currentYear, currentMonth]);
 
@@ -132,82 +160,112 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* 5대 핵심 지표 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {/* 1. 당월 심사 */}
+    <div className="space-y-3">
+      {/* 상단 4대 핵심 지표 카드 (높이 슬림화 + 연간 완료율 카드 추가 + 미수 총액 표기) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        {/* 1. 당해년도 심사 완료율 (신규 카드) */}
+        <div 
+          className="bg-white p-3 rounded-lg border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-sm transition cursor-default"
+          title="당해년도(2026년) 전체 심사 건수 대비 시행완료 건수 및 진척도"
+        >
+          <div className="min-w-0">
+            <p className="text-[11.5px] font-semibold text-slate-500 truncate flex items-center gap-1">
+              <span>{currentYear}년 연간 심사 완료율</span>
+            </p>
+            <h3 className="text-xl font-bold text-emerald-800 mt-0.5 leading-tight">
+              {stats.completedCount} <span className="text-xs text-slate-400 font-normal">/ {stats.totalYearCount}건</span>
+            </h3>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[11px] font-bold text-emerald-600">{stats.yearCompletionRate}%</span>
+              <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                  style={{ width: `${Math.min(100, parseFloat(stats.yearCompletionRate))}%` }}
+                ></div>
+              </div>
+              <span className="text-[10px] text-slate-400">완료</span>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-md bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* 2. 당월 심사 */}
         <div 
           onClick={() => {
             setCurrentYear(2026);
             setCurrentMonth(9);
           }}
-          className="bg-white p-4 rounded-2xl border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-md hover:border-blue-400 hover:ring-2 hover:ring-blue-100 transition-all cursor-pointer group"
-          title="클릭 시 당월 심사 달력으로 이동"
+          className="bg-white p-3 rounded-lg border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-sm hover:border-blue-400 transition cursor-pointer group"
+          title="클릭 시 당월(9월) 심사 달력으로 이동"
         >
-          <div>
-            <p className="text-xs font-semibold text-slate-500 group-hover:text-blue-600 transition flex items-center gap-1">
+          <div className="min-w-0">
+            <p className="text-[11.5px] font-semibold text-slate-500 group-hover:text-blue-600 transition truncate flex items-center gap-1">
               <span>{currentYear}년 {currentMonth}월 심사</span>
             </p>
-            <h3 className="text-2xl font-extrabold text-slate-900 mt-1">
-              {stats.thisMonthCount} <span className="text-sm font-normal text-slate-500">건</span>
+            <h3 className="text-xl font-bold text-slate-900 mt-0.5 leading-tight">
+              {stats.thisMonthCount} <span className="text-xs font-normal text-slate-500">건</span>
             </h3>
-            <p className="text-[10.5px] text-slate-400 mt-0.5">당월 배정 심사</p>
+            <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">당월 배정 심사 일정</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs group-hover:scale-105 transition-transform">
-            <CalendarIcon className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
+            <CalendarIcon className="w-4 h-4" />
           </div>
         </div>
 
-        {/* 2. 익월 예정 심사 */}
+        {/* 3. 익월 심사 (제목에서 '예정' 제외) */}
         <div 
           onClick={() => {
             setCurrentYear(stats.nextYear);
             setCurrentMonth(stats.nextMonth);
           }}
-          className="bg-white p-4 rounded-2xl border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-md hover:border-indigo-400 hover:ring-2 hover:ring-indigo-100 transition-all cursor-pointer group"
-          title="클릭 시 익월 심사 달력으로 이동"
+          className="bg-white p-3 rounded-lg border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-sm hover:border-indigo-400 transition cursor-pointer group"
+          title={`클릭 시 ${stats.nextYear}년 ${stats.nextMonth}월 심사 달력으로 이동`}
         >
-          <div>
-            <p className="text-xs font-semibold text-slate-500 group-hover:text-indigo-600 transition flex items-center gap-1">
-              <span>{stats.nextYear}년 {stats.nextMonth}월 예정 심사</span>
+          <div className="min-w-0">
+            <p className="text-[11.5px] font-semibold text-slate-500 group-hover:text-indigo-600 transition truncate flex items-center gap-1">
+              <span>{stats.nextYear}년 {stats.nextMonth}월 심사</span>
             </p>
-            <h3 className="text-2xl font-extrabold text-indigo-700 mt-1">
-              {stats.nextMonthCount} <span className="text-sm font-normal text-slate-500">건</span>
+            <h3 className="text-xl font-bold text-indigo-700 mt-0.5 leading-tight">
+              {stats.nextMonthCount} <span className="text-xs font-normal text-slate-500">건</span>
             </h3>
-            <p className="text-[10.5px] text-slate-400 mt-0.5">익월 계획 수립 심사</p>
+            <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">익월 계획 수립 심사</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-2xs group-hover:scale-105 transition-transform">
-            <Clock className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+            <Clock className="w-4 h-4" />
           </div>
         </div>
 
-        {/* 3. 심사비 미수금 관리 */}
+        {/* 4. 심사비 미수금 관리 (건수 + 미수 총액 함께 표시) */}
         <div 
           onClick={() => onNavigateTab && onNavigateTab('general-admin', 'finance', 'billing')}
-          className="bg-white p-4 rounded-2xl border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-md hover:border-rose-400 hover:ring-2 hover:ring-rose-100 transition-all cursor-pointer group"
+          className="bg-white p-3 rounded-lg border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-sm hover:border-rose-400 transition cursor-pointer group"
           title="클릭 시 고객사 심사비용 수납 및 세금계산서 관리로 이동"
         >
-          <div>
-            <p className="text-xs font-semibold text-slate-500 group-hover:text-rose-600 transition">
+          <div className="min-w-0">
+            <p className="text-[11.5px] font-semibold text-slate-500 group-hover:text-rose-600 transition truncate">
               심사비 미수금 관리
             </p>
-            <h3 className="text-2xl font-extrabold text-rose-600 mt-1">
-              {stats.unpaid} <span className="text-sm font-normal text-slate-500">건</span>
+            <h3 className="text-xl font-bold text-rose-600 mt-0.5 leading-tight">
+              {stats.unpaidCount} <span className="text-xs font-normal text-slate-500">건</span>
             </h3>
-            <p className="text-[10.5px] text-slate-400 mt-0.5">수납 대사 이동</p>
+            <p className="text-[10.5px] font-semibold text-rose-700 mt-0.5 truncate" title={`총 미수액: ${stats.unpaidTotal.toLocaleString()}원`}>
+              미수: {stats.unpaidTotal.toLocaleString()}원
+            </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-2xs group-hover:scale-105 transition-transform">
-            <DollarSign className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-md bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 group-hover:scale-105 transition-transform">
+            <DollarSign className="w-4 h-4" />
           </div>
         </div>
       </div>
 
       {/* Main Calendar View */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         {/* Calendar Month Navigation Header */}
-        <div className="p-4 sm:px-6 flex items-center justify-between border-b border-slate-200 bg-slate-50/70">
+        <div className="p-3 sm:px-4 flex items-center justify-between border-b border-slate-200 bg-slate-50/70">
           <div className="flex items-center space-x-3">
-            <h2 className="text-xl font-extrabold text-slate-900">
+            <h2 className="text-lg font-bold text-slate-900">
               {currentYear}년 {currentMonth}월
             </h2>
           </div>
@@ -216,13 +274,15 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
             <div className="flex space-x-1">
               <button
                 onClick={handlePrevMonth}
-                className="p-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition shadow-2xs cursor-pointer"
+                className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition shadow-2xs cursor-pointer"
+                title="이전 달"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={handleNextMonth}
-                className="p-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition shadow-2xs cursor-pointer"
+                className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition shadow-2xs cursor-pointer"
+                title="다음 달"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -231,7 +291,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         </div>
 
         {/* Calendar Day Header */}
-        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100 text-center py-2 text-xs font-bold text-slate-700">
+        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100 text-center py-1.5 text-xs font-semibold text-slate-700">
           <div className="text-rose-600">일</div>
           <div>월</div>
           <div>화</div>
@@ -245,7 +305,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         <div className="grid grid-cols-7 gap-px bg-slate-200">
           {/* Empty cells before month starts */}
           {Array.from({ length: firstDayOfWeek }).map((_, idx) => (
-            <div key={`empty-${idx}`} className="min-h-[110px] bg-slate-50/50 p-2 text-slate-300 select-none">
+            <div key={`empty-${idx}`} className="min-h-[100px] bg-slate-50/50 p-1.5 text-slate-300 select-none">
               <span className="font-mono text-xs"></span>
             </div>
           ))}
@@ -254,7 +314,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
           {Array.from({ length: daysInMonth }).map((_, idx) => {
             const dayNum = idx + 1;
             const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-            const isToday = currentYear === 2026 && currentMonth === 9 && dayNum === 9;
+            const isToday = currentYear === 2026 && currentMonth === 9 && dayNum === 10;
             const dayOfWeek = (firstDayOfWeek + idx) % 7;
             const dayProjects = projectsByDate[dateStr] || [];
             const dayCommittees = committeesByDate[dateStr] || [];
@@ -262,12 +322,12 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
             return (
               <div 
                 key={`day-${dayNum}`}
-                className={`min-h-[110px] bg-white p-2 flex flex-col justify-between transition ${
+                className={`min-h-[100px] bg-white p-1.5 flex flex-col justify-between transition ${
                   isToday ? 'bg-cyan-50/20 ring-2 ring-cyan-500 ring-inset' : ''
                 }`}
               >
                 <div className="flex items-center justify-between pb-1">
-                  <span className={`font-mono text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                  <span className={`font-mono text-xs font-semibold w-5 h-5 rounded-full flex items-center justify-center ${
                     isToday ? 'bg-cyan-600 text-white shadow-2xs' :
                     dayOfWeek === 0 ? 'text-rose-600' :
                     dayOfWeek === 6 ? 'text-blue-600' :
@@ -276,19 +336,19 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
                     {dayNum}
                   </span>
                   {(dayProjects.length > 0 || dayCommittees.length > 0) && (
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-normal text-slate-400">
                       {dayProjects.length + dayCommittees.length}건
                     </span>
                   )}
                 </div>
 
                 {/* Day Project & Committee Chips */}
-                <div className="space-y-1 overflow-y-auto max-h-[85px] no-scrollbar">
+                <div className="space-y-1 overflow-y-auto max-h-[75px] no-scrollbar">
                   {/* 심의위원회 일정 배지 */}
                   {dayCommittees.map(comm => (
                     <div
                       key={comm.id}
-                      className="px-1.5 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-[10.5px] font-bold truncate transition shadow-2xs leading-tight flex items-center gap-1 cursor-default"
+                      className="px-1.5 py-0.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-[10px] font-normal truncate transition shadow-2xs leading-tight flex items-center gap-1 cursor-default"
                       title={`${comm.sessionNumber} (${comm.time || '14:00'}) - ${comm.status}`}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0"></span>
@@ -301,7 +361,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
                     <div
                       key={proj.id}
                       onClick={() => handleProjectClick(proj)}
-                      className="px-1.5 py-1 rounded bg-slate-50 hover:bg-sky-50 text-slate-800 hover:text-sky-900 border border-slate-200 hover:border-sky-300 text-[11px] font-semibold truncate cursor-pointer transition shadow-2xs leading-tight"
+                      className="px-1.5 py-0.5 rounded bg-slate-50 hover:bg-sky-50 text-slate-800 hover:text-sky-900 border border-slate-200 hover:border-sky-300 text-[11px] font-normal truncate cursor-pointer transition shadow-2xs leading-tight"
                       title={`${proj.companyName} (클릭하여 심사상세 및 이력 확인)`}
                     >
                       {proj.companyName}
