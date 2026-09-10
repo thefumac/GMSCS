@@ -38,6 +38,7 @@ export interface Company {
   totalEmployees: number;
   industry: string;
   iafCode: string;
+  scope?: string; // 인증범위
   riskLevel: 'High' | 'Medium' | 'Low';
   createdAt: string;
   consultant?: string;       // 영업 유치자 / 컨설턴트명
@@ -46,6 +47,9 @@ export interface Company {
   assignedAuditorName?: string; // 배정된 심사원명
   isAuditorChanged?: boolean;   // 심사원 교체 여부
   auditorHistory?: string[];    // 역대 심사원 이력
+  initialContractType?: '신규' | '전환' | '재인증(부활)';
+  initialContractDate?: string; // 최초 계약일
+  standardInitialDates?: Record<string, string>; // 규격별 최초 계약일자
 }
 
 export type AuditorAffiliation = '상근' | '비상근';

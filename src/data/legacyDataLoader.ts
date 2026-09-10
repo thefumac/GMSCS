@@ -132,7 +132,14 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       salesType: (lc as any).salesType || 'HQ업체',
       assignedAuditorName: (lc as any).assignedAuditor || assignedAuditor.name,
       isAuditorChanged: (lc as any).isAuditorChanged || false,
-      auditorHistory: (lc as any).auditorHistory || []
+      auditorHistory: (lc as any).auditorHistory || [],
+      initialContractType: idx % 12 === 7 ? '재인증(부활)' : idx % 5 === 2 ? '전환' : '신규',
+      initialContractDate: `202${(idx % 4) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`,
+      standardInitialDates: {
+        '9001': `202${(idx % 4) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`,
+        '14001': `202${((idx + 1) % 4) + 2}-${String(((idx + 3) % 12) + 1).padStart(2, '0')}-${String(((idx + 5) % 28) + 1).padStart(2, '0')}`,
+        '45001': `202${((idx + 2) % 3) + 3}-${String(((idx + 6) % 12) + 1).padStart(2, '0')}-${String(((idx + 10) % 28) + 1).padStart(2, '0')}`
+      }
     };
   });
 }
