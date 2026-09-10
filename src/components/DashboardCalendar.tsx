@@ -115,10 +115,18 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
     const nextMonthPrefix = `${nextYearVal}-${String(nextMonthVal).padStart(2, '0')}`;
     const nextMonthProjects = projects.filter(p => p.startDate?.startsWith(nextMonthPrefix));
 
-    // 4. 심사비 미수금 건수 및 미수 총액
-    const unpaidProjects = projects.filter(p => p.paymentStatus === '미입금' || p.paymentStatus === '부분입금');
-    const unpaidCount = unpaidProjects.length;
-    const unpaidTotal = unpaidProjects.reduce((sum, p) => {
+    // 4. 심사비 미수금 관리 (실제 심사가 시행 완료된 건 중 미입금/부분입금만 정확히 집계 - 미래 미시행 건 제외)
+    const completedUnpaidProjects = projects.filter(p => {
+      const isUnpaid = p.paymentStatus === '미입금' || p.paymentStatus === '부분입금';
+      if (!isUnpaid) return false;
+      // 심사가 시행 완료된 건만 포함 (오늘 이전 일정이거나 보고서/서명/심의 단계)
+      const isPastDate = (p.endDate && p.endDate <= todayStr) || (p.startDate && p.startDate <= todayStr);
+      const isFinishedStatus = p.status === '인증발행' || p.status === '심의진행' || p.status === '보고서작성' || p.status === '서명완료' || p.status === '사무국검토대기';
+      return isPastDate || isFinishedStatus;
+    });
+
+    const unpaidCount = completedUnpaidProjects.length;
+    const unpaidTotal = completedUnpaidProjects.reduce((sum, p) => {
       const fee = p.finalFee || p.billedAmount || p.standardFee || 0;
       const paid = p.paidAmount || 0;
       return sum + Math.max(0, fee - paid);
@@ -237,20 +245,20 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
           </div>
         </div>
 
-        {/* 4. 심사비 미수금 관리 (건수 + 미수 총액 함께 표시) */}
+        {/* 4. 심사비 미수금 관리 (시행 완료 건만 집계) */}
         <div 
           onClick={() => onNavigateTab && onNavigateTab('general-admin', 'finance', 'billing')}
           className="bg-white p-3 rounded-lg border border-slate-200/90 flex items-center justify-between shadow-2xs hover:shadow-sm hover:border-rose-400 transition cursor-pointer group"
-          title="클릭 시 고객사 심사비용 수납 및 세금계산서 관리로 이동"
+          title="클릭 시 고객사 심사비용 수납 및 세금계산서 관리로 이동 (시행 완료 심사 기준)"
         >
           <div className="min-w-0">
             <p className="text-[11.5px] font-semibold text-slate-500 group-hover:text-rose-600 transition truncate">
-              심사비 미수금 관리
+              심사비 미수금 (시행완료)
             </p>
             <h3 className="text-xl font-bold text-rose-600 mt-0.5 leading-tight">
               {stats.unpaidCount} <span className="text-xs font-normal text-slate-500">건</span>
             </h3>
-            <p className="text-[10.5px] font-semibold text-rose-700 mt-0.5 truncate" title={`총 미수액: ${stats.unpaidTotal.toLocaleString()}원`}>
+            <p className="text-[10.5px] font-semibold text-rose-700 mt-0.5 truncate" title={`시행 완료건 총 미수액: ${stats.unpaidTotal.toLocaleString()}원`}>
               미수: {stats.unpaidTotal.toLocaleString()}원
             </p>
           </div>
