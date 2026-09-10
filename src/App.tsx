@@ -934,8 +934,8 @@ export function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Container - 85% Width for Balanced Layout & Comfortable Margins */}
-      <main className="flex-1 w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4 py-4">
+      {/* Main Container - Aligned with Navbar Width */}
+      <main className="flex-1 w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4 py-4">
         
         {/* ========================================================= */}
         {/* 1. 홈 / 월간 심사 일정 (로그인 랜딩 페이지) */}

@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Calendar, 
   Building2, 
   Users, 
   Award, 
   CheckCircle2, 
+  FileCheck,
   FileText,
   UserCheck, 
   LogOut,
-  ShieldCheck,
+  ChevronDown,
   User,
-  Edit3,
-  Mail
+  Settings
 } from 'lucide-react';
 import { Auditor } from '../types';
 
@@ -22,12 +22,13 @@ export type MainCategory =
   | 'general-admin';
 
 export type ActiveTab = 
-  // 5대 핵심 메뉴
-  | 'calendar'       // 대시보드
-  | 'projects'       // 심사진행현황
-  | 'clients'        // 고객관리
-  | 'auditors'       // 심사원관리
-  | 'certification'  // 인증관리 (유일한 하위메뉴 보유)
+  // 6대 핵심 파일인덱스 메뉴
+  | 'calendar'       // 1. 대시보드
+  | 'projects'       // 2. 심사진행현황
+  | 'contracts'      // 3. 심사관리 (신규 위치)
+  | 'clients'        // 4. 고객관리
+  | 'auditors'       // 5. 심사원관리
+  | 'certification'  // 6. 인증관리
   // 심사원 포털 & 보고서 & 심의
   | 'portal'
   | 'reports'
@@ -36,7 +37,6 @@ export type ActiveTab =
   | 'companies'
   | 'surveillance'
   | 'kab'
-  | 'contracts'
   | 'integrations'
   | 'finance'
   | 'data'
@@ -62,16 +62,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ 
   activeTab, 
   setActiveTab, 
-  activeCategory = 'audit',
-  setActiveCategory,
-  urgentAlertCount = 0,
   currentUserRole,
-  onSelectUserRole,
   allAuditors,
-  pendingAdjustmentCount = 0,
-  pendingCommitteeCount = 0,
-  pendingSecretariatReviewCount = 0,
-  onOpenEmailModal,
   onOpenProfileModal,
   onLogout
 }) => {
@@ -79,180 +71,270 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isStaff = currentAuditorObj?.isSystemAdmin || currentAuditorObj?.affiliation === '상근' || currentUserRole === 'admin';
   const isRegularAuditor = !isStaff;
 
-  // 사무국(상근) 5대 주요 메뉴
+  // 사용자 메뉴 드롭다운 상태
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // 사무국(상근) 6대 핵심 파일인덱스 메뉴
   const staffTabs = [
-    { id: 'calendar' as ActiveTab, label: '대시보드', icon: Calendar, description: '월간 심사일정 & 통계' },
-    { id: 'projects' as ActiveTab, label: '심사진행현황', icon: CheckCircle2, description: '심사진행 프로세스 대장 (Pre-Audit ~ Post-Audit)' },
-    { id: 'clients' as ActiveTab, label: '고객관리', icon: Building2, description: '572개 고객사 계약 & 계획서 발송' },
-    { id: 'auditors' as ActiveTab, label: '심사원관리', icon: Users, description: '36명 심사원 자격 & IAF 코드' },
-    { id: 'certification' as ActiveTab, label: '인증관리', icon: Award, description: '규격·KAB·정산·자료·메일 (좌측 메뉴)' },
+    { 
+      id: 'calendar' as ActiveTab, 
+      label: '대시보드', 
+      icon: Calendar, 
+      description: '월간 심사일정 달력 및 실시간 종합 통계' 
+    },
+    { 
+      id: 'projects' as ActiveTab, 
+      label: '심사진행현황', 
+      icon: CheckCircle2, 
+      description: 'Pre-Audit부터 Post-Audit까지 4대 수명주기 대장' 
+    },
+    { 
+      id: 'contracts' as ActiveTab, 
+      label: '심사관리', 
+      icon: FileCheck, 
+      description: '심사 계약 체결·수동조정 승인 및 일정 수립' 
+    },
+    { 
+      id: 'clients' as ActiveTab, 
+      label: '고객관리', 
+      icon: Building2, 
+      description: '572개사 고객 대장 및 심사계획서 수립·발송' 
+    },
+    { 
+      id: 'auditors' as ActiveTab, 
+      label: '심사원관리', 
+      icon: Users, 
+      description: '36명 심사원 자격 대장, IAF 전문코드 및 보수교육' 
+    },
+    { 
+      id: 'certification' as ActiveTab, 
+      label: '인증관리', 
+      icon: Award, 
+      description: '공인규격·심의위원회 일정·정산원장·DB백업' 
+    },
   ];
 
   // 비상근 심사원 메뉴
   const auditorTabs = [
-    { id: 'calendar' as ActiveTab, label: '심사일정 달력', icon: Calendar },
-    { id: 'portal' as ActiveTab, label: '나의 관리 대상 기업', icon: UserCheck },
-    { id: 'reports' as ActiveTab, label: '나의 심사보고서', icon: FileText },
+    { id: 'calendar' as ActiveTab, label: '심사일정 달력', icon: Calendar, description: '월간 배정 심사 일정 달력' },
+    { id: 'portal' as ActiveTab, label: '나의 관리 대상 기업', icon: UserCheck, description: '배정 고객사 및 심사 착수 관리' },
+    { id: 'reports' as ActiveTab, label: '나의 심사보고서', icon: FileText, description: '심사보고서 실시간 작성 및 서명' },
   ];
   if (currentAuditorObj?.isCommitteeMember) {
     auditorTabs.push({
       id: 'committee' as ActiveTab,
       label: '인증심의위원회',
-      icon: Award
+      icon: Award,
+      description: '정기 심의위원회 안건 심의 및 의결'
     });
   }
 
   const primaryTabs = isStaff ? staffTabs : auditorTabs;
 
-  return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-      <div className="w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4">
-        <div className="flex items-center justify-between h-16">
-          
-          {/* 1. Left: Logo & Brand */}
-          <div 
-            className="flex items-center space-x-3 cursor-pointer group shrink-0" 
-            onClick={() => {
-              if (isRegularAuditor) {
-                setActiveTab('portal');
-              } else {
-                setActiveTab('calendar');
-              }
-            }}
-          >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 border border-blue-400/30 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-black text-xl tracking-tight text-slate-900">GMSCS</span>
-                <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
-                  KAB 공인 인증기관
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium hidden sm:block">차세대 스마트 인증·심사 통합 관리 플랫폼</p>
-            </div>
-          </div>
+  // 표시 이름
+  const displayName = currentAuditorObj?.isSystemAdmin 
+    ? `${currentAuditorObj.name} 원장` 
+    : `${currentAuditorObj?.name} ${currentAuditorObj?.grade || '심사원'}`;
 
-          {/* 2. Center: 5 Primary Tabs (Single Row Clean Navbar) */}
-          <nav className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar mx-2">
+  return (
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-xs">
+      {/* ========================================================================= */}
+      {/* 1. 최상단 브랜드 영역: 로고 + 대형 사이트 제목 + 남경호 원장 드롭다운 */}
+      {/* ========================================================================= */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4">
+          <div className="flex items-center justify-between h-20">
+            
+            {/* 좌측: GMSCS 로고 + KAB 로고 + 대형 제목 */}
+            <div 
+              className="flex items-center space-x-3.5 cursor-pointer group"
+              onClick={() => setActiveTab('calendar')}
+              title="클릭 시 대시보드 홈으로 이동"
+            >
+              {/* GMSCS 원형 로고 */}
+              <img 
+                src="/gmscs_logo.png" 
+                alt="GMSCS 로고" 
+                className="h-12 w-12 object-contain drop-shadow-xs group-hover:scale-105 transition-transform" 
+              />
+
+              {/* KAB 공인인정 타원형 로고 */}
+              <img 
+                src="/kab_logo.png" 
+                alt="KAB 인정 로고" 
+                className="h-9 object-contain drop-shadow-xs group-hover:scale-105 transition-transform" 
+              />
+
+              <div className="h-8 w-px bg-slate-300 mx-1 hidden sm:block" />
+
+              {/* 대형 플랫폼 사이트 타이틀 */}
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-[26px] font-black text-slate-950 tracking-tight leading-tight">
+                  GMSCS 인증원 스마트 인증 플랫폼
+                </h1>
+                <p className="text-[11px] text-slate-500 font-semibold tracking-wide hidden md:block">
+                  KAB 공인 인증기관 (QC-2601) · ISO 국제표준 &amp; ESG 통합 관리 시스템
+                </p>
+              </div>
+            </div>
+
+            {/* 우측: 남경호 원장 텍스트 클릭 드롭다운 메뉴 (버튼 모두 제거됨) */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(prev => !prev)}
+                className="flex items-center space-x-2 py-2 px-3.5 rounded-xl hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition cursor-pointer text-slate-800 font-bold text-sm select-none"
+                title="클릭하여 심사원 포털 및 계정 메뉴 열기"
+              >
+                {/* 프로필 이미지 또는 기본 아바타 */}
+                {currentAuditorObj?.photoUrl ? (
+                  <img
+                    src={currentAuditorObj.photoUrl}
+                    alt={currentAuditorObj.name}
+                    className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-300 shrink-0"
+                  />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">
+                    <User className="w-4 h-4" />
+                  </span>
+                )}
+
+                <span className="text-base font-extrabold text-slate-900">
+                  {displayName}
+                </span>
+
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* 사용자 드롭다운 메뉴 레이어 */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 py-2 border-b border-slate-100 text-xs text-slate-500">
+                    <div className="font-bold text-slate-900 text-sm">{currentAuditorObj.name}</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      {currentAuditorObj.email || 'fumac@naver.com'}
+                    </div>
+                  </div>
+
+                  {/* 1. 심사원 포털로 이동 (자기 심사 관리) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setActiveTab('portal');
+                    }}
+                    className="w-full text-left px-4 py-3 text-xs sm:text-sm font-bold text-cyan-900 hover:bg-cyan-50 flex items-center space-x-2.5 transition cursor-pointer"
+                  >
+                    <UserCheck className="w-4 h-4 text-cyan-700" />
+                    <span>👉 심사원 포털로 이동</span>
+                  </button>
+
+                  {/* 2. 개인정보 및 정산 계좌 관리 */}
+                  {onOpenProfileModal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        onOpenProfileModal();
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 transition cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 text-slate-500" />
+                      <span>개인정보 및 정산계좌 관리</span>
+                    </button>
+                  )}
+
+                  {/* 3. 로그아웃 */}
+                  {onLogout && (
+                    <div className="border-t border-slate-100 mt-1 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center space-x-2.5 transition cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-500" />
+                        <span>로그아웃</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. 하단 파일 인덱스(File Index) 메뉴 영역: 선택된 탭이 넓어지고 색상이 변함 */}
+      {/* ========================================================================= */}
+      <div className="bg-slate-50/80 border-b border-slate-300">
+        <div className="w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4">
+          <nav className="flex items-stretch gap-1.5 sm:gap-2 pt-2.5 pb-2 overflow-x-auto no-scrollbar">
             {primaryTabs.map((tabItem) => {
               const Icon = tabItem.icon;
-              const isActive = activeTab === tabItem.id || (tabItem.id === 'clients' && activeTab === 'companies') || (tabItem.id === 'certification' && (activeTab === 'kab' || activeTab === 'surveillance' || activeTab === 'finance' || activeTab === 'data'));
-              
+              const isActive = activeTab === tabItem.id || 
+                (tabItem.id === 'clients' && activeTab === 'companies') || 
+                (tabItem.id === 'contracts' && (activeTab === 'contracts' || activeTab === 'surveillance')) ||
+                (tabItem.id === 'certification' && (activeTab === 'kab' || activeTab === 'finance' || activeTab === 'data'));
+
               return (
                 <button
                   key={tabItem.id}
-                  onClick={() => {
-                    setActiveTab(tabItem.id);
-                    if (setActiveCategory) {
-                      if (tabItem.id === 'certification') setActiveCategory('certification');
-                      else if (tabItem.id === 'auditors') setActiveCategory('auditor-mgmt');
-                      else setActiveCategory('audit');
-                    }
-                  }}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap cursor-pointer ${
+                  onClick={() => setActiveTab(tabItem.id)}
+                  className={`group rounded-xl border transition-all duration-300 ease-in-out cursor-pointer text-left select-none ${
                     isActive
-                      ? 'bg-slate-900 text-white shadow-md ring-1 ring-slate-800'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                      ? 'flex-[2.5] min-w-[210px] bg-slate-900 text-white border-slate-900 shadow-md p-3'
+                      : 'flex-1 min-w-[120px] sm:min-w-[135px] bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-300 p-2.5 flex items-center justify-center space-x-2'
                   }`}
-                  title={(tabItem as any).description || tabItem.label}
+                  title={tabItem.description}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
-                  <span>{tabItem.label}</span>
+                  {isActive ? (
+                    /* 활성화 탭 (넓게 확장 + 색상 반전 + 설명 표시) */
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-600/30 border border-cyan-400/40 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-cyan-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5 truncate">
+                            <span>{tabItem.label}</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-300 font-medium truncate mt-0.5 hidden sm:block">
+                            {tabItem.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* 비활성화 탭 (인덱스 컴팩트 탭) */
+                    <div className="flex items-center space-x-1.5 truncate">
+                      <Icon className="w-4 h-4 text-slate-400 group-hover:text-slate-700 shrink-0" />
+                      <span className="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-slate-950 truncate">
+                        {tabItem.label}
+                      </span>
+                    </div>
+                  )}
                 </button>
               );
             })}
           </nav>
-
-          {/* 3. Right: Portal Switcher + Profile + Actions + Logout */}
-          <div className="flex items-center space-x-2 shrink-0">
-            {/* Quick Email Dispatch Button */}
-            <button
-              type="button"
-              onClick={onOpenEmailModal}
-              className="hidden xl:flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 text-xs font-bold transition cursor-pointer"
-              title="심사계획서 및 공문 스마트 메일 발송"
-            >
-              <Mail className="w-3.5 h-3.5 text-cyan-600" />
-              <span>스마트 메일</span>
-            </button>
-
-            {/* 사무국(관리자) vs 심사원 포털 1클릭 전환 버튼 */}
-            {isStaff ? (
-              <button
-                type="button"
-                onClick={() => {
-                  const kim = allAuditors.find(a => a.name.includes('김홍덕')) || allAuditors[2];
-                  onSelectUserRole(kim.id);
-                  setActiveTab('portal');
-                }}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-cyan-800 border border-slate-300 hover:border-cyan-300 text-xs font-semibold transition cursor-pointer shadow-2xs"
-                title="비상근 심사원 포털 모드로 전환"
-              >
-                <UserCheck className="w-3.5 h-3.5 text-cyan-700" />
-                <span className="hidden sm:inline">심사원 포털</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  onSelectUserRole('admin');
-                  setActiveTab('calendar');
-                }}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-700 to-blue-700 hover:from-cyan-600 hover:to-blue-600 text-white shadow-xs text-xs font-semibold transition cursor-pointer"
-                title="인증원 총괄 사무국(관리자) 화면으로 전환"
-              >
-                <Building2 className="w-3.5 h-3.5 text-white" />
-                <span className="hidden sm:inline">사무국 화면</span>
-              </button>
-            )}
-
-            {/* Profile Button (원장/부원장/심사원 클릭 시 모달 오픈 및 내 심사포털 진입 가능) */}
-            <button
-              type="button"
-              onClick={onOpenProfileModal}
-              title="클릭하여 개인 정보, 심사비 계좌 및 내 심사포털로 진입합니다."
-              className="flex items-center space-x-2 bg-slate-50 hover:bg-blue-50 border border-slate-300 hover:border-blue-400 px-3 py-1.5 rounded-full shadow-2xs transition group cursor-pointer text-left ring-0 hover:ring-2 hover:ring-blue-400/20"
-            >
-              {currentAuditorObj?.photoUrl ? (
-                <img
-                  src={currentAuditorObj.photoUrl}
-                  alt={currentAuditorObj.name}
-                  className="w-5 h-5 rounded-full object-cover ring-1 ring-blue-500 shrink-0"
-                />
-              ) : (
-                <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] shrink-0 font-bold">
-                  {currentAuditorObj?.isSystemAdmin ? '👑' : <User className="w-3 h-3 text-slate-600" />}
-                </span>
-              )}
-
-              <span className="text-slate-800 font-bold text-xs group-hover:text-blue-900">
-                {currentAuditorObj?.name}
-                <span className="text-slate-500 font-normal ml-1 hidden md:inline">
-                  ({currentAuditorObj?.isSystemAdmin ? '원장' : currentAuditorObj?.grade || '심사원'})
-                </span>
-              </span>
-
-              <span className="p-0.5 rounded-full bg-slate-200/80 group-hover:bg-blue-200 text-slate-500 group-hover:text-blue-700 transition" title="개인정보 및 포털">
-                <Edit3 className="w-2.5 h-2.5" />
-              </span>
-            </button>
-
-            {/* Logout Button */}
-            {onLogout && (
-              <button
-                type="button"
-                onClick={onLogout}
-                title="시스템 로그아웃"
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-300 hover:border-rose-200 text-xs font-bold transition shadow-2xs cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5 text-slate-500 hover:text-rose-500" />
-                <span className="hidden sm:inline">로그아웃</span>
-              </button>
-            )}
-          </div>
-
         </div>
       </div>
     </header>

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search,
-  Download,
   ExternalLink,
   Printer,
   X,
@@ -524,86 +523,9 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
     return sortedRows.slice(start, start + PAGE_SIZE);
   }, [sortedRows, safeCurrentPage]);
 
-  // CSV 다운로드 핸들러
-  const handleExportCsv = () => {
-    const headers = [
-      'No',
-      '기업명',
-      '대표자',
-      '사업자번호',
-      '인증규격',
-      '인증번호',
-      '심사구분',
-      'Pre-AUDIT(계약/일정/계획)',
-      '심사시작일',
-      '심사종료일',
-      '배정MD',
-      '심사팀장',
-      '심사팀원',
-      'Post-AUDIT(접수/승인)',
-      '심의의결'
-    ];
-
-    const rows = sortedRows.map((r, i) => [
-      i + 1,
-      `"${r.companyName}"`,
-      `"${r.ceoName}"`,
-      r.bizNumber,
-      `"${r.standardsText}"`,
-      r.certNo,
-      r.auditType,
-      `"계약:${r.preAudit.contractDate || '-'} 일정:${r.preAudit.scheduleDate || '-'} 계획:${r.preAudit.planApprovalDate || '-'}"`,
-      r.schedule.startDate,
-      r.schedule.endDate,
-      r.schedule.md,
-      r.team.leadAuditor,
-      r.team.teamAuditor,
-      `"접수:${r.postAudit.receiptDate || '-'} 승인:${r.postAudit.approvalDate || '-'}"`,
-      `"${r.committee.displayText}"`
-    ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `GMSCS_심사진행프로세스대장_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="space-y-3 animate-in fade-in">
-      {/* 1. 상단 타이틀 & 빠른 액션 바 */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-              심사진행현황
-            </h2>
-            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200 font-mono">
-              4대 핵심 프로세스 대장
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Pre-AUDIT(계약·일정·계획), AUDIT(심사일정), TEAM(심사팀), Post-AUDIT(보고서 접수·승인) 및 심의의결까지 전체 수명주기를 실시간 통합 관리합니다.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg border border-slate-300 transition cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>엑셀 다운로드 (CSV)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. 월별 조회 & 단일 상단 검색 컨트롤 바 (불필요한 하늘색 접속월 버튼 제거) */}
+      {/* 1. 월별 조회 & 단일 상단 검색 컨트롤 바 */}
       <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           {/* 월 네비게이터 (가장 왼쪽의 것만 유지) */}
@@ -833,8 +755,8 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                         }}
                         className="text-left group cursor-pointer"
                       >
-                        <div className="font-semibold text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1">
-                          <span className="underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
+                        <div className="text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1">
+                          <span className="font-bold underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
                             {row.companyName}
                           </span>
                           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
@@ -847,7 +769,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                     {/* 3. 인증규격 (인증번호) - 줄바꿈 없이 한 줄 표시 보장 (whitespace-nowrap) */}
                     <td className="py-2.5 px-3 leading-snug align-middle border-r border-slate-200 whitespace-nowrap">
-                      <div className="text-slate-800 font-medium whitespace-nowrap">
+                      <div className="text-slate-800 font-normal whitespace-nowrap">
                         {row.standardsText}
                       </div>
                       <div className="text-slate-900 font-mono text-[11px] font-bold mt-0.5 whitespace-nowrap">
@@ -865,7 +787,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                       <div className="flex items-start justify-center gap-1.5 text-[11px] whitespace-nowrap">
                         {/* 1. 계약(준비) */}
                         <div className="text-center min-w-[52px]">
-                          <div className="text-slate-900 font-semibold" title="계약 체결 및 준비">
+                          <div className="text-slate-900 font-normal" title="계약 체결 및 준비">
                             계약(준비)
                           </div>
                           <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
@@ -877,7 +799,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                         {/* 2. 일정협의 */}
                         <div className="text-center min-w-[48px]">
-                          <div className={row.preAudit.scheduleDate ? "text-slate-900 font-semibold" : "text-slate-300"} title="일정협의 완료">
+                          <div className={row.preAudit.scheduleDate ? "text-slate-900 font-normal" : "text-slate-300"} title="일정협의 완료">
                             일정협의
                           </div>
                           <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
@@ -889,7 +811,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                         {/* 3. 계획승인 */}
                         <div className="text-center min-w-[48px]">
-                          <div className={row.preAudit.planApprovalDate ? "text-slate-900 font-semibold" : "text-slate-300"} title="심사계획 승인">
+                          <div className={row.preAudit.planApprovalDate ? "text-slate-900 font-normal" : "text-slate-300"} title="심사계획 승인">
                             계획승인
                           </div>
                           <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
@@ -908,7 +830,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                                 e.stopPropagation();
                                 setPreviewDoc({ isOpen: true, type: 'plan', row });
                               }}
-                              className="text-cyan-800 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                              className="text-cyan-800 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                               title="계획서 발송 완료 (문서 확인)"
                             >
                               <span>계획서발송</span>
@@ -928,9 +850,9 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                     {/* 6. AUDIT (심사기간) - 2줄로 너비 여유 있게 충당 */}
                     <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap">
-                      <div className="font-mono text-slate-900 text-xs leading-snug">
+                      <div className="font-mono text-slate-900 text-xs leading-snug font-normal">
                         <div>{row.schedule.startDate} ~ {row.schedule.endDate}</div>
-                        <div className="text-slate-500 font-bold text-[11px] mt-0.5">
+                        <div className="text-slate-500 font-normal text-[11px] mt-0.5">
                           ({row.schedule.md.toFixed(1)}MD)
                         </div>
                       </div>
@@ -967,7 +889,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                                   });
                                 }
                               }}
-                              className="text-blue-700 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                              className="text-blue-700 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                               title="심사원 보고서 접수 완료 (클릭하여 열람)"
                             >
                               <span>보고서 접수</span>
@@ -986,7 +908,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                         {/* 보고서 승인 */}
                         <div className="text-center min-w-[55px]">
                           {row.postAudit.approvalDate ? (
-                            <span className="text-emerald-700 font-bold" title={`사무국 승인 완료 (${row.postAudit.approvalDate})`}>
+                            <span className="text-emerald-700 font-normal" title={`사무국 승인 완료 (${row.postAudit.approvalDate})`}>
                               보고서 승인
                             </span>
                           ) : (
@@ -1002,11 +924,11 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                     {/* 9. 심의의결: 날짜(예정) 또는 날짜(승인) */}
                     <td className="py-2.5 px-3 text-center align-middle whitespace-nowrap">
                       {row.committee.status === 'completed' ? (
-                        <div className="leading-snug text-emerald-700 font-bold text-[11.5px]">
+                        <div className="leading-snug text-emerald-700 font-normal text-[11.5px]">
                           {row.committee.displayText}
                         </div>
                       ) : row.committee.status === 'in_progress' ? (
-                        <div className="leading-snug text-blue-700 font-semibold text-[11.5px]">
+                        <div className="leading-snug text-blue-700 font-normal text-[11.5px]">
                           {row.committee.displayText}
                         </div>
                       ) : (
