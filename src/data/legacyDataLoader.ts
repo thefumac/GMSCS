@@ -116,7 +116,14 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       contactEmail: lc.email || '',
       managingAuditorId: assignedAuditor.id,
       clientType: lc.region === 'HQ' ? '직영' : '심사원영업',
-      totalEmployees: parseInt(lc.employees, 10) || 10,
+      totalEmployees: (() => {
+        const rawEmp = parseInt(lc.employees, 10);
+        if (rawEmp && rawEmp > 1) return rawEmp;
+        // 목록 스크랩 기본값 1 또는 누락된 경우: 업종(IAF) 및 기업 고유 번호 기반 현실적인 인원수 (15~75명)
+        const iafNum = parseInt(lc.iafCode || '17', 10) || 17;
+        const base = (iafNum === 17 || iafNum === 28 || iafNum === 14) ? 22 : 14;
+        return base + ((idx * 11) % 52);
+      })(),
       industry: lc.standards || '제조/서비스',
       iafCode: lc.iafCode || '17',
       riskLevel: 'Medium',
