@@ -190,32 +190,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* 우측: 남경호 원장 텍스트 클릭 드롭다운 메뉴 (버튼 모두 제거됨) */}
+            {/* 우측: 접속자 명 (박스/아바타 없이 텍스트로만 표시, 규격명보다 1pt 큰 text-[13.5px]) */}
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen(prev => !prev)}
-                className="flex items-center space-x-2 py-2 px-3.5 rounded-xl hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition cursor-pointer text-slate-800 font-bold text-sm select-none"
+                className="flex items-center space-x-1 py-1 text-[13.5px] font-bold text-slate-800 hover:text-cyan-700 transition cursor-pointer select-none"
                 title="클릭하여 심사원 포털 및 계정 메뉴 열기"
               >
-                {/* 프로필 이미지 또는 기본 아바타 */}
-                {currentAuditorObj?.photoUrl ? (
-                  <img
-                    src={currentAuditorObj.photoUrl}
-                    alt={currentAuditorObj.name}
-                    className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-300 shrink-0"
-                  />
-                ) : (
-                  <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">
-                    <User className="w-4 h-4" />
-                  </span>
-                )}
-
-                <span className="text-base font-extrabold text-slate-900">
-                  {displayName}
-                </span>
-
-                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                <span>{displayName}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* 사용자 드롭다운 메뉴 레이어 */}
@@ -281,11 +265,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. 하단 파일 인덱스(File Index) 메뉴 영역: 선택된 탭이 넓어지고 색상이 변함 */}
+      {/* 2. 하단 파일 인덱스(File Index) 메뉴 영역: 기존 대비 60% 슬림 높이로 최적화 */}
       {/* ========================================================================= */}
-      <div className="bg-slate-50/80 border-b border-slate-300">
+      <div className="bg-slate-50/90 border-b border-slate-300">
         <div className="w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4">
-          <nav className="flex items-stretch gap-1.5 sm:gap-2 pt-2.5 pb-2 overflow-x-auto no-scrollbar">
+          <nav className="flex items-center gap-1.5 sm:gap-2 py-1.5 overflow-x-auto no-scrollbar">
             {primaryTabs.map((tabItem) => {
               const Icon = tabItem.icon;
               const isActive = activeTab === tabItem.id || 
@@ -297,40 +281,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={tabItem.id}
                   onClick={() => setActiveTab(tabItem.id)}
-                  className={`group rounded-xl border transition-all duration-300 ease-in-out cursor-pointer text-left select-none ${
+                  className={`group rounded-lg border transition-all duration-200 ease-in-out cursor-pointer select-none h-8.5 px-3 flex items-center justify-center ${
                     isActive
-                      ? 'flex-[2.5] min-w-[210px] bg-slate-900 text-white border-slate-900 shadow-md p-3'
-                      : 'flex-1 min-w-[120px] sm:min-w-[135px] bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-300 p-2.5 flex items-center justify-center space-x-2'
+                      ? 'flex-[2] min-w-[160px] bg-slate-900 text-white border-slate-900 shadow-xs'
+                      : 'flex-1 min-w-[105px] sm:min-w-[120px] bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border-slate-300'
                   }`}
                   title={tabItem.description}
                 >
-                  {isActive ? (
-                    /* 활성화 탭 (넓게 확장 + 색상 반전 + 설명 표시) */
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center space-x-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-cyan-600/30 border border-cyan-400/40 flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 text-cyan-300" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5 truncate">
-                            <span>{tabItem.label}</span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                          </div>
-                          <p className="text-[10.5px] text-slate-300 font-medium truncate mt-0.5 hidden sm:block">
-                            {tabItem.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    /* 비활성화 탭 (인덱스 컴팩트 탭) */
-                    <div className="flex items-center space-x-1.5 truncate">
-                      <Icon className="w-4 h-4 text-slate-400 group-hover:text-slate-700 shrink-0" />
-                      <span className="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-slate-950 truncate">
-                        {tabItem.label}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center space-x-1.5 truncate">
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-700'}`} />
+                    <span className={`text-xs sm:text-[13px] truncate ${isActive ? 'font-bold text-white' : 'font-semibold text-slate-700 group-hover:text-slate-950'}`}>
+                      {tabItem.label}
+                    </span>
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 ml-0.5"></span>
+                    )}
+                  </div>
                 </button>
               );
             })}

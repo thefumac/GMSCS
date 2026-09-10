@@ -657,14 +657,14 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   </div>
                 </th>
 
-                {/* 5. Pre-AUDIT (4개 항목 및 하단 일자) */}
+                {/* 5. Pre-AUDIT (3개 항목 및 하단 일자) */}
                 <th 
                   onClick={() => handleSort('preAudit')}
-                  className="py-2.5 px-3 text-center min-w-[260px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-3 text-center min-w-[210px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
                   title="Pre-AUDIT 진행일 순 정렬"
                 >
                   <div className="flex items-center justify-center">
-                    <span>Pre-AUDIT (계약·일정·계획)</span>
+                    <span>Pre-AUDIT (일정·계획)</span>
                     {renderSortIcon('preAudit')}
                   </div>
                 </th>
@@ -767,12 +767,12 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                       </button>
                     </td>
 
-                    {/* 3. 인증규격 (인증번호) - 줄바꿈 없이 한 줄 표시 보장 (whitespace-nowrap) */}
+                    {/* 3. 인증규격 (인증번호) - 줄바꿈 없이 한 줄 표시 보장 (whitespace-nowrap), 인증번호 크기 2pt 확대 */}
                     <td className="py-2.5 px-3 leading-snug align-middle border-r border-slate-200 whitespace-nowrap">
                       <div className="text-slate-800 font-normal whitespace-nowrap">
                         {row.standardsText}
                       </div>
-                      <div className="text-slate-900 font-mono text-[11px] font-bold mt-0.5 whitespace-nowrap">
+                      <div className="text-slate-950 font-mono text-[13.5px] font-bold mt-0.5 whitespace-nowrap tracking-tight">
                         ({row.certNo})
                       </div>
                     </td>
@@ -782,22 +782,10 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                       {row.auditType}
                     </td>
 
-                    {/* 5. Pre-AUDIT: 계약(준비) - 일정협의 - 계획승인 - 계획서발송(고객) (각각 하단에 수집일자 표기) */}
+                    {/* 5. Pre-AUDIT: 일정협의 - 계획승인 - 계획서발송(고객) (계약준비 제외 및 각각 하단 일자 표기) */}
                     <td className="py-2.5 px-3 align-middle border-r border-slate-200">
-                      <div className="flex items-start justify-center gap-1.5 text-[11px] whitespace-nowrap">
-                        {/* 1. 계약(준비) */}
-                        <div className="text-center min-w-[52px]">
-                          <div className="text-slate-900 font-normal" title="계약 체결 및 준비">
-                            계약(준비)
-                          </div>
-                          <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
-                            {row.preAudit.contractDate || ''}
-                          </div>
-                        </div>
-
-                        <span className="text-slate-300 mt-0.5">-</span>
-
-                        {/* 2. 일정협의 */}
+                      <div className="flex items-start justify-center gap-2 text-[11px] whitespace-nowrap">
+                        {/* 1. 일정협의 */}
                         <div className="text-center min-w-[48px]">
                           <div className={row.preAudit.scheduleDate ? "text-slate-900 font-normal" : "text-slate-300"} title="일정협의 완료">
                             일정협의
@@ -809,7 +797,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                         <span className="text-slate-300 mt-0.5">-</span>
 
-                        {/* 3. 계획승인 */}
+                        {/* 2. 계획승인 */}
                         <div className="text-center min-w-[48px]">
                           <div className={row.preAudit.planApprovalDate ? "text-slate-900 font-normal" : "text-slate-300"} title="심사계획 승인">
                             계획승인
@@ -821,7 +809,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                         <span className="text-slate-300 mt-0.5">-</span>
 
-                        {/* 4. 계획서발송 */}
+                        {/* 3. 계획서발송 */}
                         <div className="text-center min-w-[56px]">
                           {row.preAudit.planDispatchDate ? (
                             <button
