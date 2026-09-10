@@ -19,6 +19,9 @@ import { AuditorNoticeManager } from './components/AuditorNoticeManager';
 import { PdfViewerModal } from './components/PdfViewerModal';
 import { AuditorProfileModal } from './components/AuditorProfileModal';
 import { AuditProcessStatusManager } from './components/AuditProcessStatusManager';
+import { ClientManagement } from './components/ClientManagement';
+import { AuditorManagement } from './components/AuditorManagement';
+import { CertificationManagement } from './components/CertificationManagement';
 
 import { 
   mockAuditors, 
@@ -163,15 +166,17 @@ export function App() {
   const isRegularAuditor = !isStaff;
   const isNonPermanent = isRegularAuditor; // 일반 심사원 전용 보안 격리
 
-  // 2-Tier Navigation State Helper
+  // Navigation Category Helper
   const getCategoryForTab = (tab: ActiveTab): MainCategory => {
     switch (tab) {
       case 'calendar':
+      case 'projects':
       case 'contracts':
       case 'reports':
-      case 'projects':
       case 'integrations':
         return 'audit';
+      case 'clients':
+      case 'certification':
       case 'committee':
       case 'companies':
       case 'surveillance':
@@ -962,9 +967,50 @@ export function App() {
         )}
 
         {/* ========================================================= */}
-        {/* 2. 인증관리 */}
+        {/* 2. 고객관리 (572개 고객사 대장 & 계획서 수립/발송) */}
         {/* ========================================================= */}
-        {/* 2-1. 인증심의위원회 */}
+        {activeTab === 'clients' && (
+          <ClientManagement
+            companies={companies}
+            auditors={auditors}
+            contracts={contracts}
+            auditContracts={auditContracts}
+            projects={projects}
+            onOpenReport={handleOpenReport}
+            onOpenEmailModal={(companyName, contactEmail, templateType) => {
+              handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');
+            }}
+          />
+        )}
+
+        {/* ========================================================= */}
+        {/* 3. 심사원 관리 (36명 심사원 대장 & IAF 전문코드) */}
+        {/* ========================================================= */}
+        {activeTab === 'auditors' && (
+          <AuditorManagement
+            auditors={auditors}
+            onToggleCommitteeMember={handleToggleCommitteeMember}
+            onUpdateAuditorAffiliation={handleUpdateAuditorAffiliation}
+          />
+        )}
+
+        {/* ========================================================= */}
+        {/* 4. 인증관리 (유일한 좌측 사이드바 서브메뉴 관리 체계) */}
+        {/* ========================================================= */}
+        {activeTab === 'certification' && (
+          <CertificationManagement
+            auditors={auditors}
+            companies={companies}
+            projects={projects}
+            settlements={settlements}
+            onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
+            onUpdateSettlementStatus={handleUpdateSettlementStatus}
+          />
+        )}
+
+        {/* ========================================================= */}
+        {/* 보조/호환 탭: 인증심의위원회 */}
+        {/* ========================================================= */}
         {activeTab === 'committee' && (
           <CommitteeManager
             meetings={committeeMeetings}
@@ -976,7 +1022,7 @@ export function App() {
           />
         )}
 
-        {/* 2-2. 고객사 인증현황 (300사) */}
+        {/* 보조/호환 탭: 고객사 인증현황 (레거시) */}
         {activeTab === 'companies' && (
           <CompanyAuditorManager
             companies={companies}
@@ -988,7 +1034,7 @@ export function App() {
           />
         )}
 
-        {/* 2-3. 사후 / 만료 관리 (D-day 알림) */}
+        {/* 보조/호환 탭: 사후 / 만료 관리 (D-day 알림) */}
         {activeTab === 'surveillance' && (
           <SurveillanceManager
             contracts={mockContracts}
@@ -997,7 +1043,7 @@ export function App() {
           />
         )}
 
-        {/* 2-4. KAB 인정기관 관리 (공인기준실 & 사전 견적 시뮬레이터) */}
+        {/* 보조/호환 탭: KAB 인정기관 관리 */}
         {activeTab === 'kab' && (
           <KabCalculator 
             isAdmin={currentUserRole === 'admin'} 
@@ -1008,9 +1054,8 @@ export function App() {
         )}
 
         {/* ========================================================= */}
-        {/* 3. 심사관리 */}
+        {/* 보조/호환 탭: 심사 계약 관리 */}
         {/* ========================================================= */}
-        {/* 3-1. 심사 계약 관리 (신규 & 유지·추가·변경 계약 및 수동조정 승인) */}
         {activeTab === 'contracts' && (
           <AuditContractManager
             companies={companies}
@@ -1099,20 +1144,6 @@ export function App() {
           <EsgRecordIntegrator />
         )}
 
-        {/* ========================================================= */}
-        {/* 4. 심사원 관리 */}
-        {/* ========================================================= */}
-        {/* 4-1. 심사원 자격, 코드, 심의위원 관리 */}
-        {activeTab === 'auditors' && (
-          <CompanyAuditorManager
-            companies={companies}
-            auditors={auditors}
-            initialSubTab="auditors"
-            onToggleCommitteeMember={handleToggleCommitteeMember}
-            onReassignCompanyAuditor={handleReassignCompanyAuditor}
-            onUpdateAuditorAffiliation={handleUpdateAuditorAffiliation}
-          />
-        )}
 
         {/* 4-2. 심사원 전용 포털 (나의 심사 관리 기업 목록 - 다가올 심사 순) */}
         {activeTab === 'portal' && currentAuditorObj && (
@@ -1229,6 +1260,10 @@ export function App() {
           onClose={() => setIsProfileModalOpen(false)}
           auditor={currentAuditorObj}
           onSave={handleUpdateAuditorProfile}
+          onNavigateToPortal={() => {
+            setIsProfileModalOpen(false);
+            navigateTo('portal', 'auditor-mgmt');
+          }}
         />
       )}
 

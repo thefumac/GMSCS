@@ -205,6 +205,15 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
     row: null
   });
 
+  // 심사비 정산 상세 팝업 상태
+  const [previewSettlement, setPreviewSettlement] = useState<{
+    isOpen: boolean;
+    row: ProcessRowData | null;
+  }>({
+    isOpen: false,
+    row: null
+  });
+
   // 사무국 심사보고서 단계 편집 상태 (projectId -> { stage, date, note })
   const [reportCustomStages, setReportCustomStages] = useState<Record<string, {
     stage: '대기' | '접수' | '검토' | '승인';
@@ -665,33 +674,24 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   심사구분
                 </th>
 
-                {/* 우측 9대 프로세스 컬럼 */}
-                <th className="py-2.5 px-2 text-center min-w-[105px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  1. 심사준비
+                {/* 우측 4대 라이프사이클 컬럼 + 심의의결 + 정산팝업 */}
+                <th className="py-2.5 px-3 text-center min-w-[210px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
+                  Pre-AUDIT
                 </th>
-                <th className="py-2.5 px-2 text-center min-w-[95px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  2. 계획서
+                <th className="py-2.5 px-2 text-center min-w-[125px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
+                  AUDIT (심사기간)
                 </th>
-                <th className="py-2.5 px-2 text-center min-w-[95px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  3. 청구서
-                </th>
-                <th className="py-2.5 px-2 text-center min-w-[130px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  4. 심사일정
-                </th>
-                <th className="py-2.5 px-2 text-center min-w-[105px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  5. 심사팀
-                </th>
-                <th className="py-2.5 px-2 text-center min-w-[75px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  6. 심사완료
+                <th className="py-2.5 px-2 text-center min-w-[110px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
+                  TEAM (심사팀)
                 </th>
                 <th className="py-2.5 px-2 text-center min-w-[155px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  7. 심사보고서
+                  Post-AUDIT
                 </th>
                 <th className="py-2.5 px-2 text-center min-w-[95px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70">
-                  8. 심의의결
+                  심의의결
                 </th>
-                <th className="py-2.5 px-2 text-center min-w-[95px] whitespace-nowrap bg-slate-50/70">
-                  9. 심사비정산
+                <th className="py-2.5 px-2 text-center min-w-[85px] whitespace-nowrap bg-slate-50/70">
+                  심사비정산
                 </th>
               </tr>
             </thead>
@@ -759,219 +759,155 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                       {row.auditType}
                     </td>
 
-                    {/* 1. 심사준비: "일정협의" (줄바꾸어) "시작일정" */}
-                    <td className={`py-2 px-2 text-center align-middle border-r border-slate-200 ${
-                      row.prep.status === 'in_progress' ? 'bg-blue-50/40' : ''
-                    }`}>
-                      {row.prep.status === 'completed' ? (
-                        <div className="leading-snug">
-                          <div className="text-slate-900 font-medium text-[12px]">{row.prep.title}</div>
-                          <div className="text-slate-500 font-mono text-[11px] mt-0.5">{row.prep.date}</div>
-                        </div>
-                      ) : row.prep.status === 'in_progress' ? (
-                        <div className="leading-snug text-blue-600 font-semibold">
-                          <div className="text-[12px]">{row.prep.title}</div>
-                          <div className="text-[11px] text-blue-500 mt-0.5">진행중</div>
-                        </div>
-                      ) : (
-                        <div className="text-slate-300 text-[11px]">대기</div>
-                      )}
+                    {/* Pre-AUDIT: 계약(준비) - 일정협의 - 계획승인 - 계획서발송(고객) */}
+                    <td className="py-2 px-2.5 align-middle border-r border-slate-200">
+                      <div className="flex items-center justify-center gap-1 text-[11px] whitespace-nowrap">
+                        <span className="text-slate-900 font-semibold" title="계약 체결 및 준비 완료">
+                          계약(준비)
+                        </span>
+                        <span className="text-slate-300">-</span>
+                        <span className={row.schedule.startDate ? "text-slate-900 font-semibold" : "text-slate-300"} title={row.schedule.startDate ? `일정협의 완료 (${row.schedule.startDate})` : "일정협의 대기"}>
+                          일정협의
+                        </span>
+                        <span className="text-slate-300">-</span>
+                        <span className={row.plan.status === 'completed' || row.plan.status === 'in_progress' ? "text-slate-900 font-semibold" : "text-slate-300"} title="심사계획 승인">
+                          계획승인
+                        </span>
+                        <span className="text-slate-300">-</span>
+                        {row.plan.status === 'completed' || row.plan.status === 'in_progress' ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewDoc({ isOpen: true, type: 'plan', row });
+                            }}
+                            className="text-cyan-800 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+                            title="계획서 발송 완료 (문서 확인)"
+                          >
+                            <span>계획서발송</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-cyan-600 shrink-0" />
+                          </button>
+                        ) : (
+                          <span className="text-slate-300" title="계획서 발송 대기">
+                            계획서발송
+                          </span>
+                        )}
+                      </div>
                     </td>
 
-                    {/* 2. 계획서: "업체발송", "승인완료", 승인 시 문서 팝업 */}
-                    <td className={`py-2 px-2 text-center align-middle border-r border-slate-200 ${
-                      row.plan.status === 'in_progress' ? 'bg-blue-50/40' : ''
-                    }`}>
-                      {row.plan.status === 'completed' ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewDoc({ isOpen: true, type: 'plan', row });
-                          }}
-                          className="w-full text-center leading-snug group cursor-pointer hover:underline"
-                          title="승인완료 심사계획서 공문 열람"
-                        >
-                          <div className="text-slate-900 font-medium text-[12px] flex items-center justify-center gap-1">
-                            <span>{row.plan.statusText}</span>
-                            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                          </div>
-                          {row.plan.date && (
-                            <div className="text-slate-500 font-mono text-[11px] mt-0.5">{row.plan.date}</div>
-                          )}
-                        </button>
-                      ) : row.plan.status === 'in_progress' ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewDoc({ isOpen: true, type: 'plan', row });
-                          }}
-                          className="w-full text-center leading-snug text-blue-600 font-semibold group cursor-pointer hover:underline"
-                          title="업체발송 심사계획서 공문 열람"
-                        >
-                          <div className="text-[12px] flex items-center justify-center gap-1">
-                            <span>{row.plan.statusText}</span>
-                            <ExternalLink className="w-3 h-3 text-blue-400 shrink-0" />
-                          </div>
-                          {row.plan.date && (
-                            <div className="text-[11px] text-blue-500 font-mono mt-0.5">{row.plan.date}</div>
-                          )}
-                        </button>
-                      ) : (
-                        <div className="text-slate-300 text-[11px]">-</div>
-                      )}
-                    </td>
-
-                    {/* 3. 청구서: "업체발송", "승인완료", 승인 시 문서 팝업 */}
-                    <td className={`py-2 px-2 text-center align-middle border-r border-slate-200 ${
-                      row.billing.status === 'in_progress' ? 'bg-blue-50/40' : ''
-                    }`}>
-                      {row.billing.status === 'completed' ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewDoc({ isOpen: true, type: 'billing', row });
-                          }}
-                          className="w-full text-center leading-snug group cursor-pointer hover:underline"
-                          title="승인완료 심사비 청구서 및 계산서 열람"
-                        >
-                          <div className="text-slate-900 font-medium text-[12px] flex items-center justify-center gap-1">
-                            <span>{row.billing.statusText}</span>
-                            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                          </div>
-                          {row.billing.date && (
-                            <div className="text-slate-500 font-mono text-[11px] mt-0.5">{row.billing.date}</div>
-                          )}
-                        </button>
-                      ) : row.billing.status === 'in_progress' ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewDoc({ isOpen: true, type: 'billing', row });
-                          }}
-                          className="w-full text-center leading-snug text-blue-600 font-semibold group cursor-pointer hover:underline"
-                          title="업체발송 심사비 청구서 및 계산서 열람"
-                        >
-                          <div className="text-[12px] flex items-center justify-center gap-1">
-                            <span>{row.billing.statusText}</span>
-                            <ExternalLink className="w-3 h-3 text-blue-400 shrink-0" />
-                          </div>
-                          {row.billing.date && (
-                            <div className="text-[11px] text-blue-500 font-mono mt-0.5">{row.billing.date}</div>
-                          )}
-                        </button>
-                      ) : (
-                        <div className="text-slate-300 text-[11px]">-</div>
-                      )}
-                    </td>
-
-                    {/* 4. 심사일정: 일자만 기록 */}
+                    {/* AUDIT (심사기간) */}
                     <td className="py-2 px-2 text-center align-middle border-r border-slate-200 whitespace-nowrap">
                       <div className="font-mono text-slate-800 text-[11.5px] leading-snug">
                         <div>{row.schedule.startDate}</div>
                         <div className="text-slate-500 text-[11px]">~ {row.schedule.endDate}</div>
                       </div>
+                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                        ({row.schedule.md.toFixed(1)}MD)
+                      </div>
                     </td>
 
-                    {/* 5. 심사팀: 팀장:xxx (줄바꾸어) 팀원:yyy */}
+                    {/* TEAM (심사팀) */}
                     <td className="py-2 px-2 text-center align-middle border-r border-slate-200 whitespace-nowrap">
-                      <div className="leading-snug text-[12px]">
+                      <div className="leading-snug text-[11.5px]">
                         <div className="text-slate-900 font-medium">
-                          <span className="text-slate-500 font-normal text-[11px]">팀장: </span>
+                          <span className="text-slate-400 font-normal text-[10.5px]">팀장: </span>
                           <span>{row.team.leadAuditor}</span>
                         </div>
                         <div className="text-slate-600 font-normal text-[11px] mt-0.5">
-                          <span className="text-slate-400">팀원: </span>
+                          <span className="text-slate-400 text-[10.5px]">팀원: </span>
                           <span>{row.team.teamAuditor}</span>
                         </div>
                       </div>
                     </td>
 
-                    {/* 6. 심사완료: 완료 표시만 */}
-                    <td className={`py-2 px-2 text-center align-middle border-r border-slate-200 whitespace-nowrap ${
-                      row.onsite.status === 'in_progress' ? 'bg-blue-50/40' : ''
-                    }`}>
-                      {row.onsite.status === 'completed' ? (
-                        <span className="text-slate-900 font-medium text-[12px]">완료</span>
-                      ) : row.onsite.status === 'in_progress' ? (
-                        <span className="text-blue-600 font-semibold text-[12px]">진행중</span>
-                      ) : (
-                        <span className="text-slate-300 text-[11px]">-</span>
-                      )}
-                    </td>
+                    {/* Post-AUDIT: 보고서 접수 - 보고서 승인 */}
+                    <td className="py-2 px-2 text-center align-middle border-r border-slate-200 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                        {row.report.stage === '접수' || row.report.stage === '검토' || row.report.stage === '승인' ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (row.rawProject.reportId && onOpenReport) {
+                                onOpenReport(row.rawProject.reportId);
+                              } else {
+                                setEditingReportRow({
+                                  row,
+                                  stage: row.report.stage,
+                                  date: row.report.date || '',
+                                  note: row.report.note || ''
+                                });
+                              }
+                            }}
+                            className="text-blue-700 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+                            title="심사원 보고서 제출 완료 -> 사무국 접수됨 (클릭하여 열람)"
+                          >
+                            <span>보고서 접수</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-blue-500 shrink-0" />
+                          </button>
+                        ) : (
+                          <span className="text-slate-300">보고서 접수</span>
+                        )}
 
-                    {/* 7. 심사보고서: 대기-접수-검토-승인 (희미하게 표시하고 해당 단계를 검정색으로 진하게 표시) */}
-                    <td
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingReportRow({
-                          row,
-                          stage: row.report.stage,
-                          date: row.report.date || (row.schedule.endDate ? new Date(new Date(row.schedule.endDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(5, 10) : '09-18'),
-                          note: row.report.note || ''
-                        });
-                      }}
-                      className="py-2 px-2 text-center align-middle border-r border-slate-200 whitespace-nowrap hover:bg-amber-50/70 transition group select-none"
-                      title="클릭하여 사무국에서 심사보고서 단계(대기-접수-검토-승인) 편집"
-                    >
-                      <div className="flex items-center justify-center gap-1 text-[11px] leading-none">
-                        <span className={row.report.stage === '대기' ? 'text-slate-950 font-bold' : 'text-slate-300 font-normal'}>
-                          대기
-                        </span>
                         <span className="text-slate-300">-</span>
-                        <span className={row.report.stage === '접수' ? 'text-slate-950 font-bold' : 'text-slate-300 font-normal'}>
-                          접수
-                        </span>
-                        <span className="text-slate-300">-</span>
-                        <span className={row.report.stage === '검토' ? 'text-slate-950 font-bold' : 'text-slate-300 font-normal'}>
-                          검토
-                        </span>
-                        <span className="text-slate-300">-</span>
-                        <span className={row.report.stage === '승인' ? 'text-slate-950 font-bold' : 'text-slate-300 font-normal'}>
-                          승인
-                        </span>
-                        <Edit3 className="w-2.5 h-2.5 text-amber-600 opacity-0 group-hover:opacity-100 transition shrink-0 ml-0.5" />
+
+                        {row.report.stage === '승인' ? (
+                          <span className="text-emerald-700 font-bold" title={`사무국 승인 완료 (${row.report.date})`}>
+                            보고서 승인
+                          </span>
+                        ) : (
+                          <span className="text-slate-300">보고서 승인</span>
+                        )}
                       </div>
                       {row.report.date && (
-                        <div className="text-[10px] text-slate-500 font-mono mt-1">
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                           {row.report.date}
                         </div>
                       )}
                     </td>
 
-                    {/* 8. 심의의결: 대기중, 승인일자 */}
-                    <td className={`py-2 px-2 text-center align-middle border-r border-slate-200 ${
+                    {/* 심의의결: 예정(날짜) -> 승인(날짜) */}
+                    <td className={`py-2 px-2 text-center align-middle border-r border-slate-200 whitespace-nowrap ${
                       row.committee.status === 'in_progress' ? 'bg-blue-50/40' : ''
                     }`}>
                       {row.committee.status === 'completed' ? (
-                        <div className="leading-snug">
-                          <div className="text-slate-900 font-medium text-[12px]">승인</div>
-                          <div className="text-slate-500 font-mono text-[11px] mt-0.5">{row.committee.date}</div>
+                        <div className="leading-snug text-emerald-700 font-bold text-[11.5px]">
+                          <div>승인</div>
+                          {row.committee.date && (
+                            <div className="text-[10px] font-mono text-emerald-600 mt-0.5">({row.committee.date})</div>
+                          )}
                         </div>
                       ) : row.committee.status === 'in_progress' ? (
-                        <span className="text-blue-600 font-semibold text-[12px]">대기중</span>
+                        <div className="leading-snug text-blue-700 font-semibold text-[11.5px]">
+                          <div>예정</div>
+                          {row.committee.date && (
+                            <div className="text-[10px] font-mono text-blue-500 mt-0.5">({row.committee.date})</div>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-slate-300 text-[11px]">-</span>
                       )}
                     </td>
 
-                    {/* 9. 심사비정산: 정산중, 정산일자 */}
-                    <td className={`py-2 px-2 text-center align-middle ${
-                      row.settlement.status === 'in_progress' ? 'bg-blue-50/40' : ''
-                    }`}>
-                      {row.settlement.status === 'completed' ? (
-                        <div className="leading-snug">
-                          <div className="text-slate-900 font-medium text-[12px]">정산완료</div>
-                          <div className="text-slate-500 font-mono text-[11px] mt-0.5">{row.settlement.date}</div>
-                        </div>
-                      ) : row.settlement.status === 'in_progress' ? (
-                        <span className="text-blue-600 font-semibold text-[12px]">정산중</span>
-                      ) : (
-                        <span className="text-slate-300 text-[11px]">-</span>
-                      )}
+                    {/* 심사비정산: 팝업 창에서 표시 */}
+                    <td className="py-2 px-2 text-center align-middle whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewSettlement({ isOpen: true, row });
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-semibold border transition shadow-2xs cursor-pointer ${
+                          row.settlement.status === 'completed'
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 border-slate-300'
+                            : row.settlement.status === 'in_progress'
+                            ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-200'
+                        }`}
+                        title="클릭 시 심사비 정산 상세 팝업 창 열기"
+                      >
+                        {row.settlement.status === 'completed' ? '정산완료' : (row.settlement.status === 'in_progress' ? '정산중' : '정산상세')}
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -1355,6 +1291,101 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                 className="px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-xs transition cursor-pointer"
               >
                 단계 저장하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6. 심사비 정산 상세 팝업 모달 */}
+      {/* ========================================================================= */}
+      {previewSettlement.isOpen && previewSettlement.row && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs">
+                  정산
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900">
+                    심사비 정산 상세 내역
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {previewSettlement.row.companyName} ({previewSettlement.row.auditType})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewSettlement({ isOpen: false, row: null })}
+                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-xs">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">인증규격:</span>
+                  <span className="font-semibold text-slate-800">{previewSettlement.row.standardsText}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">심사기간:</span>
+                  <span className="font-mono text-slate-800">{previewSettlement.row.schedule.startDate} ~ {previewSettlement.row.schedule.endDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">심사팀 배정:</span>
+                  <span className="font-semibold text-slate-900">팀장 {previewSettlement.row.team.leadAuditor} / 팀원 {previewSettlement.row.team.teamAuditor}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">인정 공수:</span>
+                  <span className="font-mono text-slate-800">{previewSettlement.row.schedule.md.toFixed(1)} MD</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-600 font-medium">총 심사비용:</span>
+                  <span className="font-mono font-bold text-slate-900">{previewSettlement.row.billing.amount.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">MD당 적용단가:</span>
+                  <span className="font-mono text-slate-700">700,000원</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">세무 처리 기준:</span>
+                  <span className="text-slate-700 font-medium">3.3% 사업소득 원천징수 또는 세금계산서</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-slate-100">
+                  <span className="text-slate-700 font-semibold">정산 상태:</span>
+                  <span className={`font-bold ${
+                    previewSettlement.row.settlement.status === 'completed'
+                      ? 'text-emerald-700'
+                      : 'text-blue-600'
+                  }`}>
+                    {previewSettlement.row.settlement.statusText}
+                    {previewSettlement.row.settlement.date ? ` (${previewSettlement.row.settlement.date})` : ''}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 text-[11px] text-blue-900 space-y-0.5">
+                <div className="font-bold">정산 지급 계좌 안내:</div>
+                <div className="text-blue-800 font-mono">신한은행 110-384-912048 (예금주: {previewSettlement.row.team.leadAuditor})</div>
+                <div className="text-[10.5px] text-blue-600 mt-1">* 심사보고서 승인 및 심의 통과 후 익월 10일 정산 입금 처리됩니다.</div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPreviewSettlement({ isOpen: false, row: null })}
+                className="px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-xs transition cursor-pointer"
+              >
+                확인
               </button>
             </div>
           </div>

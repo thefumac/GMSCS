@@ -23,6 +23,7 @@ interface AuditorProfileModalProps {
   onClose: () => void;
   auditor: Auditor;
   onSave: (updatedAuditor: Auditor) => void;
+  onNavigateToPortal?: () => void;
 }
 
 const ALL_STANDARDS: { code: StandardCode; label: string; category: string }[] = [
@@ -65,7 +66,8 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   isOpen,
   onClose,
   auditor,
-  onSave
+  onSave,
+  onNavigateToPortal
 }) => {
   if (!isOpen) return null;
 
@@ -263,14 +265,30 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
             </div>
           </div>
 
-          <button 
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
-            title="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {onNavigateToPortal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onNavigateToPortal();
+                }}
+                className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
+                title="개인 심사원 전용 포털 화면으로 즉시 진입"
+              >
+                <span>내 심사포털로 진입</span>
+                <span>→</span>
+              </button>
+            )}
+            <button 
+              type="button"
+              onClick={onClose}
+              className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              title="닫기"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* ========================================================================= */}
