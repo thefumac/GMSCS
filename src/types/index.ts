@@ -91,13 +91,24 @@ export interface Auditor {
   bankAccount?: string; // 기존 호환용 (예: "신한 110-123-456789 김홍덕")
   payoutRatePerMd?: number; // 기본 MD당 수당
 
-  // 규격별 상세 등급 매핑 (ISO 9001: 선임심사원, ISO 14001: 정심사원 등)
+  // 규격별 상세 등급 매핑
   standardGrades?: Record<string, '선임심사원' | '정심사원' | '심사원보' | '기술전문가'>;
   
   // 인증심의위원 자격
-  isCommitteeMember: boolean;
+  isCommitteeMember?: boolean;
   committeeRole?: '심의위원장' | '심의부위원장' | '심의위원' | '심의간사' | '전문심의위원';
   committeeAppointmentDate?: string;
+
+  // 추가 프로필 상세 정보
+  address?: string;
+  birthDate?: string;
+  education?: string;
+  major?: string;
+  agency?: string;
+  regDate?: string;
+  telephone?: string;
+  iafDetails?: { standard: string; code: string; date: string; basis: string }[];
+  qualifications?: { standard: string; grade: string; agency: string; certNumber: string; expiryDate: string }[];
 }
 
 export interface CertContract {

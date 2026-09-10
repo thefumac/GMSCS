@@ -250,8 +250,8 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
                       </td>
 
                       {/* IAF 전문 코드 */}
-                      <td className="py-2 px-3 leading-snug align-middle border-r border-slate-200 text-[11px] text-slate-600 font-mono">
-                        {aud.iafCodes.length > 0 ? aud.iafCodes.join(', ') : '17, 28'}
+                      <td className="py-2 px-3 leading-snug align-middle border-r border-slate-200 text-[12px] text-slate-700">
+                        {aud.iafCodes && aud.iafCodes.length > 0 ? aud.iafCodes.join(', ') : '-'}
                       </td>
 
                       {/* 보수교육 이수현황 */}
@@ -283,9 +283,9 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
                       </td>
 
                       {/* 연락처 */}
-                      <td className="py-2 px-3 align-middle font-mono text-[11.5px] text-slate-800 whitespace-nowrap">
-                        <div>{aud.mobile || '010-0000-0000'}</div>
-                        <div className="text-[10.5px] text-slate-400 font-sans mt-0.5">{aud.email || 'auditor@gmscs.co.kr'}</div>
+                      <td className="py-2 px-3 align-middle text-[11.5px] text-slate-800 whitespace-nowrap">
+                        <div className="font-mono">{aud.mobile || '-'}</div>
+                        <div className="text-[10.5px] text-slate-500 mt-0.5">{aud.email || '-'}</div>
                       </td>
                     </tr>
                   );

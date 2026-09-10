@@ -116,7 +116,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
     return initial;
   });
 
-  const [iafCodes, setIafCodes] = useState<string[]>(auditor.iafCodes || ['17 (기계/금속)', '28 (건설/토목)']);
+  const [iafCodes, setIafCodes] = useState<string[]>(auditor.iafCodes || []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

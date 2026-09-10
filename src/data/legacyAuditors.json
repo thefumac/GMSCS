@@ -1,362 +1,5693 @@
 [
   {
+    "id": "AUD_66",
+    "legacyId": "66",
     "no": "1",
     "name": "이석원",
     "gmsNumber": "GMS26033",
     "type": "비상근",
+    "status": "위촉",
+    "email": "kitemaker69@outlook.com",
+    "mobile": "010-8220-2762",
+    "telephone": "",
+    "address": "(10362) 경기 고양시 일산동구 대산로31번길 68 (정발산동, 양지마을4단지건영빌라)",
+    "birthDate": "1969-09-30",
+    "education": "연세대학교",
+    "major": "금속공학",
+    "agency": "HQ",
+    "regDate": "2026-07-23",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "19",
+      "33",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2026.07.23",
+        "basis": "근무 IPECS12년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2026.07.23",
+        "basis": "근무 IPECS12년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2026.07.23",
+        "basis": "근무 LG전자5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2026.07.23",
+        "basis": "근무 LG전자5년"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2026.07.23",
+        "basis": "근무 IPECS12년"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2026.07.23",
+        "basis": "근무 IPECS12년"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2026.07.23",
+        "basis": "근무 LG전자5년"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2026.07.23",
+        "basis": "근무 LG전자5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2026.07.23",
+        "basis": "근무 IPECS12년"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2026.07.23",
+        "basis": "근무 IPECS12년"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2026.07.23",
+        "basis": "근무 LG전자5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2026.07.23",
+        "basis": "근무 LG전자5년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103097",
+        "expiryDate": "2029-03-26"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103097",
+        "expiryDate": "2029-03-26"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103097",
+        "expiryDate": "2029-03-26"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_63",
+    "legacyId": "63",
     "no": "2",
     "name": "김우종",
     "gmsNumber": "",
     "type": "비상근",
+    "status": "위촉",
+    "email": "wkim@daum.net",
+    "mobile": "010-5523-2548",
+    "telephone": "",
+    "address": "(42782) 대구 달서구 월배로39길 26 (상인동, 상인 KCC 스위첸) 102동 705호",
+    "birthDate": "1963-10-19",
+    "education": "경북대학교",
+    "major": "환경공학",
+    "agency": "HQ",
+    "regDate": "2026-04-29",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [],
+    "iafDetails": [],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "PCAA",
+        "certNumber": "PC1586",
+        "expiryDate": "2027-12-21"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "PCAA",
+        "certNumber": "PC1586",
+        "expiryDate": "2028-09-29"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "PCAA",
+        "certNumber": "PC1586",
+        "expiryDate": "2028-09-29"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_61",
+    "legacyId": "61",
     "no": "3",
     "name": "Trang NGUYEN",
     "gmsNumber": "",
     "type": "비상근",
+    "status": "위촉",
+    "email": "trangnguyen041182@gmail.com",
+    "mobile": "",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "",
+    "education": "",
+    "major": "",
+    "agency": "이기영",
+    "regDate": "",
     "qms": "",
     "ems": "",
     "ohs": "",
-    "period": ""
+    "iafCodes": [],
+    "iafDetails": [],
+    "qualifications": [],
+    "memo": "폰번호 : 84-915-055-169"
   },
   {
+    "id": "AUD_60",
+    "legacyId": "60",
     "no": "4",
     "name": "CHU MINH HOA",
     "gmsNumber": "",
     "type": "비상근",
+    "status": "위촉",
+    "email": "chuminhhoa@gmail.com",
+    "mobile": "",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "",
+    "education": "",
+    "major": "",
+    "agency": "이기영",
+    "regDate": "",
     "qms": "",
     "ems": "",
     "ohs": "",
-    "period": ""
+    "iafCodes": [],
+    "iafDetails": [],
+    "qualifications": [],
+    "memo": "폰번호 : 84-0913-041911"
   },
   {
+    "id": "AUD_59",
+    "legacyId": "59",
     "no": "5",
     "name": "송우범",
     "gmsNumber": "GMS25032",
     "type": "비상근",
+    "status": "위촉",
+    "email": "swb@metc.com.vn",
+    "mobile": "010-3667-0549",
+    "telephone": "",
+    "address": "(--) BT1-B24 Splendora project, An Khanh new urban area, Son Dong commune Hanoi city,",
+    "birthDate": "1973-10-04",
+    "education": "호산대학교",
+    "major": "산업안전관리",
+    "agency": "송우범",
+    "regDate": "2025-11-12",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "14",
+      "19",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2025.11.12",
+        "basis": "근무 V-CAL 대표이사"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2025.11.12",
+        "basis": "근무 V-CAL 대표이사"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2025.11.12",
+        "basis": "근무 V-CAL 대표이사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2026.02.02",
+        "basis": "근무 V-CAL 대표이사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2026.02.02",
+        "basis": "근무 ALTI전자3년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2026.02.02",
+        "basis": "근무 평화산업 8년"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2026.02.02",
+        "basis": "근무 V-CAL 대표이사"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2026.02.02",
+        "basis": "근무 평화산업 8년"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2025.11.12",
+        "basis": "근무 V-CAL 대표이사"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2025.11.12",
+        "basis": "근무 평화산업 8년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102991",
+        "expiryDate": "2029-01-29"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102991",
+        "expiryDate": "2029-01-29"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102991",
+        "expiryDate": "2028-09-22"
+      }
+    ],
+    "memo": "기재된 번호는 한국 휴대전화 번호 (베트남 : 84-354-123-645)"
   },
   {
+    "id": "AUD_58",
+    "legacyId": "58",
     "no": "6",
     "name": "이혜화",
     "gmsNumber": "GMS25031",
     "type": "비상근",
+    "status": "위촉",
+    "email": "leehyaehwa@naver.com",
+    "mobile": "010-2758-0223",
+    "telephone": "",
+    "address": "(44924) 울산 울주군 범서읍 점촌1길 2-28 (구영리, 정일품빌) 201호",
+    "birthDate": "1984-02-23",
+    "education": "울산대학교 산업대학원",
+    "major": "안전관리",
+    "agency": "울산세이프티",
+    "regDate": "2025-11-11",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "28",
+      "29",
+      "32",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2026.02.02",
+        "basis": "근무 산업안전관리12년"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2026.02.02",
+        "basis": "근무 산업안전관리12년"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2026.02.02",
+        "basis": "학력 경영학"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2026.02.02",
+        "basis": "학력 경영학"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2026.02.02",
+        "basis": "근무 더원세이프티5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2026.02.02",
+        "basis": "근무 산업안전관리12년"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2026.02.02",
+        "basis": "근무 산업안전관리12년"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2026.02.02",
+        "basis": "학력 경영학"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2026.02.02",
+        "basis": "학력 경영학"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2026.02.02",
+        "basis": "근무 더원세이프티5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2025.11.11",
+        "basis": "근무 산업안전관리12년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2025.11.11",
+        "basis": "근무 산업안전관리12년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2025.11.11",
+        "basis": "학력 울산대 경영학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2025.11.11",
+        "basis": "학력 울산대 경영학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2025.11.11",
+        "basis": "근무 더원세이프티5년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103021",
+        "expiryDate": "2029-01-29"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103021",
+        "expiryDate": "2029-01-29"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103021",
+        "expiryDate": "2028-10-29"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_57",
+    "legacyId": "57",
     "no": "7",
     "name": "정순화",
     "gmsNumber": "GMS25029",
     "type": "비상근",
+    "status": "위촉",
+    "email": "kittyui@naver.com",
+    "mobile": "010-2245-2202",
+    "telephone": "",
+    "address": "(14726) 경기 부천시 소사구 송내동 587 우방유쉘 102동 1803호",
+    "birthDate": "1980-07-06",
+    "education": "광운대학교",
+    "major": "반도체및신소재공학",
+    "agency": "",
+    "regDate": "2025-07-15",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [
+      "19",
+      "22",
+      "28",
+      "31",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "22",
+        "date": "2026.06.01",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "22",
+        "date": "2026.06.01",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "22",
+        "date": "2026.06.01",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2025.09.18",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2025.09.18",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2025.10.30",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2025.10.30",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2025.09.18",
+        "basis": "심사 10m/d이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2025.07.15",
+        "basis": "근무 한국인정지원센터9년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2025.07.15",
+        "basis": "근무 한국인정지원센터9년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2025.07.15",
+        "basis": "심사 5회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.07.15",
+        "basis": "학력 반도체및신소재공학과"
+      },
+      {
+        "standard": "EMS",
+        "code": "36",
+        "date": "2025.07.15",
+        "basis": "근무 한국인정지원센터9년"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2025.07.15",
+        "basis": "근무 한국인정지원센터9년"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2025.07.15",
+        "basis": "심사 5회이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2025.07.15",
+        "basis": "근무 한국인정지원센터9년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2025.07.15",
+        "basis": "근무 한국인정지원센터9년"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2025.07.15",
+        "basis": "심사 3회이상"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "MCL",
+        "certNumber": "MCL-OHSMS-LA-009",
+        "expiryDate": "2027-02-15"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "MCL",
+        "certNumber": "MCL-EMS-LA-009",
+        "expiryDate": "2027-05-23"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "MCL",
+        "certNumber": "MCL-QMS-LA-009",
+        "expiryDate": "2027-05-23"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_55",
+    "legacyId": "55",
     "no": "8",
     "name": "조무연",
     "gmsNumber": "GMS25028",
     "type": "비상근",
+    "status": "위촉",
+    "email": "chomuyeon@daum.net",
+    "mobile": "010-5579-1523",
+    "telephone": "",
+    "address": "(08211) 서울 구로구 신도림로 16 (신도림동, 신도림 대림2차아파트) 404동 1102호",
+    "birthDate": "1954-10-20",
+    "education": "숭실대학교",
+    "major": "전자공학과",
+    "agency": "조항채",
+    "regDate": "2025-06-10",
     "qms": "선임",
     "ems": "선임",
     "ohs": "",
-    "period": ""
+    "iafCodes": [
+      "12",
+      "14",
+      "17",
+      "19",
+      "28"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2025.06.10",
+        "basis": "근무 LS전선 21년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "KAR",
+        "certNumber": "ELA000262",
+        "expiryDate": "2026-10-03"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "KAR",
+        "certNumber": "LA970160",
+        "expiryDate": "2027-11-16"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_54",
+    "legacyId": "54",
     "no": "9",
     "name": "박금태",
     "gmsNumber": "GMS25030",
     "type": "비상근",
+    "status": "위촉",
+    "email": "bgt2052@nate.com",
+    "mobile": "010-9490-9052",
+    "telephone": "",
+    "address": "(16422) 경기 수원시 팔달구 정자천로32번길 20 (화서동, 한독.LG아파트)",
+    "birthDate": "1957-08-20",
+    "education": "bgt2052@nate.com",
+    "major": "산업공학",
+    "agency": "박금태",
+    "regDate": "",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "14",
+      "17",
+      "18",
+      "19",
+      "28",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2025.09.30",
+        "basis": "학력 산업공학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2025.09.30",
+        "basis": "학력 산업공학"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2025.09.30",
+        "basis": "학력 산업공학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2025.09.30",
+        "basis": "학력 산업공학"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2025.09.30",
+        "basis": "학력 산업공학"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2025.09.30",
+        "basis": "학력 산업공학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2025.09.30",
+        "basis": "근무 동우이엔지 3년"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2025.09.30",
+        "basis": "근무 동우이엔지 3년"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2025.09.30",
+        "basis": "근무 동우이엔지 3년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.09.30",
+        "basis": "근무 일진전기 16년"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2025.09.30",
+        "basis": "근무 일진전기 16년"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2025.09.30",
+        "basis": "근무 일진전기 16년"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2025.09.30",
+        "basis": "근무 일진중공업 3년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2025.09.30",
+        "basis": "근무 일진중공업 3년"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2025.09.30",
+        "basis": "근무 일진중공업 3년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2025.09.30",
+        "basis": "근무 진성기업 3년"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2025.09.30",
+        "basis": "근무 진성기업 3년"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2025.09.30",
+        "basis": "근무 진성기업 3년"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2025.09.30",
+        "basis": "근무 민진 2년"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2025.09.30",
+        "basis": "근무 민진 2년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2025.09.30",
+        "basis": "근무 민진 2년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "PCAA",
+        "certNumber": "PC1526",
+        "expiryDate": "2029-03-14"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "MCL",
+        "certNumber": "MCL-EMS-A-051",
+        "expiryDate": "2027-11-02"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "PCAA",
+        "certNumber": "PC1526",
+        "expiryDate": "2027-11-02"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_53",
+    "legacyId": "53",
     "no": "10",
     "name": "김홍덕",
     "gmsNumber": "GMS25027",
     "type": "비상근",
+    "status": "위촉",
+    "email": "fumac@naver.com",
+    "mobile": "010-3396-5555",
+    "telephone": "",
+    "address": "(42253) 대구 수성구 시지로 21 (시지동, 노변청구타운) 102동 101호",
+    "birthDate": "1967-03-04",
+    "education": "계명대학교(학사)",
+    "major": "산업공학과",
+    "agency": "김홍덕",
+    "regDate": "2025-04-14",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "17",
+      "18",
+      "19",
+      "31",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2025.07.30",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2025.07.30",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2025.07.30",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2025.06.02",
+        "basis": "기타 QMS와 동일 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2025.06.02",
+        "basis": "기타 QMS와 동일 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2025.06.02",
+        "basis": "지도 자문경력 100M/D 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2025.04.14",
+        "basis": "근무 (주)한국품질경영연구소 3년"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2025.04.14",
+        "basis": "근무 (주)한국품질경영연구소 3년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2025.04.14",
+        "basis": "근무 (주)한국품질경영연구소 3년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2025.04.14",
+        "basis": "학력 산업공학과"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2025.04.14",
+        "basis": "학력 산업공학과"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2025.04.14",
+        "basis": "학력 산업공학과"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.04.14",
+        "basis": "근무 (주)새로닉스 2년"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2025.04.14",
+        "basis": "근무 (주)새로닉스 2년"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2025.04.14",
+        "basis": "근무 (주)새로닉스 2년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2025.04.14",
+        "basis": "근무 (주)나노켐 2년"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2025.04.14",
+        "basis": "근무 (주)나노켐 2년"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2025.04.14",
+        "basis": "근무 (주)나노켐 2년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "ESG-MS",
+        "grade": "일반",
+        "agency": "자체",
+        "certNumber": "",
+        "expiryDate": ""
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102895",
+        "expiryDate": "2028-03-24"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102895",
+        "expiryDate": "2028-03-24"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102895",
+        "expiryDate": "2028-03-24"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_52",
+    "legacyId": "52",
     "no": "11",
     "name": "이동훈",
     "gmsNumber": "GMS25026",
     "type": "비상근",
+    "status": "위촉",
+    "email": "goldhock@naver.com",
+    "mobile": "010-3555-2929",
+    "telephone": "",
+    "address": "(41971) 대구 중구 남산로 30 102동 1303호",
+    "birthDate": "1985-01-28",
+    "education": "대구가톨릭대학",
+    "major": "자동차공학",
+    "agency": "이동훈",
+    "regDate": "2025-03-05",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "17",
+      "18",
+      "29"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2025.03.05",
+        "basis": "학력 자동차공학"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2025.03.05",
+        "basis": "학력 자동차공학"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2025.03.05",
+        "basis": "학력 자동차공학"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2025.03.05",
+        "basis": "근무 효림산업9년"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2025.03.05",
+        "basis": "근무 효림산업9년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2025.03.05",
+        "basis": "근무 효림산업9년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2025.03.05",
+        "basis": "근무 효림산업9년"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2025.03.05",
+        "basis": "근무 효림산업9년"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2025.03.05",
+        "basis": "근무 효림산업9년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "PCAA",
+        "certNumber": "PC2643",
+        "expiryDate": "2027-07-07"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "PCAA",
+        "certNumber": "PC2643",
+        "expiryDate": "2026-07-13"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "PCAA",
+        "certNumber": "PC2643",
+        "expiryDate": "2026-07-13"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_49",
+    "legacyId": "49",
     "no": "12",
     "name": "지병구",
     "gmsNumber": "",
     "type": "비상근",
+    "status": "위촉",
+    "email": "bgji1979@naver.com",
+    "mobile": "010-5449-5048",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "",
+    "education": "",
+    "major": "",
+    "agency": "",
+    "regDate": "",
     "qms": "",
     "ems": "",
     "ohs": "",
-    "period": ""
+    "iafCodes": [],
+    "iafDetails": [],
+    "qualifications": [],
+    "memo": ""
   },
   {
+    "id": "AUD_48",
+    "legacyId": "48",
     "no": "13",
     "name": "황인순",
     "gmsNumber": "GMS24025",
     "type": "비상근",
+    "status": "위촉",
+    "email": "hitcon@hanmail.net",
+    "mobile": "010-2351-8528",
+    "telephone": "",
+    "address": "(15328) 경기 안산시 상록구 웃말5길 40 (일동)",
+    "birthDate": "1960-02-13",
+    "education": "대유공업전문대학교",
+    "major": "기계과",
+    "agency": "이기영",
+    "regDate": "2024-10-23",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "18",
+      "19",
+      "29",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.10.23",
+        "basis": "기타 국립기술표준원 인증심사원증"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2024.10.23",
+        "basis": "근무 티오피공업13년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2024.10.23",
+        "basis": "근무 동미전기공업(주)15년"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.10.23",
+        "basis": "기타 국립기술표준원 인증심사원증"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2024.10.23",
+        "basis": "근무 티오피공업13년"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2024.10.23",
+        "basis": "근무 동미전기공업(주)15년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.10.23",
+        "basis": "기타 국립기술표준원 인증심사원증"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2024.10.23",
+        "basis": "근무 티오피공업13년"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2024.10.23",
+        "basis": "근무 동미전기공업(주)15년"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2024.10.23",
+        "basis": "학력 기계과"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "KAR",
+        "certNumber": "OGA191256",
+        "expiryDate": "2026-01-06"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "KAR",
+        "certNumber": "EGA191255",
+        "expiryDate": "2026-01-06"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "KAR",
+        "certNumber": "GA980484",
+        "expiryDate": "2028-06-17"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_47",
+    "legacyId": "47",
     "no": "14",
     "name": "강경우",
     "gmsNumber": "GMS24024",
     "type": "비상근",
+    "status": "위촉",
+    "email": "helikkw@naver.com",
+    "mobile": "010-2023-8431",
+    "telephone": "",
+    "address": "(34052) 대전 유성구 전민로 32 (전민동)",
+    "birthDate": "1970-12-09",
+    "education": "공주대학교 대학원",
+    "major": "컴퓨터공학",
+    "agency": "강경우",
+    "regDate": "2024-09-10",
     "qms": "일반",
     "ems": "",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "18",
+      "19",
+      "29",
+      "33"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2024.09.10",
+        "basis": "학력 컴퓨터공학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2024.09.10",
+        "basis": "근무 (주)아이씨티이엔지5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2024.09.10",
+        "basis": "근무 (주)아이씨티이엔지5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2024.09.10",
+        "basis": "근무 (주)아이씨티이엔지5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2024.09.10",
+        "basis": "근무 (주)아이씨티이엔지5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2024.09.10",
+        "basis": "근무 (주)아이씨티이엔지5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2024.09.10",
+        "basis": "근무 (주)아이씨티이엔지5년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102753",
+        "expiryDate": "2027-09-02"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102753",
+        "expiryDate": "2027-09-02"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_46",
+    "legacyId": "46",
     "no": "15",
     "name": "송승윤",
     "gmsNumber": "GMS24017",
     "type": "비상근",
+    "status": "위촉",
+    "email": "xoxw7116@naver.com",
+    "mobile": "010-3968-0400",
+    "telephone": "",
+    "address": "(42661) 대구 달서구 달구벌대로 1834 (두류동, 성안오피스텔) 1310호",
+    "birthDate": "1991-08-28",
+    "education": "대학교(4년제)",
+    "major": "섬유공학",
+    "agency": "송관섭",
+    "regDate": "2024-03-25",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "04",
+      "05",
+      "12",
+      "29",
+      "32",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.03.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.03.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.03.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2024.03.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2024.03.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "05",
+        "date": "2024.03.25",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2024.03.25",
+        "basis": "학력"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100566",
+        "expiryDate": "2027-03-14"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100566",
+        "expiryDate": "2028-12-04"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100566",
+        "expiryDate": "2028-12-04"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_45",
+    "legacyId": "45",
     "no": "16",
     "name": "이예원",
     "gmsNumber": "GMS24021",
     "type": "상근",
+    "status": "위촉",
+    "email": "yewon6798@gmail.com",
+    "mobile": "010-2240-6798",
+    "telephone": "",
+    "address": "(03961) 서울 마포구 방울내로11길 43 (망원동, 상암마젤란21아파트) 1404호",
+    "birthDate": "1990-05-11",
+    "education": "대학교",
+    "major": "태국어통번역",
+    "agency": "HQ",
+    "regDate": "2024-07-30",
     "qms": "일반",
     "ems": "",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "34",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2024.07.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.07.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.07.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2024.07.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.07.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.07.30",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102701",
+        "expiryDate": "2027-07-18"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102701",
+        "expiryDate": "2027-07-18"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_44",
+    "legacyId": "44",
     "no": "17",
     "name": "박상영",
     "gmsNumber": "GMS24020",
     "type": "비상근",
+    "status": "위촉",
+    "email": "pguiver@hanmail.net",
+    "mobile": "010-2075-7684",
+    "telephone": "",
+    "address": "(21616) 인천 남동구 서창남순환로 190-15 (서창동, 서창퍼스트뷰아파트)",
+    "birthDate": "1959-09-20",
+    "education": "한국공항대 외",
+    "major": "산업경영 외",
+    "agency": "조항채",
+    "regDate": "2024-07-17",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "07",
+      "17",
+      "18",
+      "33",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.07.17",
+        "basis": "근무 엠아이씨유13년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.07.17",
+        "basis": "학력 산업경영공학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2024.07.17",
+        "basis": "학력 산업경영공학"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2024.07.17",
+        "basis": "근무 진영정기14년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2024.07.17",
+        "basis": "근무 진영정기14년"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.07.17",
+        "basis": "근무 엠아이씨유13년"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2024.07.17",
+        "basis": "학력 산업경영공학"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2024.07.17",
+        "basis": "근무 진영정기14년"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2024.07.17",
+        "basis": "근무 진영정기14년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.07.17",
+        "basis": "근무 엠아이씨유13년"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.07.17",
+        "basis": "학력 산업경영공학"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2024.07.17",
+        "basis": "근무 진영정기14년"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2024.07.17",
+        "basis": "근무 진영정기14년"
+      },
+      {
+        "standard": "QMS",
+        "code": "07",
+        "date": "2024.07.17",
+        "basis": "학력 안전환경공학"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100904",
+        "expiryDate": "2028-08-25"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100904",
+        "expiryDate": "2028-01-13"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "KAR",
+        "certNumber": "GA030609",
+        "expiryDate": "2027-03-12"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_43",
+    "legacyId": "43",
     "no": "18",
     "name": "조항채",
     "gmsNumber": "GMS24019",
     "type": "비상근",
+    "status": "위촉",
+    "email": "niboco@naver.com",
+    "mobile": "010-8384-9001",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "1968-04-09",
+    "education": "대전대학교",
+    "major": "환경공학과",
+    "agency": "조항채",
+    "regDate": "2024-04-02",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "03",
+      "04",
+      "07",
+      "12",
+      "14",
+      "17",
+      "18",
+      "19",
+      "28",
+      "31",
+      "33",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2025.10.13",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2025.10.13",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2025.10.13",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2025.10.13",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2025.08.25",
+        "basis": "심사 10m/d이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2025.08.25",
+        "basis": "심사 10m/d이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2025.08.25",
+        "basis": "심사 7m/d이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2025.04.29",
+        "basis": "학력 전자계산과"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.03.12",
+        "basis": "심사 3회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2024.11.07",
+        "basis": "심사 7m/d이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2024.11.07",
+        "basis": "심사 3회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2025.02.20",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2024.11.07",
+        "basis": "심사 3회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2024.04.02",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2024.04.02",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2025.03.03",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2025.02.20",
+        "basis": "심사 2회이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2025.03.12",
+        "basis": "심사 3회이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2025.02.20",
+        "basis": "심사 2회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.04.02",
+        "basis": "근무 시스코인증원12년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2024.04.02",
+        "basis": "근무 엠아이씨유6년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2024.04.02",
+        "basis": "근무 대양염직4년"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.04.02",
+        "basis": "근무 시스코인증원12년"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2024.04.02",
+        "basis": "근무 엠아이씨유6년"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2024.04.02",
+        "basis": "근무 대양염직4년"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.04.02",
+        "basis": "근무 시스코인증원12년"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2024.04.02",
+        "basis": "근무 엠아이씨유6년"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2024.04.02",
+        "basis": "근무 대양염직4년"
+      },
+      {
+        "standard": "QMS",
+        "code": "07",
+        "date": "2024.04.02",
+        "basis": "학력 환경공학과"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2024.04.02",
+        "basis": "근무 대양염직4년"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2024.04.02",
+        "basis": "심사 심사횟수 3회충족"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "GPC",
+        "certNumber": "25C30050",
+        "expiryDate": "2026-10-25"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "GPC",
+        "certNumber": "25340123",
+        "expiryDate": "2027-03-18"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "GPC",
+        "certNumber": "23140186",
+        "expiryDate": "2026-09-29"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_40",
+    "legacyId": "40",
     "no": "19",
     "name": "곽숙이",
     "gmsNumber": "GMS23015",
     "type": "비상근",
+    "status": "위촉",
+    "email": "joa0510@daum.net",
+    "mobile": "010-3523-6356",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "1960-05-12",
+    "education": "계명대학교",
+    "major": "경영학",
+    "agency": "한국중소기업경영연구원",
+    "regDate": "2023-12-26",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "04",
+      "17",
+      "28",
+      "29",
+      "32",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2024.02.01",
+        "basis": "기타 EMS 리스크 동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.10.18",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.10.18",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2024.10.18",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2024.10.18",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2024.10.18",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.12.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.12.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.12.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.12.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2023.12.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2023.12.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.12.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.12.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.12.26",
+        "basis": "심사 심사 5회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.12.26",
+        "basis": "심사 심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.12.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.12.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2023.12.26",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100823",
+        "expiryDate": "2027-10-17"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100823",
+        "expiryDate": "2027-04-23"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100823",
+        "expiryDate": "2027-10-23"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_39",
+    "legacyId": "39",
     "no": "20",
     "name": "임다영",
     "gmsNumber": "GMS23014",
     "type": "비상근",
+    "status": "위촉",
+    "email": "ekdud0422@naver.com",
+    "mobile": "010-2557-2900",
+    "telephone": "",
+    "address": "(44609) 울산 남구 신복로71번길 13 (무거동, 무거현대아파트) 102-618",
+    "birthDate": "1998-04-09",
+    "education": "인제대학교",
+    "major": "식품공학과",
+    "agency": "울산세이프티",
+    "regDate": "2023-12-01",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "03",
+      "19",
+      "30",
+      "31",
+      "33",
+      "34",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2023.12.01",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.12.01",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2025.07.03",
+        "basis": "기타 OH 리스크 동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2025.07.03",
+        "basis": "기타 OH 리스크 동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2025.10.20",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2025.10.20",
+        "basis": "기타 OH 리스크 동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "36",
+        "date": "2025.10.20",
+        "basis": "기타 OH 리스크 동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.12.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.12.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.12.01",
+        "basis": "근무 울산세이프티"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2025.07.03",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.03.12",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.09.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2024.09.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2024.09.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2024.09.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "30",
+        "date": "2024.09.30",
+        "basis": "학력 식품공학과"
+      },
+      {
+        "standard": "EMS",
+        "code": "30",
+        "date": "2024.09.30",
+        "basis": "학력 식품공학과"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.12.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2023.12.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2023.12.01",
+        "basis": "심사 심사5회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "30",
+        "date": "2023.12.01",
+        "basis": "학력 식품공학과"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102333",
+        "expiryDate": "2027-09-26"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102333",
+        "expiryDate": "2027-09-26"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102333",
+        "expiryDate": "2026-11-02"
+      }
+    ],
+    "memo": "임다영 QMS/EMS 자격 부여 일자: 2024.09.27"
   },
   {
+    "id": "AUD_38",
+    "legacyId": "38",
     "no": "21",
-    "name": "남미현",
-    "gmsNumber": "GMS23012",
-    "type": "비상근",
-    "qms": "일반",
-    "ems": "일반",
-    "ohs": "",
-    "period": ""
-  },
-  {
-    "no": "22",
     "name": "이윤호",
     "gmsNumber": "GMS23013",
     "type": "비상근",
+    "status": "위촉",
+    "email": "yhlee619@naver.com",
+    "mobile": "010-7162-0619",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "1985-06-19",
+    "education": "경북대학교",
+    "major": "경영학",
+    "agency": "한국중소기업경영연구원",
+    "regDate": "2023-10-12",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "03",
+      "17",
+      "18",
+      "19",
+      "28",
+      "29",
+      "32",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2026.02.10",
+        "basis": "기타 EMS 동일 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2026.02.10",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2026.02.10",
+        "basis": "기타 EMS 동일 리스크"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2025.01.09",
+        "basis": "심사 5회 이상 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.03.10",
+        "basis": "기타 QMS 하위 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2025.03.10",
+        "basis": "기타 QMS 동일 리스크"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2025.05.14",
+        "basis": "기타 QMS 동일 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2025.05.14",
+        "basis": "심사 2회 이상 충족"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2025.05.14",
+        "basis": "심사 3회 이상 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2025.04.10",
+        "basis": "기타 QMS 동일 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2025.04.10",
+        "basis": "심사 3회 이상 충족"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2025.04.10",
+        "basis": "심사 3회 이상 충족"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2025.03.10",
+        "basis": "심사 3회 이상 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.10.12",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.10.12",
+        "basis": "학력"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100606",
+        "expiryDate": "2027-02-22"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100606",
+        "expiryDate": "2028-01-17"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100606",
+        "expiryDate": "2028-01-30"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_37",
+    "legacyId": "37",
+    "no": "22",
+    "name": "남미현",
+    "gmsNumber": "GMS23012",
+    "type": "비상근",
+    "status": "위촉",
+    "email": "nam1966@naver.com",
+    "mobile": "010-7122-6601",
+    "telephone": "",
+    "address": "(16691) 경기 수원시 영통구 영통로154번길 56 102-402",
+    "birthDate": "1966-01-01",
+    "education": "성균관대",
+    "major": "화학",
+    "agency": "이기영",
+    "regDate": "2023-10-30",
+    "qms": "일반",
+    "ems": "일반",
+    "ohs": "일반",
+    "iafCodes": [
+      "04",
+      "05",
+      "12",
+      "14",
+      "17",
+      "18",
+      "19",
+      "23",
+      "28",
+      "33"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2025.10.23",
+        "basis": "기타 QMS 하위 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2025.10.23",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2025.10.23",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2026.02.02",
+        "basis": "근무 성진건설3년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "23",
+        "date": "2026.02.02",
+        "basis": "기타 EMS 리스크 동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2026.02.02",
+        "basis": "근무 일진전기5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2026.02.02",
+        "basis": "근무 일진전기5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2026.02.02",
+        "basis": "근무 일진전기5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2026.02.02",
+        "basis": "학력 화학과"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2026.02.02",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2025.02.19",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "23",
+        "date": "2025.04.10",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2025.04.10",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2025.02.19",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2024.07.01",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.10.30",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2023.10.30",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2023.10.30",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "05",
+        "date": "2023.10.30",
+        "basis": "학력"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103069",
+        "expiryDate": "2029-01-29"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IAREMS051",
+        "expiryDate": "2026-03-07"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IARQMS065",
+        "expiryDate": "2026-03-07"
+      }
+    ],
+    "memo": ""
+  },
+  {
+    "id": "AUD_36",
+    "legacyId": "36",
     "no": "23",
     "name": "이창집",
     "gmsNumber": "GMS23010",
     "type": "비상근",
+    "status": "위촉",
+    "email": "changjip@naver.com",
+    "mobile": "010-4746-8170",
+    "telephone": "",
+    "address": "(05817) 서울 송파구 새말로8길 12 (문정동, 건영아파트) 103동 307호",
+    "birthDate": "1963-04-26",
+    "education": "학사",
+    "major": "기계설계학과",
+    "agency": "이기영",
+    "regDate": "2023-10-10",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "12",
+      "18",
+      "19",
+      "29"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2023.10.11",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2023.10.11",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IARSMS039",
+        "expiryDate": "2026-02-06"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IAREMS045",
+        "expiryDate": "2025-12-20"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IARQMS056",
+        "expiryDate": "2025-12-20"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_35",
+    "legacyId": "35",
     "no": "24",
     "name": "이기영",
     "gmsNumber": "GMS23009",
     "type": "비상근",
+    "status": "위촉",
+    "email": "leegi1963@hanmail.net",
+    "mobile": "010-3736-9982",
+    "telephone": "",
+    "address": "(16691) 경기 수원시 영통구 영통로154번길 56 (망포동, 한양수자인 에듀파크) 102-402",
+    "birthDate": "1963-02-28",
+    "education": "석사",
+    "major": "",
+    "agency": "이기영",
+    "regDate": "2023-09-25",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "04",
+      "12",
+      "14",
+      "17",
+      "18",
+      "19",
+      "22",
+      "23",
+      "28",
+      "29",
+      "31",
+      "33",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2025.07.09",
+        "basis": "기타 EMS 하위 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2025.07.09",
+        "basis": "기타 EMS 하위 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2025.10.23",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2025.10.23",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2025.07.09",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "23",
+        "date": "2025.04.10",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "23",
+        "date": "2025.04.10",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2025.04.10",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2024.07.01",
+        "basis": "심사 심사2회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.12.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.12.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2023.10.04",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.10.04",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.10.04",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "22",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "22",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "22",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2023.09.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.09.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.09.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.09.25",
+        "basis": "학력 산업공학전공"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.09.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.09.25",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IARSMS041",
+        "expiryDate": "2026-03-07"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IAR",
+        "certNumber": "IAREMS055",
+        "expiryDate": "2026-10-06"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IAR",
+        "certNumber": "IARQMS069",
+        "expiryDate": "2026-10-06"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_32",
+    "legacyId": "32",
     "no": "25",
     "name": "홍진호",
     "gmsNumber": "GMS23008",
     "type": "비상근",
+    "status": "위촉",
+    "email": "jimmy8417@gmail.com",
+    "mobile": "010-8417-4771",
+    "telephone": "",
+    "address": "(44935) 울산 울주군 언양읍 새말길 43-2 (다개리)",
+    "birthDate": "1977-09-11",
+    "education": "영남대학교",
+    "major": "응용화학공학전공",
+    "agency": "울산세이프티",
+    "regDate": "2023-09-25",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "12",
+      "14",
+      "19",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2025.10.20",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "36",
+        "date": "2025.10.20",
+        "basis": "기타 OH리스크동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2025.10.20",
+        "basis": "기타 OH리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.08.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.08.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2024.08.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2024.08.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2024.08.13",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2024.08.13",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2024.08.13",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.09.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.09.25",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.09.25",
+        "basis": "학력 응용화학전공"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.09.25",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102245",
+        "expiryDate": "2026-04-24"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102245",
+        "expiryDate": "2027-08-12"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102245",
+        "expiryDate": "2027-08-12"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_31",
+    "legacyId": "31",
     "no": "26",
     "name": "성해준",
     "gmsNumber": "GMS23007",
     "type": "비상근",
+    "status": "위촉",
+    "email": "ulsansafety@naver.com",
+    "mobile": "010-6262-8288",
+    "telephone": "",
+    "address": "(44539) 울산 중구 종가4길 10 상가 219동 201호",
+    "birthDate": "1977-12-20",
+    "education": "울산대학교",
+    "major": "안전관리",
+    "agency": "울산세이프티",
+    "regDate": "2023-10-04",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [
+      "12",
+      "13",
+      "14",
+      "17",
+      "18",
+      "19",
+      "28",
+      "34",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "36",
+        "date": "2024.03.26",
+        "basis": "기타 OH 동일 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2024.03.26",
+        "basis": "기타 OH 동일 리스크"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2024.03.26",
+        "basis": "기타 OH 동일 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.03.26",
+        "basis": "기타 OH 동일 리스크"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2025.11.10",
+        "basis": "심사 심사횟수 3회 충족"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2024.06.02",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2025.06.02",
+        "basis": "기타 QMS 동일 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2025.06.02",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "13",
+        "date": "2025.07.03",
+        "basis": "기타 자문경력 100m/d이상 충족"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2024.05.21",
+        "basis": "심사 심사횟수 3회 충족"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2024.05.21",
+        "basis": "심사 심사횟수 5회 충족"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2024.05.21",
+        "basis": "심사 심사횟수 3회 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2024.05.21",
+        "basis": "심사 심사횟수 3회 충족"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.03.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.03.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2024.03.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2024.03.26",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2024.03.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2024.03.26",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.12.19",
+        "basis": "심사 심사횟수 3회 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.12.19",
+        "basis": "심사 심사횟수 5회 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.12.19",
+        "basis": "심사 심사횟수 5회 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2023.12.05",
+        "basis": "심사 심사횟수 2회 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.10.04",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.10.04",
+        "basis": "학력 응용화학전공(학사)"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.10.04",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR102304",
+        "expiryDate": "2027-02-15"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR102304",
+        "expiryDate": "2027-02-15"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR102304",
+        "expiryDate": "2029-04-12"
+      }
+    ],
+    "memo": "2024.04.23 기준 : OH 17번 등록"
   },
   {
+    "id": "AUD_29",
+    "legacyId": "29",
     "no": "27",
     "name": "송인선",
     "gmsNumber": "GMS23004",
     "type": "비상근",
+    "status": "위촉",
+    "email": "kgms2304@gmail.com",
+    "mobile": "010-4205-2304",
+    "telephone": "",
+    "address": "(03493) 서울 은평구 증산로3길 26-1, DMC우방아파트 101동 702호",
+    "birthDate": "1974-05-23",
+    "education": "고졸",
+    "major": "",
+    "agency": "HQ",
+    "regDate": "2023-05-01",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "17",
+      "19",
+      "28",
+      "29",
+      "32",
+      "34"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.03.20",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2024.03.20",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2024.03.20",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2024.03.20",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2024.11.13",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2024.11.13",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2024.11.13",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2024.07.19",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2024.07.19",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2024.07.19",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.01.23",
+        "basis": "심사 심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2024.03.20",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "ESG-MS",
+        "grade": "일반",
+        "agency": "자체",
+        "certNumber": "",
+        "expiryDate": ""
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102214",
+        "expiryDate": "2027-07-18"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102214",
+        "expiryDate": "2026-02-20"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR102214",
+        "expiryDate": "2026-02-20"
+      }
+    ],
+    "memo": "2024.08.05:OH코드추가"
   },
   {
+    "id": "AUD_28",
+    "legacyId": "28",
     "no": "28",
     "name": "송관섭",
     "gmsNumber": "GMS23006",
     "type": "비상근",
+    "status": "위촉",
+    "email": "song24@daum.net",
+    "mobile": "010-2505-6331",
+    "telephone": "대구 (053)-624-6331",
+    "address": "(42810) 대구 달서구 상인서로 85 (상인동, 상인동방현대아파트) 103동 102호",
+    "birthDate": "1963-10-03",
+    "education": "박사",
+    "major": "회계학",
+    "agency": "송관섭",
+    "regDate": "2023-09-12",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [
+      "03",
+      "12",
+      "18",
+      "19",
+      "23",
+      "28",
+      "33",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "23",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "23",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2023.09.12",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2023.09.12",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "C-GMP",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100625",
+        "expiryDate": "2027-03-14"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100625",
+        "expiryDate": "2026-09-09"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100625",
+        "expiryDate": "2026-09-30"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100625",
+        "expiryDate": "2026-11-30"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_22",
+    "legacyId": "22",
     "no": "29",
     "name": "오호준",
     "gmsNumber": "GMS23005",
     "type": "비상근",
+    "status": "위촉",
+    "email": "rokmcohj@nate.com",
+    "mobile": "010-4719-6120",
+    "telephone": "",
+    "address": "(--) 60, Jingwan 2-ro, Eunpyeong-gu, Seoul, korea",
+    "birthDate": "1974-04-03",
+    "education": "학사",
+    "major": "기계과",
+    "agency": "",
+    "regDate": "2020-06-03",
     "qms": "일반",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "31",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.05.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2023.05.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.05.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2023.05.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.05.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.05.06",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100164",
+        "expiryDate": "2027-01-10"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100164",
+        "expiryDate": "2027-03-29"
+      },
+      {
+        "standard": "QMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100164",
+        "expiryDate": "2027-03-29"
+      }
+    ],
+    "memo": "2025.06.30 해촉"
   },
   {
+    "id": "AUD_21",
+    "legacyId": "21",
     "no": "30",
     "name": "우종광",
     "gmsNumber": "GMS24018",
     "type": "비상근",
+    "status": "위촉",
+    "email": "jkw457@naver.com",
+    "mobile": "010-9275-6340",
+    "telephone": "서울 (02)-835-2340",
+    "address": "(--)  (Hansung APT, Shindaebangdong), 104-1201, Yoidaebangro 10gil 13,  Dongjac-gu, Seoul, Korea",
+    "birthDate": "1955-02-01",
+    "education": "공학사",
+    "major": "금속공학과",
+    "agency": "",
+    "regDate": "2024-04-02",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.04.02",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2024.04.02",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2024.04.02",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.04.02",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2024.04.02",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2024.04.02",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IAR",
+        "certNumber": "IARSMS008",
+        "expiryDate": "2026-10-11"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IAR",
+        "certNumber": "IAREMS007",
+        "expiryDate": "2026-10-11"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IAR",
+        "certNumber": "IARQMS004",
+        "expiryDate": "2026-06-13"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_20",
+    "legacyId": "20",
     "no": "31",
     "name": "권혁일",
     "gmsNumber": "GMS23003",
     "type": "비상근",
+    "status": "위촉",
+    "email": "kwonhi640@nate.com",
+    "mobile": "010-9244-7750",
+    "telephone": "",
+    "address": "(17778) 경기 평택시 점촌로10번길 13 (서정동, 송탄빌리지) 9동 201호",
+    "birthDate": "1964-11-30",
+    "education": "대졸",
+    "major": "전자공학",
+    "agency": "",
+    "regDate": "2023-05-01",
     "qms": "선임",
     "ems": "일반",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "14",
+      "17",
+      "18",
+      "19",
+      "22",
+      "23",
+      "28",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "기타 QMS 리스크 동일"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2025.10.23",
+        "basis": "근무 KB손해보험 5년"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2025.10.23",
+        "basis": "근무 KB손해보험 5년"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2025.10.23",
+        "basis": "심사 KB손해보험 5년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2025.09.29",
+        "basis": "근무 근무경력2년&심사경험L기준"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사 5회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2023.10.24",
+        "basis": "기타 QMS33리스크이하"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2023.10.24",
+        "basis": "기타 QMS33리스크동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.10.24",
+        "basis": "심사 심사5회이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.10.24",
+        "basis": "기타 경영지도사 자격증"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.10.24",
+        "basis": "기타 경영지도사 자격증"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.10.24",
+        "basis": "기타 경영지도사 자격증"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2023.10.24",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2023.10.24",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "22",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "근무 중앙개발 2년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "근무 (주)대영산업 2년"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "근무 (주)NTI 3년"
+      },
+      {
+        "standard": "EMS",
+        "code": "22",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "근무 중앙개발 2년"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "근무 (주)대영산업 2년"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "근무 (주)NTI 3년"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "22",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "근무 중앙개발 2년"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "근무 (주)대영산업 2년"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "근무 (주)NTI 3년"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103043",
+        "expiryDate": "2028-12-04"
+      },
+      {
+        "standard": "EMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR103043",
+        "expiryDate": "2028-12-04"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR103043",
+        "expiryDate": "2028-12-04"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_17",
+    "legacyId": "17",
     "no": "32",
     "name": "임옥규",
     "gmsNumber": "",
     "type": "비상근",
+    "status": "위촉",
+    "email": "limgoto@hanmail.net",
+    "mobile": "010-5473-9401",
+    "telephone": "",
+    "address": "(--)",
+    "birthDate": "1975-10-25",
+    "education": "서울과학기술대학교",
+    "major": "&#160기계공학과",
+    "agency": "한국품질경영인증원(KQM)",
+    "regDate": "2019-08-22",
     "qms": "",
     "ems": "",
     "ohs": "",
-    "period": ""
+    "iafCodes": [
+      "CIV"
+    ],
+    "iafDetails": [
+      {
+        "standard": "FSMS",
+        "code": "CIV",
+        "date": "2019.01.02",
+        "basis": "기타"
+      }
+    ],
+    "qualifications": [],
+    "memo": ""
   },
   {
+    "id": "AUD_11",
+    "legacyId": "11",
     "no": "33",
     "name": "이상진",
     "gmsNumber": "GMS23011",
     "type": "비상근",
+    "status": "위촉",
+    "email": "hosan153@naver.com",
+    "mobile": "010-3512-6547",
+    "telephone": "",
+    "address": "(41584) 대구 북구 중앙대로 591 (침산동, 침산동코오롱하늘채아파트) 591, Jungangdae-ro, Buk-gu, Daegu-city, Korea",
+    "birthDate": "1958-10-15",
+    "education": "대학교",
+    "major": "경영학과",
+    "agency": "한국중소기업경영연구원",
+    "regDate": "2023-10-06",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "일반",
+    "iafCodes": [
+      "03",
+      "04",
+      "12",
+      "14",
+      "17",
+      "18",
+      "19",
+      "23",
+      "28",
+      "29",
+      "31",
+      "32",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2024.08.14",
+        "basis": "기타 OH 하위 리스크"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2024.08.14",
+        "basis": "기타 OH 리스크 동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2024.08.14",
+        "basis": "심사 심사 3회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.12.26",
+        "basis": "심사 심사 5회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.12.26",
+        "basis": "심사 심사 5회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.12.26",
+        "basis": "심사 심사 3회 이상"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "23",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "23",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.10.06",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2023.10.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2023.06.06",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2023.10.06",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "OHSAS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100230",
+        "expiryDate": "2024-11-04"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100230",
+        "expiryDate": "2026-08-31"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100230",
+        "expiryDate": "2026-10-31"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_10",
+    "legacyId": "10",
     "no": "34",
     "name": "정현일",
     "gmsNumber": "GMS23002",
     "type": "상근",
+    "status": "위촉",
+    "email": "himix1993@gmail.com",
+    "mobile": "010-2226-7259",
+    "telephone": "",
+    "address": "(01129) 서울 강북구 덕릉로 94 (미아동) 21 201동 1001호",
+    "birthDate": "1969-11-19",
+    "education": "연세대학교",
+    "major": "경제학",
+    "agency": "HQ",
+    "regDate": "2019-06-03",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [
+      "03",
+      "04",
+      "07",
+      "12",
+      "14",
+      "17",
+      "18",
+      "19",
+      "23",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2023.05.01",
+        "basis": "심사 심사 2회 이상"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "36",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "07",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "30",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "23",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "30",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "23",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "30",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2023.05.01",
+        "basis": "근무"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "ISMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100204",
+        "expiryDate": "2028-08-01"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100204",
+        "expiryDate": "2026-09-16"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100204",
+        "expiryDate": "2027-05-03"
+      },
+      {
+        "standard": "FSMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100204",
+        "expiryDate": "2028-01-05"
+      },
+      {
+        "standard": "C-GMP",
+        "grade": "선임",
+        "agency": "자체",
+        "certNumber": "2020CG002",
+        "expiryDate": ""
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100204",
+        "expiryDate": "2027-05-03"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_9",
+    "legacyId": "9",
     "no": "35",
     "name": "곽현철",
     "gmsNumber": "GMS23016",
     "type": "비상근",
+    "status": "위촉",
+    "email": "dodozace@hanmail.net",
+    "mobile": "010-3412-2016",
+    "telephone": "",
+    "address": "(14322) 경기 광명시 하안로 60 (소하동, 광명테크노파크) (소하동,광명테크노파크에이동 903호)",
+    "birthDate": "1978-02-25",
+    "education": "이학사",
+    "major": "&#160정보몸계학전공",
+    "agency": "곽현철",
+    "regDate": "2023-10-04",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [
+      "12",
+      "29",
+      "33",
+      "34",
+      "35"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.10.04",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.10.04",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.10.04",
+        "basis": "기타 QMS리스크동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2024.01.03",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.10.04",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.10.04",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2024.01.03",
+        "basis": "학력"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.10.04",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.10.04",
+        "basis": "학력"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2024.01.03",
+        "basis": "학력"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.10.04",
+        "basis": "심사 심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2023.10.04",
+        "basis": "심사 심사 3회 이상"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "C-GMP",
+        "grade": "일반",
+        "agency": "자체",
+        "certNumber": "",
+        "expiryDate": ""
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "GPC",
+        "certNumber": "24C50011",
+        "expiryDate": "2027-04-13"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "GPC",
+        "certNumber": "24350052",
+        "expiryDate": "2027-04-13"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "GPC",
+        "certNumber": "24150058",
+        "expiryDate": "2027-04-13"
+      }
+    ],
+    "memo": ""
   },
   {
+    "id": "AUD_2",
+    "legacyId": "2",
     "no": "36",
     "name": "남경호",
     "gmsNumber": "GMS23001",
     "type": "상근",
+    "status": "위촉",
+    "email": "nam2304@empas.com",
+    "mobile": "010-6261-2304",
+    "telephone": "인터넷 (070)-4351-7180",
+    "address": "(03493) 서울 은평구 증산동 244 우방아파트 101-702",
+    "birthDate": "1969-10-25",
+    "education": "학사",
+    "major": "철학과",
+    "agency": "HQ",
+    "regDate": "2023-05-01",
     "qms": "선임",
     "ems": "선임",
-    "ohs": "",
-    "period": ""
+    "ohs": "선임",
+    "iafCodes": [
+      "03",
+      "04",
+      "05",
+      "07",
+      "12",
+      "13",
+      "14",
+      "17",
+      "18",
+      "19",
+      "22",
+      "23",
+      "28",
+      "29",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36"
+    ],
+    "iafDetails": [
+      {
+        "standard": "OHSAS",
+        "code": "13",
+        "date": "2024.10.21",
+        "basis": "심사 3회 이상 충족"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "기타 QMS29리스크동일"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "36",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "36",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "35",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "35",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "33",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "33",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "22",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "22",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "EMS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "12",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "EMS",
+        "code": "12",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "OHSAS",
+        "code": "03",
+        "date": "2023.05.01",
+        "basis": "기타 ISO22000심사원"
+      },
+      {
+        "standard": "EMS",
+        "code": "03",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "19",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "36",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "35",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "34",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "33",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "32",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "31",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "28",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "23",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "22",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "29",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "18",
+        "date": "2023.05.01",
+        "basis": "심사"
+      },
+      {
+        "standard": "QMS",
+        "code": "17",
+        "date": "2023.05.01",
+        "basis": "근무"
+      },
+      {
+        "standard": "QMS",
+        "code": "14",
+        "date": "2023.05.01",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "12",
+        "date": "2023.05.01",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "07",
+        "date": "2023.05.01",
+        "basis": "심사 3회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "05",
+        "date": "2023.05.01",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "04",
+        "date": "2023.05.01",
+        "basis": "심사 2회 이상"
+      },
+      {
+        "standard": "QMS",
+        "code": "03",
+        "date": "2023.05.01",
+        "basis": "심사 3회 이상"
+      }
+    ],
+    "qualifications": [
+      {
+        "standard": "ESG-MS",
+        "grade": "선임",
+        "agency": "자체",
+        "certNumber": "",
+        "expiryDate": ""
+      },
+      {
+        "standard": "BCMS",
+        "grade": "일반",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2027-08-12"
+      },
+      {
+        "standard": "ISMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2027-08-11"
+      },
+      {
+        "standard": "ABMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2028-05-16"
+      },
+      {
+        "standard": "EnMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2027-04-25"
+      },
+      {
+        "standard": "OHSAS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2026-07-26"
+      },
+      {
+        "standard": "EMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2026-09-07"
+      },
+      {
+        "standard": "QMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2026-09-07"
+      },
+      {
+        "standard": "FSMS",
+        "grade": "선임",
+        "agency": "IQCS",
+        "certNumber": "KR100246",
+        "expiryDate": "2028-09-30"
+      },
+      {
+        "standard": "C-GMP",
+        "grade": "선임",
+        "agency": "자체",
+        "certNumber": "",
+        "expiryDate": ""
+      }
+    ],
+    "memo": ""
   }
 ]

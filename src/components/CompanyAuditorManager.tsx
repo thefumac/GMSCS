@@ -22,6 +22,7 @@ import {
 import { Company, Auditor, AuditorReassignmentLog, AuditorAffiliation } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 import { LegacyCompanyExtended } from '../data/legacyDataLoader';
+import { checkOutdatedStandard, cleanStandardName, DEFAULT_OFFICIAL_STANDARD_VERSIONS } from './AuditorPortal';
 
 interface CompanyAuditorManagerProps {
   companies: (Company | LegacyCompanyExtended)[];
@@ -471,8 +472,26 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                         <td className="py-2 px-3 border-r border-slate-200 text-center font-medium text-slate-600 whitespace-nowrap">
                           {c.regionCode || (c.address ? c.address.substring(0, 2) : '--')}
                         </td>
-                        <td className="py-2 px-3 border-r border-slate-200 text-[11px] whitespace-nowrap font-medium text-slate-800">
-                          {c.standards || c.industry || '--'}
+                        <td className="py-2 px-3 border-r border-slate-200 text-[11px] whitespace-nowrap font-normal text-slate-800">
+                          {(() => {
+                            const stdStr = c.standards || c.industry || '';
+                            if (!stdStr || stdStr === '--') return '--';
+                            const stds = stdStr.split(/[\/,;]+/).map((s: string) => s.trim()).filter(Boolean);
+                            return stds.map((std: string, sIdx: number) => {
+                              const outChk = checkOutdatedStandard(cleanStandardName(std), DEFAULT_OFFICIAL_STANDARD_VERSIONS);
+                              return (
+                                <span key={sIdx} className={`inline-flex items-center gap-0.5 ${outChk.isOutdated ? 'text-red-600' : 'text-slate-800'}`}>
+                                  <span>{cleanStandardName(std)}</span>
+                                  {outChk.isOutdated && (
+                                    <span className="px-1 py-0.5 rounded text-[9.5px] bg-rose-50 text-rose-600 border border-rose-200 font-normal ml-0.5">
+                                      {outChk.officialVersion} 전환대상
+                                    </span>
+                                  )}
+                                  {sIdx < stds.length - 1 && <span className="text-slate-300 mx-0.5">/</span>}
+                                </span>
+                              );
+                            });
+                          })()}
                         </td>
                         <td className="py-2 px-3 border-r border-slate-200 text-center font-bold font-mono text-slate-700 whitespace-nowrap">
                           {c.iafCode || '--'}

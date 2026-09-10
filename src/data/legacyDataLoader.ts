@@ -4,18 +4,19 @@ import realAuditProjectsRaw from './realAuditProjects.json';
 import { Auditor, Company, StandardCode, AuditorAffiliation, CertContract, AuditProject, AuditType, AuditStatus } from '../types';
 
 // Map legacy auditors to Auditor[]
+// Map legacy auditors to Auditor[]
 export function getMergedAuditors(): Auditor[] {
-  return legacyAuditorsRaw.map((la, idx) => {
+  return legacyAuditorsRaw.map((la: any, idx) => {
     // 4인 상근 (남경호, 정현일, 이혜원, 남효린) vs 그 외 비상근
     const isStaff4 = la.name.includes('남경호') || la.name.includes('정현일') || la.name.includes('이혜원') || la.name.includes('이예원') || la.name.includes('남효린');
-    const affiliation: AuditorAffiliation = isStaff4 ? '상근' : '비상근';
-    const originType: '상근' | '비상근' = isStaff4 ? '상근' : '비상근';
+    const affiliation: AuditorAffiliation = isStaff4 ? '상근' : (la.type === '상근' ? '상근' : '비상근');
+    const originType: '상근' | '비상근' = isStaff4 ? '상근' : (la.type === '상근' ? '상근' : '비상근');
 
     // Determine highest grade
     let grade: Auditor['grade'] = '정심사원';
-    if (la.qms.includes('선임') || la.ems.includes('선임') || la.ohs.includes('선임') || la.name.includes('김홍덕')) {
+    if ((la.qms && la.qms.includes('선임')) || (la.ems && la.ems.includes('선임')) || (la.ohs && la.ohs.includes('선임')) || la.name.includes('김홍덕')) {
       grade = '선임심사원';
-    } else if (la.qms.includes('보') || la.ems.includes('보') || la.ohs.includes('보')) {
+    } else if ((la.qms && la.qms.includes('보')) || (la.ems && la.ems.includes('보')) || (la.ohs && la.ohs.includes('보'))) {
       grade = '심사원보';
     }
 
@@ -26,30 +27,47 @@ export function getMergedAuditors(): Auditor[] {
 
     const id = la.name.includes('남경호') ? 'admin' : `aud-${la.gmsNumber ? la.gmsNumber.toLowerCase() : idx + 1}`;
 
-    // 이메일 매핑 (김홍덕: fumac@naver.com)
-    let email = `${id}@gmscs.co.kr`;
+    // 이메일: 크롤링된 실 이메일 우선 적용 (김홍덕: fumac@naver.com)
+    let email = la.email && la.email.includes('@') ? la.email : `${id}@gmscs.co.kr`;
     if (la.name.includes('김홍덕')) {
       email = 'fumac@naver.com';
     } else if (la.name.includes('남경호')) {
-      email = 'ceo@gmscs.co.kr';
-    } else if (la.name.includes('정현일')) {
-      email = 'hi.jung@gmscs.co.kr';
+      email = la.email || 'ceo@gmscs.co.kr';
     }
+
+    // 휴대전화: 크롤링된 실 번호 적용
+    let mobile = la.mobile && la.mobile.length > 5 ? la.mobile : '';
+    if (!mobile) {
+      if (la.name.includes('남경호')) mobile = '010-4848-2143';
+      else if (la.name.includes('김홍덕')) mobile = '010-2658-0296';
+      else if (la.name.includes('정현일')) mobile = '010-3345-8912';
+      else mobile = '-';
+    }
+
+    // IAF 코드: 크롤링된 실제 전문코드 배열 적용
+    const iafCodes = Array.isArray(la.iafCodes) ? la.iafCodes : [];
 
     return {
       id,
       gmsNumber: la.gmsNumber || '',
       originType,
       name: la.name,
-      mobile: la.name.includes('남경호') ? '010-4848-2143' : la.name.includes('김홍덕') ? '010-2658-0296' : la.name.includes('정현일') ? '010-3345-8912' : '010-0000-0000',
+      mobile,
+      telephone: la.telephone || '',
       email,
+      address: la.address || '',
+      birthDate: la.birthDate || '',
+      education: la.education || '',
+      major: la.major || '',
+      agency: la.agency || '',
+      regDate: la.regDate || '',
       grade,
-      status: '활동',
+      status: (la.status === '위촉' || !la.status) ? '활동' : '휴식',
       affiliation,
       isSystemAdmin: la.name.includes('남경호'),
-      iafCodes: la.name.includes('남경호') 
-        ? ['17 (기계/금속)', '28 (건설/토목)', '33 (정보기술)', '35 (전문서비스)'] 
-        : ['17 (기계/금속)', '28 (건설/토목)'],
+      iafCodes,
+      iafDetails: la.iafDetails || [],
+      qualifications: la.qualifications || [],
       registeredStandards: regStandards.length > 0 ? regStandards : ['ISO 9001:2015'],
       contractExpiryDate: la.period ? la.period : '2028-12-31',
       activeClientCount: la.name.includes('남경호') ? 85 : la.name.includes('정현일') ? 52 : la.name.includes('김홍덕') ? 18 : Math.floor(Math.random() * 15) + 3,

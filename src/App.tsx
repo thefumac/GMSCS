@@ -898,41 +898,86 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-cyan-500 selection:text-white">
-      {/* Global Hierarchical Navigation Bar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={(tab) => {
-          navigateTo(tab, activeCategory, {
-            isEditingReport: tab === 'reports' ? false : isEditingReport
-          });
-        }}
-        activeCategory={activeCategory}
-        setActiveCategory={(cat) => {
-          setActiveCategory(cat);
-        }}
-        urgentAlertCount={urgentCount}
-        currentUserRole={currentUserRole}
-        onSelectUserRole={(role) => {
-          setCurrentUserRole(role);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('gmscs_role', role);
-          }
-          const aud = auditors.find(a => a.id === role);
-          const isLoginStaff = aud?.isSystemAdmin || aud?.affiliation === '상근' || role === 'admin';
-          if (!isLoginStaff) {
-            navigateTo('portal', 'auditor-mgmt', { isEditingReport: false, replace: true });
-          } else {
-            navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
-          }
-        }}
-        allAuditors={auditors}
-        pendingAdjustmentCount={pendingAdjustmentCount}
-        pendingCommitteeCount={pendingCommitteeCount}
-        pendingSecretariatReviewCount={pendingSecretariatReviewCount}
-        onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
-        onOpenProfileModal={() => setIsProfileModalOpen(true)}
-        onLogout={handleLogout}
-      />
+      {/* Global Hierarchical Navigation Bar - 심사원 포털에서는 숨기고 전용 헤더 표시 */}
+      {activeTab === 'portal' ? (
+        /* 심사원 개인 포털 전용 헤더: 사무국 메뉴 완전 제거, 간결한 전용 타이틀만 표시 */
+        <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-xs">
+          <div className="w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4">
+            <div className="flex items-center justify-between h-14">
+              <div className="flex items-center space-x-3">
+                <img src="/gmscs_logo.png" alt="GMSCS 로고" className="h-9 w-9 object-contain" />
+                <div className="h-6 w-px bg-slate-300 hidden sm:block" />
+                <h1 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight">
+                  GMSCS 인증원 심사원 개인별 심사관리
+                </h1>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="text-[13px] font-bold text-slate-700">
+                  {currentAuditorObj.name} {currentAuditorObj.grade || '심사원'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="text-[12px] text-cyan-700 hover:text-cyan-900 font-semibold transition cursor-pointer"
+                >
+                  내 정보
+                </button>
+                {isStaff && (
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('calendar', 'audit')}
+                    className="text-[12px] text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer"
+                  >
+                    사무국 화면
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="text-[12px] text-rose-500 hover:text-rose-700 font-semibold transition cursor-pointer"
+                >
+                  로그아웃
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            navigateTo(tab, activeCategory, {
+              isEditingReport: tab === 'reports' ? false : isEditingReport
+            });
+          }}
+          activeCategory={activeCategory}
+          setActiveCategory={(cat) => {
+            setActiveCategory(cat);
+          }}
+          urgentAlertCount={urgentCount}
+          currentUserRole={currentUserRole}
+          onSelectUserRole={(role) => {
+            setCurrentUserRole(role);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('gmscs_role', role);
+            }
+            const aud = auditors.find(a => a.id === role);
+            const isLoginStaff = aud?.isSystemAdmin || aud?.affiliation === '상근' || role === 'admin';
+            if (!isLoginStaff) {
+              navigateTo('portal', 'auditor-mgmt', { isEditingReport: false, replace: true });
+            } else {
+              navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
+            }
+          }}
+          allAuditors={auditors}
+          pendingAdjustmentCount={pendingAdjustmentCount}
+          pendingCommitteeCount={pendingCommitteeCount}
+          pendingSecretariatReviewCount={pendingSecretariatReviewCount}
+          onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
+          onOpenProfileModal={() => setIsProfileModalOpen(true)}
+          onLogout={handleLogout}
+        />
+      )}
 
       {/* Main Container - Aligned with Navbar Width */}
       <main className="flex-1 w-[96%] sm:w-[92%] lg:w-[90%] mx-auto max-w-[1850px] px-2 sm:px-4 py-4">
