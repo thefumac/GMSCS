@@ -719,29 +719,88 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
               </button>
             </div>
 
-            {/* Quick Auditor Overview (규격별 선임여부 / 코드 / 총관리기업수) */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-lg border border-slate-200 shrink-0">
+            {/* Quick Auditor Overview (컴팩트 규격 뱃지 칩 / IAF 코드 / 정산방식 / 관리기업수) */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shrink-0 space-y-3 text-xs">
+              {/* Row 1: 심사 가능 규격 컴팩트 뱃지 나열 (다규격 심사원도 공간 낭비 없이 2~3줄 내 완벽 정리) */}
               <div>
-                <span className="text-slate-500 font-medium block">심사 가능 규격별 등급</span>
-                <div className="font-bold text-slate-800 space-y-0.5 mt-1">
-                  <div>QMS: {selectedAuditor.registeredStandards.some(s => s.includes('9001')) ? (selectedAuditor.grade.includes('선임') ? '선임심사원' : '정심사원') : '--'}</div>
-                  <div>EMS: {selectedAuditor.registeredStandards.some(s => s.includes('14001')) ? (selectedAuditor.grade.includes('선임') ? '선임심사원' : '정심사원') : '--'}</div>
-                  <div>OHS: {selectedAuditor.registeredStandards.some(s => s.includes('45001')) ? (selectedAuditor.grade.includes('선임') ? '선임심사원' : '정심사원') : '--'}</div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-slate-600 font-bold flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-blue-600" />
+                    보유 심사 규격 및 등급 ({selectedAuditor.registeredStandards?.length || 0}개)
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    * 인디고: 선임심사원 / 에메랄드: 정심사원 / 슬레이트: 심사원보
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {(selectedAuditor.registeredStandards || ['ISO 9001:2015']).map(std => {
+                    const mappedGrade = selectedAuditor.standardGrades?.[std] 
+                      || (selectedAuditor.grade?.includes('선임') ? '선임심사원' : '정심사원');
+                    const isLead = mappedGrade.includes('선임');
+                    const isRegular = mappedGrade.includes('정');
+                    return (
+                      <span 
+                        key={std}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-[11px] font-normal shadow-2xs ${
+                          isLead 
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-900'
+                            : isRegular
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                            : 'bg-slate-100 border-slate-300 text-slate-700'
+                        }`}
+                        title={`${std} - ${mappedGrade}`}
+                      >
+                        <span>{std.split(':')[0]}</span>
+                        <span className={`px-1 py-0.2 rounded text-[9.5px] font-medium ${
+                          isLead ? 'bg-indigo-600 text-white' : isRegular ? 'bg-emerald-600 text-white' : 'bg-slate-500 text-white'
+                        }`}>
+                          {mappedGrade}
+                        </span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
-              <div className="sm:col-span-2">
-                <span className="text-slate-500 font-medium block">심사 가능 IAF 코드</span>
-                <span className="font-bold font-mono text-slate-800 leading-relaxed block mt-1">
-                  {selectedAuditor.iafCodes.join(', ') || '17 (기계/금속), 28 (건설/토목)'}
-                </span>
-                <div className="text-slate-500 font-mono text-[11px] mt-1.5">
-                  연락처: {selectedAuditor.mobile} | {selectedAuditor.email}
+
+              {/* Row 2: IAF 코드, 연락처, 심사비 정산방식 & 입금계좌 */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200/80">
+                <div>
+                  <span className="text-slate-500 font-medium block">심사 가능 IAF 코드</span>
+                  <span className="font-bold font-mono text-slate-800 block mt-0.5 leading-tight">
+                    {selectedAuditor.iafCodes?.join(', ') || '17 (기계/금속), 28 (건설/토목)'}
+                  </span>
+                  <div className="text-slate-500 font-mono text-[11px] mt-1">
+                    {selectedAuditor.mobile} | {selectedAuditor.email}
+                  </div>
                 </div>
-              </div>
-              <div className="sm:text-right flex flex-col justify-between">
-                <span className="text-slate-500 font-medium block">총 관리 고객사 수</span>
-                <div className="text-2xl font-black font-mono text-blue-900 mt-1">
-                  {getCompaniesForAuditor(selectedAuditor).length}개사
+
+                <div>
+                  <span className="text-slate-500 font-medium block">심사비 지급방식 & 입금계좌</span>
+                  <div className="mt-0.5 space-y-0.5">
+                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10.5px] font-bold ${
+                      selectedAuditor.payoutMethod === '세금계산서'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {selectedAuditor.payoutMethod === '세금계산서' ? '세금계산서 (개인사업자)' : '3.3% 원천징수 (프리랜서)'}
+                    </span>
+                    {selectedAuditor.businessNumber && (
+                      <div className="text-slate-600 font-mono text-[11px]">
+                        사업자: {selectedAuditor.businessNumber} ({selectedAuditor.businessName || '개인사업자'})
+                      </div>
+                    )}
+                    <div className="text-slate-700 font-mono text-[11px]">
+                      계좌: {selectedAuditor.bankAccount || `${selectedAuditor.bankName || '신한'} ${selectedAuditor.accountNumber || '등록필요'}`}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sm:text-right flex flex-col justify-between">
+                  <span className="text-slate-500 font-medium block">총 관리 고객사</span>
+                  <div className="text-2xl font-black font-mono text-blue-900">
+                    {getCompaniesForAuditor(selectedAuditor).length}개사
+                  </div>
                 </div>
               </div>
             </div>
@@ -768,11 +827,11 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
 
             {/* Managed Companies Table List */}
             <div className="border border-slate-300 rounded-lg overflow-hidden flex-1 overflow-y-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 sticky top-0">
+              <table className="w-full text-left text-[13px] border-collapse">
+                <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-300 sticky top-0 text-[13px]">
                   <tr>
                     <th className="py-2.5 px-3 border-r border-slate-200 text-center w-12 whitespace-nowrap">No</th>
-                    <th className="py-2.5 px-3 border-r border-slate-200 w-44 whitespace-nowrap">기업명</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 w-48 whitespace-nowrap">기업명</th>
                     <th className="py-2.5 px-3 border-r border-slate-200 min-w-[240px]">인증표준 (인증번호)</th>
                     <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16 whitespace-nowrap">IAF</th>
                     <th className="py-2.5 px-3 border-r border-slate-200 text-center w-28 whitespace-nowrap">이전 심사 성격</th>
@@ -791,24 +850,24 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                       const { auditType, nextDue } = getAuditStageAndNextDue(comp, cIdx);
                       return (
                         <tr key={comp.id || cIdx} className="hover:bg-blue-50/40 transition">
-                          <td className="py-2.5 px-3 border-r border-slate-200 text-center text-slate-500 font-mono text-[11px] whitespace-nowrap">
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center text-slate-500 font-mono text-xs whitespace-nowrap">
                             {cIdx + 1}
                           </td>
-                          <td className="py-2.5 px-3 border-r border-slate-200 font-bold text-slate-900 whitespace-nowrap">
+                          <td className="py-2.5 px-3 border-r border-slate-200 font-semibold text-[14px] text-slate-900 whitespace-nowrap">
                             {comp.companyName}
                           </td>
                           <td className="py-2.5 px-3 border-r border-slate-200 text-slate-800">
-                            <span className="font-mono text-[11.5px] leading-relaxed">
+                            <span className="font-mono text-[12.5px] leading-relaxed">
                               {formatStandardsWithCert(comp.standards, comp.certNo)}
                             </span>
                           </td>
-                          <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-700 whitespace-nowrap">
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono text-slate-700 font-normal whitespace-nowrap">
                             {comp.iafCode || '--'}
                           </td>
-                          <td className="py-2.5 px-3 border-r border-slate-200 text-center font-medium text-slate-800 whitespace-nowrap">
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center font-normal text-slate-700 whitespace-nowrap">
                             {auditType}
                           </td>
-                          <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-900 whitespace-nowrap">
+                          <td className="py-2.5 px-3 text-center font-mono font-normal text-slate-800 whitespace-nowrap">
                             {nextDue}
                           </td>
                         </tr>

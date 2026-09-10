@@ -59,15 +59,17 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
     }
   };
 
-  // 심사 일정 매핑
+  // 심사 일정 매핑 (해당 심사의 각 일자에 기업명 표시)
   const projectsByDate = useMemo(() => {
     const map: Record<string, AuditProject[]> = {};
     projects.forEach(p => {
-      if (p.startDate) {
-        const dateKey = p.startDate; // YYYY-MM-DD
+      const datesToMap = p.auditDates && p.auditDates.length > 0 ? p.auditDates : (p.startDate ? [p.startDate] : []);
+      datesToMap.forEach(dateKey => {
         if (!map[dateKey]) map[dateKey] = [];
-        map[dateKey].push(p);
-      }
+        if (!map[dateKey].some(item => item.id === p.id)) {
+          map[dateKey].push(p);
+        }
+      });
     });
     return map;
   }, [projects]);
@@ -267,29 +269,18 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
                 </div>
 
                 {/* Day Project Chips (클릭 시 심사 이력 팝업 열기) */}
+                {/* Day Project Chips (심사업체명만 표시, 클릭 시 심사 상세 및 이력 팝업 열기) */}
                 <div className="space-y-1 overflow-y-auto max-h-[85px] no-scrollbar">
-                  {dayProjects.map((proj) => {
-                    const statusColor = 
-                      proj.status === '서명완료' || proj.status === '인증발행' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                      proj.status === '사무국검토대기' ? 'bg-amber-100 text-amber-900 border-amber-400' :
-                      proj.status === '심사진행중' ? 'bg-blue-100 text-blue-800 border-blue-300' :
-                      'bg-slate-100 text-slate-700 border-slate-300';
-
-                    return (
-                      <div
-                        key={proj.id}
-                        onClick={() => handleProjectClick(proj)}
-                        className={`p-1.5 rounded-lg border text-[11px] cursor-pointer hover:scale-[1.02] transition-transform shadow-2xs ${statusColor}`}
-                        title="클릭 시 해당 기업의 전체 심사이력을 확인합니다."
-                      >
-                        <div className="font-bold truncate">🏢 {proj.companyName}</div>
-                        <div className="text-[10px] flex items-center justify-between opacity-80 mt-0.5">
-                          <span>{proj.leadAuditorName || '심사팀장'}</span>
-                          <span className="font-mono">{proj.appliedMd}MD</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {dayProjects.map((proj) => (
+                    <div
+                      key={proj.id}
+                      onClick={() => handleProjectClick(proj)}
+                      className="px-1.5 py-1 rounded bg-slate-50 hover:bg-sky-50 text-slate-800 hover:text-sky-900 border border-slate-200 hover:border-sky-300 text-[11px] font-semibold truncate cursor-pointer transition shadow-2xs leading-tight"
+                      title={`${proj.companyName} (클릭하여 심사상세 및 이력 확인)`}
+                    >
+                      {proj.companyName}
+                    </div>
+                  ))}
                 </div>
               </div>
             );

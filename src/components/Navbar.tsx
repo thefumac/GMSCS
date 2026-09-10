@@ -18,7 +18,9 @@ import {
   LogOut,
   Megaphone,
   Briefcase,
-  FolderLock
+  FolderLock,
+  User,
+  Edit3
 } from 'lucide-react';
 import { Auditor } from '../types';
 
@@ -61,6 +63,7 @@ interface NavbarProps {
   pendingCommitteeCount?: number;
   pendingSecretariatReviewCount?: number;
   onOpenEmailModal: () => void;
+  onOpenProfileModal?: () => void;
   onLogout?: () => void;
 }
 
@@ -71,11 +74,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveCategory,
   urgentAlertCount,
   currentUserRole,
+  onSelectUserRole,
   allAuditors,
   pendingAdjustmentCount = 1,
   pendingCommitteeCount = 2,
   pendingSecretariatReviewCount = 0,
   onOpenEmailModal,
+  onOpenProfileModal,
   onLogout
 }) => {
   const currentAuditorObj = allAuditors.find(a => a.id === currentUserRole) || allAuditors[0];
@@ -128,21 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     onClick?: () => void;
   }
 
-  const subMenus: Record<MainCategory, SubMenuItem[]> = isRegularAuditor ? {
-    'auditor-mgmt': [
-      { id: 'portal', label: '나의 관리 대상 기업 목록 (다가올 심사 순)', icon: UserCheck },
-    ],
-    'audit': [
-      { id: 'reports', label: '나의 심사보고서 (작성 및 전자서명)', icon: FileText },
-      { id: 'email-dispatch', label: '심사계획서/공문 메일 발송', icon: Mail, onClick: onOpenEmailModal },
-    ],
-    'general-admin': [
-      { id: 'finance', label: '나의 심사비 정산 명세서 (3.3% 원천징수)', icon: DollarSign },
-    ],
-    'certification': currentAuditorObj.isCommitteeMember ? [
-      { id: 'committee', label: '인증심의위원회 안건 의결', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' }
-    ] : [],
-  } : {
+  const subMenus: Record<MainCategory, SubMenuItem[]> = {
     'certification': [
       { id: 'companies', label: '고객사 인증현황 (572개사 전수)', icon: Building2 },
       { id: 'committee', label: '인증심의위원회', icon: Award, badge: pendingCommitteeCount, badgeColor: 'bg-indigo-600' },
@@ -150,28 +141,26 @@ export const Navbar: React.FC<NavbarProps> = ({
       { id: 'kab', label: 'KAB 인정기관 관리 (공인기준·MD)', icon: Calculator },
     ],
     'audit': [
-      { id: 'calendar', label: '월간 심사 일정 (달력 & 핵심지표)', icon: Calendar },
-      { id: 'contracts', label: '심사 계약 관리 (신규·유지·추가·변경)', icon: FileCheck, badge: pendingAdjustmentCount, badgeColor: 'bg-amber-600' },
+      { id: 'calendar', label: '심사일정 달력', icon: Calendar },
+      { id: 'projects', label: '심사진행현황', icon: CheckCircle2 },
+      { id: 'contracts', label: '심사계약 관리', icon: FileCheck, badge: pendingAdjustmentCount, badgeColor: 'bg-amber-600' },
       { 
         id: 'reports', 
-        label: '심사 보고서 관리 (적정성 검토·정산)', 
+        label: '심사보고서 관리', 
         icon: FileText, 
         badge: pendingSecretariatReviewCount && pendingSecretariatReviewCount > 0 ? pendingSecretariatReviewCount : undefined, 
         badgeColor: 'bg-amber-500' 
       },
-      { id: 'projects', label: '심사 진행현황 & 계획서', icon: CheckCircle2 },
-      { id: 'integrations', label: 'OK ESG & ISO-Record 연동', icon: Layers },
-      { id: 'email-dispatch', label: '스마트 메일 발송 센터', icon: Mail, onClick: onOpenEmailModal },
+      { id: 'email-dispatch', label: '메일 발송 센터', icon: Mail, onClick: onOpenEmailModal },
     ],
     'auditor-mgmt': [
-      { id: 'auditors', label: '심사원 자격·코드·심의위원 관리 (36명)', icon: Users },
-      { id: 'portal', label: '심사원 전용 포털 (배정업체·일정·이해상충)', icon: UserCheck },
+      { id: 'auditors', label: '심사원 자격·코드 관리 (36명)', icon: Users },
+      { id: 'portal', label: '심사원별 목록 (포털)', icon: UserCheck },
     ],
     'general-admin': [
-      { id: 'finance', label: '재무관리 (심사비용 수납 & 심사원 정산원장)', icon: DollarSign },
-      { id: 'data', label: '자료관리 (주서버 & 외장 USB 백업·설정)', icon: HardDrive },
-      { id: 'notices', label: '심사원 공지사항 (공지 등록·서식 배포)', icon: Megaphone },
-      { id: 'email-dispatch', label: '스마트 메일 발송 센터', icon: Mail, onClick: onOpenEmailModal },
+      { id: 'finance', label: '재무관리 (수납 및 정산)', icon: DollarSign },
+      { id: 'notices', label: '심사원 공지사항', icon: Megaphone },
+      { id: 'data', label: '자료관리 (백업 및 설정)', icon: HardDrive },
     ]
   };
 
@@ -184,7 +173,24 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const currentSubItems = subMenus[activeCategory] || [];
+  const regularAuditorItems: SubMenuItem[] = [
+    { id: 'calendar', label: '심사일정 달력', icon: Calendar },
+    { id: 'portal', label: '나의 관리 대상 기업 목록', icon: UserCheck },
+    { id: 'reports', label: '나의 심사보고서 (작성 및 서명)', icon: FileText },
+    { id: 'finance', label: '나의 심사비 정산 명세서 (3.3% 원천징수)', icon: DollarSign },
+    { id: 'email-dispatch', label: '심사계획서/공문 메일 발송', icon: Mail, onClick: onOpenEmailModal },
+  ];
+  if (currentAuditorObj?.isCommitteeMember) {
+    regularAuditorItems.push({
+      id: 'committee',
+      label: '인증심의위원회 안건 의결',
+      icon: Award,
+      badge: pendingCommitteeCount,
+      badgeColor: 'bg-indigo-600'
+    });
+  }
+
+  const currentSubItems = isRegularAuditor ? regularAuditorItems : (subMenus[activeCategory] || []);
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">
@@ -223,19 +229,69 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Right: Current User Info + Logout Button */}
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-full shadow-2xs">
-                {currentAuditorObj?.isSystemAdmin ? (
-                  <span className="text-amber-600 font-bold text-xs flex items-center gap-1">
-                    👑 {currentAuditorObj.name} (상근)
-                  </span>
+            {/* Right: Mode Switcher + Current User Info + Logout */}
+            <div className="flex items-center space-x-2.5">
+              {/* 사무국(관리자) vs 심사원 포털 1클릭 전환 버튼 */}
+              {isStaff ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const kim = allAuditors.find(a => a.name.includes('김홍덕')) || allAuditors[2];
+                    onSelectUserRole(kim.id);
+                  }}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-cyan-800 border border-slate-300 hover:border-cyan-300 text-xs font-medium transition cursor-pointer shadow-2xs"
+                  title="김홍덕 심사원 전용 포털 화면으로 전환"
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-cyan-700" />
+                  <span>심사원 포털 보기</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectUserRole('admin');
+                  }}
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-700 to-blue-700 hover:from-cyan-600 hover:to-blue-600 text-white shadow-xs text-xs font-semibold transition cursor-pointer"
+                  title="인증원 총괄 사무국(관리자) 화면으로 전환"
+                >
+                  <Building2 className="w-3.5 h-3.5 text-white" />
+                  <span>사무국 화면 보기</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={onOpenProfileModal}
+                title="클릭하여 개인 정보, 심사비 지급방식(세금계산서/원천징수), 계좌, 자격현황을 수정합니다."
+                className="flex items-center space-x-2 bg-slate-50 hover:bg-blue-50 border border-slate-300 hover:border-blue-400 px-3.5 py-1.5 rounded-full shadow-2xs transition group cursor-pointer text-left ring-0 hover:ring-2 hover:ring-blue-400/20"
+              >
+                {/* Photo or Default Avatar */}
+                {currentAuditorObj?.photoUrl ? (
+                  <img
+                    src={currentAuditorObj.photoUrl}
+                    alt={currentAuditorObj.name}
+                    className="w-5 h-5 rounded-full object-cover ring-1 ring-blue-500 shrink-0"
+                  />
                 ) : (
-                  <span className="text-slate-800 font-bold text-xs flex items-center gap-1">
-                    👤 {currentAuditorObj?.name} ({currentAuditorObj?.grade} · {currentAuditorObj?.affiliation === '상근' ? '상근' : '비상근'})
+                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] shrink-0">
+                    {currentAuditorObj?.isSystemAdmin ? '👑' : <User className="w-3 h-3 text-slate-600" />}
                   </span>
                 )}
-              </div>
+
+                {currentAuditorObj?.isSystemAdmin ? (
+                  <span className="text-amber-700 font-medium text-xs group-hover:text-amber-800">
+                    {currentAuditorObj.name} (상근)
+                  </span>
+                ) : (
+                  <span className="text-slate-700 font-medium text-xs group-hover:text-blue-900">
+                    {currentAuditorObj?.name} ({currentAuditorObj?.grade} · {currentAuditorObj?.affiliation === '상근' ? '상근' : '비상근'})
+                  </span>
+                )}
+
+                <span className="p-0.5 rounded-full bg-slate-200/80 group-hover:bg-blue-200 text-slate-500 group-hover:text-blue-700 transition ml-1" title="개인정보 및 지급방식 수정">
+                  <Edit3 className="w-2.5 h-2.5" />
+                </span>
+              </button>
 
               {/* Logout Button */}
               {onLogout && (
@@ -308,9 +364,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 3. 하위 메뉴 영역 (Tier-2 Sub Navigation Bar - 상근 4인 전용) */}
+      {/* 3. 하위 메뉴 영역 (Tier-2 Sub Navigation Bar - 상근 및 심사원 공통 지원) */}
       {/* ========================================================================= */}
-      {isStaff && currentSubItems.length > 0 && (
+      {currentSubItems.length > 0 && (
         <div className="bg-slate-100/90 border-b border-slate-200 shadow-2xs">
           <div className="w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4 py-2">
             <nav className="flex space-x-1.5 overflow-x-auto no-scrollbar text-xs">

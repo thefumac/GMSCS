@@ -60,13 +60,14 @@ function getStandardsWithCertNo(comp: Company, contract?: CertContract): { std: 
     stds = contract.standards;
   } else if (compAny.standards) {
     stds = typeof compAny.standards === 'string' 
-      ? compAny.standards.split(',').map((s: string) => s.trim()) 
+      ? compAny.standards.split(/[/,;]+/).map((s: string) => s.trim()) 
       : compAny.standards;
   }
 
   const baseCert = contract?.certNumber || compAny.certNo || 'Q260101';
 
-  return stds.map((s: string, idx: number) => {
+  return stds.map((rawS: string, idx: number) => {
+    const s = rawS.replace(/\s*\((?:QMS|EMS|OHS|ISMS|품질|환경|안전보건|안전)\)/gi, '').trim();
     let prefix = 'Q';
     if (s.includes('14001')) prefix = 'E';
     else if (s.includes('45001')) prefix = 'O';

@@ -67,6 +67,44 @@ export interface CompanyWithStatus {
 }
 
 // 심사 일정 단위 행 인터페이스
+// 불필요한 약어 (QMS, EMS, OHS 등) 제거 헬퍼
+export function cleanStandardName(std: string): string {
+  if (!std) return '';
+  return std.replace(/\s*\((?:QMS|EMS|OHS|ISMS|품질|환경|안전보건|안전)\)/gi, '').trim();
+}
+
+// 사무국 공인 최신 규격 버전 기본값 (ISO 14001: 2026 기본 반영)
+export const DEFAULT_OFFICIAL_STANDARD_VERSIONS: Record<string, string> = {
+  'ISO 9001': '2015',
+  'ISO 14001': '2026', // 사용자 지정: 14001은 2026
+  'ISO 45001': '2018',
+  'ISO 27001': '2022',
+  'ISO 50001': '2018',
+  'ISO 22000': '2018',
+  'ESG-MS': '2023',
+  'ISO 13485': '2016',
+};
+
+// 구버전 규격 감지 헬퍼 (구버전일 경우 빨간색 강조)
+export function checkOutdatedStandard(stdStr: string, officialVersions: Record<string, string>): {
+  isOutdated: boolean;
+  stdKey: string;
+  currentVersion: string;
+  officialVersion: string;
+} {
+  const cleaned = cleanStandardName(stdStr);
+  const match = cleaned.match(/^([A-Za-z0-9\s-]+):(\d{4})/);
+  if (match) {
+    const stdKey = match[1].trim();
+    const currentVer = match[2];
+    const officialVer = officialVersions[stdKey];
+    if (officialVer && parseInt(currentVer, 10) < parseInt(officialVer, 10)) {
+      return { isOutdated: true, stdKey, currentVersion: currentVer, officialVersion: officialVer };
+    }
+  }
+  return { isOutdated: false, stdKey: '', currentVersion: '', officialVersion: '' };
+}
+
 // 심사일정이 같으면 1개 행으로 통합되고, 일정이 다르면 별개 행으로 관리되며 각자의 진행상태를 가짐
 export interface AuditScheduleRow {
   rowId: string;
@@ -76,6 +114,7 @@ export interface AuditScheduleRow {
   bizNumber: string;
   companyWithStatus: CompanyWithStatus;
   standardsText: string;
+  standardsList: string[]; // 개별 규격 리스트
   certNo: string;
   iafCode: string;
   stageText: '1차 사후' | '2차 사후' | '갱신';
@@ -85,6 +124,11 @@ export interface AuditScheduleRow {
   consultant: string;
   auditState: AuditLifecycleState;
   isIntegrated: boolean; // 통합심사 여부
+  // 신규 필드 (협력기관 대체 및 구버전 감지)
+  recentAuditDate: string; // 최근 심사일/기간 (예: "2025-09-24 ~ 09-25")
+  auditMd: number; // 심사 공수 (MD)
+  hasOutdatedStandard: boolean; // 구버전 규격 포함 여부 (인증번호 빨간색)
+  outdatedStandardsList: string[]; // 구버전 목록
 }
 
 interface AuditorPortalProps {
@@ -286,7 +330,7 @@ const COMPANY_CERT_SCHEDULES: Record<string, CertScheduleItem[]> = {
   // 동원시스템즈: 9001 (Q230020) & 45001 (23-F-1123) 동일 일정(2026-09-23) 통합심사 -> 1개 행 (D-13일 심사준비)
   '동원시스템즈': [
     {
-      standards: ['ISO 9001:2015 (QMS)', 'ISO 45001:2018'],
+      standards: ['ISO 9001:2015', 'ISO 45001:2018'],
       certNos: ['Q230020', '23-F-1123'],
       iafCode: '14',
       stageText: '1차 사후',
@@ -373,7 +417,7 @@ type SortField =
   | 'stageText'
   | 'dueDate'
   | 'auditorRole'
-  | 'consultant';
+  | 'recentAuditDate';
 
 export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   currentAuditor,
@@ -412,6 +456,31 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
 
   // 사무국 심사준비 일수 변수 (2차 사후 후 120일, 그 외 90일)
   const [prepConfig] = useState<AuditPrepThresholdConfig>(DEFAULT_AUDIT_PREP_CONFIG);
+
+  // 사무국 공인 최신 규격 버전 관리 상태 (기본: ISO 14001은 2026)
+  const [officialVersions, setOfficialVersions] = useState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('gmscs_official_standard_versions');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to load official standard versions', e);
+      }
+    }
+    return DEFAULT_OFFICIAL_STANDARD_VERSIONS;
+  });
+
+  const [isVersionModalOpen, setIsVersionModalOpen] = useState<boolean>(false);
+
+  const handleUpdateOfficialVersion = (stdKey: string, newYear: string) => {
+    setOfficialVersions(prev => {
+      const next = { ...prev, [stdKey]: newYear.trim() };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('gmscs_official_standard_versions', JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
   // 정렬
   const [sortField, setSortField] = useState<SortField>('auditState');
@@ -541,6 +610,38 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           const auditState = computeAuditState(dday.days, sch.stageText, project, prepConfig, compName);
           const isIntegrated = sch.standards.length > 1;
 
+          // 규격명 정제 및 구버전 감지
+          const standardsList = sch.standards.map(s => cleanStandardName(s));
+          const hasOutdated = standardsList.some(s => checkOutdatedStandard(s, officialVersions).isOutdated);
+          const outdatedList = standardsList
+            .filter(s => checkOutdatedStandard(s, officialVersions).isOutdated)
+            .map(s => {
+              const ch = checkOutdatedStandard(s, officialVersions);
+              return `${ch.stdKey} (${ch.officialVersion} 전환대상)`;
+            });
+
+          // 최근 심사일/기간 및 MD 공수 산출
+          let recentAuditDate = '2025-10-15';
+          if (project?.startDate) {
+            recentAuditDate = project.endDate && project.endDate !== project.startDate
+              ? `${project.startDate} ~ ${project.endDate.slice(5)}`
+              : project.startDate;
+          } else {
+            // 차기일자 1년 전 날짜 추정
+            try {
+              const dParts = sch.dueDate.split('-');
+              if (dParts.length === 3) {
+                const prevYear = parseInt(dParts[0], 10) - 1;
+                const endDay = String(Math.min(28, parseInt(dParts[2], 10) + 1)).padStart(2, '0');
+                recentAuditDate = `${prevYear}-${dParts[1]}-${dParts[2]} ~ ${dParts[1]}-${endDay}`;
+              }
+            } catch {
+              recentAuditDate = '2025-10-15 ~ 10-16';
+            }
+          }
+
+          const auditMd = standardsList.length >= 3 ? 3.0 : standardsList.length === 2 ? 2.5 : 2.0;
+
           rows.push({
             rowId: `${company.id}-sch-${sIdx}`,
             companyId: company.id,
@@ -548,7 +649,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             ceoName: company.ceoName,
             bizNumber: company.bizNumber,
             companyWithStatus: compStatus,
-            standardsText: sch.standards.join(', '),
+            standardsText: standardsList.join(', '),
+            standardsList,
             certNo: sch.certNos.join(' / '),
             iafCode: sch.iafCode,
             stageText: sch.stageText,
@@ -557,7 +659,11 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             auditorRole,
             consultant,
             auditState,
-            isIntegrated
+            isIntegrated,
+            recentAuditDate,
+            auditMd,
+            hasOutdatedStandard: hasOutdated,
+            outdatedStandardsList: outdatedList
           });
         });
       } else {
@@ -566,6 +672,30 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
         const dday = calculateDDay(dueDate);
         const auditState = computeAuditState(dday.days, stageText, project, prepConfig, compName);
 
+        const rawStdStr = (company as any).standards || 'ISO 9001:2015';
+        const standardsList = rawStdStr.split(/[/,;]+/).map((s: string) => cleanStandardName(s)).filter(Boolean);
+        const hasOutdated = standardsList.some((s: string) => checkOutdatedStandard(s, officialVersions).isOutdated);
+        const outdatedList = standardsList
+          .filter((s: string) => checkOutdatedStandard(s, officialVersions).isOutdated)
+          .map((s: string) => {
+            const ch = checkOutdatedStandard(s, officialVersions);
+            return `${ch.stdKey} (${ch.officialVersion} 전환대상)`;
+          });
+
+        let recentAuditDate = '2025-11-18 ~ 11-19';
+        try {
+          const dParts = dueDate.split('-');
+          if (dParts.length === 3) {
+            const prevYear = parseInt(dParts[0], 10) - 1;
+            const endDay = String(Math.min(28, parseInt(dParts[2], 10) + 1)).padStart(2, '0');
+            recentAuditDate = `${prevYear}-${dParts[1]}-${dParts[2]} ~ ${dParts[1]}-${endDay}`;
+          }
+        } catch {
+          recentAuditDate = '2025-11-18 ~ 11-19';
+        }
+
+        const auditMd = standardsList.length >= 3 ? 3.0 : standardsList.length === 2 ? 2.5 : 2.0;
+
         rows.push({
           rowId: `${company.id}-default`,
           companyId: company.id,
@@ -573,7 +703,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           ceoName: company.ceoName,
           bizNumber: company.bizNumber,
           companyWithStatus: compStatus,
-          standardsText: (company as any).standards || 'ISO 9001:2015',
+          standardsText: standardsList.join(', '),
+          standardsList,
           certNo: (company as any).certNo || contract?.certNumber || 'Q240236',
           iafCode: company.iafCode || '14',
           stageText,
@@ -582,13 +713,17 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           auditorRole,
           consultant,
           auditState,
-          isIntegrated: false
+          isIntegrated: standardsList.length > 1,
+          recentAuditDate,
+          auditMd,
+          hasOutdatedStandard: hasOutdated,
+          outdatedStandardsList: outdatedList
         });
       }
     });
 
     return rows;
-  }, [companies, myCompanyIds, contracts, projects, currentAuditor, prepConfig, allCompanyItems]);
+  }, [companies, myCompanyIds, contracts, projects, currentAuditor, prepConfig, allCompanyItems, officialVersions]);
 
   // 4. 상단 핵심 지표 계산 (규격명 표준화)
   const totalCompanyCount = useMemo(() => {
@@ -689,10 +824,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           return sortAsc
             ? a.auditorRole.localeCompare(b.auditorRole)
             : b.auditorRole.localeCompare(a.auditorRole);
-        case 'consultant':
+        case 'recentAuditDate':
           return sortAsc
-            ? a.consultant.localeCompare(b.consultant)
-            : b.consultant.localeCompare(a.consultant);
+            ? a.recentAuditDate.localeCompare(b.recentAuditDate)
+            : b.recentAuditDate.localeCompare(a.recentAuditDate);
         default:
           return sortAsc
             ? a.dueDate.localeCompare(b.dueDate)
@@ -1287,6 +1422,20 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 <option value="14001">ISO 14001</option>
                 <option value="45001">ISO 45001</option>
               </select>
+
+              {/* 사무국 최신 규격 버전 관리 버튼 */}
+              <button
+                type="button"
+                onClick={() => setIsVersionModalOpen(true)}
+                className="flex items-center gap-1.5 py-1.5 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition cursor-pointer shadow-2xs hover:border-slate-400"
+                title="사무국 인증원 공인 최신 규격 버전(년도) 설정"
+              >
+                <Sliders className="w-3.5 h-3.5 text-cyan-700" />
+                <span>규격 버전 관리</span>
+                <span className="px-1.5 py-0.2 rounded bg-cyan-50 text-cyan-800 text-[10.5px] font-mono border border-cyan-200">
+                  14001:{officialVersions['ISO 14001'] || '2026'}
+                </span>
+              </button>
             </div>
 
             <div className="text-[11px] text-slate-500 font-mono">
@@ -1296,24 +1445,24 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
 
           {/* 메인 심사 업체 대장 테이블 (9개 컬럼, 동일 일정 통합, 개별 일정 독립 진행상태) */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-[13.5px] border-collapse">
               <thead>
-                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 select-none text-xs">
+                <tr className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 select-none text-[13.5px]">
                   {/* 1. 진행상태 */}
                   <th
                     onClick={() => handleSort('auditState')}
-                    className="py-3 px-3 text-center min-w-[95px] cursor-pointer hover:bg-slate-200/80 transition"
+                    className="py-2.5 px-3 text-center min-w-[95px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
                   >
                     진행상태 {renderSortIcon('auditState')}
                   </th>
 
                   {/* 2. No. */}
-                  <th className="py-3 px-2 text-center w-10 text-slate-500">No</th>
+                  <th className="py-2.5 px-2 text-center w-11 text-slate-500 font-normal whitespace-nowrap">No</th>
 
                   {/* 3. 기업명 (대표자) */}
                   <th
                     onClick={() => handleSort('companyName')}
-                    className="py-3 px-3.5 min-w-[170px] cursor-pointer hover:bg-slate-200/80 transition"
+                    className="py-2.5 px-3.5 min-w-[175px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
                   >
                     기업명 (대표자) {renderSortIcon('companyName')}
                   </th>
@@ -1321,15 +1470,15 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   {/* 4. 인증규격 (인증번호) */}
                   <th
                     onClick={() => handleSort('standards')}
-                    className="py-3 px-3.5 min-w-[195px] cursor-pointer hover:bg-slate-200/80 transition"
+                    className="py-2.5 px-3.5 min-w-[210px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
                   >
                     인증규격 (인증번호) {renderSortIcon('standards')}
                   </th>
 
-                  {/* 5. 코드 (IAF) */}
+                  {/* 5. 코드 (IAF) - 줄바꿈 방지 폭 확대 및 whitespace-nowrap */}
                   <th
                     onClick={() => handleSort('iafCode')}
-                    className="py-3 px-2 text-center w-14 cursor-pointer hover:bg-slate-200/80 transition"
+                    className="py-2.5 px-2.5 text-center min-w-[80px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
                   >
                     코드 {renderSortIcon('iafCode')}
                   </th>
@@ -1337,7 +1486,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   {/* 6. 차기심사 */}
                   <th
                     onClick={() => handleSort('stageText')}
-                    className="py-3 px-2.5 text-center min-w-[85px] cursor-pointer hover:bg-slate-200/80 transition"
+                    className="py-2.5 px-2.5 text-center min-w-[90px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
                   >
                     차기심사 {renderSortIcon('stageText')}
                   </th>
@@ -1345,7 +1494,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   {/* 7. 차기심사일 */}
                   <th
                     onClick={() => handleSort('dueDate')}
-                    className="py-3 px-3 min-w-[125px] cursor-pointer hover:bg-slate-200/80 transition text-center"
+                    className="py-2.5 px-3 min-w-[130px] cursor-pointer hover:bg-slate-200/80 transition text-center whitespace-nowrap"
                   >
                     차기심사일 {renderSortIcon('dueDate')}
                   </th>
@@ -1353,24 +1502,24 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   {/* 8. 심사역할 */}
                   <th
                     onClick={() => handleSort('auditorRole')}
-                    className="py-3 px-2.5 text-center min-w-[85px] cursor-pointer hover:bg-slate-200/80 transition text-slate-800"
+                    className="py-2.5 px-2.5 text-center min-w-[90px] cursor-pointer hover:bg-slate-200/80 transition text-slate-800 whitespace-nowrap"
                   >
                     심사역할 {renderSortIcon('auditorRole')}
                   </th>
 
-                  {/* 9. 협력기관 */}
+                  {/* 9. 최근 심사일 (MD) - 협력기관 컬럼 대체 */}
                   <th
-                    onClick={() => handleSort('consultant')}
-                    className="py-3 px-3 text-center min-w-[95px] cursor-pointer hover:bg-slate-200/80 transition"
+                    onClick={() => handleSort('recentAuditDate')}
+                    className="py-2.5 px-3 text-center min-w-[175px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
                   >
-                    협력기관 {renderSortIcon('consultant')}
+                    최근 심사일 (MD) {renderSortIcon('recentAuditDate')}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {sortedRows.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="py-12 text-center text-slate-400 font-normal">
                       검색 조건에 일치하는 심사 일정이 없습니다.
                     </td>
                   </tr>
@@ -1378,76 +1527,97 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   sortedRows.map((row, idx) => (
                     <tr key={row.rowId} className="hover:bg-slate-50/80 transition">
                       {/* 1. 진행상태 (해당 심사일정의 실제 상태 표시) */}
-                      <td className="py-3 px-3 text-center align-middle">
-                        <span className={`text-[12.5px] ${getAuditStateTextClass(row.auditState)}`}>
+                      <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
+                        <span className={`text-[13px] font-medium ${getAuditStateTextClass(row.auditState)}`}>
                           {row.auditState}
                         </span>
                       </td>
 
                       {/* 2. No */}
-                      <td className="py-3 px-2 text-center font-mono text-slate-400 align-middle">
+                      <td className="py-2 px-2 text-center font-mono text-slate-400 text-xs align-middle">
                         {idx + 1}
                       </td>
 
-                      {/* 3. 기업명 (대표자) */}
-                      <td className="py-3 px-3.5 align-middle">
+                      {/* 3. 기업명 (대표자) - 기업명만 굵게 표시 */}
+                      <td className="py-2 px-3.5 align-middle">
                         <button
                           type="button"
                           onClick={() => setHistoryModalCompany(row.companyWithStatus)}
                           className="text-left group cursor-pointer"
                         >
-                          <div className="font-extrabold text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5">
+                          <div className="font-semibold text-[14.5px] text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5">
                             <span className="underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
                               {row.companyName}
                             </span>
-                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
+                            <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5">
+                          <div className="text-[12px] text-slate-500 font-normal mt-0.5">
                             {row.ceoName} 대표 {row.bizNumber ? `(${row.bizNumber})` : ''}
                           </div>
                         </button>
                       </td>
 
-                      {/* 4. 인증규격 (인증번호) - 통합심사 배지 포함 */}
-                      <td className="py-3 px-3.5 leading-snug">
-                        <div className="text-slate-800 text-[11.5px]">
+                      {/* 4. 인증규격 (인증번호) - 전환대상 규격만 빨간색/뱃지 표시, 인증번호는 검정색 유지 */}
+                      <td className="py-2 px-3.5 leading-snug align-middle">
+                        <div className="text-slate-800 text-[13px]">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-cyan-950">{row.standardsText}</span>
+                            {row.standardsList.map((std, sIdx) => {
+                              const outChk = checkOutdatedStandard(std, officialVersions);
+                              return (
+                                <span
+                                  key={sIdx}
+                                  className={`inline-flex items-center gap-1 font-normal text-[13px] ${
+                                    outChk.isOutdated ? 'text-red-600 font-semibold' : 'text-slate-800'
+                                  }`}
+                                >
+                                  <span>{cleanStandardName(std)}</span>
+                                  {outChk.isOutdated && (
+                                    <span className="px-1.5 py-0.2 rounded text-[10.5px] bg-rose-50 text-rose-600 border border-rose-200 font-medium">
+                                      {outChk.officialVersion} 전환대상
+                                    </span>
+                                  )}
+                                  {sIdx < row.standardsList.length - 1 && (
+                                    <span className="text-slate-300">,</span>
+                                  )}
+                                </span>
+                              );
+                            })}
                             {row.isIntegrated && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold shrink-0">
+                              <span className="text-[11px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-medium shrink-0">
                                 통합심사
                               </span>
                             )}
                           </div>
-                          <div className="text-slate-500 font-mono text-[10.5px] mt-0.5">
+                          {/* 인증번호는 검정색 볼드로 단정하게 표시 */}
+                          <div className="text-slate-900 font-mono text-[12.5px] mt-0.5 tracking-tight font-bold">
                             ({row.certNo})
                           </div>
                         </div>
                       </td>
 
-                      {/* 5. 코드 (IAF) */}
-                      <td className="py-3 px-2 text-center font-mono text-slate-700 font-bold text-[11.5px]">
+                      {/* 5. 코드 (IAF) - 볼드 제거, 단정한 폰트 */}
+                      <td className="py-2 px-2.5 text-center font-mono text-slate-700 font-normal text-[13px] whitespace-nowrap align-middle">
                         {row.iafCode}
                       </td>
 
-                      {/* 6. 차기심사 (갱신은 파란색) */}
-                      <td className="py-3 px-2.5 text-center whitespace-nowrap">
-                        <span className={`text-xs ${
+                      {/* 6. 차기심사 (갱신은 파란색, 볼드 제거) */}
+                      <td className="py-2 px-2.5 text-center whitespace-nowrap align-middle">
+                        <span className={`text-[13px] ${
                           row.stageText === '갱신' 
-                            ? 'text-blue-600 font-extrabold' 
-                            : 'text-slate-800 font-bold'
+                            ? 'text-blue-600 font-medium' 
+                            : 'text-slate-700 font-normal'
                         }`}>
                           {row.stageText}
                         </span>
                       </td>
 
                       {/* 7. 차기심사일 (심사준비/심사중일 때만 D-Day 표시) */}
-                      <td className="py-3 px-3 text-center">
-                        <div className="font-mono font-bold text-slate-900 text-xs">
+                      <td className="py-2 px-3 text-center whitespace-nowrap align-middle">
+                        <div className="font-mono font-normal text-slate-800 text-[13px]">
                           {row.dueDate}
                         </div>
                         {['심사준비', '심사 중'].includes(row.auditState) && (
-                          <div className="mt-0.5 text-[11px] font-bold">
+                          <div className="mt-0.5 text-[11.5px] font-medium">
                             <span className={
                               row.dday.isOverdue
                                 ? 'text-red-600'
@@ -1461,21 +1631,24 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                         )}
                       </td>
 
-                      {/* 8. 심사역할 */}
-                      <td className="py-3 px-2.5 text-center whitespace-nowrap">
+                      {/* 8. 심사역할 - 볼드 남발 제거 */}
+                      <td className="py-2 px-2.5 text-center whitespace-nowrap align-middle">
                         {(() => {
-                          if (row.auditorRole === '팀장') return <span className="text-xs font-black text-indigo-700">팀장</span>;
-                          if (row.auditorRole === '심사원') return <span className="text-xs font-bold text-cyan-800">심사원</span>;
-                          if (row.auditorRole === '심사원보') return <span className="text-xs font-semibold text-slate-600">심사원보</span>;
-                          return <span className="text-xs font-bold text-amber-700">협력기관</span>;
+                          if (row.auditorRole === '팀장') return <span className="text-[12.5px] font-medium text-indigo-700">팀장</span>;
+                          if (row.auditorRole === '심사원') return <span className="text-[12.5px] font-normal text-cyan-800">심사원</span>;
+                          if (row.auditorRole === '심사원보') return <span className="text-[12.5px] font-normal text-slate-600">심사원보</span>;
+                          return <span className="text-[12.5px] font-medium text-amber-700">협력기관</span>;
                         })()}
                       </td>
 
-                      {/* 9. 협력기관 */}
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span className="font-bold text-slate-800 text-xs">
-                          {row.consultant || '사무국직접'}
-                        </span>
+                      {/* 9. 최근 심사일 (MD) - ()속에 검정색으로 심사MD 표시 */}
+                      <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
+                        <div className="font-mono font-normal text-slate-800 text-[12.5px]">
+                          <span>{row.recentAuditDate}</span>
+                          <span className="text-slate-900 font-medium ml-1.5">
+                            ({row.auditMd.toFixed(1)} MD)
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -2424,6 +2597,126 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 className="px-4 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold cursor-pointer"
               >
                 닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 사무국 공인 최신 규격 버전(연도) 설정 모달 */}
+      {isVersionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 px-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-cyan-100 text-cyan-800 flex items-center justify-center">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">
+                    인증원 규격별 공인 버전(연도) 관리
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    사무국 규격 버전 설정 시 구버전 인증 유지 업체의 해당 규격이 전환대상으로 자동 표시됩니다.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsVersionModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 안내 배너 */}
+            <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
+              <div className="flex items-center gap-1.5 font-semibold text-amber-950 mb-1">
+                <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>구버전 규격 자동 감지 안내</span>
+              </div>
+              <p>
+                현재 <strong>ISO 14001</strong>의 최신 공인 버전이 <strong>2026</strong>으로 설정되어 있습니다. 
+                이전 버전(예: ISO 14001:2015)으로 인증을 유지 중인 업체는 대장에서 
+                해당 규격이 <span className="text-red-600 font-semibold ml-0.5">붉은색</span>으로 강조되며 <span className="px-1 py-0.2 rounded bg-rose-100 text-rose-700 text-[11px] font-medium border border-rose-200">[2026 전환대상]</span> 배지가 부여됩니다.
+              </p>
+            </div>
+
+            {/* 규격별 버전 편집 리스트 */}
+            <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+              {Object.entries(DEFAULT_OFFICIAL_STANDARD_VERSIONS).map(([stdKey, defYear]) => {
+                const curYear = officialVersions[stdKey] || defYear;
+                const isCustomized = curYear !== defYear;
+                return (
+                  <div
+                    key={stdKey}
+                    className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+                      stdKey === 'ISO 14001'
+                        ? 'bg-cyan-50/50 border-cyan-200'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-semibold text-sm text-slate-900 flex items-center gap-2">
+                        <span>{stdKey}</span>
+                        {stdKey === 'ISO 14001' && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-100 text-cyan-800 font-medium">
+                            요청 지정
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-mono">
+                        기본 권장 버전: {defYear}년
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-medium">버전(연도):</span>
+                      <input
+                        type="text"
+                        value={curYear}
+                        onChange={(e) => handleUpdateOfficialVersion(stdKey, e.target.value)}
+                        placeholder="2026"
+                        maxLength={4}
+                        className="w-20 px-2.5 py-1 text-center font-mono font-bold text-sm bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
+                      />
+                      {isCustomized && (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateOfficialVersion(stdKey, defYear)}
+                          className="text-[11px] text-slate-400 hover:text-slate-600 underline"
+                          title="기본값으로 복원"
+                        >
+                          초기화
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 하단 버튼 */}
+            <div className="pt-4 mt-4 border-t border-slate-200 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setOfficialVersions(DEFAULT_OFFICIAL_STANDARD_VERSIONS);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('gmscs_official_standard_versions', JSON.stringify(DEFAULT_OFFICIAL_STANDARD_VERSIONS));
+                  }
+                }}
+                className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 font-medium hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                전체 기본값 복원
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsVersionModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+              >
+                설정 완료 및 닫기
               </button>
             </div>
           </div>

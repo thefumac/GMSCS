@@ -49,6 +49,7 @@ export interface Company {
 }
 
 export type AuditorAffiliation = '상근' | '비상근';
+export type AuditorPayoutMethod = '세금계산서' | '원천징수';
 
 export interface Auditor {
   id: string;
@@ -66,14 +67,33 @@ export interface Auditor {
   contractExpiryDate: string;
   activeClientCount: number;
   
+  // 개인 사진 (프로필 이미지 DataURL 또는 URL)
+  photoUrl?: string;
+
+  // 심사비 지급 방식 및 세무 사업자 정보
+  payoutMethod?: AuditorPayoutMethod; // '세금계산서' | '원천징수'
+  isBusinessEntity?: boolean; // 개인사업자 여부
+  businessNumber?: string; // 사업자등록번호 (000-00-00000)
+  businessName?: string; // 상호명
+  businessCeo?: string; // 사업자 대표명
+  businessAddress?: string; // 사업장 주소
+  taxEmail?: string; // 세금계산서 수신 이메일
+  residentNumberFront?: string; // 원천징수용 생년월일 (YYMMDD)
+
+  // 정산 계좌 정보
+  bankName?: string; // 은행명
+  accountNumber?: string; // 계좌번호
+  accountHolder?: string; // 예금주
+  bankAccount?: string; // 기존 호환용 (예: "신한 110-123-456789 김홍덕")
+  payoutRatePerMd?: number; // 기본 MD당 수당
+
+  // 규격별 상세 등급 매핑 (ISO 9001: 선임심사원, ISO 14001: 정심사원 등)
+  standardGrades?: Record<string, '선임심사원' | '정심사원' | '심사원보' | '기술전문가'>;
+  
   // 인증심의위원 자격
   isCommitteeMember: boolean;
   committeeRole?: '심의위원장' | '심의부위원장' | '심의위원' | '심의간사' | '전문심의위원';
   committeeAppointmentDate?: string;
-  
-  // 정산 관련 계좌 및 MD 단가
-  bankAccount?: string;
-  payoutRatePerMd?: number; // 기본 MD당 수당
 }
 
 export interface CertContract {
@@ -306,6 +326,8 @@ export interface AuditProject {
   leadAuditorName: string;
   startDate: string;
   endDate: string;
+  auditDates?: string[];
+  teamAuditorNames?: string[];
   status: AuditStatus;
   
   // KAB MD 및 비용 로직

@@ -17,6 +17,8 @@ import { EmailDispatchModal, EmailDispatchData } from './components/EmailDispatc
 import { LoginPage } from './components/LoginPage';
 import { AuditorNoticeManager } from './components/AuditorNoticeManager';
 import { PdfViewerModal } from './components/PdfViewerModal';
+import { AuditorProfileModal } from './components/AuditorProfileModal';
+import { AuditProcessStatusManager } from './components/AuditProcessStatusManager';
 
 import { 
   mockAuditors, 
@@ -66,7 +68,21 @@ export function App() {
   });
 
   // Core Data States (36 Legacy Auditors & 572 Legacy Companies)
-  const [auditors, setAuditors] = useState<Auditor[]>(() => getMergedAuditors());
+  const [auditors, setAuditors] = useState<Auditor[]>(() => {
+    const base = getMergedAuditors();
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('gmscs_auditor_overrides');
+        if (saved) {
+          const overrides: Record<string, Partial<Auditor>> = JSON.parse(saved);
+          return base.map(a => overrides[a.id] ? { ...a, ...overrides[a.id] } : a);
+        }
+      } catch (e) {
+        console.error('Failed to load auditor overrides from localStorage', e);
+      }
+    }
+    return base;
+  });
   const [companies, setCompanies] = useState<Company[]>(() => getMergedCompanies());
   const [contracts, setContracts] = useState<CertContract[]>(() => getMergedContracts());
   const [projects, setProjects] = useState<AuditProject[]>(() => getMergedProjects());
@@ -120,6 +136,24 @@ export function App() {
     title: '',
     companyName: ''
   });
+
+  // 심사원 마이페이지 / 개인정보 및 지급방식 관리 모달 상태
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+
+  // 심사원 개인정보 및 지급정보 업데이트 핸들러 (로컬스토리지 영구 반영)
+  const handleUpdateAuditorProfile = (updatedAuditor: Auditor) => {
+    setAuditors(prev => prev.map(a => a.id === updatedAuditor.id ? updatedAuditor : a));
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('gmscs_auditor_overrides');
+        const overrides: Record<string, Partial<Auditor>> = saved ? JSON.parse(saved) : {};
+        overrides[updatedAuditor.id] = updatedAuditor;
+        localStorage.setItem('gmscs_auditor_overrides', JSON.stringify(overrides));
+      } catch (e) {
+        console.error('Failed to persist auditor override', e);
+      }
+    }
+  };
 
   // 현재 로그인한 심사원 객체 및 권한 체계
   const currentAuditorObj: Auditor = auditors.find(a => a.id === currentUserRole) 
@@ -200,13 +234,13 @@ export function App() {
     };
   };
 
-  // 2-Tier Navigation State (일반 심사원은 'portal', 관리자는 'audit' / 'calendar' 기본)
+  // 2-Tier Navigation State (최초 접속 및 로그인 시 심사일정 달력화면 기본)
   const [activeCategory, setActiveCategory] = useState<MainCategory>(() => {
     if (typeof window !== 'undefined' && window.location.hash) {
       const parsed = parseHashState(window.location.hash);
       if (parsed) return parsed.category;
     }
-    return isRegularAuditor ? 'auditor-mgmt' : 'audit';
+    return 'audit';
   });
 
   const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
@@ -214,7 +248,7 @@ export function App() {
       const parsed = parseHashState(window.location.hash);
       if (parsed) return parsed.tab;
     }
-    return isRegularAuditor ? 'portal' : 'calendar';
+    return 'calendar';
   });
 
   // 통합 네비게이션 함수 (Browser History pushState / replaceState 연동)
@@ -267,13 +301,8 @@ export function App() {
       localStorage.setItem('gmscs_auth', 'true');
       localStorage.setItem('gmscs_role', roleId);
     }
-    const aud = auditors.find(a => a.id === roleId);
-    const isLoginStaff = aud?.isSystemAdmin || aud?.affiliation === '상근' || roleId === 'admin';
-    if (!isLoginStaff) {
-      navigateTo('portal', 'auditor-mgmt', { isEditingReport: false, replace: true });
-    } else {
-      navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
-    }
+    // 최초 로그인 시 심사일정이 표시된 달력화면이 보이도록 설정
+    navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
   };
 
   const handleLogout = () => {
@@ -310,12 +339,12 @@ export function App() {
   // 일반 심사원의 비인가 탭 접근 방지 및 자동 리디렉션
   React.useEffect(() => {
     if (isRegularAuditor) {
-      const allowedTabs: ActiveTab[] = ['portal', 'reports', 'finance'];
+      const allowedTabs: ActiveTab[] = ['calendar', 'portal', 'reports', 'finance'];
       if (currentAuditorObj?.isCommitteeMember) {
         allowedTabs.push('committee');
       }
       if (!allowedTabs.includes(activeTab)) {
-        navigateTo('portal', 'auditor-mgmt', { replace: true });
+        navigateTo('calendar', 'audit', { replace: true });
       }
       // 일반 심사원은 재무관리에서 세금계산서/수납(billing) 탭 접근 금지
       if (financeSubTab === 'billing') {
@@ -882,12 +911,20 @@ export function App() {
           if (typeof window !== 'undefined') {
             localStorage.setItem('gmscs_role', role);
           }
+          const aud = auditors.find(a => a.id === role);
+          const isLoginStaff = aud?.isSystemAdmin || aud?.affiliation === '상근' || role === 'admin';
+          if (!isLoginStaff) {
+            navigateTo('portal', 'auditor-mgmt', { isEditingReport: false, replace: true });
+          } else {
+            navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
+          }
         }}
         allAuditors={auditors}
         pendingAdjustmentCount={pendingAdjustmentCount}
         pendingCommitteeCount={pendingCommitteeCount}
         pendingSecretariatReviewCount={pendingSecretariatReviewCount}
         onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -1037,32 +1074,24 @@ export function App() {
           </div>
         )}
 
-        {/* 3-2. 심사 진행현황 & 계획서 */}
+        {/* 3-2. 심사 진행현황 & 프로세스 대장 (9단계 엑셀 매트릭스) */}
         {activeTab === 'projects' && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-black text-slate-900">심사 진행현황 및 심사 계획서 관리</h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  모든 인증 심사 프로젝트의 계획 수립, 심사계획서 발송 여부, 진행 상태를 통합 관리합니다.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenEmailModalWithPreset('', '', '심사계획서')}
-                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition shadow-sm"
-              >
-                + 공문 심사계획서 신규 발송
-              </button>
-            </div>
-
-            <DashboardCalendar
-              projects={projects}
-              auditors={auditors}
-              companies={companies}
-              onOpenReport={handleOpenReport}
-              onSendPlan={handleSendPlan}
-            />
-          </div>
+          <AuditProcessStatusManager
+            projects={projects}
+            auditors={auditors}
+            companies={companies}
+            contracts={contracts}
+            reports={reports}
+            settlements={settlements}
+            committeeMeetings={committeeMeetings}
+            onOpenReport={handleOpenReport}
+            onSendPlan={(companyName, contactEmail, templateType) => {
+              handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');
+            }}
+            onNavigateToSettlement={() => {
+              navigateTo('finance', 'general-admin', { financeSubTab: 'settlements' });
+            }}
+          />
         )}
 
         {/* 3-3. OK ESG & ISO-Record 연계 모듈 */}
@@ -1192,6 +1221,16 @@ export function App() {
         auditType={pdfModalState.auditType}
         auditDate={pdfModalState.auditDate}
       />
+
+      {/* 심사원 마이페이지 / 개인정보 및 심사비 지급방식 설정 모달 */}
+      {isProfileModalOpen && (
+        <AuditorProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          auditor={currentAuditorObj}
+          onSave={handleUpdateAuditorProfile}
+        />
+      )}
 
       {/* Footer (okesg.com 사업자 및 플랫폼 정보 인용, 이용약관/개인정보처리방침 제외) */}
       <footer className="bg-slate-50 border-t border-slate-200 py-6 text-xs text-slate-500 no-print">
