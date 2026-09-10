@@ -8,6 +8,7 @@ import {
 import { Company, Auditor, CertContract, AuditProject, AuditContractRecord } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
+import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
 
 export interface ClientManagementProps {
   companies: Company[];
@@ -31,7 +32,7 @@ const getRegionDisplay = (comp: Company): string => {
   if (addr.includes('베트남') || reg.includes('베트남') || reg.includes('VN') || addr.includes('Vietnam')) return '베트남';
   if (addr.includes('중국') || reg.includes('중국') || reg.includes('CN') || addr.includes('China')) return '중국';
   if (addr.includes('인도네시아') || reg.includes('인니') || addr.includes('Indonesia')) return '인도네시아';
-  if (addr.includes('미국') || reg.includes('USA') || addr.includes('USA')) return '미국';
+  if (addr.includes('미국') || reg.includes('USA')) return '미국';
   if (addr.includes('일본') || reg.includes('JP') || addr.includes('Japan')) return '일본';
   if (addr.includes('인도') || reg.includes('인도') || addr.includes('India')) return '인도';
 
@@ -84,7 +85,9 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
-  const [selectedContractType, setSelectedContractType] = useState<string>('all');
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
+  const [selectedAuditor, setSelectedAuditor] = useState<string>('all');
+  const [selectedAgency, setSelectedAgency] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
@@ -105,6 +108,52 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     });
     return map;
   }, [contracts]);
+
+  // 1. 고유 지역 목록 추출
+  const regionOptions = useMemo(() => {
+    const set = new Set<string>();
+    companies.forEach(c => {
+      const reg = getRegionDisplay(c);
+      if (reg) set.add(reg);
+    });
+    const preferredOrder = ['경기', '서울', '충남', '경남', '전남', '부산', '인천', '충북', '경북', '전북', '강원', '대구', '대전', '광주', '울산', '세종', '제주', '베트남', '중국'];
+    return Array.from(set).sort((a, b) => {
+      const ia = preferredOrder.indexOf(a);
+      const ib = preferredOrder.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return a.localeCompare(b, 'ko');
+    });
+  }, [companies]);
+
+  // 2. 담당 심사원 목록 추출
+  const auditorOptions = useMemo(() => {
+    const names = new Set<string>();
+    auditors.forEach(a => {
+      if (a.name) names.add(a.name);
+    });
+    companies.forEach(c => {
+      const compAny = c as any;
+      if (compAny.assignedAuditor) names.add(compAny.assignedAuditor);
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'ko'));
+  }, [auditors, companies]);
+
+  // 3. 고유 협력기관 목록 추출
+  const agencyOptions = useMemo(() => {
+    const agencies = new Set<string>();
+    companies.forEach(c => {
+      const compAny = c as any;
+      const managingAuditor = auditorMap.get(c.managingAuditorId || '') || { name: compAny.assignedAuditor || '남경호' };
+      const agencyName = getAgencyDisplayName(c.consultant || compAny.consultant, managingAuditor.name);
+      if (agencyName && agencyName !== '—') {
+        agencies.add(agencyName);
+      }
+    });
+    const list = Array.from(agencies).filter(a => a !== 'HQ직영').sort((a, b) => a.localeCompare(b, 'ko'));
+    return ['HQ직영', ...list];
+  }, [companies, auditorMap]);
 
   // Helper: Get standard initial contract dates
   const getStandardInitialDates = (comp: Company, fallbackContract?: CertContract) => {
@@ -149,9 +198,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const compName = c.companyName.replace(/\s+/g, '').toLowerCase();
       const ceo = (c.ceoName || '').replace(/\s+/g, '').toLowerCase();
       const biz = (c.bizNumber || '').replace(/[-\s]/g, '');
-      const contractType = c.initialContractType || compAny.initialContractType || '신규';
+      const region = getRegionDisplay(c);
+      const managingAuditor = auditorMap.get(c.managingAuditorId || '') || { name: compAny.assignedAuditor || '남경호' };
+      const agencyDisplay = getAgencyDisplayName(c.consultant || compAny.consultant, managingAuditor.name);
 
-      // Search match
+      // 1. 텍스트 검색 매칭 (기업명, 대표자, 사업자번호, 인증번호)
       const matchesSearch = !cleanSearch ||
         compName.includes(cleanSearch) ||
         ceo.includes(cleanSearch) ||
@@ -159,15 +210,28 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         certNo.includes(cleanSearch) ||
         standards.includes(cleanSearch);
 
-      // Standard match
-      const matchesStandard = selectedStandard === 'all' || standards.includes(selectedStandard);
+      // 2. 인증 규격 매칭 (GMS_AVAILABLE_STANDARDS 변수 기반)
+      let matchesStandard = true;
+      if (selectedStandard !== 'all') {
+        const stdNumberMatch = selectedStandard.match(/\d+/);
+        const stdNumber = stdNumberMatch ? stdNumberMatch[0] : selectedStandard;
+        matchesStandard = standards.includes(stdNumber) || standards.includes(selectedStandard.toLowerCase());
+      }
 
-      // Contract type match
-      const matchesType = selectedContractType === 'all' || contractType === selectedContractType;
+      // 3. 지역 매칭
+      const matchesRegion = selectedRegion === 'all' || region === selectedRegion;
 
-      return matchesSearch && matchesStandard && matchesType;
+      // 4. 담당 심사원 매칭
+      const matchesAuditor = selectedAuditor === 'all' ||
+        managingAuditor.name === selectedAuditor ||
+        (compAny.assignedAuditor && compAny.assignedAuditor.includes(selectedAuditor));
+
+      // 5. 협력기관 매칭
+      const matchesAgency = selectedAgency === 'all' || agencyDisplay === selectedAgency;
+
+      return matchesSearch && matchesStandard && matchesRegion && matchesAuditor && matchesAgency;
     });
-  }, [companies, searchTerm, selectedStandard, selectedContractType]);
+  }, [companies, searchTerm, selectedStandard, selectedRegion, selectedAuditor, selectedAgency, auditorMap]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / PAGE_SIZE));
@@ -179,11 +243,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
   return (
     <div className="space-y-3 animate-in fade-in">
-      {/* 1. 상단 단일 조회바 */}
-      <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+      {/* 1. 상단 단일 조회바 (인증규격 전체 메뉴 + 지역 + 담당심사원 + 협력기관 검색창) */}
+      <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           {/* 검색창 */}
-          <div className="relative min-w-[240px] max-w-[340px]">
+          <div className="relative min-w-[200px] max-w-[260px]">
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -192,39 +256,77 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="기업명, 대표자, 사업자번호, 인증번호 검색"
-              className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-cyan-500 focus:bg-white"
+              placeholder="기업명, 대표자, 사업자번호 검색"
+              className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-cyan-500 focus:bg-white"
             />
           </div>
 
-          {/* 규격 필터 */}
+          {/* 인증규격 필터 (GMS_AVAILABLE_STANDARDS 변수에서 동적 생성) */}
           <select
             value={selectedStandard}
             onChange={(e) => {
               setSelectedStandard(e.target.value);
               setCurrentPage(1);
             }}
-            className="py-1 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
+            className="py-1 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
           >
             <option value="all">전체 인증 규격</option>
-            <option value="9001">ISO 9001</option>
-            <option value="14001">ISO 14001</option>
-            <option value="45001">ISO 45001</option>
+            {GMS_AVAILABLE_STANDARDS.map((std) => (
+              <option key={std.code} value={std.code}>
+                {std.code} ({std.name.split(' ')[0]})
+              </option>
+            ))}
           </select>
 
-          {/* 구분 필터 (신규, 전환, 재인증) */}
+          {/* 지역 검색 필터 */}
           <select
-            value={selectedContractType}
+            value={selectedRegion}
             onChange={(e) => {
-              setSelectedContractType(e.target.value);
+              setSelectedRegion(e.target.value);
               setCurrentPage(1);
             }}
-            className="py-1 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
+            className="py-1 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
           >
-            <option value="all">전체 구분</option>
-            <option value="신규">신규</option>
-            <option value="전환">전환</option>
-            <option value="재인증">재인증</option>
+            <option value="all">전체 지역</option>
+            {regionOptions.map((reg) => (
+              <option key={reg} value={reg}>
+                {reg}
+              </option>
+            ))}
+          </select>
+
+          {/* 담당 심사원 검색 필터 */}
+          <select
+            value={selectedAuditor}
+            onChange={(e) => {
+              setSelectedAuditor(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="py-1 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
+          >
+            <option value="all">전체 담당심사원</option>
+            {auditorOptions.map((name) => (
+              <option key={name} value={name}>
+                {name} 심사원
+              </option>
+            ))}
+          </select>
+
+          {/* 협력기관 검색 필터 */}
+          <select
+            value={selectedAgency}
+            onChange={(e) => {
+              setSelectedAgency(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="py-1 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-700 font-normal focus:outline-hidden cursor-pointer"
+          >
+            <option value="all">전체 협력기관</option>
+            {agencyOptions.map((agency) => (
+              <option key={agency} value={agency}>
+                {agency}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -234,7 +336,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             총 <span className="text-cyan-700 font-normal">{filteredCompanies.length}</span>개사
             <span className="text-slate-400 ml-1 font-normal">({safePage}/{totalPages}p)</span>
           </div>
-          <div className="inline-flex items-center bg-slate-50 border border-slate-300 rounded-lg p-0.5">
+          <div className="inline-flex items-center bg-slate-50 border border-slate-300 rounded p-0.5">
             <button
               type="button"
               disabled={safePage <= 1}
@@ -259,7 +361,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       </div>
 
       {/* 2. 고객관리 엑셀 목록형 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-300 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded border border-slate-300 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse border border-slate-300">
             <thead>
@@ -280,7 +382,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                   구분
                 </th>
                 <th className="py-2.5 px-3 text-center min-w-[125px] font-normal border-r border-slate-300">
-                  최초 계약일 (규격별)
+                  최초 계약일
                 </th>
                 <th className="py-2.5 px-2 text-center min-w-[60px] font-normal border-r border-slate-300">
                   직원수
@@ -363,7 +465,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         {contractType}
                       </td>
 
-                      {/* 최초 계약일 (규격별) */}
+                      {/* 최초 계약일 */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap align-middle border-r border-slate-200 font-mono text-xs font-normal text-slate-600">
                         {standardDates.map((item, dIdx) => (
                           <div key={dIdx} className="leading-tight">
