@@ -271,11 +271,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                       </td>
 
                       {/* 인증규격 */}
-                      <td className="py-2 px-3 leading-snug align-middle border-r border-slate-200">
-                        <div className="text-slate-800 font-normal">
+                      <td className="py-2 px-3 leading-snug align-middle border-r border-slate-200 whitespace-nowrap">
+                        <div className="text-slate-800 font-medium whitespace-nowrap">
                           {stdText}
                         </div>
-                        <div className="text-slate-900 font-mono text-[11px] font-bold mt-0.5">
+                        <div className="text-slate-900 font-mono text-[11px] font-bold mt-0.5 whitespace-nowrap">
                           ({certNo})
                         </div>
                       </td>

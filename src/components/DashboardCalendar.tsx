@@ -9,11 +9,13 @@ import {
 import { AuditProject, Auditor, Company } from '../types';
 import { ActiveTab, MainCategory } from './Navbar';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { CommitteeScheduleItem } from '../utils/committeeSchedule';
 
 interface DashboardCalendarProps {
   projects: AuditProject[];
   auditors: Auditor[];
   companies: Company[];
+  committeeSchedules?: CommitteeScheduleItem[];
   onOpenReport: (reportId: string) => void;
   onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
   onSendPlan: (projectId: string) => void;
@@ -24,6 +26,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   projects,
   auditors,
   companies,
+  committeeSchedules = [],
   onOpenReport,
   onOpenPdfReport,
   onSendPlan: _onSendPlan,
@@ -73,6 +76,16 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
     });
     return map;
   }, [projects]);
+
+  // 심의위원회 일정 매핑
+  const committeesByDate = useMemo(() => {
+    const map: Record<string, CommitteeScheduleItem[]> = {};
+    committeeSchedules.forEach(c => {
+      if (!map[c.date]) map[c.date] = [];
+      map[c.date].push(c);
+    });
+    return map;
+  }, [committeeSchedules]);
 
   // 대시보드 통계 계산
   const stats = useMemo(() => {
@@ -244,6 +257,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
             const isToday = currentYear === 2026 && currentMonth === 9 && dayNum === 9;
             const dayOfWeek = (firstDayOfWeek + idx) % 7;
             const dayProjects = projectsByDate[dateStr] || [];
+            const dayCommittees = committeesByDate[dateStr] || [];
 
             return (
               <div 
@@ -261,16 +275,28 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
                   }`}>
                     {dayNum}
                   </span>
-                  {dayProjects.length > 0 && (
+                  {(dayProjects.length > 0 || dayCommittees.length > 0) && (
                     <span className="text-[10px] font-bold text-slate-400">
-                      {dayProjects.length}건
+                      {dayProjects.length + dayCommittees.length}건
                     </span>
                   )}
                 </div>
 
-                {/* Day Project Chips (클릭 시 심사 이력 팝업 열기) */}
-                {/* Day Project Chips (심사업체명만 표시, 클릭 시 심사 상세 및 이력 팝업 열기) */}
+                {/* Day Project & Committee Chips */}
                 <div className="space-y-1 overflow-y-auto max-h-[85px] no-scrollbar">
+                  {/* 심의위원회 일정 배지 */}
+                  {dayCommittees.map(comm => (
+                    <div
+                      key={comm.id}
+                      className="px-1.5 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-[10.5px] font-bold truncate transition shadow-2xs leading-tight flex items-center gap-1 cursor-default"
+                      title={`${comm.sessionNumber} (${comm.time || '14:00'}) - ${comm.status}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0"></span>
+                      <span className="truncate">⚖️ {comm.sessionNumber}</span>
+                    </div>
+                  ))}
+
+                  {/* 심사 기업 목록 */}
                   {dayProjects.map((proj) => (
                     <div
                       key={proj.id}

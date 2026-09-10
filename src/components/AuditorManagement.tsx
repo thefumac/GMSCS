@@ -245,8 +245,8 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
                       </td>
 
                       {/* 등록 규격 */}
-                      <td className="py-2 px-3 leading-snug align-middle border-r border-slate-200 text-[11.5px] text-slate-800">
-                        {regStdText || '9001:2015'}
+                      <td className="py-2 px-3 leading-snug align-middle border-r border-slate-200 text-[11.5px] text-slate-800 whitespace-nowrap">
+                        {regStdText || 'ISO 9001:2015'}
                       </td>
 
                       {/* IAF 전문 코드 */}

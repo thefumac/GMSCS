@@ -22,6 +22,7 @@ import { AuditProcessStatusManager } from './components/AuditProcessStatusManage
 import { ClientManagement } from './components/ClientManagement';
 import { AuditorManagement } from './components/AuditorManagement';
 import { CertificationManagement } from './components/CertificationManagement';
+import { CommitteeScheduleItem, loadSavedCommitteeSchedules } from './utils/committeeSchedule';
 
 import { 
   mockAuditors, 
@@ -94,7 +95,7 @@ export function App() {
   const [committeeMeetings, setCommitteeMeetings] = useState<CommitteeMeeting[]>(mockCommitteeMeetings);
   const [emailLogs, setEmailLogs] = useState<EmailDispatchLog[]>(mockEmailLogs);
   const [auditContracts, setAuditContracts] = useState<AuditContractRecord[]>(mockAuditContracts);
-  
+  const [committeeSchedules, setCommitteeSchedules] = useState<CommitteeScheduleItem[]>(() => loadSavedCommitteeSchedules());
   // 심사보고서 목록 관리 vs 세부 에디터 전환 상태
   const [isEditingReport, setIsEditingReport] = useState<boolean>(false);
   const [activeReportId, setActiveReportId] = useState<string>('rep-1');
@@ -944,6 +945,7 @@ export function App() {
             projects={projects}
             auditors={auditors}
             companies={companies}
+            committeeSchedules={committeeSchedules}
             onOpenReport={handleOpenReport}
             onOpenPdfReport={(info) => {
               setPdfModalState({
@@ -1003,6 +1005,8 @@ export function App() {
             companies={companies}
             projects={projects}
             settlements={settlements}
+            committeeSchedules={committeeSchedules}
+            onUpdateCommitteeSchedules={setCommitteeSchedules}
             onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
             onUpdateSettlementStatus={handleUpdateSettlementStatus}
           />
@@ -1129,6 +1133,7 @@ export function App() {
             reports={reports}
             settlements={settlements}
             committeeMeetings={committeeMeetings}
+            committeeSchedules={committeeSchedules}
             onOpenReport={handleOpenReport}
             onSendPlan={(companyName, contactEmail, templateType) => {
               handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');

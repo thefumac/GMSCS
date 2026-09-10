@@ -503,5 +503,4 @@ export interface PreviousAuditNcCheck {
   auditorName: string;
   verifiedAt: string;
 }
-
-
+export type { CommitteeScheduleItem } from '../utils/committeeSchedule';
