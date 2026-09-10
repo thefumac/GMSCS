@@ -102,8 +102,25 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
   return legacyCompaniesRaw.map((lc, idx) => {
     const isDrive = driveCompanies.has(lc.name) || Array.from(driveCompanies).some(dc => lc.name.includes(dc));
     
-    // 36명의 심사원에게 기업 고르게 배분 (지역코드/순번에 따른 결정적 매핑)
-    const assignedAuditor = auditors[idx % auditors.length];
+    // 실제 원본 DB의 배정 심사원(lc.assignedAuditor 또는 consultant)을 최우선으로 매핑!
+    const rawAssigned = ((lc as any).assignedAuditor || '').trim();
+    const rawConsultant = ((lc as any).consultant || '').trim();
+    
+    let assignedAuditor = auditors[idx % auditors.length]; // 기본 fallback
+
+    if (rawAssigned) {
+      // 1순위: assignedAuditor 문자열에서 일치하는 심사원 객체 검색 (김홍덕 등 등록 심사원 우선)
+      const matched = auditors.find(a => rawAssigned.includes(a.name));
+      if (matched) {
+        assignedAuditor = matched;
+      }
+    } else if (rawConsultant && rawConsultant !== 'HQ' && rawConsultant !== '사무국직접') {
+      // 2순위: consultant(유치 심사원) 기준 검색
+      const matched = auditors.find(a => rawConsultant.includes(a.name));
+      if (matched) {
+        assignedAuditor = matched;
+      }
+    }
 
     return {
       id: `comp-legacy-${lc.no || idx + 1}`,

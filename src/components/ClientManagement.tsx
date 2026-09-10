@@ -222,9 +222,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const matchesRegion = selectedRegion === 'all' || region === selectedRegion;
 
       // 4. 담당 심사원 매칭
+      const rawAssigned = compAny.assignedAuditor || c.assignedAuditorName || '';
       const matchesAuditor = selectedAuditor === 'all' ||
         managingAuditor.name === selectedAuditor ||
-        (compAny.assignedAuditor && compAny.assignedAuditor.includes(selectedAuditor));
+        (rawAssigned && rawAssigned.includes(selectedAuditor)) ||
+        (c.consultant && c.consultant.includes(selectedAuditor));
 
       // 5. 협력기관 매칭
       const matchesAgency = selectedAgency === 'all' || agencyDisplay === selectedAgency;
@@ -495,8 +497,8 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                       </td>
 
                       {/* 담당 심사원 (독립 컬럼) */}
-                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700">
-                        {managingAuditor.name}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700" title={compAny.assignedAuditor || comp.assignedAuditorName || managingAuditor.name}>
+                        {compAny.assignedAuditor || comp.assignedAuditorName || managingAuditor.name}
                       </td>
 
                       {/* 협력기관 (독립 컬럼, 이해충돌 방지 적용) */}
