@@ -134,7 +134,7 @@ GMSCS 인증원장 남경호 배상`);
         id: `mlog-${Date.now()}`,
         sentAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
         templateType,
-        senderEmail: 'admin@gmscs.co.kr',
+        senderEmail: 'esggnf@naver.com',
         senderName: 'GMSCS 인증원',
         recipientEmail,
         recipientName: recipientName || recipientEmail,
@@ -267,7 +267,7 @@ GMSCS 인증원장 남경호 배상`);
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-slate-700 font-bold">메일 본문 (편집 가능)</label>
-              <span className="text-[11px] text-slate-400">발신: admin@gmscs.co.kr (GMSCS 인증원)</span>
+              <span className="text-[11px] text-slate-400">발신: esggnf@naver.com (GMSCS 인증원)</span>
             </div>
             <textarea
               rows={9}

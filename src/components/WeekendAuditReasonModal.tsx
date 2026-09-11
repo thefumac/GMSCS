@@ -94,20 +94,34 @@ export const WeekendAuditReasonModal: React.FC<WeekendAuditReasonModalProps> = (
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold flex items-center gap-2">
-                <span>주말 및 공휴일 심사(근무) 사유서</span>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-300 text-[10px] font-bold border border-amber-500/40">
-                  Remark 공인 서식
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-extrabold flex items-center gap-2">
+                  <span>주말 및 공휴일 심사(근무) 사유서</span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-300 text-[10px] font-bold border border-amber-500/40">
+                    Remark 공인 서식
+                  </span>
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReasonCategory('전기요금절감');
+                    setDetailedReason('전기 요금 절감을 위하여 휴일인 토, 일요일에 근무하고 평일에 휴무하는 근로방식을 6월부터 8월까지 시행하는 방침에 따라 휴일인 해당 일자에 근무하여 현장 심사를 수행함.');
+                    setClientName('박경원 대표');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500/30 hover:bg-amber-500/50 text-amber-200 border border-amber-400/40 font-bold text-[10px] transition cursor-pointer"
+                  title="케이원메탈 실물 휴일근무확인서(전기요금 절감 토/일 근무) 사례 자동 입력"
+                >
+                  ★ 케이원메탈 실물사례 채우기
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
                 KAB 인정 기준 및 노동법규 준수를 위한 주말 심사 사유 증적 및 기업 이메일 확인 연동
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

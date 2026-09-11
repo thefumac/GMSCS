@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Building2, 
   X, 
@@ -12,16 +12,24 @@ import {
   Phone,
   Mail,
   Clock,
-  Briefcase
+  Briefcase,
+  Send,
+  CheckCircle2,
+  FileCheck,
+  AlertCircle
 } from 'lucide-react';
-import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement } from '../types';
+import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement, AuditContractRecord, CertChangeApplicationData, WeekendAuditReasonData } from '../types';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
+import { AuditPlanInvoiceDocModal } from './AuditPlanInvoiceDocModal';
+import { CertChangeApplicationModal } from './CertChangeApplicationModal';
+import { WeekendAuditReasonModal } from './WeekendAuditReasonModal';
 
 export interface CompanyAuditHistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   company: Company | null;
   contracts?: CertContract[];
+  auditContracts?: AuditContractRecord[];
   projects?: AuditProject[];
   reports?: Record<string, AuditReport>;
   settlements?: AuditorSettlement[];
@@ -103,6 +111,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   onClose,
   company,
   contracts = [],
+  auditContracts = [],
   projects = [],
   reports = {},
   allAuditors = [],
@@ -110,11 +119,18 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   onOpenPdfReport,
   onOpenPlanInvoiceModal
 }) => {
+  const [isPlanDocOpen, setIsPlanDocOpen] = useState(false);
+  const [isCertChangeOpen, setIsCertChangeOpen] = useState(false);
+  const [isWeekendOpen, setIsWeekendOpen] = useState(false);
+  const [certChangeData, setCertChangeData] = useState<CertChangeApplicationData | undefined>(undefined);
+  const [weekendData, setWeekendData] = useState<WeekendAuditReasonData | undefined>(undefined);
+
   if (!isOpen || !company) return null;
 
   const contract = contracts.find(c => c.companyId === company.id);
   const matchingProjects = projects.filter(p => p.companyId === company.id || p.companyName === company.companyName);
   const latestProject = matchingProjects[0];
+  const matchingAuditContract = auditContracts.find(c => c.companyId === company.id || c.companyName === company.companyName);
   
   const stageText = getAuditStage(company, contract, latestProject);
   const stdAndCerts = getStandardsWithCertNo(company, contract);
@@ -124,14 +140,59 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   // 배정 심사원
   const managingAuditor = allAuditors.find(a => a.id === company.managingAuditorId || a.id === latestProject?.leadAuditorId) 
     || allAuditors.find(a => a.name === latestProject?.leadAuditorName)
-    || { name: company.managingAuditorId || '김홍덕', grade: '선임심사원', mobile: '010-3797-1563' };
+    || { name: company.managingAuditorId || '김홍덕', grade: '선임심사원', mobile: '010-3797-1563', email: 'auditor@gmscs.co.kr' };
 
   // 보고서 ID
   const reportId = latestProject?.reportId || (latestProject ? `rep-${latestProject.id}` : undefined);
 
+  // Effective AuditContractRecord for document display
+  const effectiveContractRecord: AuditContractRecord = matchingAuditContract || {
+    id: `CTR-${company.id}`,
+    contractNumber: `CTR-${company.bizNumber ? company.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : '202601'}`,
+    companyId: company.id,
+    companyName: company.companyName,
+    contractType: (stageText.includes('최초') ? '신규인증' : stageText.includes('갱신') ? '갱신심사' : '정기사후') as any,
+    standards: stdAndCerts.map(s => s.std as any),
+    employeeCount: company.totalEmployees || 48,
+    riskLevel: 'Medium',
+    contractDate: contract?.initialCertDate || '2026-09-10',
+    plannedAuditStartDate: latestProject?.startDate || '2026-10-24',
+    contractStatus: (latestProject?.status === '계획수립' ? '진행중' : '계약체결') as any,
+    leadAuditorId: (managingAuditor as any).id || 'AUD-001',
+    leadAuditorName: managingAuditor.name || '김홍덕',
+    agency: company.consultant || '직영',
+    kabStandardMd: 2.0,
+    appliedMd: 2.0,
+    standardRatePerMd: 800000,
+    ratePerMd: 800000,
+    standardFee: 1600000,
+    finalFee: 2000000,
+    docAuditMd: 0.5,
+    docAuditFee: 500000,
+    onsiteAuditMd: 1.5,
+    onsiteAuditFee: 1100000,
+    travelExpense: 200000,
+    lodgingOption: '업체직접제공',
+    lodgingNights: 0,
+    lodgingExpense: 0,
+    applicationFee: 200000,
+    docFee: 500000,
+    siteFee: 1100000,
+    travelFee: 200000,
+    lodgingFee: 0,
+    lodgingProvidedByClient: true,
+    appFee: 200000,
+    approvalStatus: '승인완료',
+    isAdjusted: false,
+    planInvoiceDispatchStatus: (latestProject?.status === '계획서발송' || latestProject?.status === '심사진행중') ? '발송완료' : '발송대기',
+    auditorResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답',
+    agencyResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답',
+    clientResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답'
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in">
-      <div className="bg-white rounded-3xl max-w-3xl w-full border border-slate-200 shadow-2xl p-6 space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-4xl w-full border border-slate-200 shadow-2xl p-6 space-y-4 text-xs max-h-[90vh] overflow-y-auto">
         
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-200">
@@ -163,7 +224,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
           </button>
         </div>
 
-        {/* 0. 심사 업무 통합 실행 바 (계획서·청구서 확인, 심사보고서 작성/열람) */}
+        {/* 0. 심사 업무 통합 실행 바 (계획서·청구서·서식 확인, 심사보고서 작성/열람) */}
         <div className="bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 text-white p-4 rounded-2xl shadow-md border border-cyan-800/40 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -180,21 +241,39 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
             </h4>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {onOpenPlanInvoiceModal && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenPlanInvoiceModal(company);
-                }}
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                title="사무국 수립 심사계획서 및 심사비 청구서 확인/동의"
-              >
-                <FileText className="w-4 h-4" />
-                <span>계획·청구서 확인</span>
-              </button>
-            )}
+          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+            {/* Remark 공식 심사계획서 / 심사비청구서 (F16-004) 모달 버튼 */}
+            <button
+              type="button"
+              onClick={() => setIsPlanDocOpen(true)}
+              className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="사무국 수립 심사계획서 및 심사비 청구서 (F16-004) 확인"
+            >
+              <FileCheck className="w-3.5 h-3.5" />
+              <span>계획·청구서·계약서</span>
+            </button>
+
+            {/* F19-002 인증변경신청서 버튼 */}
+            <button
+              type="button"
+              onClick={() => setIsCertChangeOpen(true)}
+              className="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="F19-002 인증변경신청서 작성 및 열람 (상호/주소/대표/생산품목 변경)"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>인증변경(F19-002)</span>
+            </button>
+
+            {/* 휴일근무확인서 버튼 */}
+            <button
+              type="button"
+              onClick={() => setIsWeekendOpen(true)}
+              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="휴일(토/일) 및 야간 심사 사유 확인서 열람/작성"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>휴일근무확인서</span>
+            </button>
 
             {onOpenReport && (
               <button
@@ -203,11 +282,11 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                   onClose();
                   onOpenReport(reportId || 'rep-1');
                 }}
-                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-cyan-500/30 cursor-pointer"
+                className="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-md shadow-cyan-500/30 cursor-pointer"
                 title="심사보고서 작성 및 체크리스트 입력 / 열람"
               >
                 <FileText className="w-4 h-4 text-slate-950" />
-                <span>심사보고서 작성/열람</span>
+                <span>심사보고서</span>
               </button>
             )}
           </div>
@@ -423,7 +502,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
               <div className="w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0 group-hover:scale-110 transition-transform shadow-xs">
                 ★
               </div>
-              <div className="bg-cyan-50/70 group-hover:bg-cyan-100/60 p-3.5 rounded-xl border border-cyan-200 group-hover:border-cyan-400 flex-1 space-y-1.5 transition shadow-2xs">
+              <div className="bg-cyan-50/70 group-hover:bg-cyan-100/60 p-3.5 rounded-xl border border-cyan-200 group-hover:border-cyan-400 flex-1 space-y-2 transition shadow-2xs">
                 <div className="flex items-center justify-between font-bold text-cyan-950">
                   <span className="text-xs font-black">2026년 {stageText} (현재 대상)</span>
                   <div className="flex items-center gap-2">
@@ -439,6 +518,56 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                 <p className="text-[11px] text-cyan-900">
                   차기 심사 기한: <strong className="font-mono text-cyan-950">{dueDate}</strong> ({dday.text}) · 배정팀장: <strong>{managingAuditor.name}</strong>
                 </p>
+
+                {/* 3자 공문 발송 및 회신 확인 현황 바 */}
+                <div className="bg-white/80 p-2.5 rounded-lg border border-cyan-200 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                  <div className="flex items-center gap-1.5">
+                    <Send className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="font-bold text-slate-700">심사계획·청구서(F16-004):</span>
+                    <span className={`px-2 py-0.5 rounded-md font-bold text-[10.5px] ${
+                      effectiveContractRecord.planInvoiceDispatchStatus === '발송완료'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                    }`}>
+                      {effectiveContractRecord.planInvoiceDispatchStatus || '발송대기'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-500">심사원 회신:</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        effectiveContractRecord.auditorResponseStatus === '동의' 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {effectiveContractRecord.auditorResponseStatus || '동의'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-500">협력기관 회신:</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        effectiveContractRecord.agencyResponseStatus === '동의' 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {effectiveContractRecord.agencyResponseStatus || '동의 (사전확정)'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-500">기업 회신:</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        effectiveContractRecord.clientResponseStatus === '동의' 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {effectiveContractRecord.clientResponseStatus || '확인수신'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -468,6 +597,43 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
         </div>
 
       </div>
+
+      {/* Remark 공식 심사계획서 및 심사비청구서 (F16-004) 모달 */}
+      <AuditPlanInvoiceDocModal
+        isOpen={isPlanDocOpen}
+        onClose={() => setIsPlanDocOpen(false)}
+        contract={effectiveContractRecord}
+        company={company}
+        auditor={managingAuditor as any}
+      />
+
+      {/* F19-002 인증변경신청서 모달 */}
+      <CertChangeApplicationModal
+        isOpen={isCertChangeOpen}
+        onClose={() => setIsCertChangeOpen(false)}
+        company={company}
+        standards={stdAndCerts.map(s => s.std)}
+        initialData={certChangeData}
+        onSaveData={(data) => {
+          setCertChangeData(data);
+          alert('[F19-002 인증변경신청서 저장 완료]\n상호/주소/대표자 및 생산품목 변경사항이 시스템에 저장되었습니다.');
+        }}
+      />
+
+      {/* 휴일근무확인서 모달 */}
+      <WeekendAuditReasonModal
+        isOpen={isWeekendOpen}
+        onClose={() => setIsWeekendOpen(false)}
+        companyName={company.companyName}
+        auditDates={latestProject?.startDate ? `${latestProject.startDate} ~ ${latestProject.endDate}` : '2026-10-24 ~ 2026-10-25'}
+        standards={stdAndCerts.map(s => s.std)}
+        auditorName={managingAuditor.name}
+        initialData={weekendData}
+        onSaveData={(data) => {
+          setWeekendData(data);
+          alert('[휴일근무확인서 저장 완료]\n주말(토/일) 및 야간 심사 사유가 정상 등록되었습니다.');
+        }}
+      />
     </div>
   );
 };

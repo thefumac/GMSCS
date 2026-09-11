@@ -125,28 +125,59 @@ export interface CertContract {
   status: '유효' | '만료임박' | '만료' | '정지';
 }
 
-export type AuditContractType = '신규인증' | '정기사후' | '갱신심사' | '규격추가' | '인증변경';
+export type AuditContractType = '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경';
 
 export interface CertChangeApplicationData {
   appliedDate: string;
+  companyName?: string;
+  certNumber?: string;
+  dept?: string;
+  contactPerson?: string;
+  standards?: string[];
+  headAddress?: string;
+  plantAddress?: string;
+  tel?: string;
+  fax?: string;
+  currentScope?: string;
+  
   changeCategories: ('상호' | '주소' | '사업자' | '범위' | '표준' | '기타')[];
   newCompanyNameKo?: string;
   newCompanyNameEn?: string;
   newCeoName?: string;
-  newAddressHead?: string;
-  newAddressPlant?: string;
-  newBizType?: string;
+  newManagerName?: string;
+  newAddressHeadKo?: string;
+  newAddressHeadEn?: string;
+  newAddressPlantKo?: string;
+  newAddressPlantEn?: string;
+  bizChangeType?: string; // 개인사업자에서 법인사업자 등
+  bizChangeCeo?: string;
+  bizChangeMna?: string;
+  bizChangeOther?: string;
   scopeChangeType?: '이전' | '추가' | '축소' | '기타';
-  newScopeDetails?: string;
+  newScopeDetailsKo?: string;
+  newScopeDetailsEn?: string;
+  newStandardDetails?: string;
   desiredAuditDate?: string;
   attachedDocuments: string[];
+  
+  // 인증원 확인란
+  verifyMethod?: '서류확인' | '특별사후관리심사' | '인증변경심사';
+  auditDays?: string;
+  auditFee?: number;
+  auditorChargeName?: string;
+  reviewerName?: string;
+  approverName?: string;
+  
   clientSignature?: string;
+  afterCompanyName?: string;
+  afterCeoName?: string;
+  afterAddress?: string;
 }
 
 export interface WeekendAuditReasonData {
   auditDates: string;
   isWeekendOrHoliday: boolean;
-  reasonCategory: '연속가동생산' | '고객사요청' | '공정특성' | '기타';
+  reasonCategory: '전기요금절감' | '연속가동생산' | '고객사요청' | '공정특성' | '기타';
   detailedReason: string;
   auditorSigned: boolean;
   auditorSignedAt?: string;
@@ -164,10 +195,14 @@ export interface AuditContractRecord {
   companyId: string;
   companyName: string;
   contractType: AuditContractType;
+  receptionType?: '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경';
   standards: StandardCode[];
   addedStandards?: StandardCode[]; // 규격추가 시
   changeDetails?: string; // 인증변경 시 사유/내용
   employeeCount: number;
+  previousEmployeeCount?: number;
+  isEmployeeChanged?: boolean;
+  employeeDiff?: number;
   riskLevel: 'High' | 'Medium' | 'Low';
   
   // 이전 계약 사항 (대사 및 비교용)
@@ -179,12 +214,15 @@ export interface AuditContractRecord {
     appliedMd: number;
     ratePerMd: number;
     finalFee: number;
-    travelExpense: number;
+    travelExpense?: number;
+    leadAuditorName?: string;
+    agency?: string;
   };
 
   // KAB 공식 표준 MD (원칙상 조정하지 않고 준수)
   kabStandardMd: number;
   appliedMd: number; // KAB 표준 MD와 일치
+  mdDecisionType?: 'KAB표준유지' | '수동조정변경';
   
   // MD당 단가 조정 (KAB 표준 800,000원에서 단가 조정)
   standardRatePerMd: number; // 800,000원
@@ -201,6 +239,14 @@ export interface AuditContractRecord {
   lodgingExpense: number; // 숙박비 금액
   applicationFee: number; // 5. 신청 및 등록비 (신규/추가/변경 시)
 
+  // 편의 별칭 (호환성)
+  docFee?: number;
+  siteFee?: number;
+  travelFee?: number;
+  lodgingFee?: number;
+  appFee?: number;
+  lodgingProvidedByClient?: boolean;
+
   standardFee: number; // KAB 표준 총액
   finalFee: number; // 5대 항목 합산 최종 계약 금액 (VAT 별도)
   
@@ -211,9 +257,33 @@ export interface AuditContractRecord {
   approvedAt?: string;
   leadAuditorId: string;
   leadAuditorName: string;
+  teamAuditorId?: string;
+  teamAuditorName?: string;
+  isHqOrStaffLead?: boolean; // 본사/상근직원 여부
+
+  // 협력 기관 및 사전 협의
+  agency?: string;
+  consultant?: string;
+  agencyAgreementStatus?: '협의불필요' | '협의대기' | '협의완료';
+  agencyAgreementDate?: string;
+  agencyAgreementBy?: string;
+  agencyAgreementNote?: string;
+
+  // 3자 발송 및 회신 상태
   plannedAuditStartDate?: string;
   plannedAuditEndDate?: string;
-  contractStatus: '견적작성' | '승인요청' | '계약체결' | '심사진행중' | '완료';
+  contractStatus: '견적작성' | '승인요청' | '계약체결' | '계획서발송' | '심사진행중' | '계약대기' | '진행중' | '완료';
+  planInvoiceDispatchStatus?: '미발송' | '발송완료' | '발송대기';
+  planInvoiceDispatchedAt?: string;
+  
+  auditorResponseStatus?: '대기' | '확인회신' | '일정조정요청' | '동의' | '미응답';
+  auditorResponseAt?: string;
+  auditorResponseNote?: string;
+  agencyResponseStatus?: '대기' | '확인회신' | '수수료조정요청' | '일정조정요청' | '동의' | '미응답';
+  agencyResponseAt?: string;
+  agencyResponseNote?: string;
+  clientResponseStatus?: '대기' | '확인회신' | '일정조정요청' | '동의' | '미응답';
+  clientResponseAt?: string;
 
   // 공식 서식 연동
   weekendAuditData?: WeekendAuditReasonData;
@@ -368,6 +438,14 @@ export interface AuditProject {
 
   // 계획서 및 수납
   planSentDate?: string;
+  planInvoiceDispatchStatus?: '미발송' | '발송완료' | '발송대기';
+  planInvoiceDispatchedAt?: string;
+  auditorResponseStatus?: '대기' | '확인회신' | '일정조정요청' | '동의' | '미응답';
+  agencyResponseStatus?: '대기' | '확인회신' | '수수료조정요청' | '일정조정요청' | '동의' | '미응답';
+  clientResponseStatus?: '대기' | '확인회신' | '일정조정요청' | '동의' | '미응답';
+  agencyAgreementStatus?: '협의불필요' | '협의대기' | '협의완료';
+  certChangeData?: CertChangeApplicationData;
+  weekendAuditData?: WeekendAuditReasonData;
   paymentStatus: PaymentStatus;
   taxInvoiceStatus: TaxInvoiceStatus;
   billedAmount: number;

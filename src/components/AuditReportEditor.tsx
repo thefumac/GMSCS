@@ -36,8 +36,10 @@ import {
   Languages,
   Globe
 } from 'lucide-react';
-import { AuditReport, SignatureLog, ProcessMatrixRow, ThreeYearCyclePlanItem, PreviousAuditNcCheck } from '../types';
+import { AuditReport, SignatureLog, ProcessMatrixRow, ThreeYearCyclePlanItem, PreviousAuditNcCheck, CertChangeApplicationData, WeekendAuditReasonData, Company } from '../types';
 import { SignatureCanvas } from './SignatureCanvas';
+import { CertChangeApplicationModal } from './CertChangeApplicationModal';
+import { WeekendAuditReasonModal } from './WeekendAuditReasonModal';
 import { remarkMeetingAgendas } from '../data/mockRemarkData';
 import { 
   FullAuditReportPackData, 
@@ -91,6 +93,12 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
   const [showEmailSendModal, setShowEmailSendModal] = useState<boolean>(false);
   const [showSecretariatReviewModal, setShowSecretariatReviewModal] = useState<boolean>(false);
   const [saveToast, setSaveToast] = useState<string | null>(null);
+
+  // Remark 공식 서식 (F19-002 인증변경신청서 & 휴일근무확인서) State
+  const [isCertChangeOpen, setIsCertChangeOpen] = useState<boolean>(false);
+  const [isWeekendOpen, setIsWeekendOpen] = useState<boolean>(false);
+  const [certChangeData, setCertChangeData] = useState<CertChangeApplicationData | undefined>(undefined);
+  const [weekendData, setWeekendData] = useState<WeekendAuditReasonData | undefined>(undefined);
 
   // 사무국 검토 입력 state
   const [secretariatCommentInput, setSecretariatCommentInput] = useState<string>(initialReport.secretariatComment || '');
@@ -658,6 +666,26 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
               )}
             </div>
           )}
+
+          {/* 현장 인지: F19-002 인증변경신청서 작성 버튼 */}
+          <button
+            onClick={() => setIsCertChangeOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+            title="현장 실사 중 상호/대표/주소/생산품목 변경 인지 시 F19-002 서식 즉시 작성"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>현장 인지: F19-002 인증변경</span>
+          </button>
+
+          {/* 휴일근무확인서 버튼 */}
+          <button
+            onClick={() => setIsWeekendOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+            title="토/일 또는 공휴일 현장 심사 수행 시 휴일근무확인서 작성 및 첨부"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>휴일근무확인서</span>
+          </button>
 
           {/* fumac@naver.com 시험 발송 모달 열기 버튼 */}
           <button
@@ -2364,6 +2392,56 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
           </div>
         </div>
       )}
+
+      {/* F19-002 인증변경신청서 모달 */}
+      <CertChangeApplicationModal
+        isOpen={isCertChangeOpen}
+        onClose={() => setIsCertChangeOpen(false)}
+        company={{
+          id: (initialReport as any).companyId || 'comp-k1',
+          companyName: packData.companyName,
+          ceoName: packData.ceoName,
+          bizNumber: (packData as any).bizNumber || '214-88-92810',
+          address: packData.mainSiteAddress,
+          contactPerson: packData.ceoName,
+          contactPhone: '054-955-9197',
+          scope: packData.auditScope,
+          iafCode: '14'
+        } as Company}
+        certNumber={packData.certNumber}
+        standards={packData.standards.map((s: any) => typeof s === 'string' ? s : s.code || 'ISO 9001:2015')}
+        initialData={certChangeData}
+        onSaveData={(data) => {
+          setCertChangeData(data);
+          if (data.afterCompanyName) {
+            setPackData(prev => ({ ...prev, companyName: data.afterCompanyName! }));
+          }
+          if (data.afterCeoName) {
+            setPackData(prev => ({ ...prev, ceoName: data.afterCeoName! }));
+          }
+          if (data.afterAddress) {
+            setPackData(prev => ({ ...prev, mainSiteAddress: data.afterAddress! }));
+          }
+          setSaveToast('F19-002 인증변경신청서가 심사보고서 패키지에 성공적으로 저장 및 연동되었습니다.');
+          setTimeout(() => setSaveToast(null), 3000);
+        }}
+      />
+
+      {/* 휴일근무확인서 모달 */}
+      <WeekendAuditReasonModal
+        isOpen={isWeekendOpen}
+        onClose={() => setIsWeekendOpen(false)}
+        companyName={packData.companyName}
+        auditDates={`${initialReport.startDate} ~ ${initialReport.endDate}`}
+        standards={packData.standards.map((s: any) => typeof s === 'string' ? s : s.code || 'ISO 9001:2015')}
+        auditorName={initialReport.leadAuditor || '김홍덕'}
+        initialData={weekendData}
+        onSaveData={(data) => {
+          setWeekendData(data);
+          setSaveToast('휴일근무확인서(토/일 전기요금절감 등)가 심사보고서에 첨부 완료되었습니다.');
+          setTimeout(() => setSaveToast(null), 3000);
+        }}
+      />
     </div>
   );
 };

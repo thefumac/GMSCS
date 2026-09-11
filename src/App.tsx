@@ -22,6 +22,7 @@ import { AuditProcessStatusManager } from './components/AuditProcessStatusManage
 import { ClientManagement } from './components/ClientManagement';
 import { AuditorManagement } from './components/AuditorManagement';
 import { CertificationManagement } from './components/CertificationManagement';
+import { CompanyAuditHistoryModal } from './components/CompanyAuditHistoryModal';
 import { CommitteeScheduleItem, loadSavedCommitteeSchedules } from './utils/committeeSchedule';
 
 import { 
@@ -140,6 +141,9 @@ export function App() {
     title: '',
     companyName: ''
   });
+
+  // 기업 심사이력 및 경과 통합 모달 상태
+  const [historyModalCompany, setHistoryModalCompany] = useState<Company | null>(null);
 
   // 심사원 마이페이지 / 개인정보 및 지급방식 관리 모달 상태
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
@@ -537,6 +541,68 @@ export function App() {
     }));
 
     alert(`[계약 반려 처리]\n사유: ${reason}\n해당 계약 조정 건이 반려 처리되었습니다.`);
+  };
+
+  // 3자(기업/심사원/협력기관) 심사계획서 및 심사비청구서 공문 발송 처리
+  const handleDispatchPlanAndInvoice = (contractId: string, target: '기업' | '심사원' | '협력기관' | 'all') => {
+    const nowStr = '2026-09-11';
+    setAuditContracts(prev => prev.map(c => {
+      if (c.id === contractId) {
+        return {
+          ...c,
+          planInvoiceDispatchStatus: '발송완료',
+          planInvoiceDispatchDate: nowStr,
+          contractStatus: c.contractStatus === '계약대기' ? '진행중' : c.contractStatus
+        };
+      }
+      return c;
+    }));
+
+    // 심사진행현황 프로젝트 상태도 '계획서발송'으로 연동 승격
+    setProjects(prev => prev.map(p => {
+      if (p.contractId === contractId || p.id === contractId) {
+        return {
+          ...p,
+          status: '계획서발송',
+          planSentDate: nowStr
+        };
+      }
+      return p;
+    }));
+  };
+
+  // 3자 회신 시뮬레이션 및 심사일정/진행 확정 자동 승격
+  const handleSimulateResponse = (contractId: string, role: 'auditor' | 'agency' | 'client', action: 'agree' | 'request_adjust') => {
+    const statusVal = action === 'agree' ? '동의' : '일정조정요청';
+
+    setAuditContracts(prev => prev.map(c => {
+      if (c.id === contractId) {
+        const updated = { ...c };
+        if (role === 'auditor') updated.auditorResponseStatus = statusVal;
+        if (role === 'agency') updated.agencyResponseStatus = statusVal;
+        if (role === 'client') updated.clientResponseStatus = statusVal;
+
+        // 심사원과 협력기관(존재시) 모두 동의 완료되면 계약체결 확정
+        const auditorOk = updated.auditorResponseStatus === '동의';
+        const agencyOk = !updated.agency || updated.agency === '직영' || updated.agencyResponseStatus === '동의';
+        if (auditorOk && agencyOk) {
+          updated.contractStatus = '계약체결';
+        }
+        return updated;
+      }
+      return c;
+    }));
+
+    // 프로젝트 상태 연동: 심사원 동의 시 '심사진행중' (일정확정)으로 변경
+    setProjects(prev => prev.map(p => {
+      if (p.contractId === contractId || p.id === contractId) {
+        return {
+          ...p,
+          status: action === 'agree' ? '심사진행중' : '계획수립'
+        };
+      }
+      return p;
+    }));
   };
 
   // 심사보고서 목록에서 특정 보고서 상세 열기 (사용자 요구사항: 목록을 보고 클릭하여 세부 사항 열람)
@@ -1110,10 +1176,14 @@ export function App() {
             companies={companies}
             auditors={auditors}
             contracts={auditContracts}
+            projects={projects}
             isAdmin={currentUserRole === 'admin'}
             onSaveContract={handleSaveContract}
             onApproveContract={handleApproveContract}
             onRejectContract={handleRejectContract}
+            onDispatchPlanAndInvoice={handleDispatchPlanAndInvoice}
+            onSimulateResponse={handleSimulateResponse}
+            onOpenCompanyAuditHistory={(comp: any) => setHistoryModalCompany(comp)}
           />
         )}
 
@@ -1317,6 +1387,31 @@ export function App() {
         />
       )}
 
+      {/* 기업 심사 이력 및 진행 경과 통합 모달 */}
+      <CompanyAuditHistoryModal
+        isOpen={!!historyModalCompany}
+        onClose={() => setHistoryModalCompany(null)}
+        company={historyModalCompany}
+        contracts={contracts}
+        auditContracts={auditContracts}
+        projects={projects}
+        reports={reports}
+        settlements={settlements}
+        allAuditors={auditors}
+        onOpenReport={handleOpenReport}
+        onOpenPdfReport={(info) => {
+          setPdfModalState({
+            isOpen: true,
+            title: info.title,
+            companyName: info.companyName,
+            standard: info.standard,
+            auditType: info.auditType,
+            auditDate: info.auditDate,
+            pdfUrl: info.pdfUrl
+          });
+        }}
+      />
+
       {/* Footer (okesg.com 사업자 및 플랫폼 정보 인용, 이용약관/개인정보처리방침 제외) */}
       <footer className="bg-slate-50 border-t border-slate-200 py-6 text-xs text-slate-500 no-print">
         <div className="w-[95%] sm:w-[88%] lg:w-[85%] mx-auto max-w-[1800px] px-2 sm:px-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -1337,7 +1432,7 @@ export function App() {
               <p className="flex flex-wrap items-center">
                 <span><strong className="font-semibold text-slate-700">주소:</strong> 서울특별시 강서구 강서로 406, 9F</span>
                 <span className="text-slate-300 mx-2">|</span>
-                <span><strong className="font-semibold text-slate-700">Email:</strong> <a href="mailto:gnfokesg@gmail.com" className="text-cyan-700 hover:underline">gnfokesg@gmail.com</a></span>
+                <span><strong className="font-semibold text-slate-700">Email:</strong> <a href="mailto:esggnf@naver.com" className="text-cyan-700 hover:underline">esggnf@naver.com</a></span>
               </p>
             </div>
             <p className="text-[10.5px] text-slate-400 pt-0.5">
