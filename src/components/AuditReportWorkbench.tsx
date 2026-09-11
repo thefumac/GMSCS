@@ -207,13 +207,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
   // 1단계 심사 데이터 State (Page 1~6)
   const [stage1Data, setStage1Data] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`${storageKey}_STAGE1`);
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return {
+    const defaultData = {
       auditType: contract?.contractType || '2차 사후관리심사',
       auditStandards: contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
       diffFromApp: '없다',
@@ -301,17 +295,28 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       overallSummary: '본 조직은 ISO 9001:2015 및 ISO 14001:2015 요구사항에 부합하는 경영시스템 문서를 충실히 수립하고 실행하고 있으며, 최고경영자의 확고한 실천 의지와 전부서의 참여도가 높음. 2단계 현장 심사 진행에 결격사유 없음.',
       conclusion: 'pass' as 'pass' | 'corrective' | 'fail'
     };
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`${storageKey}_STAGE1`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return {
+            ...defaultData,
+            ...parsed,
+            attendees: Array.isArray(parsed.attendees) && parsed.attendees.length > 0 ? parsed.attendees : defaultData.attendees,
+            clauseNotes: Array.isArray(parsed.clauseNotes) && parsed.clauseNotes.length > 0 ? parsed.clauseNotes : defaultData.clauseNotes,
+            findingsTable: Array.isArray(parsed.findingsTable) && parsed.findingsTable.length > 0 ? parsed.findingsTable : defaultData.findingsTable,
+          };
+        } catch (e) {}
+      }
+    }
+    return defaultData;
   });
 
   // 2단계 심사 데이터 State (Page 7~16)
   const [stage2Data, setStage2Data] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`${storageKey}_STAGE2`);
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return {
+    const defaultData = {
       auditType: contract?.contractType || '2차 사후관리심사',
       auditStandards: contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
       auditDateStart: '2026-09-10',
@@ -462,6 +467,22 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       nextAuditMonth: '2027-09',
       nextAuditMd: '2.0'
     };
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`${storageKey}_STAGE2`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return {
+            ...defaultData,
+            ...parsed,
+            schedules: Array.isArray(parsed.schedules) && parsed.schedules.length > 0 ? parsed.schedules : defaultData.schedules,
+            auditNotes: Array.isArray(parsed.auditNotes) && parsed.auditNotes.length > 0 ? parsed.auditNotes : defaultData.auditNotes,
+          };
+        } catch (e) {}
+      }
+    }
+    return defaultData;
   });
 
   // NCR 부적합 보고서 목록 State (Page 19~ 동적 추가 가능)
@@ -3101,7 +3122,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {stage2Data.schedules.map((row: any, sIdx: number) => (
+                          {(stage2Data.schedules || []).map((row: any, sIdx: number) => (
                             <tr key={sIdx} className="border-b border-slate-400">
                               <td className="p-0.5 border-r border-slate-400 text-center font-mono bg-slate-50/50">
                                 <input
@@ -4060,7 +4081,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {stage2Data.auditNotes.map((note: { clause: string; content: string }, idx: number) => (
+                          {(stage2Data.auditNotes || []).map((note: { clause: string; content: string }, idx: number) => (
                             <tr key={idx} className="border-b border-slate-400 hover:bg-slate-50/50">
                               <td className="p-2 font-bold text-slate-900 border-r border-slate-400 align-top bg-slate-50">
                                 {note.clause}
