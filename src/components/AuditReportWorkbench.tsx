@@ -1992,11 +1992,11 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </table>
 
                       {/* 표지 식별 중앙 대형 로고 */}
-                      <div className="flex justify-center items-center py-4 my-2">
+                      <div className="flex justify-center items-center py-8 my-3 md:py-10 md:my-4">
                         <img 
                           src="/report-logo.png" 
                           alt="GMSCS 인증원" 
-                          className="h-16 md:h-20 w-auto object-contain" 
+                          className="h-20 md:h-24 w-auto object-contain" 
                         />
                       </div>
 
@@ -3481,11 +3481,11 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </table>
 
                       {/* 표지 식별 중앙 대형 로고 */}
-                      <div className="flex justify-center items-center py-4 my-2">
+                      <div className="flex justify-center items-center py-8 my-3 md:py-10 md:my-4">
                         <img 
                           src="/report-logo.png" 
                           alt="GMSCS 인증원" 
-                          className="h-16 md:h-20 w-auto object-contain" 
+                          className="h-20 md:h-24 w-auto object-contain" 
                         />
                       </div>
 
