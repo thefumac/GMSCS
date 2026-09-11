@@ -3492,9 +3492,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       <table className="w-full border-collapse border border-slate-800 text-xs table-fixed">
                         <colgroup>
                           <col className="w-[15%]" />
-                          <col className="w-[35%]" />
-                          <col className="w-[14%]" />
-                          <col className="w-[36%]" />
+                          <col className="w-[46%]" />
+                          <col className="w-[13%]" />
+                          <col className="w-[26%]" />
                         </colgroup>
                         <tbody>
                           <tr className="border-b border-slate-400">
