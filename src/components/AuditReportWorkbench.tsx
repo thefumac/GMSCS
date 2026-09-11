@@ -234,7 +234,17 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`${storageKey}_SIGS`);
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
+        try {
+          const parsed = JSON.parse(saved);
+          const clean: Record<string, EmailSignatureRecord> = {};
+          Object.entries(parsed).forEach(([k, v]: [string, any]) => {
+            // 과거 하드코딩되었던 더미 해시(SIG-EMAIL-89A4-F291, SIG-EMAIL-CC41-901B) 제거
+            if (v && v.signatureHash && v.signatureHash !== 'SIG-EMAIL-89A4-F291' && v.signatureHash !== 'SIG-EMAIL-CC41-901B') {
+              clean[k] = v;
+            }
+          });
+          return clean;
+        } catch (e) {}
       }
     }
     return {};
@@ -779,17 +789,21 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         });
       } else if (signer.roleType === '심사팀원') {
         if (memberIdx === 0 || memberIdx === -1) {
+          next['s1_team1'] = { ...newSignRecord, slotId: 's1_team1', slotLabel: '심사팀원 (서명)' };
           next['s2_team1'] = { ...newSignRecord, slotId: 's2_team1', slotLabel: '심사팀원1 (서명)' };
           next['s2_p9_member1'] = { ...newSignRecord, slotId: 's2_p9_member1', slotLabel: '심사팀원1 서명' };
           next['s2_conf_m1'] = { ...newSignRecord, slotId: 's2_conf_m1', slotLabel: '심사팀원1 서명' };
         } else if (memberIdx === 1) {
+          next['s1_t2'] = { ...newSignRecord, slotId: 's1_t2', slotLabel: '심사팀원 (서명)' };
           next['s2_team2'] = { ...newSignRecord, slotId: 's2_team2', slotLabel: '심사팀원2 (서명)' };
           next['s2_p9_member2'] = { ...newSignRecord, slotId: 's2_p9_member2', slotLabel: '심사팀원2 서명' };
           next['s2_conf_m2'] = { ...newSignRecord, slotId: 's2_conf_m2', slotLabel: '심사팀원2 서명' };
         } else if (memberIdx === 2) {
+          next['s1_t3'] = { ...newSignRecord, slotId: 's1_t3', slotLabel: '심사팀원 (서명)' };
           next['s2_team3'] = { ...newSignRecord, slotId: 's2_team3', slotLabel: '심사팀원3 (서명)' };
           next['s2_conf_m3'] = { ...newSignRecord, slotId: 's2_conf_m3', slotLabel: '심사팀원3 서명' };
         } else if (memberIdx === 3) {
+          next['s1_oth'] = { ...newSignRecord, slotId: 's1_oth', slotLabel: '기타 (서명)' };
           next['s2_team4'] = { ...newSignRecord, slotId: 's2_team4', slotLabel: '심사팀원4 (서명)' };
           next['s2_conf_m4'] = { ...newSignRecord, slotId: 's2_conf_m4', slotLabel: '심사팀원4 서명' };
         }
@@ -803,6 +817,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
           next[`car_client_sign_${item.id}`] = { ...newSignRecord, slotId: `car_client_sign_${item.id}`, slotLabel: '인증고객 확인 (서명)' };
         });
       } else if (signer.roleType === '근로자대표') {
+        next['s1_work'] = { ...newSignRecord, slotId: 's1_work', slotLabel: '근로자대표 (서명)' };
         next['s2_work'] = { ...newSignRecord, slotId: 's2_work', slotLabel: '근로자대표 (서명)' };
         next['s2_worker_rep'] = { ...newSignRecord, slotId: 's2_worker_rep', slotLabel: '근로자 대표 서명' };
       }
@@ -1153,7 +1168,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     role: '고객확인' | '근로자대표' | '심사팀장' | '심사팀원' | '확인심사원',
     defaultName?: string,
     defaultPos?: string,
-    defaultEmail?: string
+    defaultEmail?: string,
+    signerStatus?: '대기' | '발송완료' | '서명완료'
   ) => {
     const signed = signatures[slotId];
     if (signed && signed.isVerified) {
@@ -1182,23 +1198,47 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       );
     }
 
+    if (signerStatus === '발송완료') {
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            setSigningForm({
+              name: defaultName || (role === '심사팀장' ? (auditor?.name || '') : company.ceoName || ''),
+              position: defaultPos || (role === '심사팀장' ? (auditor?.grade || '선임심사원') : '대표이사'),
+              email: defaultEmail || (role === '심사팀장' ? (auditor?.email || '') : company.contactEmail || ''),
+              pinCode: '',
+              isPinSent: true,
+              generatedPin: Math.floor(100000 + Math.random() * 900000).toString()
+            });
+            setActiveSigningSlot({ slotId, slotLabel, role });
+          }}
+          className="w-full py-1 px-1.5 border border-blue-400 bg-blue-50/80 hover:bg-blue-100 text-blue-900 rounded font-bold text-[10px] flex items-center justify-center gap-1 transition-colors animate-pulse cursor-pointer"
+          title="이메일 발송 완료 상태 - 클릭 시 서명 진행"
+        >
+          <Clock className="w-3 h-3 text-blue-600" />
+          <span>(서명대기 / 전자서명)</span>
+        </button>
+      );
+    }
+
     return (
       <button
         type="button"
         onClick={() => {
           setSigningForm({
-            name: defaultName || (role === '심사팀장' ? (auditor?.name || '남경호') : company.ceoName || '박진용'),
-            position: defaultPos || (role === '심사팀장' ? '선임심사원' : '대표이사'),
-            email: defaultEmail || (role === '심사팀장' ? (auditor?.email || 'auditor@gmscs.co.kr') : company.contactEmail || 'wjt-jypark@naver.com'),
+            name: defaultName || (role === '심사팀장' ? (auditor?.name || '') : company.ceoName || ''),
+            position: defaultPos || (role === '심사팀장' ? (auditor?.grade || '선임심사원') : '대표이사'),
+            email: defaultEmail || (role === '심사팀장' ? (auditor?.email || '') : company.contactEmail || ''),
             pinCode: '',
             isPinSent: false,
             generatedPin: Math.floor(100000 + Math.random() * 900000).toString()
           });
           setActiveSigningSlot({ slotId, slotLabel, role });
         }}
-        className="w-full py-1 px-1.5 border border-dashed border-cyan-700 bg-cyan-50 hover:bg-cyan-100 text-cyan-900 rounded font-bold text-[10.5px] flex items-center justify-center gap-1 transition-colors"
+        className="w-full py-1 px-1.5 border border-dashed border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded font-bold text-[10px] flex items-center justify-center gap-1 transition-colors cursor-pointer"
       >
-        <Mail className="w-3 h-3 text-cyan-700" />
+        <Mail className="w-3 h-3 text-slate-500" />
         <span>(서명 / 전자서명)</span>
       </button>
     );
@@ -1355,6 +1395,12 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       </div>
     </div>
   );
+
+  const leadSigner = emailSigners.find(s => s.roleType === '심사팀장');
+  const clientSigner = emailSigners.find(s => s.roleType === '고객담당자');
+  const workerSigner = emailSigners.find(s => s.roleType === '근로자대표');
+  const teamSigners = emailSigners.filter(s => s.roleType === '심사팀원');
+  const leadAuditorObj = auditors.find(a => a.name === (leadSigner?.name || project?.leadAuditorName || auditor?.name)) || auditor;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-xs flex flex-col overflow-hidden text-slate-900">
@@ -1983,35 +2029,35 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tbody>
                             <tr className="border-b border-slate-400">
                               <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{company.ceoName || '박진용'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{clientSigner?.name || company.contactPerson || company.ceoName || ''}</td>
                               <td className="w-36 p-1 border-r border-slate-400">
-                                {renderSignatureCell('s1_cust', '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                                {renderSignatureCell('s1_cust', '고객 확인 (서명)', '고객확인', clientSigner?.name || company.contactPerson || company.ceoName || '', clientSigner?.position || '담당자', clientSigner?.email || company.contactEmail, clientSigner?.status)}
                               </td>
                               <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{workerSigner?.name || ''}</td>
                               <td className="w-36 p-1">
-                                {renderSignatureCell('s1_work', '근로자대표 (서명)', '근로자대표', '김진수', '근로자대표', 'worker@k1metal.co.kr')}
+                                {renderSignatureCell('s1_work', '근로자대표 (서명)', '근로자대표', workerSigner?.name || '', workerSigner?.position || '근로자대표', workerSigner?.email, workerSigner?.status)}
                               </td>
                             </tr>
                             <tr className="border-b border-slate-400">
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀장</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}</td>
                               <td className="p-1 border-r border-slate-400">
-                                {renderSignatureCell('s1_lead', '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                {renderSignatureCell('s1_lead', '심사팀장 (서명)', '심사팀장', leadSigner?.name || project?.leadAuditorName || auditor?.name || '', leadSigner?.position || leadAuditorObj?.grade || '선임심사원', leadSigner?.email || leadAuditorObj?.email, leadSigner?.status)}
                               </td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{teamSigners[0]?.name || ''}</td>
                               <td className="p-1 border-r border-slate-400">
-                                {renderSignatureCell('s1_team1', '심사팀원 (서명)', '심사팀원', '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                                {renderSignatureCell('s1_team1', '심사팀원 (서명)', '심사팀원', teamSigners[0]?.name || '', teamSigners[0]?.position || '심사원', teamSigners[0]?.email, teamSigners[0]?.status)}
                               </td>
                             </tr>
                             <tr>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
-                              <td className="p-1 border-r border-slate-400">{renderSignatureCell('s1_t2', '심사팀원 (서명)', '심사팀원')}</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-700">{teamSigners[1]?.name || '-'}</td>
+                              <td className="p-1 border-r border-slate-400">{renderSignatureCell('s1_t2', '심사팀원 (서명)', '심사팀원', teamSigners[1]?.name, teamSigners[1]?.position, teamSigners[1]?.email, teamSigners[1]?.status)}</td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
-                              <td className="p-1">{renderSignatureCell('s1_oth', '기타 (서명)', '확인심사원')}</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-700">{teamSigners[2]?.name || '-'}</td>
+                              <td className="p-1">{renderSignatureCell('s1_oth', '기타 (서명)', '확인심사원', teamSigners[2]?.name, teamSigners[2]?.position, teamSigners[2]?.email, teamSigners[2]?.status)}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -3558,50 +3604,50 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tbody>
                             <tr className="border-b border-slate-400">
                               <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{stage2Data.contactPerson || stage2Data.ceoName || company.contactPerson || company.ceoName || '담당자'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{clientSigner?.name || company.contactPerson || company.ceoName || ''}</td>
                               <td className="w-36 p-1 border-r border-slate-400">
-                                {renderSignatureCell('s2_cust', '고객 확인 (서명)', '고객확인', stage2Data.contactPerson || stage2Data.ceoName || company.contactPerson || company.ceoName || '담당자', stage2Data.contactPosition || '품질부장', stage2Data.email || company.contactEmail)}
+                                {renderSignatureCell('s2_cust', '고객 확인 (서명)', '고객확인', clientSigner?.name || company.contactPerson || company.ceoName || '', clientSigner?.position || '담당자', clientSigner?.email || company.contactEmail, clientSigner?.status)}
                               </td>
                               <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{workerSigner?.name || ''}</td>
                               <td className="w-36 p-1">
-                                {renderSignatureCell('s2_work', '근로자대표 (서명)', '근로자대표', '김진수', '근로자대표', 'worker@k1metal.co.kr')}
+                                {renderSignatureCell('s2_work', '근로자대표 (서명)', '근로자대표', workerSigner?.name || '', workerSigner?.position || '근로자대표', workerSigner?.email, workerSigner?.status)}
                               </td>
                             </tr>
                             <tr className="border-b border-slate-400">
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀장</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{stage2Data.scheduleLeader || auditor?.name || '남경호'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}</td>
                               <td className="p-1 border-r border-slate-400">
-                                {renderSignatureCell('s2_lead', '심사팀장 (서명)', '심사팀장', stage2Data.scheduleLeader || auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                {renderSignatureCell('s2_lead', '심사팀장 (서명)', '심사팀장', leadSigner?.name || project?.leadAuditorName || auditor?.name || '', leadSigner?.position || leadAuditorObj?.grade || '선임심사원', leadSigner?.email || leadAuditorObj?.email, leadSigner?.status)}
                               </td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{stage2Data.scheduleMember || '신현섭'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{teamSigners[0]?.name || ''}</td>
                               <td className="p-1">
-                                {renderSignatureCell('s2_team1', '심사팀원 (서명)', '심사팀원', stage2Data.scheduleMember || '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                                {renderSignatureCell('s2_team1', '심사팀원 (서명)', '심사팀원', teamSigners[0]?.name || '', teamSigners[0]?.position || '심사원', teamSigners[0]?.email, teamSigners[0]?.status)}
                               </td>
                             </tr>
                             <tr className="border-b border-slate-400">
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-700">{teamSigners[1]?.name || '-'}</td>
                               <td className="p-1 border-r border-slate-400">
-                                {renderSignatureCell('s2_team2', '심사팀원 (서명)', '심사팀원')}
+                                {renderSignatureCell('s2_team2', '심사팀원 (서명)', '심사팀원', teamSigners[1]?.name, teamSigners[1]?.position, teamSigners[1]?.email, teamSigners[1]?.status)}
                               </td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-700">{teamSigners[2]?.name || '-'}</td>
                               <td className="p-1">
-                                {renderSignatureCell('s2_team3', '심사팀원 (서명)', '심사팀원')}
+                                {renderSignatureCell('s2_team3', '심사팀원 (서명)', '심사팀원', teamSigners[2]?.name, teamSigners[2]?.position, teamSigners[2]?.email, teamSigners[2]?.status)}
                               </td>
                             </tr>
                             <tr>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-700">{teamSigners[3]?.name || '-'}</td>
                               <td className="p-1 border-r border-slate-400">
-                                {renderSignatureCell('s2_team4', '심사팀원 (서명)', '심사팀원')}
+                                {renderSignatureCell('s2_team4', '심사팀원 (서명)', '심사팀원', teamSigners[3]?.name, teamSigners[3]?.position, teamSigners[3]?.email, teamSigners[3]?.status)}
                               </td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-700">{teamSigners[4]?.name || '-'}</td>
                               <td className="p-1">
-                                {renderSignatureCell('s2_oth', '기타 (서명)', '확인심사원')}
+                                {renderSignatureCell('s2_oth', '기타 (서명)', '확인심사원', teamSigners[4]?.name, teamSigners[4]?.position, teamSigners[4]?.email, teamSigners[4]?.status)}
                               </td>
                             </tr>
                           </tbody>
@@ -6051,11 +6097,11 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <div className="grid grid-cols-2 gap-4">
                               <div className="border border-slate-400 p-2 rounded bg-slate-50/50">
                                 <span className="font-bold text-slate-800 block mb-1">고객확인 (대표자/담당자)</span>
-                                {renderSignatureCell('cert_cust_p17', '고객 확인 (서명)', '고객확인', stage2Data.contactPerson || scopeConfirmData.ceoName || company.ceoName || '박진용', stage2Data.contactPosition || '품질부장', stage2Data.email || company.contactEmail)}
+                                {renderSignatureCell('cert_cust_p17', '고객 확인 (서명)', '고객확인', clientSigner?.name || company.contactPerson || company.ceoName || '', clientSigner?.position || '담당자', clientSigner?.email || company.contactEmail, clientSigner?.status)}
                               </div>
                               <div className="border border-slate-400 p-2 rounded bg-slate-50/50">
                                 <span className="font-bold text-slate-800 block mb-1">심사팀장</span>
-                                {renderSignatureCell('cert_lead_p17', '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                {renderSignatureCell('cert_lead_p17', '심사팀장 (서명)', '심사팀장', leadSigner?.name || project?.leadAuditorName || auditor?.name || '', leadSigner?.position || leadAuditorObj?.grade || '선임심사원', leadSigner?.email || leadAuditorObj?.email, leadSigner?.status)}
                               </div>
                             </div>
                           </td>
@@ -6795,7 +6841,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <td className="p-2 border-r border-slate-400 font-mono">
                               <input
                                 type="date"
-                                value={ncrItem.actionDate || '2026-09-25'}
+                                value={ncrItem.actionDate || ''}
                                 onChange={(e) => {
                                   const next = [...ncrList];
                                   next[ncrIdx].actionDate = e.target.value;
@@ -6806,7 +6852,15 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             </td>
                             <th className="p-2 border-r border-slate-400 text-left font-bold">인증고객 확인</th>
                             <td className="p-2">
-                              {renderSignatureCell(`car_client_done_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', scopeConfirmData.ceoName || company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                              {renderSignatureCell(
+                                `car_client_done_${ncrItem.id}`,
+                                '인증고객 확인 (서명)',
+                                '고객확인',
+                                clientSigner?.name || scopeConfirmData.ceoName || company.ceoName || '',
+                                clientSigner?.position || '대표이사',
+                                clientSigner?.email || company.contactEmail,
+                                clientSigner?.status
+                              )}
                             </td>
                           </tr>
 
@@ -6936,7 +6990,15 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[11px] font-semibold text-slate-700">심사원 확인 서명:</span>
                                 <div className="w-48">
-                                  {renderSignatureCell(`car_verif_auditor_${ncrItem.id}`, '확인 심사원 (서명)', '확인심사원', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                  {renderSignatureCell(
+                                    `car_verif_auditor_${ncrItem.id}`,
+                                    '확인 심사원 (서명)',
+                                    '확인심사원',
+                                    leadSigner?.name || auditor?.name || '',
+                                    leadSigner?.position || auditor?.grade || '선임심사원',
+                                    leadSigner?.email || auditor?.email,
+                                    leadSigner?.status
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -6944,7 +7006,15 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[11px] font-semibold text-slate-700">효과성 확인 서명:</span>
                                 <div className="w-48">
-                                  {renderSignatureCell(`car_eff_auditor_${ncrItem.id}`, '효과성 심사원 (서명)', '확인심사원', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                  {renderSignatureCell(
+                                    `car_eff_auditor_${ncrItem.id}`,
+                                    '효과성 심사원 (서명)',
+                                    '확인심사원',
+                                    leadSigner?.name || auditor?.name || '',
+                                    leadSigner?.position || auditor?.grade || '선임심사원',
+                                    leadSigner?.email || auditor?.email,
+                                    leadSigner?.status
+                                  )}
                                 </div>
                               </div>
                             </td>
