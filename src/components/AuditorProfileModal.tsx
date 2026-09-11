@@ -120,10 +120,10 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   const [contractExpiryDate, setContractExpiryDate] = useState(auditor.contractExpiryDate || '2028-12-31');
   const [photoUrl, setPhotoUrl] = useState<string>(auditor.photoUrl || '');
 
-  // Enhanced fields: Residential Region, Birth Date, Gender
-  const [residentialRegion, setResidentialRegion] = useState<string>(auditor.residentialRegion || '서울 강서구');
-  const [birthDate, setBirthDate] = useState<string>(auditor.birthDate || '1972-04-18');
-  const [gender, setGender] = useState<'남' | '여'>(auditor.gender || '남');
+  // Enhanced fields: Residential Region, Birth Date, Gender (DB 우선, 없으면 빈칸)
+  const [residentialRegion, setResidentialRegion] = useState<string>(auditor.residentialRegion || '');
+  const [birthDate, setBirthDate] = useState<string>(auditor.birthDate || '');
+  const [gender, setGender] = useState<'남' | '여' | ''>(auditor.gender || '');
 
   // Payout and Business
   const [payoutMethod, setPayoutMethod] = useState<AuditorPayoutMethod>(auditor.payoutMethod || (auditor.isBusinessEntity ? '세금계산서' : '원천징수'));
@@ -145,7 +145,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
 
   // Standards and Grades
   const [registeredStandards, setRegisteredStandards] = useState<StandardCode[]>(
-    auditor.registeredStandards || ['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018']
+    auditor.registeredStandards || []
   );
   
   const [standardGrades, setStandardGrades] = useState<Record<string, '선임심사원' | '정심사원' | '심사원보' | '기술전문가'>>(() => {
@@ -157,87 +157,13 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
     return initial;
   });
 
-  const [iafCodes, setIafCodes] = useState<string[]>(auditor.iafCodes || ['17 (기계/금속)', '28 (건설/토목)', '14 (고무/플라스틱)']);
+  const [iafCodes, setIafCodes] = useState<string[]>(auditor.iafCodes || []);
 
-  // Certificates, Training, Seminar, Career Requests
-  const [certificates, setCertificates] = useState<AuditorCertItem[]>(auditor.certificates || [
-    {
-      id: 'cert-1',
-      name: 'KAB 공인 ISO 9001 품질경영 선임심사원 자격증',
-      standard: 'ISO 9001:2015',
-      grade: '선임심사원',
-      certNumber: 'KAB-QMS-09-0418',
-      issuer: '한국인정지원센터(KAB)',
-      issueDate: '2018-04-10',
-      expiryDate: '2027-12-31'
-    },
-    {
-      id: 'cert-2',
-      name: 'KAB 공인 ISO 14001 환경경영 선임심사원 자격증',
-      standard: 'ISO 14001:2015',
-      grade: '선임심사원',
-      certNumber: 'KAB-EMS-14-0522',
-      issuer: '한국인정지원센터(KAB)',
-      issueDate: '2019-06-15',
-      expiryDate: '2027-12-31'
-    }
-  ]);
-
-  const [trainingHistory, setTrainingHistory] = useState<AuditorTrainingItem[]>(auditor.trainingHistory || [
-    {
-      id: 'train-2026',
-      title: '2026년도 인증심사원 정기 보수교육 (CPD 16시간)',
-      year: '2026',
-      hours: 16,
-      completedDate: '2026-03-20',
-      institution: '한국인정지원센터(KAB)',
-      status: '이수완료'
-    },
-    {
-      id: 'train-2025',
-      title: '2025년도 ISO 9001/14001 개정 규격 심화 보수교육',
-      year: '2025',
-      hours: 16,
-      completedDate: '2025-05-15',
-      institution: 'GMS인증원 직무교육원',
-      status: '이수완료'
-    }
-  ]);
-
-  const [seminarHistory, setSeminarHistory] = useState<AuditorSeminarItem[]>(auditor.seminarHistory || [
-    {
-      id: 'sem-1',
-      title: '2026 하반기 GMSCS 인증심사원 직무 역량강화 세미나',
-      date: '2026-06-25',
-      host: 'GMSCS 인증원 사무국',
-      hours: 4,
-      location: '본사 대회의실 / 온오프라인 병행',
-      note: '참석 확인 완료'
-    },
-    {
-      id: 'sem-2',
-      title: '2025 지속가능경영(ESG) 및 공급망 실사 대응 워크샵',
-      date: '2025-11-18',
-      host: 'KAB 한국인정지원센터',
-      hours: 6,
-      location: '대한상공회의소 국제회의장',
-      note: '수료증 발급'
-    }
-  ]);
-
-  const [careerCertRequests, setCareerCertRequests] = useState<CareerCertRequestItem[]>(auditor.careerCertRequests || [
-    {
-      id: 'REQ-2026-001',
-      requestedAt: '2026-08-28 14:20',
-      purpose: 'KAB 심사원 3개년 자격갱신 실적 제출용',
-      submitTo: '한국인정지원센터(KAB)',
-      status: '승인완료',
-      approvedAt: '2026-08-29 10:15',
-      approvedBy: '남경호 원장',
-      certDocNumber: 'GMS-EXP-2026-0089',
-      notes: '정상 승인 완료'
-    }
-  ]);
+  // Certificates, Training, Seminar, Career Requests (DB 없을 시 빈 배열 [])
+  const [certificates, setCertificates] = useState<AuditorCertItem[]>(auditor.certificates || []);
+  const [trainingHistory, setTrainingHistory] = useState<AuditorTrainingItem[]>(auditor.trainingHistory || []);
+  const [seminarHistory, setSeminarHistory] = useState<AuditorSeminarItem[]>(auditor.seminarHistory || []);
+  const [careerCertRequests, setCareerCertRequests] = useState<CareerCertRequestItem[]>(auditor.careerCertRequests || []);
 
   // Selected Career Cert Preview Modal State
   const [selectedCertForPrint, setSelectedCertForPrint] = useState<CareerCertRequestItem | null>(null);
@@ -307,7 +233,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   };
 
   // =========================================================================
-  // Dynamic MD and Audit History Calculation from Projects DB
+  // Dynamic MD and Audit History Calculation from Projects DB (DB 데이터만 집계)
   // =========================================================================
   const auditorAuditHistory = useMemo(() => {
     const auditorName = auditor.name.trim();
@@ -327,28 +253,27 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
         id: p.id || `aud-proj-${idx}`,
         companyId: p.companyId,
         companyName: p.companyName,
-        auditDate: p.startDate && p.endDate ? `${p.startDate} ~ ${p.endDate}` : (p.startDate || '2026-09-10'),
-        startDate: p.startDate || '2026-09-10',
+        auditDate: p.startDate && p.endDate ? `${p.startDate} ~ ${p.endDate}` : (p.startDate || ''),
+        startDate: p.startDate || '',
         auditType: p.auditType || '정기사후',
         standards: p.standards && p.standards.length > 0 ? p.standards : ['ISO 9001:2015'],
-        iafCode: (p as any).iafCode || comp?.iafCode || '17',
+        iafCode: (p as any).iafCode || comp?.iafCode || '',
         role,
         isLead,
         appliedMd,
         status: p.status || '완료',
-        industry: comp?.industry || '제조업'
+        industry: comp?.industry || ''
       };
-    }).sort((a, b) => b.startDate.localeCompare(a.startDate));
+    }).sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
   }, [auditor.name, projects, companies]);
 
-  // Cumulative MD summary by Standard
+  // Cumulative MD summary by Standard (DB 실적 합산)
   const standardMdSummary = useMemo(() => {
-    const map: Record<string, { count: number; totalMd: number; leadMd: number }> = {};
+    const map: Record<string, { count: number; totalMd: number; leadMd: number; iafCodes: Set<string> }> = {};
     
-    // 기본 보유 규격 초기화
     registeredStandards.forEach(std => {
-      const key = std.replace('ISO ', '').split(':')[0];
-      map[key] = { count: 0, totalMd: 0, leadMd: 0 };
+      const key = std.replace('ISO ', '').split(':')[0].trim();
+      map[key] = { count: 0, totalMd: 0, leadMd: 0, iafCodes: new Set<string>() };
     });
 
     auditorAuditHistory.forEach(item => {
@@ -356,31 +281,26 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
       item.standards.forEach(rawStd => {
         const stdKey = rawStd.replace('ISO ', '').split(':')[0].trim();
         if (!map[stdKey]) {
-          map[stdKey] = { count: 0, totalMd: 0, leadMd: 0 };
+          map[stdKey] = { count: 0, totalMd: 0, leadMd: 0, iafCodes: new Set<string>() };
         }
         map[stdKey].count += 1;
         map[stdKey].totalMd += md;
         if (item.isLead) {
           map[stdKey].leadMd += md;
         }
+        if (item.iafCode) {
+          map[stdKey].iafCodes.add(item.iafCode);
+        }
       });
     });
-
-    // 기본값이 너무 작으면 realistic default 반영
-    if (Object.keys(map).length > 0 && Object.values(map).every(v => v.totalMd === 0)) {
-      if (map['9001']) map['9001'] = { count: 14, totalMd: 24.5, leadMd: 18.0 };
-      if (map['14001']) map['14001'] = { count: 10, totalMd: 16.0, leadMd: 12.0 };
-      if (map['45001']) map['45001'] = { count: 6, totalMd: 8.5, leadMd: 4.0 };
-    }
 
     return map;
   }, [registeredStandards, auditorAuditHistory]);
 
-  // Cumulative MD summary by IAF Code
+  // Cumulative MD summary by IAF Code (DB 실적 합산)
   const iafCodeMdSummary = useMemo(() => {
     const map: Record<string, { code: string; name: string; count: number; totalMd: number }> = {};
     
-    // IAF 코드 매핑 초기화
     iafCodes.forEach(rawCode => {
       const numMatch = rawCode.match(/^\d+/);
       const codeNum = numMatch ? numMatch[0] : rawCode.substring(0, 2);
@@ -388,7 +308,8 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
     });
 
     auditorAuditHistory.forEach(item => {
-      const code = (item.iafCode || '17').replace(/[^0-9]/g, '').padStart(2, '0');
+      if (!item.iafCode) return;
+      const code = item.iafCode.replace(/[^0-9]/g, '').padStart(2, '0');
       if (!map[code]) {
         map[code] = { code, name: `Code ${code}`, count: 0, totalMd: 0 };
       }
@@ -396,20 +317,12 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
       map[code].totalMd += item.appliedMd;
     });
 
-    // 현실적 기본 MD 보충
-    if (Object.values(map).every(v => v.totalMd === 0)) {
-      if (map['17']) map['17'] = { code: '17', name: '17 (기계/금속)', count: 8, totalMd: 14.5 };
-      if (map['28']) map['28'] = { code: '28', name: '28 (건설/토목)', count: 6, totalMd: 10.0 };
-      if (map['14']) map['14'] = { code: '14', name: '14 (고무/플라스틱)', count: 4, totalMd: 6.5 };
-    }
-
     return map;
   }, [iafCodes, auditorAuditHistory]);
 
   // Total Cumulative Audit MD
   const totalCumulativeMd = useMemo(() => {
-    const sum = auditorAuditHistory.reduce((acc, cur) => acc + cur.appliedMd, 0);
-    return sum > 0 ? sum : 49.0;
+    return auditorAuditHistory.reduce((acc, cur) => acc + cur.appliedMd, 0);
   }, [auditorAuditHistory]);
 
   // Approve / Reject Career Certificate Request (사무국 권한)
@@ -419,14 +332,14 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
         return {
           ...r,
           status: '승인완료',
-          approvedAt: '2026-09-12 10:00',
+          approvedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
           approvedBy: '사무국 (남경호 원장)',
           certDocNumber: `GMS-EXP-2026-${String(Math.floor(Math.random() * 900) + 100)}`
         };
       }
       return r;
     }));
-    alert('심사 경력 증명서 발급 신청이 성공적으로 승인되었습니다.\n해당 심사원은 개인포털에서 즉시 고해상도 PDF 증명서를 출력할 수 있습니다.');
+    alert('심사 경력 증명서 발급 신청이 성공적으로 승인되었습니다.\n해당 심사원은 개인포털에서 즉시 공식 증명서를 출력할 수 있습니다.');
   };
 
   const handleRejectCertRequest = (reqId: string) => {
@@ -461,9 +374,9 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
       grade,
       contractExpiryDate,
       photoUrl,
-      residentialRegion,
-      birthDate,
-      gender,
+      residentialRegion: residentialRegion || undefined,
+      birthDate: birthDate || undefined,
+      gender: (gender as '남' | '여') || undefined,
       payoutMethod,
       isBusinessEntity: payoutMethod === '세금계산서',
       businessNumber: payoutMethod === '세금계산서' ? businessNumber : undefined,
@@ -492,27 +405,27 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-6 sm:pt-10 pb-8 p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-slate-100 border border-slate-300 rounded-3xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-5 sm:pt-8 pb-8 p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-slate-100 border border-slate-300 rounded-3xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition-all duration-200">
         
         {/* ========================================================================= */}
         {/* 1. Modal Top Bar (Header & Quick Identity) */}
         {/* ========================================================================= */}
-        <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0 border-b border-slate-800">
+        <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center space-x-3.5">
             <div className="relative">
               {photoUrl ? (
                 <img 
                   src={photoUrl} 
                   alt={name} 
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-cyan-500/80 shadow-md"
+                  className="w-11 h-11 rounded-full object-cover ring-2 ring-cyan-500/80 shadow-md"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold text-lg shadow-inner">
+                <div className="w-11 h-11 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold text-base shadow-inner">
                   {name.charAt(0) || '심'}
                 </div>
               )}
-              <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 text-[10px] font-bold rounded-full text-white ${
+              <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 text-[9.5px] font-bold rounded-full text-white ${
                 affiliation === '상근' ? 'bg-amber-600' : 'bg-cyan-600'
               }`}>
                 {affiliation}
@@ -534,11 +447,11 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 font-normal flex items-center gap-2 flex-wrap">
-                <span>등록번호: <strong className="font-mono text-slate-200">{gmsNumber || 'GMS25027'}</strong></span>
+                <span>등록번호: <strong className="font-mono text-slate-200">{gmsNumber || '-'}</strong></span>
                 <span>•</span>
-                <span>거주지역: <strong className="text-slate-200">{residentialRegion}</strong></span>
+                <span>거주지역: <strong className="text-slate-200">{residentialRegion || '-'}</strong></span>
                 <span>•</span>
-                <span>생년월일: <strong className="font-mono text-slate-200">{birthDate} ({gender})</strong></span>
+                <span>생년월일: <strong className="font-mono text-slate-200">{birthDate ? `${birthDate} ${gender ? `(${gender})` : ''}` : '-'}</strong></span>
               </p>
             </div>
           </div>
@@ -570,15 +483,15 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
         </div>
 
         {/* ========================================================================= */}
-        {/* 2. Paper-Folder Index Tabs (요청하신 5대 탭) */}
+        {/* 2. Paper-Folder Index Tabs (간격 없이 밀착, 높이 3% 축소 py-2) */}
         {/* ========================================================================= */}
-        <div className="bg-slate-200/90 border-b border-slate-300 px-4 pt-2 grid grid-cols-2 sm:grid-cols-5 gap-1 shrink-0">
+        <div className="bg-slate-200/90 border-b border-slate-300 px-3 pt-1.5 grid grid-cols-5 gap-0 shrink-0">
           
           {/* TAB 1: 기본 정보 */}
           <button
             type="button"
             onClick={() => setActiveTab('basic')}
-            className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-t-xl text-xs font-bold border-t border-x transition cursor-pointer ${
+            className={`flex items-center justify-center space-x-1 py-2 px-1 rounded-t-lg text-xs font-bold border-t border-x transition cursor-pointer ${
               activeTab === 'basic'
                 ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
                 : 'bg-slate-300/60 text-slate-600 border-transparent hover:bg-slate-300'
@@ -592,7 +505,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-t-xl text-xs font-bold border-t border-x transition cursor-pointer ${
+            className={`flex items-center justify-center space-x-1 py-2 px-1 rounded-t-lg text-xs font-bold border-t border-x transition cursor-pointer ${
               activeTab === 'history'
                 ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
                 : 'bg-slate-300/60 text-slate-600 border-transparent hover:bg-slate-300'
@@ -606,7 +519,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('qualMatrix')}
-            className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-t-xl text-xs font-bold border-t border-x transition cursor-pointer ${
+            className={`flex items-center justify-center space-x-1 py-2 px-1 rounded-t-lg text-xs font-bold border-t border-x transition cursor-pointer ${
               activeTab === 'qualMatrix'
                 ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
                 : 'bg-slate-300/60 text-slate-600 border-transparent hover:bg-slate-300'
@@ -620,7 +533,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('education')}
-            className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-t-xl text-xs font-bold border-t border-x transition cursor-pointer ${
+            className={`flex items-center justify-center space-x-1 py-2 px-1 rounded-t-lg text-xs font-bold border-t border-x transition cursor-pointer ${
               activeTab === 'education'
                 ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
                 : 'bg-slate-300/60 text-slate-600 border-transparent hover:bg-slate-300'
@@ -634,7 +547,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('certificates')}
-            className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-t-xl text-xs font-bold border-t border-x transition cursor-pointer ${
+            className={`flex items-center justify-center space-x-1 py-2 px-1 rounded-t-lg text-xs font-bold border-t border-x transition cursor-pointer ${
               activeTab === 'certificates'
                 ? 'bg-white text-slate-900 border-slate-300 shadow-xs'
                 : 'bg-slate-300/60 text-slate-600 border-transparent hover:bg-slate-300'
@@ -648,26 +561,26 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
         {/* ========================================================================= */}
         {/* 3. Modal Content Body */}
         {/* ========================================================================= */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 bg-white min-h-[480px]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-white min-h-[460px]">
           
           {/* ----------------------------------------------------------------------- */}
-          {/* TAB 1: 기본정보 (인적사항, 주거지역, 생년월일, 성별, 정산정보)           */}
+          {/* TAB 1: 기본정보                                                         */}
           {/* ----------------------------------------------------------------------- */}
           {activeTab === 'basic' && (
-            <div className="space-y-5 animate-in fade-in">
+            <div className="space-y-4 animate-in fade-in">
               {/* Photo & Identity Section */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 flex flex-col sm:flex-row items-center gap-5">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
                 <div className="relative group shrink-0">
                   {photoUrl ? (
                     <img 
                       src={photoUrl} 
                       alt={name} 
-                      className="w-24 h-24 rounded-2xl object-cover ring-2 ring-cyan-200 shadow-md"
+                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-cyan-200 shadow-md"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400">
-                      <User className="w-8 h-8 text-slate-400" />
-                      <span className="text-[11px] font-medium mt-1">사진 없음</span>
+                    <div className="w-20 h-20 rounded-2xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400">
+                      <User className="w-7 h-7 text-slate-400" />
+                      <span className="text-[10.5px] font-medium mt-1">사진 없음</span>
                     </div>
                   )}
                   <button
@@ -676,7 +589,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     className="absolute -bottom-1 -right-1 p-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-full shadow-md border-2 border-white transition cursor-pointer"
                     title="사진 변경"
                   >
-                    <Camera className="w-3.5 h-3.5" />
+                    <Camera className="w-3 h-3" />
                   </button>
                   <input 
                     type="file" 
@@ -687,32 +600,32 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   />
                 </div>
 
-                <div className="space-y-1.5 text-center sm:text-left flex-1">
+                <div className="space-y-1 text-center sm:text-left flex-1">
                   <div className="flex items-center justify-center sm:justify-start gap-2">
                     <h4 className="text-xs font-bold text-slate-900">심사원 프로필 사진</h4>
-                    <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-800 text-[10.5px] font-bold">
+                    <span className="px-2 py-0.2 rounded bg-cyan-100 text-cyan-800 text-[10px] font-bold">
                       공문 및 심사보고서 자동 연동
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    개인포털에서 심사원이 직접 사진 및 개인정보를 수정할 수 있으며, 주소 전체 대신 <strong>주거지역(시/구), 생년월일, 성별</strong>을 체계적으로 관리합니다.
+                  <p className="text-[11.5px] text-slate-500 leading-relaxed">
+                    개인포털에서 심사원이 직접 사진 및 개인정보를 입력/수정할 수 있습니다.
                   </p>
-                  <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 pt-0.5">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 transition cursor-pointer shadow-2xs"
+                      className="px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 transition cursor-pointer shadow-2xs"
                     >
-                      사진 업로드 / 변경
+                      사진 업로드
                     </button>
                     {photoUrl && (
                       <button
                         type="button"
                         onClick={handleRemovePhoto}
-                        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center gap-1 cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" />
-                        사진 삭제
+                        삭제
                       </button>
                     )}
                   </div>
@@ -720,13 +633,13 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
               </div>
 
               {/* Personal Info Grid */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3.5">
                 <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5 pb-2 border-b border-slate-200">
                   <User className="w-4 h-4 text-cyan-700" />
                   <span>개인 인적사항 (개인포털 연동 항목)</span>
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
                       심사원 성명 <span className="text-rose-500">*</span>
@@ -735,7 +648,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                       placeholder="예: 김홍덕"
                     />
                   </div>
@@ -748,7 +661,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       type="text"
                       value={gmsNumber}
                       onChange={(e) => setGmsNumber(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-mono font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                       placeholder="예: GMS25027"
                     />
                   </div>
@@ -760,49 +673,45 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     <select
                       value={affiliation}
                       onChange={(e) => setAffiliation(e.target.value as AuditorAffiliation)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-bold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                     >
                       <option value="비상근">비상근 (일반 심사원)</option>
                       <option value="상근">상근 (사무국 전임)</option>
                     </select>
                   </div>
 
-                  {/* 3대 핵심 사용자 요구 항목: 거주지역, 생년월일, 성별 */}
                   <div>
                     <label className="block text-slate-700 font-bold mb-1 flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-cyan-600" />
-                      <span>주거지역 (시/구 단위) <span className="text-rose-500">*</span></span>
+                      <span>주거지역 (시/구 단위)</span>
                     </label>
                     <input
                       type="text"
                       value={residentialRegion}
                       onChange={(e) => setResidentialRegion(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                       placeholder="예: 서울 강서구, 대구 달서구"
                     />
-                    <span className="text-[10.5px] text-slate-400 mt-0.5 block">
-                      * 주소 전체 대신 심사원 배정 시 지역 동선을 위한 거주지역입니다.
-                    </span>
                   </div>
 
                   <div>
                     <label className="block text-slate-700 font-bold mb-1 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-cyan-600" />
-                      <span>생년월일 <span className="text-rose-500">*</span></span>
+                      <span>생년월일</span>
                     </label>
                     <input
                       type="date"
                       value={birthDate}
                       onChange={(e) => setBirthDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-mono font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                     />
                   </div>
 
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
-                      성별 <span className="text-rose-500">*</span>
+                      성별
                     </label>
-                    <div className="grid grid-cols-2 gap-2 mt-0.5">
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setGender('남')}
@@ -812,7 +721,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                             : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                         }`}
                       >
-                        남성 (남)
+                        남
                       </button>
                       <button
                         type="button"
@@ -823,7 +732,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                             : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                         }`}
                       >
-                        여성 (여)
+                        여
                       </button>
                     </div>
                   </div>
@@ -831,13 +740,13 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   <div>
                     <label className="block text-slate-700 font-bold mb-1 flex items-center gap-1">
                       <Phone className="w-3.5 h-3.5 text-slate-400" />
-                      휴대전화 번호 <span className="text-rose-500">*</span>
+                      휴대전화 번호
                     </label>
                     <input
                       type="text"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-mono font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                       placeholder="010-XXXX-XXXX"
                     />
                   </div>
@@ -845,14 +754,14 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   <div>
                     <label className="block text-slate-700 font-bold mb-1 flex items-center gap-1">
                       <Mail className="w-3.5 h-3.5 text-slate-400" />
-                      이메일 주소 <span className="text-rose-500">*</span>
+                      이메일 주소
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
-                      placeholder="fumac@naver.com"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-mono font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
+                      placeholder="이메일 입력"
                     />
                   </div>
 
@@ -864,14 +773,14 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       type="date"
                       value={contractExpiryDate}
                       onChange={(e) => setContractExpiryDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-mono font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Payout & Bank Info */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-4">
+              {/* Payout & Bank Info (세금계산서 클릭 시 세부 입력 표시) */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3.5">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                     <DollarSign className="w-4 h-4 text-emerald-600" />
@@ -881,9 +790,9 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setPayoutMethod('원천징수')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                         payoutMethod === '원천징수'
-                          ? 'bg-emerald-700 text-white'
+                          ? 'bg-emerald-700 text-white shadow-2xs'
                           : 'bg-white text-slate-600 border border-slate-300'
                       }`}
                     >
@@ -891,25 +800,94 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPayoutMethod('세금계산서')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      onClick={() => {
+                        setPayoutMethod('세금계산서');
+                        if (!taxEmail && email) setTaxEmail(email);
+                        if (!businessCeo && name) setBusinessCeo(name);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                         payoutMethod === '세금계산서'
-                          ? 'bg-blue-700 text-white'
+                          ? 'bg-blue-700 text-white shadow-2xs'
                           : 'bg-white text-slate-600 border border-slate-300'
                       }`}
                     >
-                      세금계산서 (개인사업자)
+                      세금계산서
                     </button>
                   </div>
                 </div>
 
+                {/* 세금계산서 선택 시 사업자 발행 정보 표시 */}
+                {payoutMethod === '세금계산서' && (
+                  <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl space-y-3 animate-in fade-in text-xs">
+                    <div className="font-bold text-blue-900 flex items-center gap-1.5 pb-1 border-b border-blue-100">
+                      <Building2 className="w-3.5 h-3.5 text-blue-700" />
+                      <span>전자세금계산서 발행 정보</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-slate-700 font-bold mb-1">
+                          사업자명 (상호) <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={businessName}
+                          onChange={(e) => setBusinessName(e.target.value)}
+                          placeholder="상호명 입력"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-700 font-bold mb-1">
+                          대표자 성명 <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={businessCeo}
+                          onChange={(e) => setBusinessCeo(e.target.value)}
+                          placeholder={name || '대표자명'}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-700 font-bold mb-1">
+                          사업자등록번호 <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={businessNumber}
+                          onChange={(e) => setBusinessNumber(e.target.value)}
+                          placeholder="000-00-00000"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-700 font-bold mb-1">
+                          수신 이메일 <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={taxEmail}
+                          onChange={(e) => setTaxEmail(e.target.value)}
+                          placeholder={email || 'tax@domain.com'}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 계좌 정보 */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">입금 은행</label>
                     <select
                       value={bankName}
                       onChange={(e) => setBankName(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                     >
                       {BANK_LIST.map((b) => (
                         <option key={b} value={b}>{b}</option>
@@ -923,8 +901,8 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       type="text"
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="예: 110-123-456789"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-mono font-semibold text-slate-900 focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      placeholder="계좌번호 입력"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-mono font-semibold text-slate-900 focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                     />
                   </div>
 
@@ -934,8 +912,8 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       type="text"
                       value={accountHolder}
                       onChange={(e) => setAccountHolder(e.target.value)}
-                      placeholder="예: 김홍덕"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 text-xs shadow-2xs"
+                      placeholder={name || '예금주'}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
                     />
                   </div>
                 </div>
@@ -944,7 +922,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           )}
 
           {/* ----------------------------------------------------------------------- */}
-          {/* TAB 2: 심사이력 (Audit History & Role Records)                          */}
+          {/* TAB 2: 심사이력                                                         */}
           {/* ----------------------------------------------------------------------- */}
           {activeTab === 'history' && (
             <div className="space-y-4 animate-in fade-in">
@@ -955,7 +933,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     <span>심사 수행 이력 대장 (앱 심사 DB 실시간 자동 연동)</span>
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    해당 심사원이 팀장(선임심사원) 및 심사팀원으로 참여한 심사 기록과 부여 역할 목록입니다.
+                    해당 심사원이 팀장(선임심사원) 및 심사팀원으로 참여한 실제 심사 기록과 부여 역할 목록입니다.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -994,11 +972,11 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                             {idx + 1}
                           </td>
                           <td className="py-2 px-3 border-r border-slate-200 font-mono text-[11.5px] whitespace-nowrap">
-                            {rec.auditDate}
+                            {rec.auditDate || '-'}
                           </td>
                           <td className="py-2 px-3.5 border-r border-slate-200">
                             <div className="font-bold text-slate-900">{rec.companyName}</div>
-                            <div className="text-[10.5px] text-slate-500">{rec.industry}</div>
+                            {rec.industry && <div className="text-[10.5px] text-slate-500">{rec.industry}</div>}
                           </td>
                           <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap">
                             <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold text-[11px]">
@@ -1009,7 +987,9 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                             <div className="font-semibold text-cyan-950">
                               {rec.standards.map(s => s.replace('ISO ', '')).join(', ')}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-mono">IAF Code {rec.iafCode}</div>
+                            {rec.iafCode && (
+                              <div className="text-[10px] text-slate-400 font-mono">IAF Code {rec.iafCode}</div>
+                            )}
                           </td>
                           <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap">
                             <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
@@ -1052,11 +1032,11 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           )}
 
           {/* ----------------------------------------------------------------------- */}
-          {/* TAB 3: 자격 & 코드 관리 (규격별 누적MD, IAF 코드별 누적MD, 승급 요건) */}
+          {/* TAB 3: 자격 & 코드 관리                                                 */}
           {/* ----------------------------------------------------------------------- */}
           {activeTab === 'qualMatrix' && (
-            <div className="space-y-5 animate-in fade-in">
-              <div className="bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 p-5 rounded-2xl text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-4 animate-in fade-in">
+              <div className="bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 p-4.5 rounded-2xl text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold text-xs border border-cyan-400/30">
@@ -1083,62 +1063,68 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   <span>1. 보유 인증 규격별 심사이력 &amp; 누적 MD 산출</span>
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {registeredStandards.map(std => {
-                    const cleanKey = std.replace('ISO ', '').split(':')[0].trim();
-                    const stats = standardMdSummary[cleanKey] || { count: 0, totalMd: 0, leadMd: 0 };
-                    const curGrade = standardGrades[std] || '선임심사원';
-                    const isLead = curGrade.includes('선임');
-                    const isFulfilled = stats.totalMd >= 15.0;
+                {registeredStandards.length === 0 ? (
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-center text-slate-400 text-xs">
+                    등록된 인증 규격이 없습니다.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {registeredStandards.map(std => {
+                      const cleanKey = std.replace('ISO ', '').split(':')[0].trim();
+                      const stats = standardMdSummary[cleanKey] || { count: 0, totalMd: 0, leadMd: 0 };
+                      const curGrade = standardGrades[std] || '선임심사원';
+                      const isLead = curGrade.includes('선임');
+                      const isFulfilled = stats.totalMd >= 15.0;
 
-                    return (
-                      <div key={std} className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2.5 shadow-2xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-xs text-slate-900">{std}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${
-                            isLead ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white'
-                          }`}>
-                            {curGrade}
-                          </span>
-                        </div>
+                      return (
+                        <div key={std} className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-2 shadow-2xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-extrabold text-xs text-slate-900">{std}</span>
+                            <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${
+                              isLead ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white'
+                            }`}>
+                              {curGrade}
+                            </span>
+                          </div>
 
-                        <div className="space-y-1 text-xs">
-                          <div className="flex justify-between text-slate-600">
-                            <span>누적 심사 건수:</span>
-                            <strong className="font-mono text-slate-900">{stats.count}건</strong>
-                          </div>
-                          <div className="flex justify-between text-slate-600">
-                            <span>누적 심사 공수:</span>
-                            <strong className="font-mono text-cyan-800 font-bold">{stats.totalMd.toFixed(1)} MD</strong>
-                          </div>
-                          <div className="flex justify-between text-slate-600">
-                            <span>팀장(선임) 수행:</span>
-                            <strong className="font-mono text-indigo-800">{stats.leadMd.toFixed(1)} MD</strong>
-                          </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-200">
-                          {isFulfilled ? (
-                            <div className="flex items-center gap-1 text-emerald-700 font-bold text-[11px]">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>충족 (누적 {stats.totalMd.toFixed(1)} MD 완료)</span>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between text-slate-600">
+                              <span>누적 심사 건수:</span>
+                              <strong className="font-mono text-slate-900">{stats.count}건</strong>
                             </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-amber-700 font-bold text-[11px]">
-                                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                                <span>요건 진행중 ({stats.totalMd.toFixed(1)} / 기준 15.0 MD)</span>
+                            <div className="flex justify-between text-slate-600">
+                              <span>누적 심사 공수:</span>
+                              <strong className="font-mono text-cyan-800 font-bold">{stats.totalMd.toFixed(1)} MD</strong>
+                            </div>
+                            <div className="flex justify-between text-slate-600">
+                              <span>팀장(선임) 수행:</span>
+                              <strong className="font-mono text-indigo-800">{stats.leadMd.toFixed(1)} MD</strong>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-200">
+                            {isFulfilled ? (
+                              <div className="flex items-center gap-1 text-emerald-700 font-bold text-[11px]">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>충족 (누적 {stats.totalMd.toFixed(1)} MD)</span>
                               </div>
-                              <span className="text-[10px] text-slate-500 block">
-                                * 승급 요건: {(15.0 - stats.totalMd).toFixed(1)} MD 추가 심사 및 입회심사 필요
-                              </span>
-                            </div>
-                          )}
+                            ) : (
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-1 text-amber-700 font-bold text-[11px]">
+                                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>요건 진행중 ({stats.totalMd.toFixed(1)} / 기준 15.0 MD)</span>
+                                </div>
+                                <span className="text-[10px] text-slate-500 block">
+                                  * 승급 요건: {(15.0 - stats.totalMd).toFixed(1)} MD 추가 심사 및 입회심사 필요
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* 3-B. IAF 전문 코드별 누적 MD 산출 */}
@@ -1160,38 +1146,46 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
-                      {Object.values(iafCodeMdSummary).map((iaf) => {
-                        const isCodeFulfilled = iaf.totalMd >= 5.0;
+                      {Object.values(iafCodeMdSummary).length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400">
+                            등록된 IAF 전문 코드가 없습니다.
+                          </td>
+                        </tr>
+                      ) : (
+                        Object.values(iafCodeMdSummary).map((iaf) => {
+                          const isCodeFulfilled = iaf.totalMd >= 5.0;
 
-                        return (
-                          <tr key={iaf.code} className="hover:bg-slate-50 transition">
-                            <td className="py-2.5 px-3 text-center font-mono font-bold text-cyan-800 border-r border-slate-200">
-                              {iaf.code}
-                            </td>
-                            <td className="py-2.5 px-3.5 font-semibold text-slate-900 border-r border-slate-200">
-                              {iaf.name}
-                            </td>
-                            <td className="py-2.5 px-3 text-center font-mono border-r border-slate-200">
-                              {iaf.count}건
-                            </td>
-                            <td className="py-2.5 px-3 text-center font-mono font-bold text-indigo-900 border-r border-slate-200">
-                              {iaf.totalMd.toFixed(1)} MD
-                            </td>
-                            <td className="py-2.5 px-3 text-center">
-                              {isCodeFulfilled ? (
-                                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px] inline-flex items-center gap-1">
-                                  <Check className="w-3 h-3 text-emerald-700" />
-                                  <span>충족 ({iaf.totalMd.toFixed(1)} MD)</span>
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium text-[11px] inline-flex items-center gap-1">
-                                  <span>미충족 ({iaf.totalMd.toFixed(1)}/5.0 MD)</span>
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                          return (
+                            <tr key={iaf.code} className="hover:bg-slate-50 transition">
+                              <td className="py-2.5 px-3 text-center font-mono font-bold text-cyan-800 border-r border-slate-200">
+                                {iaf.code}
+                              </td>
+                              <td className="py-2.5 px-3.5 font-semibold text-slate-900 border-r border-slate-200">
+                                {iaf.name}
+                              </td>
+                              <td className="py-2.5 px-3 text-center font-mono border-r border-slate-200">
+                                {iaf.count}건
+                              </td>
+                              <td className="py-2.5 px-3 text-center font-mono font-bold text-indigo-900 border-r border-slate-200">
+                                {iaf.totalMd.toFixed(1)} MD
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                {isCodeFulfilled ? (
+                                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px] inline-flex items-center gap-1">
+                                    <Check className="w-3 h-3 text-emerald-700" />
+                                    <span>충족 ({iaf.totalMd.toFixed(1)} MD)</span>
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium text-[11px] inline-flex items-center gap-1">
+                                    <span>미충족 ({iaf.totalMd.toFixed(1)}/5.0 MD)</span>
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1200,80 +1194,90 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           )}
 
           {/* ----------------------------------------------------------------------- */}
-          {/* TAB 4: 자격증·교육·세미나 이력 (Certificates, Training & Seminars)       */}
+          {/* TAB 4: 자격증·교육·세미나                                               */}
           {/* ----------------------------------------------------------------------- */}
           {activeTab === 'education' && (
-            <div className="space-y-5 animate-in fade-in">
+            <div className="space-y-4 animate-in fade-in">
               {/* 4-A: KAB 공인 심사원 자격증 사진 및 등록 정보 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                     <Award className="w-4 h-4 text-cyan-700" />
                     <span>KAB 공인 심사원 자격증 사본 및 등록 정보</span>
                   </h4>
-                  <span className="text-[11px] text-slate-500 font-mono">총 {certificates.length}개 보유</span>
+                  <span className="text-[11px] text-slate-500 font-mono">총 {certificates.length}건</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {certificates.map(cert => (
-                    <div key={cert.id} className="bg-white border border-slate-200 p-3.5 rounded-xl space-y-2 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900">{cert.name}</span>
-                        <span className="px-2 py-0.5 rounded bg-cyan-700 text-white font-bold text-[10px]">
-                          {cert.grade}
-                        </span>
+                {certificates.length === 0 ? (
+                  <div className="p-4 bg-white rounded-xl border border-dashed border-slate-200 text-center text-slate-400 text-xs">
+                    등록된 자격증 사본 정보가 없습니다.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {certificates.map(cert => (
+                      <div key={cert.id} className="bg-white border border-slate-200 p-3.5 rounded-xl space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-900">{cert.name}</span>
+                          <span className="px-2 py-0.5 rounded bg-cyan-700 text-white font-bold text-[10px]">
+                            {cert.grade}
+                          </span>
+                        </div>
+                        <div className="text-[11.5px] text-slate-600 space-y-1">
+                          <div>자격번호: <strong className="font-mono text-slate-900">{cert.certNumber || '-'}</strong></div>
+                          <div>발행기관: <strong>{cert.issuer || '-'}</strong></div>
+                          <div>최초등록일: <strong className="font-mono">{cert.issueDate || '-'}</strong> | 유효기간: <strong className="font-mono text-cyan-800">{cert.expiryDate || '-'}</strong></div>
+                        </div>
+                        <div className="pt-1 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => alert(`[자격증 사본 조회]\n자격증: ${cert.name}\n등록번호: ${cert.certNumber || '-'}\n발행처: ${cert.issuer || '-'}`)}
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3 text-slate-600" />
+                            <span>자격증 사본 확인</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-[11.5px] text-slate-600 space-y-1">
-                        <div>자격번호: <strong className="font-mono text-slate-900">{cert.certNumber}</strong></div>
-                        <div>발행기관: <strong>{cert.issuer}</strong></div>
-                        <div>최초등록일: <strong className="font-mono">{cert.issueDate}</strong> | 유효기간: <strong className="font-mono text-cyan-800">{cert.expiryDate || '2027-12-31'}</strong></div>
-                      </div>
-                      <div className="pt-1 flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => alert(`[자격증 사본 조회]\n자격증: ${cert.name}\n등록번호: ${cert.certNumber}\n발행처: ${cert.issuer}`)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1"
-                        >
-                          <Eye className="w-3 h-3 text-slate-600" />
-                          <span>자격증 사본 확인</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 4-B: 필수 보수교육(CPD) 이수 현황 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-emerald-700" />
                     <span>연간 의무 보수교육 (CPD) 이수 이력</span>
                   </h4>
-                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10.5px] font-bold">
-                    2026년도 이수 완료
-                  </span>
+                  <span className="text-[11px] text-slate-500 font-mono">총 {trainingHistory.length}건</span>
                 </div>
 
-                <div className="space-y-2">
-                  {trainingHistory.map(tr => (
-                    <div key={tr.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                      <div>
-                        <div className="font-bold text-slate-900">{tr.title}</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">
-                          교육기관: {tr.institution} | 이수일자: {tr.completedDate} ({tr.hours}시간)
+                {trainingHistory.length === 0 ? (
+                  <div className="p-4 bg-white rounded-xl border border-dashed border-slate-200 text-center text-slate-400 text-xs">
+                    등록된 보수교육 이수 이력이 없습니다.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {trainingHistory.map(tr => (
+                      <div key={tr.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div>
+                          <div className="font-bold text-slate-900">{tr.title}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            교육기관: {tr.institution} | 이수일자: {tr.completedDate} ({tr.hours}시간)
+                          </div>
                         </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200 self-start sm:self-auto">
+                          ✓ {tr.status} ({tr.hours}h)
+                        </span>
                       </div>
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200 self-start sm:self-auto">
-                        ✓ {tr.status} ({tr.hours}h)
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 4-C: 직무 세미나 및 워크샵 참석 이력 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-blue-700" />
@@ -1282,38 +1286,44 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   <span className="text-[11px] text-slate-500 font-mono">총 {seminarHistory.length}건 참석</span>
                 </div>
 
-                <div className="space-y-2">
-                  {seminarHistory.map(sem => (
-                    <div key={sem.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                      <div>
-                        <div className="font-bold text-slate-900">{sem.title}</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">
-                          일시: {sem.date} ({sem.hours}시간) | 주관: {sem.host} {sem.location ? `| 장소: ${sem.location}` : ''}
+                {seminarHistory.length === 0 ? (
+                  <div className="p-4 bg-white rounded-xl border border-dashed border-slate-200 text-center text-slate-400 text-xs">
+                    등록된 세미나 참석 이력이 없습니다.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {seminarHistory.map(sem => (
+                      <div key={sem.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div>
+                          <div className="font-bold text-slate-900">{sem.title}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            일시: {sem.date} ({sem.hours}시간) | 주관: {sem.host} {sem.location ? `| 장소: ${sem.location}` : ''}
+                          </div>
                         </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold text-[11px] border border-blue-200 self-start sm:self-auto">
+                          참석 확인됨
+                        </span>
                       </div>
-                      <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold text-[11px] border border-blue-200 self-start sm:self-auto">
-                        참석 확인됨
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* ----------------------------------------------------------------------- */}
-          {/* TAB 5: 경력증명서 승인 및 출력 (Career Certificate Approval)            */}
+          {/* TAB 5: 경력증명서 승인                                                 */}
           {/* ----------------------------------------------------------------------- */}
           {activeTab === 'certificates' && (
-            <div className="space-y-5 animate-in fade-in">
-              <div className="bg-amber-50/80 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3 text-amber-950">
+            <div className="space-y-4 animate-in fade-in">
+              <div className="bg-amber-50/80 border border-amber-200 p-3.5 rounded-2xl flex items-start space-x-3 text-amber-950">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-1 text-xs">
                   <div className="font-extrabold text-amber-900">
                     [사무국 관리자 전용] 심사원 경력증명서 발급 심사 및 공식 승인
                   </div>
                   <p className="text-amber-800 leading-relaxed font-normal">
-                    심사원이 개인포털에서 신청한 <strong>심사 경력 증명서</strong>는 사무국의 승인 절차를 거쳐야만 개인포털에서 출력 및 다운로드가 활성화됩니다.
+                    심사원이 개인포털에서 신청한 <strong>심사 경력 증명서</strong>는 [증명서 이력 보기]를 통해 실적을 검토하고 [승인]을 클릭하면 개인포털에서 즉시 출력이 가능해집니다.
                   </p>
                 </div>
               </div>
@@ -1328,13 +1338,13 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       <th className="py-2.5 px-3 border-r border-slate-200">제출처</th>
                       <th className="py-2.5 px-3 text-center w-24 border-r border-slate-200">진행 상태</th>
                       <th className="py-2.5 px-3 text-center w-36 border-r border-slate-200">승인 정보</th>
-                      <th className="py-2.5 px-3 text-center w-32">사무국 관리</th>
+                      <th className="py-2.5 px-3 text-center w-36">사무국 관리</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {careerCertRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-400">
+                        <td colSpan={6} className="py-10 text-center text-slate-400">
                           접수된 경력증명서 발급 신청 내역이 없습니다.
                         </td>
                       </tr>
@@ -1372,33 +1382,15 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                             )}
                           </td>
                           <td className="py-2.5 px-3 text-center">
-                            {req.status === '신청대기' ? (
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleApproveCertRequest(req.id)}
-                                  className="px-2 py-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-[11px] rounded-lg transition cursor-pointer shadow-2xs"
-                                >
-                                  승인
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRejectCertRequest(req.id)}
-                                  className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] rounded-lg border border-rose-200 transition cursor-pointer"
-                                >
-                                  반려
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setSelectedCertForPrint(req)}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] rounded-lg border border-slate-300 transition cursor-pointer inline-flex items-center gap-1 shadow-2xs"
-                              >
-                                <Printer className="w-3 h-3 text-slate-700" />
-                                <span>증명서 미리보기</span>
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCertForPrint(req)}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] rounded-lg border border-slate-300 transition cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                              title="증명서 내용 확인 및 승인 처리"
+                            >
+                              <Eye className="w-3 h-3 text-slate-700" />
+                              <span>증명서 이력 보기</span>
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -1422,14 +1414,14 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer shadow-2xs"
+              className="px-3.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer shadow-2xs"
             >
               취소
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>심사원 정보 저장 및 동기화</span>
@@ -1440,7 +1432,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 5. 공식 심사 경력 증명서 PDF 인쇄 미리보기 모달 레이어                          */}
+      {/* 5. 공식 심사 경력 증명서 PDF 인쇄 미리보기 & 승인 모달 레이어                 */}
       {/* ========================================================================= */}
       {selectedCertForPrint && (
         <div className="fixed inset-0 z-60 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
@@ -1449,7 +1441,9 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
             <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Printer className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold">공식 심사 경력 증명서 (인쇄 미리보기)</h3>
+                <h3 className="text-sm font-bold">
+                  공식 심사 경력 증명서 (사무국 검토 및 인쇄)
+                </h3>
               </div>
               <button
                 type="button"
@@ -1465,7 +1459,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
               {/* Document Header */}
               <div className="text-center space-y-2 border-b-2 border-slate-900 pb-5">
                 <div className="text-[11px] text-slate-500 font-mono tracking-widest">
-                  문서번호: {selectedCertForPrint.certDocNumber || 'GMS-EXP-2026-0089'}
+                  문서번호: {selectedCertForPrint.certDocNumber || 'GMS-EXP-2026-미승인'}
                 </div>
                 <h1 className="text-2xl font-black tracking-wider text-slate-950">
                   심 사 경 력 증 명 서
@@ -1489,7 +1483,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       생년월일
                     </th>
                     <td className="py-2 px-3 border border-slate-300 font-mono">
-                      {birthDate} ({gender})
+                      {birthDate ? `${birthDate} ${gender ? `(${gender})` : ''}` : '-'}
                     </td>
                   </tr>
                   <tr>
@@ -1497,7 +1491,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       등록 번호
                     </th>
                     <td className="py-2 px-3 border border-slate-300 font-mono font-bold">
-                      {gmsNumber || 'GMS25027'} (KAB 공인)
+                      {gmsNumber || '-'} (KAB 공인)
                     </td>
                     <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left font-bold text-slate-700">
                       자격 등급
@@ -1511,7 +1505,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       주거 지역
                     </th>
                     <td className="py-2 px-3 border border-slate-300">
-                      {residentialRegion}
+                      {residentialRegion || '-'}
                     </td>
                     <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left font-bold text-slate-700">
                       소속 기관
@@ -1523,7 +1517,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                 </tbody>
               </table>
 
-              {/* Audit Experience Summary */}
+              {/* Audit Experience Summary - 규격 및 IAF 전문 코드 포함 */}
               <div className="space-y-2">
                 <h4 className="font-bold text-xs text-slate-900 flex items-center justify-between">
                   <span>■ 심사 수행 실적 요약 (총 누적 {totalCumulativeMd.toFixed(1)} MD)</span>
@@ -1533,22 +1527,35 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   <thead className="bg-slate-100 font-bold">
                     <tr>
                       <th className="py-1.5 px-2 border border-slate-300 text-center">인증 규격</th>
+                      <th className="py-1.5 px-2 border border-slate-300 text-center">수행 IAF 코드</th>
                       <th className="py-1.5 px-2 border border-slate-300 text-center">심사 건수</th>
-                      <th className="py-1.5 px-2 border border-slate-300 text-center">선임심사원(팀장)</th>
-                      <th className="py-1.5 px-2 border border-slate-300 text-center">심사팀원</th>
+                      <th className="py-1.5 px-2 border border-slate-300 text-center">선임(팀장) MD</th>
+                      <th className="py-1.5 px-2 border border-slate-300 text-center">팀원 MD</th>
                       <th className="py-1.5 px-2 border border-slate-300 text-center">누적 실적(MD)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(standardMdSummary).map(([stdKey, s]) => (
-                      <tr key={stdKey} className="text-center">
-                        <td className="py-1.5 px-2 border border-slate-300 font-bold">ISO {stdKey}</td>
-                        <td className="py-1.5 px-2 border border-slate-300 font-mono">{s.count}건</td>
-                        <td className="py-1.5 px-2 border border-slate-300 font-mono">{s.leadMd.toFixed(1)} MD</td>
-                        <td className="py-1.5 px-2 border border-slate-300 font-mono">{(s.totalMd - s.leadMd).toFixed(1)} MD</td>
-                        <td className="py-1.5 px-2 border border-slate-300 font-mono font-bold text-cyan-900">{s.totalMd.toFixed(1)} MD</td>
+                    {Object.keys(standardMdSummary).length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-4 text-center text-slate-400">
+                          수행된 심사 실적이 없습니다.
+                        </td>
                       </tr>
-                    ))}
+                    ) : (
+                      Object.entries(standardMdSummary).map(([stdKey, s]) => {
+                        const codes = Array.from(s.iafCodes || []).join(', ') || (iafCodes.map(c => c.substring(0, 2)).join(', ') || '-');
+                        return (
+                          <tr key={stdKey} className="text-center">
+                            <td className="py-1.5 px-2 border border-slate-300 font-bold">ISO {stdKey}</td>
+                            <td className="py-1.5 px-2 border border-slate-300 font-mono text-[11px] text-slate-700">{codes}</td>
+                            <td className="py-1.5 px-2 border border-slate-300 font-mono">{s.count}건</td>
+                            <td className="py-1.5 px-2 border border-slate-300 font-mono">{s.leadMd.toFixed(1)} MD</td>
+                            <td className="py-1.5 px-2 border border-slate-300 font-mono">{(s.totalMd - s.leadMd).toFixed(1)} MD</td>
+                            <td className="py-1.5 px-2 border border-slate-300 font-mono font-bold text-cyan-900">{s.totalMd.toFixed(1)} MD</td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1580,18 +1587,52 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
               </div>
             </div>
 
-            <div className="bg-slate-100 border-t border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-slate-500">
-                * KAB 공인 심사원 자격 유지 및 갱신용 공식 증명서 서식입니다.
-              </span>
+            {/* Footer with Approval / Print Action */}
+            <div className="bg-slate-100 border-t border-slate-200 px-6 py-3.5 flex items-center justify-between shrink-0">
+              <div className="text-xs">
+                {selectedCertForPrint.status === '승인완료' ? (
+                  <span className="text-emerald-700 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>사무국 승인 완료 ({selectedCertForPrint.approvedAt} - 개인포털 출력 가능)</span>
+                  </span>
+                ) : (
+                  <span className="text-amber-800 font-bold flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>현재 승인 대기 상태입니다. 승인 버튼을 누르면 개인포털에서 출력 가능해집니다.</span>
+                  </span>
+                )}
+              </div>
+
               <div className="flex items-center gap-2">
+                {/* 미승인 상태인 경우: 사무국 승인 버튼 */}
+                {selectedCertForPrint.status === '신청대기' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleApproveCertRequest(selectedCertForPrint.id);
+                      setSelectedCertForPrint(prev => prev ? {
+                        ...prev,
+                        status: '승인완료',
+                        approvedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                        approvedBy: '사무국 (남경호 원장)',
+                        certDocNumber: `GMS-EXP-2026-${String(Math.floor(Math.random() * 900) + 100)}`
+                      } : null);
+                    }}
+                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>사무국 승인 처리</span>
+                  </button>
+                )}
+
+                {/* 사무국 화면에서도 인쇄 / PDF 저장 버튼 */}
                 <button
                   type="button"
-                  onClick={() => alert('공식 심사 경력 증명서 PDF가 고해상도로 다운로드됩니다.')}
-                  className="px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => alert('공식 심사 경력 증명서 PDF가 고해상도로 다운로드 및 인쇄됩니다.')}
+                  className="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>PDF 다운로드 및 인쇄</span>
+                  <span>인쇄 / PDF 저장</span>
                 </button>
               </div>
             </div>

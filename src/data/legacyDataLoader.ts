@@ -47,116 +47,43 @@ export function getMergedAuditors(): Auditor[] {
     // IAF 코드: 크롤링된 실제 전문코드 배열 적용
     const iafCodes = Array.isArray(la.iafCodes) ? la.iafCodes : [];
 
-    // 거주지역 & 생년월일 & 성별 기본값
-    let residentialRegion = '서울 강서구';
-    let birthDate = la.birthDate || '1970-05-15';
-    let gender: '남' | '여' = '남';
+    // 거주지역: 실제 DB 주소(address)에서 시/구 추출, 없으면 빈칸
+    let residentialRegion = '';
+    if (la.address) {
+      const match = la.address.replace(/\(\d+\)/g, '').trim().match(/^([^\s]+(?:\s+[^\s]+)?)/);
+      residentialRegion = match ? match[0] : la.address;
+    }
 
-    if (la.name.includes('김홍덕')) {
-      residentialRegion = '서울 강서구';
-      birthDate = '1972-04-18';
-      gender = '남';
-    } else if (la.name.includes('남경호')) {
-      residentialRegion = '경기 성남시 분당구';
-      birthDate = '1965-08-20';
-      gender = '남';
-    } else if (la.name.includes('정현일')) {
-      residentialRegion = '대구 수성구';
-      birthDate = '1968-11-03';
-      gender = '남';
+    // 생년월일: 실제 DB 필드(birthDate)
+    const birthDate = la.birthDate || '';
+
+    // 성별: 실제 DB 데이터 또는 기본 공란/식별
+    let gender: '남' | '여' | undefined = undefined;
+    if (la.gender === '남' || la.gender === '여') {
+      gender = la.gender;
     } else if (la.name.includes('이혜원') || la.name.includes('남효린') || la.name.includes('정순화') || la.name.includes('송인선')) {
       gender = '여';
-      residentialRegion = idx % 2 === 0 ? '서울 송파구' : '경기 수원시 영통구';
-      birthDate = `198${(idx % 8) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 25) + 1).padStart(2, '0')}`;
-    } else {
-      const sampleRegions = ['서울 마포구', '서울 영등포구', '경기 용인시 수지구', '인천 연수구', '대전 유성구', '부산 해운대구', '대구 달서구', '경남 창원시'];
-      residentialRegion = sampleRegions[idx % sampleRegions.length];
-      birthDate = `197${(idx % 9)}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`;
+    } else if (la.name) {
       gender = '남';
     }
 
-    // 기본 자격증 데이터
-    const certList = [
-      {
-        id: `cert-${id}-1`,
-        name: 'KAB 공인 ISO 9001 선임심사원 자격증',
-        standard: 'ISO 9001:2015',
-        grade: '선임심사원',
-        certNumber: `KAB-QMS-09-${String(idx + 100).padStart(4, '0')}`,
-        issuer: '한국인정지원센터(KAB)',
-        issueDate: '2018-04-10',
-        expiryDate: '2027-12-31'
-      },
-      {
-        id: `cert-${id}-2`,
-        name: 'KAB 공인 ISO 14001 선임심사원 자격증',
-        standard: 'ISO 14001:2015',
-        grade: '선임심사원',
-        certNumber: `KAB-EMS-14-${String(idx + 100).padStart(4, '0')}`,
-        issuer: '한국인정지원센터(KAB)',
-        issueDate: '2019-06-15',
-        expiryDate: '2027-12-31'
-      }
-    ];
+    // 자격증, 보수교육, 직무세미나 이력: DB 필드 우선, 없으면 빈 배열 []
+    const certList = Array.isArray(la.certificates) ? la.certificates : (
+      la.qualifications && Array.isArray(la.qualifications) ? la.qualifications.map((q: any, qIdx: number) => ({
+        id: `cert-${id}-${qIdx}`,
+        name: `${q.standard} ${q.grade || '심사원'} 자격`,
+        standard: q.standard,
+        grade: q.grade || '심사원',
+        certNumber: q.certNumber || '',
+        issuer: q.agency || 'KAB',
+        issueDate: la.regDate || '',
+        expiryDate: q.expiryDate || ''
+      })) : []
+    );
 
-    // 보수교육 이력
-    const trainingList = [
-      {
-        id: `train-${id}-2026`,
-        title: '2026년도 심사원 정기 보수교육 (CPD 16시간)',
-        year: '2026',
-        hours: 16,
-        completedDate: '2026-03-20',
-        institution: '한국인정지원센터(KAB)',
-        status: '이수완료' as const
-      },
-      {
-        id: `train-${id}-2025`,
-        title: '2025년도 ISO 9001/14001 개정 규격 심화 보수교육',
-        year: '2025',
-        hours: 16,
-        completedDate: '2025-05-15',
-        institution: 'GMS인증원 직무교육원',
-        status: '이수완료' as const
-      }
-    ];
-
-    // 직무 세미나 이력
-    const seminarList = [
-      {
-        id: `sem-${id}-1`,
-        title: '2026 하반기 GMSCS 인증심사원 직무 역량강화 세미나',
-        date: '2026-06-25',
-        host: 'GMSCS 인증원 사무국',
-        hours: 4,
-        location: '본사 대회의실 / 온오프라인 병행',
-        note: '참석 확인 완료'
-      },
-      {
-        id: `sem-${id}-2`,
-        title: '2025 지속가능경영(ESG) 및 공급망 실사 대응 워크샵',
-        date: '2025-11-18',
-        host: 'KAB 한국인정지원센터',
-        hours: 6,
-        location: '대한상공회의소 국제회의장',
-        note: '수료증 발급'
-      }
-    ];
-
-    // 경력증명서 신청 내역 기본값 (김홍덕 심사원은 승인완료 1건 예시)
-    const certRequests = la.name.includes('김홍덕') ? [
-      {
-        id: 'REQ-2026-001',
-        requestedAt: '2026-08-28 14:20',
-        purpose: 'KAB 심사원 3개년 자격갱신 실적 제출용',
-        submitTo: '한국인정지원센터(KAB)',
-        status: '승인완료' as const,
-        approvedAt: '2026-08-29 10:15',
-        approvedBy: '남경호 원장',
-        certDocNumber: 'GMS-EXP-2026-0089',
-        notes: '정상 승인 완료'
-      }
-    ] : [];
+    const trainingList = Array.isArray(la.trainingHistory) ? la.trainingHistory : [];
+    const seminarList = Array.isArray(la.seminarHistory) ? la.seminarHistory : [];
+    const certRequests = Array.isArray(la.careerCertRequests) ? la.careerCertRequests : [];
 
     return {
       id,
