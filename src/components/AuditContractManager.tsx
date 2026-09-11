@@ -1734,7 +1734,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                       <tr className="border-b border-slate-400">
                         <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">문서번호</th>
                         <td className="p-2 print:p-1 border-r border-slate-400 font-mono text-slate-900 font-bold">
-                          GMS-인증- {currentContractRecord.contractNumber.replace(/[^0-9]/g, '').slice(-8) || '2026052001'}
+                          GMS-인증- {currentContractRecord.contractNumber ? currentContractRecord.contractNumber.replace(/[^0-9]/g, '').slice(-8) : ''}
                         </td>
                         <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">담당부서</th>
                         <td className="p-2 print:p-1 text-slate-900">-</td>
@@ -1746,17 +1746,17 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         </td>
                         <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">담당자/직책</th>
                         <td className="p-2 print:p-1 text-slate-900 font-semibold">
-                          {activeCompany.contactPerson || '박광영'} 부장
+                          {activeCompany.contactPerson || ''} {activeCompany.contactPerson ? '담당자' : ''}
                         </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
                         <td className="p-2 print:p-1 border-r border-slate-400 font-mono text-slate-900">
-                          {currentContractRecord.contractDate || '2026-05-20'}
+                          {currentContractRecord.contractDate || ''}
                         </td>
                         <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">전    화</th>
                         <td className="p-2 print:p-1 font-mono text-slate-900">
-                          {activeCompany.contactPhone || '054-956-9197'}
+                          {activeCompany.contactPhone || ''}
                         </td>
                       </tr>
                       <tr className="border-b border-slate-400">
@@ -1766,13 +1766,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         </td>
                         <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">팩    스</th>
                         <td className="p-2 print:p-1 font-mono text-slate-900">
-                          {(activeCompany as any).fax || '054-700-9397'}
+                          {(activeCompany as any).fax || ''}
                         </td>
                       </tr>
                       <tr>
                         <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">고객번호</th>
                         <td className="p-2 print:p-1 font-mono text-slate-900" colSpan={3}>
-                          {(activeCompany as any).customerNumber || (activeCompany.bizNumber ? 'QE240206 / OH240234' : 'QE240206')}
+                          {(activeCompany as any).customerNumber || ''}
                         </td>
                       </tr>
                     </tbody>
@@ -1815,7 +1815,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr className="border-b border-slate-400">
                           <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">인 증 대 상</th>
                           <td className="p-2 print:p-1" colSpan={3}>
-                            KSIC (산업분류코드) / <span className="font-bold text-slate-900">인증코드 {activeCompany.iafCode || '17'}</span>
+                            KSIC (산업분류코드) / <span className="font-bold text-slate-900">인증코드 {activeCompany.iafCode || ''}</span>
                           </td>
                         </tr>
                         <tr>
@@ -1892,9 +1892,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr>
                           <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">심사팀장</td>
                           <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-medium">GMS{isHqOrStaffLead ? ' (HQ)' : ''}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">{selectedLeadAuditor?.name}</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">{selectedLeadAuditor?.name || ''}</td>
                           <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">
-                            {selectedLeadAuditor?.mobile || '010-3797-1563'} / {selectedLeadAuditor?.email || 'esggnf@naver.com'}
+                            {selectedLeadAuditor?.mobile || ''}{selectedLeadAuditor?.email ? ` / ${selectedLeadAuditor.email}` : ''}
                           </td>
                         </tr>
                         {selectedTeamAuditor && (
@@ -1903,7 +1903,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                             <td className="p-1.5 print:p-0.5 border-r border-slate-400">{activeAgencyName || 'GMS'}</td>
                             <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">{selectedTeamAuditor.name}</td>
                             <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">
-                              {selectedTeamAuditor.mobile || '010-4205-2304'} / {selectedTeamAuditor.email || 'esggnf@naver.com'}
+                              {selectedTeamAuditor.mobile || ''}{selectedTeamAuditor.email ? ` / ${selectedTeamAuditor.email}` : ''}
                             </td>
                           </tr>
                         )}
@@ -1985,11 +1985,11 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                       <tr className="border-b border-slate-400">
                         <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">청구번호</th>
                         <td className="p-2 border-r border-slate-400 font-mono font-bold text-slate-900">
-                          GMS-인증-{currentContractRecord.contractNumber.replace(/[^0-9]/g, '').slice(-8) || '20260502'}
+                          GMS-인증-{currentContractRecord.contractNumber ? currentContractRecord.contractNumber.replace(/[^0-9]/g, '').slice(-8) : ''}
                         </td>
                         <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
                         <td className="p-2 font-mono text-slate-900">
-                          {currentContractRecord.contractDate || '2026-05-20'}
+                          {currentContractRecord.contractDate || ''}
                         </td>
                       </tr>
                       <tr>
@@ -1999,7 +1999,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         </td>
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">참    조</th>
                         <td className="p-2 text-slate-900 font-semibold">
-                          {activeCompany.contactPerson || '박광영'} 부장
+                          {activeCompany.contactPerson || ''} {activeCompany.contactPerson ? '담당자' : ''}
                         </td>
                       </tr>
                     </tbody>

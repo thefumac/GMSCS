@@ -42,6 +42,8 @@ interface PdfViewerModalProps {
   standard?: string;
   auditType?: string;
   auditDate?: string;
+  auditorName?: string;
+  auditorEmail?: string;
 }
 
 // 전자메일 서명 레코드
@@ -93,7 +95,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   companyName,
   standard = 'ISO 9001:2015',
   auditType = '정기 사후관리 심사',
-  auditDate = '2025-10-15'
+  auditDate = '2025-10-15',
+  auditorName = '',
+  auditorEmail = ''
 }) => {
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [activeTab, setActiveTab] = useState<ReportSectionTab>('all');
@@ -111,57 +115,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         } catch (e) {}
       }
     }
-    // 기본 사전 서명 (예시 데이터)
-    return {
-      'cover_customer': {
-        slotId: 'cover_customer',
-        slotLabel: '고객 확인 (서명)',
-        role: '고객확인',
-        signerName: '박한성',
-        signerPosition: '대표이사',
-        signerEmail: 'ceo@k1metal.co.kr',
-        signedAt: '2026-09-10 16:30:15',
-        signatureHash: 'SIG-EMAIL-89A4-F291',
-        isVerified: true,
-        ipAddress: '211.234.120.45'
-      },
-      'cover_worker_rep': {
-        slotId: 'cover_worker_rep',
-        slotLabel: '근로자 대표 (서명)',
-        role: '근로자대표',
-        signerName: '최진우',
-        signerPosition: '노사협의회 근로자대표 / 생산과장',
-        signerEmail: 'worker.rep@k1metal.co.kr',
-        signedAt: '2026-09-10 16:35:22',
-        signatureHash: 'SIG-EMAIL-C412-88B0',
-        isVerified: true,
-        ipAddress: '211.234.120.45'
-      },
-      'cover_lead_auditor': {
-        slotId: 'cover_lead_auditor',
-        slotLabel: '심사 팀장 (서명)',
-        role: '심사팀장',
-        signerName: '남경호',
-        signerPosition: '선임심사원 / 심사팀장',
-        signerEmail: 'auditor.nam@gmscs.co.kr',
-        signedAt: '2026-09-10 17:00:00',
-        signatureHash: 'SIG-EMAIL-A773-EE19',
-        isVerified: true,
-        ipAddress: '121.134.88.92'
-      },
-      'coi_lead_auditor': {
-        slotId: 'coi_lead_auditor',
-        slotLabel: '이해관계확인 심사팀장 (서명)',
-        role: '심사팀장',
-        signerName: '남경호',
-        signerPosition: '선임심사원 / 심사팀장',
-        signerEmail: 'auditor.nam@gmscs.co.kr',
-        signedAt: '2026-09-08 09:10:00',
-        signatureHash: 'SIG-COI-9921-A1',
-        isVerified: true,
-        ipAddress: '121.134.88.92'
-      }
-    };
+    return {};
   });
 
   // 1단계 요구사항별 심사 기록 (Table 9: 4~10장)
@@ -377,9 +331,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         type="button"
         onClick={() => {
           setSigningForm({
-            name: defaultName || (role === '심사팀장' ? '남경호' : role === '고객확인' ? '박한성' : ''),
+            name: defaultName || (role === '심사팀장' ? (auditorName || '') : ''),
             position: defaultPos || (role === '심사팀장' ? '선임심사원' : role === '고객확인' ? '대표이사' : role === '근로자대표' ? '근로자 대표' : '심사원'),
-            email: defaultEmail || (role === '심사팀장' ? 'auditor@gmscs.co.kr' : 'client@company.com'),
+            email: defaultEmail || (role === '심사팀장' ? (auditorEmail || '') : ''),
             pinCode: '',
             isPinSent: false,
             generatedPin: Math.floor(100000 + Math.random() * 900000).toString()
@@ -643,7 +597,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                         심사 팀장 (GMSCS 공인심사원)
                       </div>
                       <div className="py-1">
-                        {renderSignatureSlot('cover_lead_auditor', '심사 팀장 (서명)', '심사팀장', '남경호', '선임심사원', 'auditor.nam@gmscs.co.kr')}
+                        {renderSignatureSlot('cover_lead_auditor', '심사 팀장 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
                       </div>
                     </div>
                   </div>
@@ -717,26 +671,26 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                         <td className="p-2 border-r border-slate-300 text-center font-mono">09:30 ~ 10:30</td>
                         <td className="p-2 border-r border-slate-300">시작회의 / 최고경영자 면담 / 경영방침 및 조직상황(4, 5절)</td>
                         <td className="p-2 border-r border-slate-300 font-medium">대표이사실 / 기획팀</td>
-                        <td className="p-2 text-center font-bold text-slate-800">남경호 (팀장)</td>
+                        <td className="p-2 text-center font-bold text-slate-800">{auditorName || '심사팀장'} (팀장)</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-center font-mono">10:30 ~ 12:30</td>
                         <td className="p-2 border-r border-slate-300">리스크 및 기회조치(6절), 환경측면평가, 안전보건 위험성평가</td>
                         <td className="p-2 border-r border-slate-300 font-medium">품질혁신팀 / 환경안전</td>
-                        <td className="p-2 text-center font-bold text-slate-800">남경호 (팀장)</td>
+                        <td className="p-2 text-center font-bold text-slate-800">{auditorName || '심사팀장'} (팀장)</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-center font-mono">13:30 ~ 17:30</td>
                         <td className="p-2 border-r border-slate-300">자원관리, 적격성, 문서화된 정보(7절), 설계 및 개발(8.3)</td>
                         <td className="p-2 border-r border-slate-300 font-medium">연구소 / 인사총무팀</td>
-                        <td className="p-2 text-center font-bold text-slate-800">정현일 (심사원)</td>
+                        <td className="p-2 text-center font-bold text-slate-800">심사팀원</td>
                       </tr>
                       <tr>
                         <td rowSpan={2} className="p-2 border-r border-slate-300 text-center font-mono font-bold bg-slate-50">2일차</td>
                         <td className="p-2 border-r border-slate-300 text-center font-mono">09:00 ~ 15:30</td>
                         <td className="p-2 border-r border-slate-300">제조/서비스 운영관리(8.5), 설비보전, 유해물질/폐기물관리, 비상대응</td>
                         <td className="p-2 border-r border-slate-300 font-medium">생산팀 (제1·제2공장)</td>
-                        <td className="p-2 text-center font-bold text-slate-800">남경호 / 정현일</td>
+                        <td className="p-2 text-center font-bold text-slate-800">{auditorName || '심사팀장'} / 심사팀원</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-center font-mono">15:30 ~ 17:30</td>
@@ -771,7 +725,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                     <span className="font-mono text-slate-700">작성일자: {auditDate}</span>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-800">심사팀장:</span>
-                      {renderSignatureSlot('coi_lead_auditor', '심사팀장 (서명)', '심사팀장', '남경호', '선임심사원', 'auditor.nam@gmscs.co.kr')}
+                      {renderSignatureSlot('coi_lead_auditor', '심사팀장 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
                     </div>
                   </div>
                 </div>
@@ -1237,8 +1191,8 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                     본 심사팀은 (주)한성정밀공업의 {standard} 경영시스템이 규격 요구사항을 충족하고 효과적으로 유지되고 있음을 확인하였으므로 [인증 유지]를 KAB 인증위원회에 추천합니다.
                   </h4>
                   <div className="pt-2 border-t border-cyan-800 flex items-center justify-between text-xs text-cyan-300">
-                    <span>심사팀장: <strong>남경호 선임심사원</strong></span>
-                    <span>차기 심사 예정: <strong>2027년 10월 (3차 사후관리)</strong></span>
+                    <span>심사팀장: <strong>{auditorName ? `${auditorName} 선임심사원` : ''}</strong></span>
+                    <span>차기 심사 예정: <strong>{auditDate ? `차기 심사` : ''}</strong></span>
                   </div>
                 </div>
 
@@ -1265,9 +1219,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                       <tr>
                         <th className="p-2 border-r border-slate-300 text-left w-48">ISO 요구사항 (조항)</th>
                         <th className="p-2 border-r border-slate-300 w-28">최초/갱신 심사</th>
-                        <th className="p-2 border-r border-slate-300 w-28">1차 사후 (2025)</th>
-                        <th className="p-2 border-r border-slate-300 w-28 bg-cyan-50 text-cyan-950 font-extrabold">2차 사후 (금회)</th>
-                        <th className="p-2 w-28">갱신 심사 (2027)</th>
+                        <th className="p-2 border-r border-slate-300 w-28">1차 사후</th>
+                        <th className="p-2 border-r border-slate-300 w-28 bg-cyan-50 text-cyan-950 font-extrabold">2차 사후</th>
+                        <th className="p-2 w-28">갱신 심사</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
@@ -1275,49 +1229,49 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                         <td className="p-2 border-r border-slate-300 text-left font-medium">4. 조직 상황</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-left font-medium">5. 리더십 및 방침</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-left font-medium">6. 기획 (리스크/기회)</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">○</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-left font-medium">7. 지원 (자원/적격성)</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-left font-medium">8. 운용 (생산/서비스)</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-left font-medium">9. 성과평가 (내부심사/경영검토)</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-slate-300 text-left font-medium">10. 개선 (시정조치)</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
                         <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">● (완료)</td>
+                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
                         <td className="p-2 font-bold text-slate-700">●</td>
                       </tr>
                     </tbody>
@@ -1342,7 +1296,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                     </p>
                   </div>
                   <span className="font-mono text-xs font-bold text-slate-700">
-                    발행번호: NCR-2026-01
+                    발행번호: NCR-01
                   </span>
                 </div>
 
@@ -1364,7 +1318,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                       <tr className="border-b border-slate-300">
                         <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">부적합 사실</td>
                         <td colSpan={3} className="p-3 text-slate-900 leading-relaxed">
-                          제2공장 정밀 가공라인의 버니어 캘리퍼스(관리번호: QC-CAL-08)의 교정 유효기간이 2026년 9월 5일로 도래하였으나 교정 의뢰가 지연되어 사용 중인 상태가 식별됨.
+                          제2공장 정밀 가공라인의 버니어 캘리퍼스(관리번호: QC-CAL-08)의 교정 유효기간이 만료되었으나 교정 의뢰가 지연되어 사용 중인 상태가 식별됨.
                         </td>
                       </tr>
                       <tr className="border-b border-slate-300">
@@ -1376,7 +1330,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                       <tr className="border-b border-slate-300">
                         <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">재발방지대책</td>
                         <td colSpan={3} className="p-3 text-slate-900 leading-relaxed">
-                          1. 해당 캘리퍼스 즉시 한국계측기연구원에 공인교정 의뢰 및 합격성적서 수령 (2026-09-09 완료)
+                          1. 해당 캘리퍼스 즉시 한국계측기연구원에 공인교정 의뢰 및 합격성적서 수령 완료
                           <br />
                           2. 사내 ERP 계측기 관리 모듈에 만료 30일 전 자동 이메일 통보 시스템 구축
                         </td>
@@ -1393,7 +1347,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-800">조치확인 심사원 서명:</span>
-                    {renderSignatureSlot('ncr_auditor', '심사원 확인 (서명)', '심사팀장', '남경호', '선임심사원', 'auditor.nam@gmscs.co.kr')}
+                    {renderSignatureSlot('ncr_auditor', '심사원 확인 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
                   </div>
                 </div>
 
@@ -1462,7 +1416,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-800">심사팀장 확인 서명:</span>
-                    {renderSignatureSlot('cert_lead_auditor', '심사팀장 확인 (서명)', '심사팀장', '남경호', '선임심사원', 'auditor.nam@gmscs.co.kr')}
+                    {renderSignatureSlot('cert_lead_auditor', '심사팀장 확인 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
                   </div>
                 </div>
 

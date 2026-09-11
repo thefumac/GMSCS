@@ -215,7 +215,7 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                   <tr className="border-b border-slate-400">
                     <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">문서번호</th>
                     <td className="p-2 border-r border-slate-400 font-mono text-slate-900 font-bold">
-                      GMS-인증- {contract.contractNumber.replace(/[^0-9]/g, '').slice(-8) || '2026052001'}
+                      {contract.contractNumber ? `GMS-인증-${contract.contractNumber.replace(/[^0-9]/g, '').slice(-8) || contract.contractNumber}` : ''}
                     </td>
                     <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">담당부서</th>
                     <td className="p-2 text-slate-900">-</td>
@@ -227,33 +227,33 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                     </td>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">담당자/직책</th>
                     <td className="p-2 text-slate-900 font-semibold">
-                      {company?.contactPerson || '박광영'} 부장
+                      {company?.contactPerson || ''}
                     </td>
                   </tr>
                   <tr className="border-b border-slate-400">
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
                     <td className="p-2 border-r border-slate-400 font-mono text-slate-900">
-                      {contract.contractDate || '2026-05-20'}
+                      {contract.contractDate || ''}
                     </td>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">전    화</th>
                     <td className="p-2 font-mono text-slate-900">
-                      {company?.contactPhone || '054-956-9197'}
+                      {company?.contactPhone || ''}
                     </td>
                   </tr>
                   <tr className="border-b border-slate-400">
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">대 표 자</th>
                     <td className="p-2 border-r border-slate-400 font-bold text-slate-900">
-                      {company?.ceoName || '대표이사'}
+                      {company?.ceoName || ''}
                     </td>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">팩    스</th>
                     <td className="p-2 font-mono text-slate-900">
-                      054-700-9397
+                      {(company as any)?.contactFax || (company as any)?.fax || ''}
                     </td>
                   </tr>
                   <tr className="border-b border-slate-400">
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">주    소</th>
                     <td className="p-2 border-r border-slate-400 text-slate-900" colSpan={3}>
-                      {company?.address || '경상북도 고령군 성산면 성산로 515'}
+                      {company?.address || ''}
                     </td>
                   </tr>
                   <tr className="border-b border-slate-400">
@@ -281,7 +281,7 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                   <tr className="border-b border-slate-400">
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사팀장</th>
                     <td className="p-2 border-r border-slate-400 font-bold text-slate-900">
-                      {contract.leadAuditorName || auditor?.name || '김홍덕'}
+                      {contract.leadAuditorName || auditor?.name || ''}
                     </td>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사팀원</th>
                     <td className="p-2 text-slate-900">
@@ -291,7 +291,7 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                   <tr>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사일자</th>
                     <td className="p-2 border-r border-slate-400 font-mono text-slate-900" colSpan={3}>
-                      {contract.plannedAuditStartDate || '2026-06-08'} ~ {contract.plannedAuditEndDate || '2026-06-10'}
+                      {contract.plannedAuditStartDate || ''}{contract.plannedAuditEndDate ? ` ~ ${contract.plannedAuditEndDate}` : ''}
                     </td>
                   </tr>
                 </tbody>
@@ -358,11 +358,11 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                   <tr className="border-b border-slate-400">
                     <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">청구번호</th>
                     <td className="p-2 border-r border-slate-400 font-mono font-bold text-slate-900">
-                      GMS-인증-{contract.contractNumber.replace(/[^0-9]/g, '').slice(-8) || '20260502'}
+                      {contract.contractNumber ? `GMS-인증-${contract.contractNumber.replace(/[^0-9]/g, '').slice(-8) || contract.contractNumber}` : ''}
                     </td>
                     <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
                     <td className="p-2 font-mono text-slate-900">
-                      {contract.contractDate || '2026-05-20'}
+                      {contract.contractDate || ''}
                     </td>
                   </tr>
                   <tr>
@@ -372,7 +372,7 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                     </td>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">참    조</th>
                     <td className="p-2 text-slate-900 font-semibold">
-                      {company?.contactPerson || '박광영'} 부장
+                      {company?.contactPerson || ''}
                     </td>
                   </tr>
                 </tbody>
@@ -425,7 +425,7 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                     <tr>
                       <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사일자</th>
                       <td className="p-2 border-r border-slate-400 font-mono text-slate-900">
-                        {contract.plannedAuditStartDate || '2026-06-08'} ~ {contract.plannedAuditEndDate || '2026-06-10'}
+                        {contract.plannedAuditStartDate || ''}{contract.plannedAuditEndDate ? ` ~ ${contract.plannedAuditEndDate}` : ''}
                       </td>
                       <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사일수(MD)</th>
                       <td className="p-2 font-mono font-bold text-slate-900">
@@ -536,25 +536,25 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                   </tr>
                   <tr>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">대표자</th>
-                    <td className="border border-slate-400 p-2.5 text-slate-900">{company?.ceoName || '대표이사'} (서명/인)</td>
+                    <td className="border border-slate-400 p-2.5 text-slate-900">{company?.ceoName || ''} (서명/인)</td>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">대표이사</th>
                     <td className="border border-slate-400 p-2.5 font-bold text-cyan-900">남 경 호 (서명/인)</td>
                   </tr>
                   <tr>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">사업자등록</th>
-                    <td className="border border-slate-400 p-2.5 font-mono text-slate-900">{company?.bizNumber || '214-88-92810'}</td>
+                    <td className="border border-slate-400 p-2.5 font-mono text-slate-900">{company?.bizNumber || ''}</td>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">법인등록</th>
                     <td className="border border-slate-400 p-2.5 font-mono text-slate-900">110111-7489210</td>
                   </tr>
                   <tr>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">소재지</th>
-                    <td className="border border-slate-400 p-2.5 text-slate-900">{company?.address || '등록 사업장 주소지'}</td>
+                    <td className="border border-slate-400 p-2.5 text-slate-900">{company?.address || ''}</td>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">소재지</th>
                     <td className="border border-slate-400 p-2.5 text-slate-900">서울특별시 강서구 강서로 406, 905호</td>
                   </tr>
                   <tr>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">계약일자</th>
-                    <td className="border border-slate-400 p-2.5 font-mono font-bold text-slate-900">{contract.contractDate || '2026-05-20'}</td>
+                    <td className="border border-slate-400 p-2.5 font-mono font-bold text-slate-900">{contract.contractDate || ''}</td>
                     <th className="border border-slate-400 bg-slate-100 p-2.5 text-center font-bold text-slate-800">계약유형</th>
                     <td className="border border-slate-400 p-2.5 font-bold text-indigo-700">{contract.contractType}</td>
                   </tr>
@@ -612,16 +612,16 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                   위 계약의 성립을 증명하기 위하여 계약서 2부를 작성하여 고객과 인증원이 각각 서명 날인 후 1부씩 보관한다.
                 </p>
                 <div className="text-center font-mono font-bold text-slate-700 text-xs">
-                  {contract.contractDate || '2026년 05월 20일'}
+                  {contract.contractDate || ''}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-3">
                   <div className="border border-slate-300 p-4 rounded-lg bg-slate-50 space-y-1">
                     <span className="font-bold text-slate-900 block text-xs">[고객(의뢰인)]</span>
                     <p className="text-[11px] text-slate-700">상호 : {contract.companyName}</p>
-                    <p className="text-[11px] text-slate-700">주소 : {company?.address || '경상북도 고령군 성산면 성산로 515'}</p>
+                    <p className="text-[11px] text-slate-700">주소 : {company?.address || ''}</p>
                     <p className="text-[11px] text-slate-700 flex items-center justify-between pt-2">
-                      <span>대표자 : <strong>{company?.ceoName || '대표이사'}</strong></span>
+                      <span>대표자 : <strong>{company?.ceoName || ''}</strong></span>
                       <span className="text-slate-400 text-xs">(인)</span>
                     </p>
                   </div>

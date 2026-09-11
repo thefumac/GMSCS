@@ -205,24 +205,24 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
 
   // 배정 심사원
   const managingAuditor = allAuditors.find(a => a.id === effectiveCompany.managingAuditorId || a.id === latestProject?.leadAuditorId) 
-    || allAuditors.find(a => a.name === latestProject?.leadAuditorName)
-    || { name: effectiveCompany.managingAuditorId || '김홍덕', grade: '선임심사원', mobile: '010-3797-1563', email: 'auditor@gmscs.co.kr' };
+    || allAuditors.find(a => a.name === latestProject?.leadAuditorName) 
+    || { name: effectiveCompany.managingAuditorId || '', grade: '심사원', mobile: '', email: '' };
 
   // Effective AuditContractRecord for document display
   const effectiveContractRecord: AuditContractRecord = matchingAuditContract || {
     id: `CTR-${effectiveCompany.id}`,
-    contractNumber: `CTR-${effectiveCompany.bizNumber ? effectiveCompany.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : '202601'}`,
+    contractNumber: `CTR-${effectiveCompany.bizNumber ? effectiveCompany.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : ''}`,
     companyId: effectiveCompany.id,
     companyName: effectiveCompany.companyName,
     contractType: (stageText.includes('최초') ? '신규인증' : stageText.includes('갱신') ? '갱신심사' : '정기사후') as any,
     standards: stdAndCerts.map(s => s.std as any),
-    employeeCount: effectiveCompany.totalEmployees || 48,
+    employeeCount: effectiveCompany.totalEmployees || 0,
     riskLevel: 'Medium',
-    contractDate: contract?.initialCertDate || '2026-09-10',
-    plannedAuditStartDate: latestProject?.startDate || '2026-10-24',
+    contractDate: contract?.initialCertDate || '',
+    plannedAuditStartDate: latestProject?.startDate || '',
     contractStatus: (latestProject?.status === '계획수립' ? '진행중' : '계약체결') as any,
-    leadAuditorId: (managingAuditor as any).id || 'AUD-001',
-    leadAuditorName: managingAuditor.name || '김홍덕',
+    leadAuditorId: (managingAuditor as any).id || '',
+    leadAuditorName: managingAuditor.name || '',
     agency: effectiveCompany.consultant || effectiveCompany.agency || '직영',
     kabStandardMd: 2.0,
     appliedMd: 2.0,
@@ -253,73 +253,29 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
     clientResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답'
   };
 
-  // 과거 심사 완료 이력 대장 데이터 (각 심사별 부속서류 유무 및 탭 데이터 연동)
-  const auditHistoryRecords: AuditHistoryRecordItem[] = [
+  // 과거 심사 완료 이력 대장 데이터 (실제 프로젝트 목록 매핑)
+  const auditHistoryRecords: AuditHistoryRecordItem[] = matchingProjects.length > 0 ? matchingProjects.map((p, idx) => ({
+    id: p.id || `audit-${idx}`,
+    auditDate: p.startDate && p.endDate ? `${p.startDate} ~ ${p.endDate}` : (p.startDate || ''),
+    auditType: p.auditType || stageText,
+    leadAuditor: p.leadAuditorName || managingAuditor.name || '',
+    teamAuditor: (p as any).teamAuditorName || '단독심사',
+    ncCount: { major: 0, minor: 0, obs: 0 },
+    status: p.status || '계획수립',
+    reportAvailable: true,
+    certAvailable: true,
+    planAvailable: true,
+    hasAttachments: false,
+    attachments: []
+  })) : [
     {
-      id: 'audit-2026',
-      auditDate: latestProject ? `${latestProject.startDate} ~ ${latestProject.endDate}` : '2026-10-24 ~ 2026-10-25',
+      id: `audit-${effectiveCompany.id}`,
+      auditDate: latestProject ? (latestProject.startDate && latestProject.endDate ? `${latestProject.startDate} ~ ${latestProject.endDate}` : latestProject.startDate) : (contract?.initialCertDate || ''),
       auditType: stageText,
-      leadAuditor: managingAuditor.name,
-      teamAuditor: '신현섭 심사원',
-      ncCount: { major: 0, minor: 0, obs: 1 },
-      status: latestProject?.status || '계획수립',
-      reportAvailable: true,
-      certAvailable: true,
-      planAvailable: true,
-      hasAttachments: true,
-      attachments: [
-        {
-          id: 'att-2026-1',
-          docType: 'F19-002 인증변경신청서',
-          title: '인증변경신청서',
-          date: '2026-09-08',
-          summary: '제2공장 주조라인 증설에 따른 인증범위 및 사업장 추가 신청',
-          status: '사무국 승인완료',
-          fileLinkType: 'f19-002'
-        },
-        {
-          id: 'att-2026-2',
-          docType: 'F19-003 휴일(주말) 심사 사유서',
-          title: '휴일심사사유서',
-          date: '2026-09-08',
-          summary: '주말(토) 정상 가동에 따른 현장 심사 수행 (기업 원클릭 승인)',
-          status: '접수 및 확인완료',
-          fileLinkType: 'f19-003'
-        }
-      ]
-    },
-    {
-      id: 'audit-2025',
-      auditDate: '2025-10-14 ~ 2025-10-15',
-      auditType: '1차 사후관리심사',
-      leadAuditor: managingAuditor.name,
-      teamAuditor: '김홍덕 선임심사원',
-      ncCount: { major: 0, minor: 1, obs: 2 },
-      status: '인증유지완료',
-      reportAvailable: true,
-      certAvailable: true,
-      planAvailable: true,
-      hasAttachments: true,
-      attachments: [
-        {
-          id: 'att-2025-1',
-          docType: '사업자등록증명원 / 공장등록증',
-          title: '사업자/공장등록증',
-          date: '2025-10-10',
-          summary: '대표자 변경 및 사업장 주소 이전 확인 증빙 서류',
-          status: '보관완료',
-          fileLinkType: 'biz-cert'
-        }
-      ]
-    },
-    {
-      id: 'audit-2024',
-      auditDate: contract?.initialCertDate ? `${contract.initialCertDate} ~ 2024-10-19` : '2024-10-18 ~ 2024-10-19',
-      auditType: '최초 인증심사 (1·2단계)',
-      leadAuditor: managingAuditor.name,
+      leadAuditor: managingAuditor.name || '',
       teamAuditor: '단독심사',
       ncCount: { major: 0, minor: 0, obs: 0 },
-      status: '최초등록완료',
+      status: latestProject?.status || (contract ? '인증유지' : '계획수립'),
       reportAvailable: true,
       certAvailable: true,
       planAvailable: true,
@@ -345,15 +301,19 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                 <h3 className="text-base font-extrabold text-slate-900">
                   {company.companyName}
                 </h3>
-                <span className="text-cyan-800 font-semibold text-[11px] bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
-                  IAF {company.iafCode || '14'}
-                </span>
-                <span className="text-[11px] text-slate-500 font-mono">
-                  (사업자번호: {company.bizNumber || '214-88-92810'})
-                </span>
+                {company.iafCode && (
+                  <span className="text-cyan-800 font-semibold text-[11px] bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                    IAF {company.iafCode}
+                  </span>
+                )}
+                {company.bizNumber && (
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    (사업자번호: {company.bizNumber})
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                대표자: {company.ceoName} · 업종: {company.industry || '제조업'} · 본사: {company.address}
+                대표자: {company.ceoName || ''} {company.industry ? `· 업종: ${company.industry}` : ''} {company.address ? `· 본사: ${company.address}` : ''}
               </p>
             </div>
           </div>
@@ -462,30 +422,30 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">사업자등록번호:</span>
-                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.bizNumber || '214-88-92810'}</span>
+                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.bizNumber || ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">업종 / 주요생산품:</span>
-                      <span className="text-slate-800 font-normal">{effectiveCompany.industry || '자동차 및 선박용 주조물 제조'}</span>
+                      <span className="text-slate-800 font-normal">{effectiveCompany.industry || ''}</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">실무 담당자:</span>
-                      <span className="text-slate-900 font-medium">{effectiveCompany.contactPerson || '정순호 이사'}</span>
+                      <span className="text-slate-900 font-medium">{effectiveCompany.contactPerson || ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">담당자 연락처:</span>
-                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.contactPhone || '054-955-9197'}</span>
+                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.contactPhone || ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">담당자 이메일:</span>
-                      <span className="font-mono text-cyan-800 font-normal">{effectiveCompany.contactEmail || 'quality@kwonmetal.co.kr'}</span>
+                      <span className="font-mono text-cyan-800 font-normal">{effectiveCompany.contactEmail || ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">소재지 주소:</span>
-                      <span className="text-slate-800 font-normal truncate max-w-[240px]">{effectiveCompany.address}</span>
+                      <span className="text-slate-800 font-normal truncate max-w-[240px]">{effectiveCompany.address || ''}</span>
                     </div>
                   </div>
                 </div>
@@ -505,23 +465,27 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] text-indigo-900 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                    IAF Code: {effectiveCompany.iafCode || '17'}
-                  </span>
+                  {effectiveCompany.iafCode && (
+                    <span className="text-[11px] text-indigo-900 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                      IAF Code: {effectiveCompany.iafCode}
+                    </span>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <div>
                     <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[국문 인증범위]</span>
                     <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-800 font-medium leading-relaxed">
-                      {effectiveCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
+                      {effectiveCompany.scope || ''}
                     </p>
                   </div>
-                  <div>
-                    <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[영문 인증범위 (English Scope)]</span>
-                    <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 font-mono text-[11px] font-normal leading-relaxed">
-                      {(effectiveCompany as any).scopeEng || 'Manufacture of Castings for Automobile, Marine, Machine Tools, Construction Machinery and General Industrial Machinery.'}
-                    </p>
-                  </div>
+                  {(effectiveCompany as any).scopeEng && (
+                    <div>
+                      <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[영문 인증범위 (English Scope)]</span>
+                      <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 font-mono text-[11px] font-normal leading-relaxed">
+                        {(effectiveCompany as any).scopeEng}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -535,11 +499,11 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                   <div className="space-y-2">
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">담당 심사팀장:</span>
-                      <span className="text-slate-900 font-medium">{managingAuditor.name} ({managingAuditor.grade || '선임심사원'})</span>
+                      <span className="text-slate-900 font-medium">{managingAuditor.name ? `${managingAuditor.name} (${managingAuditor.grade || '심사원'})` : '-'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">심사원 연락처/이메일:</span>
-                      <span className="font-mono text-slate-700 text-[11px] font-normal">{managingAuditor.mobile || '010-3797-1563'} / {managingAuditor.email || 'auditor@gmscs.co.kr'}</span>
+                      <span className="font-mono text-slate-700 text-[11px] font-normal">{managingAuditor.mobile || ''}{managingAuditor.email ? ` / ${managingAuditor.email}` : ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">영업/협력기관 (컨설턴트):</span>
@@ -547,7 +511,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">종업원 수 (M/D 산정기준):</span>
-                      <span className="text-slate-800 font-mono font-normal">{company.totalEmployees || 48}명 (정규직 {Math.max(1, (company.totalEmployees || 48) - 3)}명)</span>
+                      <span className="text-slate-800 font-mono font-normal">{company.totalEmployees ? `${company.totalEmployees}명` : '-'}</span>
                     </div>
                   </div>
 
@@ -557,22 +521,22 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                       <div className="text-right">
                         {stdAndCerts.map((sc, i) => (
                           <div key={i} className="text-cyan-950 font-mono text-[11px] font-medium">
-                            {sc.std} <span className="text-slate-500 font-normal">({sc.certNo})</span>
+                            {sc.std} <span className="text-slate-500 font-normal">({sc.certNo || '발급전'})</span>
                           </div>
                         ))}
                       </div>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">최초 계약일:</span>
-                      <span className="font-mono text-slate-800 font-normal">{contract?.initialCertDate || '2024-10-18'}</span>
+                      <span className="font-mono text-slate-800 font-normal">{contract?.initialCertDate || '-'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">최초 인증등록일:</span>
-                      <span className="font-mono text-emerald-800 font-medium">{contract?.initialCertDate || '2024-10-18'}</span>
+                      <span className="font-mono text-emerald-800 font-medium">{contract?.initialCertDate || '-'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">차기 사후관리 만료일:</span>
-                      <span className="font-mono text-amber-900 font-medium">{dueDate} ({dday.text})</span>
+                      <span className="font-mono text-amber-900 font-medium">{dueDate ? `${dueDate} (${dday.text})` : '-'}</span>
                     </div>
                   </div>
                 </div>
@@ -602,16 +566,16 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                       <div className="space-y-2">
                         <div className="flex justify-between border-b border-slate-200/60 pb-1">
                           <span className="text-slate-500 font-normal">이전 인증기관명:</span>
-                          <span className="text-cyan-950 font-bold">{effectiveCompany.prevCertificationBody || '한국품질재단(KFQ)'}</span>
+                          <span className="text-cyan-950 font-bold">{effectiveCompany.prevCertificationBody || '-'}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-200/60 pb-1">
                           <span className="text-slate-500 font-normal">이전 인증서 번호:</span>
-                          <span className="font-mono text-slate-800 font-medium">{effectiveCompany.prevCertNumber || 'KFQ-QA-10928'}</span>
+                          <span className="font-mono text-slate-800 font-medium">{effectiveCompany.prevCertNumber || '-'}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-200/60 pb-1">
                           <span className="text-slate-500 font-normal">이전 인증 유효기간:</span>
                           <span className="font-mono text-slate-800">
-                            {effectiveCompany.prevCertIssueDate || '2023-11-01'} ~ {effectiveCompany.prevCertExpiryDate || '2026-10-31'}
+                            {effectiveCompany.prevCertIssueDate || '-'} ~ {effectiveCompany.prevCertExpiryDate || '-'}
                           </span>
                         </div>
                       </div>
@@ -624,7 +588,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                         <div>
                           <span className="text-slate-500 font-normal block mb-1">전환 / 대체 사유 및 시작 배경:</span>
                           <p className="p-2 bg-white rounded border border-slate-200 text-slate-700 text-[11px] leading-relaxed">
-                            {effectiveCompany.transferReason || '기존 인증기관 만료 도래에 따른 인증기관 이관 전환 신청 및 갱신/사후 통합 관리 목적'}
+                            {effectiveCompany.transferReason || '-'}
                           </p>
                         </div>
                       </div>
@@ -673,8 +637,8 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                         </div>
                       ) : (
                         <div className="p-2.5 bg-white rounded border border-dashed border-slate-200 text-slate-500 text-[11px] flex items-center justify-between">
-                          <span>등록된 이전 심사보고서 첨부파일이 있습니다 (KFQ_2025_정기사후보고서.pdf, KFQ_인증서_사본.pdf)</span>
-                          <span className="text-[10px] text-cyan-800 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">인증원 보관문서</span>
+                          <span>등록된 이전 심사보고서 첨부파일이 없습니다.</span>
+                          <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">첨부문서 없음</span>
                         </div>
                       )}
                     </div>

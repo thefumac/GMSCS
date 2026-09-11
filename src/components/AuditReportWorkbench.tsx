@@ -940,17 +940,17 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
   // NCR 추가 함수
   const handleAddNcr = () => {
-    const nextNo = `NCR-2026-09-0${ncrList.length + 1}`;
+    const nextNo = `NCR-${new Date().toISOString().slice(0, 7)}-0${ncrList.length + 1}`;
     const newNcr: NcrItem = {
       id: `ncr-${Date.now()}`,
       ncrNo: nextNo,
       standard: 'ISO 9001:2015',
-      clause: '8.5.1 (생산 및 서비스 제공의 관리)',
-      dept: '생산팀',
-      auditorName: auditor?.name || '남경호',
-      auditType: '사후 2차',
+      clause: '',
+      dept: '',
+      auditorName: auditor?.name || '',
+      auditType: stage2Data.typeChoice ? `${stage2Data.typeChoice} ${stage2Data.survRound || ''}차`.trim() : '',
       grade: '경부적합',
-      issueDate: '2026-09-11',
+      issueDate: project?.endDate || project?.startDate || new Date().toISOString().slice(0, 10),
       details: '',
       correctionAction: '',
       causeAnalysis: '',
@@ -1492,22 +1492,22 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
             <div className="space-y-1.5 text-[11px] text-slate-600">
               <div>
-                <strong className="text-slate-800">업체명:</strong> <span className="font-bold text-slate-950">{scopeConfirmData.companyNameKor}</span> (대표: {scopeConfirmData.ceoName})
+                <strong className="text-slate-800">업체명:</strong> <span className="font-bold text-slate-950">{scopeConfirmData.companyNameKor || company.companyName}</span> (대표: {scopeConfirmData.ceoName || company.ceoName})
               </div>
               <div>
-                <strong className="text-slate-800">사업자번호:</strong> <span className="font-mono">{company.bizNumber || '107-88-30351'}</span>
+                <strong className="text-slate-800">사업자번호:</strong> <span className="font-mono">{company.bizNumber || ''}</span>
               </div>
               <div>
-                <strong className="text-slate-800">소재지:</strong> {scopeConfirmData.addressKor}
+                <strong className="text-slate-800">소재지:</strong> {scopeConfirmData.addressKor || company.address}
               </div>
               <div>
-                <strong className="text-slate-800">담당자:</strong> {company.contactPerson || '박진웅 부장'} ({company.contactPhone || '031-360-7078'})
+                <strong className="text-slate-800">담당자:</strong> {company.contactPerson || ''} {company.contactPhone ? `(${company.contactPhone})` : ''}
               </div>
               <div>
                 <strong className="text-slate-800">심사표준:</strong> <span className="font-semibold text-slate-900">{stage1Data.auditStandards}</span>
               </div>
               <div>
-                <strong className="text-slate-800">심사일정:</strong> <span className="font-mono text-slate-900">{stage2Data.auditDateStart} ~ {stage2Data.auditDateEnd}</span>
+                <strong className="text-slate-800">심사일정:</strong> <span className="font-mono text-slate-900">{stage2Data.auditDateStart && stage2Data.auditDateEnd ? `${stage2Data.auditDateStart} ~ ${stage2Data.auditDateEnd}` : (stage2Data.auditDateStart || stage2Data.auditDateEnd || '')}</span>
               </div>
             </div>
           </div>
@@ -2106,7 +2106,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">
                                 주사업장<br />주 소
                               </th>
-                              <td colSpan={3} className="p-2">{company.address || '경기 군포시 공단로140번길 46, 206호'}</td>
+                              <td colSpan={3} className="p-2">{company.address || ''}</td>
                             </tr>
                             <tr className="border-b border-slate-400">
                               <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">
@@ -2150,17 +2150,17 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             </tr>
                             <tr className="border-b border-slate-400">
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">Tel</th>
-                              <td className="p-2 border-r border-slate-400">{company.contactPhone || '031-360-7078'}</td>
+                              <td className="p-2 border-r border-slate-400">{company.contactPhone || ''}</td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">Fax</th>
-                              <td className="p-2">{(company as any).fax || '031-353-8891'}</td>
+                              <td className="p-2">{(company as any).fax || ''}</td>
                             </tr>
                             <tr>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">
                                 Home<br />page
                               </th>
-                              <td className="p-2 border-r border-slate-400">{(company as any).website || 'www.wjt.co.kr'}</td>
+                              <td className="p-2 border-r border-slate-400">{(company as any).website || ''}</td>
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">E-Mail</th>
-                              <td className="p-2 font-mono">{company.contactEmail || 'wjt-jypark@naver.com'}</td>
+                              <td className="p-2 font-mono">{company.contactEmail || ''}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -2240,7 +2240,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       <td className="p-1.5 border-r border-slate-300">
                                         <input
                                           type="text"
-                                          value={stage1Data.manualDocNo || 'QM-01'}
+                                          value={stage1Data.manualDocNo || ''}
                                           onChange={(e) => setStage1Data({ ...stage1Data, manualDocNo: e.target.value })}
                                           className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs"
                                         />
@@ -2251,9 +2251,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       <td className="p-1.5 border-r border-slate-300">
                                         <input
                                           type="text"
-                                          value={stage1Data.manualRevDate || '2026-01-10'}
+                                          value={stage1Data.manualRevDate || ''}
                                           onChange={(e) => setStage1Data({ ...stage1Data, manualRevDate: e.target.value })}
-                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center font-mono"
                                         />
                                       </td>
                                       <th className="w-20 bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
@@ -2262,7 +2262,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       <td className="p-1.5">
                                         <input
                                           type="text"
-                                          value={stage1Data.manualRevNo || 'Rev.4'}
+                                          value={stage1Data.manualRevNo || ''}
                                           onChange={(e) => setStage1Data({ ...stage1Data, manualRevNo: e.target.value })}
                                           className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
                                         />
@@ -2275,7 +2275,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       <td className="p-1.5 border-r border-slate-300">
                                         <input
                                           type="text"
-                                          value={stage1Data.processDocNo || 'QP-01~12'}
+                                          value={stage1Data.processDocNo || ''}
                                           onChange={(e) => setStage1Data({ ...stage1Data, processDocNo: e.target.value })}
                                           className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs"
                                         />
@@ -2286,9 +2286,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       <td className="p-1.5 border-r border-slate-300">
                                         <input
                                           type="text"
-                                          value={stage1Data.processRevDate || '2025-11-20'}
+                                          value={stage1Data.processRevDate || ''}
                                           onChange={(e) => setStage1Data({ ...stage1Data, processRevDate: e.target.value })}
-                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center font-mono"
                                         />
                                       </td>
                                       <th className="bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
@@ -2297,7 +2297,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       <td className="p-1.5">
                                         <input
                                           type="text"
-                                          value={stage1Data.processRevNo || 'Rev.2'}
+                                          value={stage1Data.processRevNo || ''}
                                           onChange={(e) => setStage1Data({ ...stage1Data, processRevNo: e.target.value })}
                                           className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
                                         />
@@ -2349,7 +2349,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                   <div className="w-36 p-1.5 border-r border-slate-300 flex items-center">
                                     <input
                                       type="text"
-                                      value={stage1Data.exclusionClause || '8.3'}
+                                      value={stage1Data.exclusionClause || ''}
                                       onChange={(e) => setStage1Data({ ...stage1Data, exclusionClause: e.target.value })}
                                       className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
                                     />
@@ -2605,7 +2605,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <span className="font-bold text-slate-700 underline shrink-0">있다면:</span>
                                 <input
                                   type="text"
-                                  value={stage1Data.env1_details || '절삭유 및 폐유 위탁처리 계약 체결'}
+                                  value={stage1Data.env1_details || ''}
                                   onChange={(e) => setStage1Data({...stage1Data, env1_details: e.target.value})}
                                   className="flex-1 border-b border-dotted border-slate-400 px-1 py-0.5 text-xs bg-transparent focus:outline-none"
                                 />
@@ -2838,7 +2838,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 (
                                 <input
                                   type="text"
-                                  value={stage1Data.safe5_criticalCount || '1'}
+                                  value={stage1Data.safe5_criticalCount || ''}
                                   onChange={(e) => setStage1Data({...stage1Data, safe5_criticalCount: e.target.value})}
                                   className="w-10 text-center border-b border-slate-400 font-mono font-bold text-xs focus:outline-none"
                                 />
@@ -3006,22 +3006,22 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </thead>
                           <tbody>
                             <tr className="border-b border-slate-400">
-                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[0]?.name || company.ceoName || '박진용'}</td>
-                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[0]?.role || '대표이사 / 최고경영자'}</td>
-                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[1]?.name || '박진웅'}</td>
-                              <td className="p-1.5">{stage1Data.attendees[1]?.role || '품질관리팀장 / 부장'}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{clientSigner?.name || stage1Data.attendees[0]?.name || company.ceoName || ''}</td>
+                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[0]?.role || (company.ceoName ? '대표이사 / 최고경영자' : '')}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[1]?.name || company.contactPerson || ''}</td>
+                              <td className="p-1.5">{stage1Data.attendees[1]?.role || (company.contactPerson ? `${(company as any).contactPosition || '담당자'}` : '')}</td>
                             </tr>
                             <tr className="border-b border-slate-400">
-                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[2]?.name || '이영희'}</td>
-                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[2]?.role || '환경안전관리자 / 차장'}</td>
-                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[3]?.name || '김진수'}</td>
-                              <td className="p-1.5">{stage1Data.attendees[3]?.role || '근로자대표 / 직장'}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[2]?.name || ''}</td>
+                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[2]?.role || ''}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{workerSigner?.name || stage1Data.attendees[3]?.name || ''}</td>
+                              <td className="p-1.5">{stage1Data.attendees[3]?.role || (workerSigner?.name ? '근로자대표' : '')}</td>
                             </tr>
                             <tr className="border-b border-slate-400">
-                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[4]?.name || '정민호'}</td>
-                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[4]?.role || '영업자재팀 / 과장'}</td>
-                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[5]?.name || '윤상혁'}</td>
-                              <td className="p-1.5">{stage1Data.attendees[5]?.role || '가공팀 / 반장'}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[4]?.name || ''}</td>
+                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[4]?.role || ''}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[5]?.name || ''}</td>
+                              <td className="p-1.5">{stage1Data.attendees[5]?.role || ''}</td>
                             </tr>
                             <tr className="border-b border-slate-400">
                               <td className="p-1.5 border-r border-slate-400 text-center text-slate-400">-</td>
@@ -3052,19 +3052,19 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tbody>
                             <tr className="border-b border-slate-400">
                               <th className="w-20 bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀장</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}</td>
                               <th className="w-20 bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{teamSigners[0]?.name || ''}</td>
                               <th className="w-20 bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
-                              <td className="p-2 text-slate-400">-</td>
+                              <td className="p-2 text-slate-400">{teamSigners[1]?.name || '-'}</td>
                             </tr>
                             <tr>
                               <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">{teamSigners[2]?.name || '-'}</td>
                               <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
-                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">{teamSigners[3]?.name || '-'}</td>
                               <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
-                              <td className="p-2 text-slate-400">-</td>
+                              <td className="p-2 text-slate-400">{teamSigners[4]?.name || '-'}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -3544,7 +3544,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <span>사후(</span>
                                 <input
                                   type="text"
-                                  value={stage2Data.survRound || '2'}
+                                  value={stage2Data.survRound || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, survRound: e.target.value })}
                                   className="w-8 border-b border-slate-400 px-1 text-center bg-transparent focus:outline-none"
                                 />
@@ -4079,7 +4079,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <span className="font-bold text-slate-900">작성일자:</span>
                           <input
                             type="text"
-                            value={stage2Data.conflictDate || '2026-09-10'}
+                            value={stage2Data.conflictDate || project?.startDate || ''}
                             onChange={(e) => setStage2Data({ ...stage2Data, conflictDate: e.target.value })}
                             className="w-28 border-b border-slate-700 font-mono text-center bg-transparent font-bold py-0.5 focus:outline-none"
                           />
@@ -4094,25 +4094,25 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <td className="w-1/6 p-1 border-r border-slate-400 text-center font-bold">
                                 <input
                                   type="text"
-                                  value={stage2Data.conflictLeader || auditor?.name || '남경호'}
+                                  value={stage2Data.conflictLeader || leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, conflictLeader: e.target.value })}
                                   className="w-full text-center bg-transparent font-bold"
                                 />
                               </td>
                               <td className="w-1/6 p-1 border-r border-slate-800 text-center">
-                                {renderSignatureCell('s2_conf_lead', '심사팀장 (서명)', '심사팀장', stage2Data.conflictLeader || auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                {renderSignatureCell('s2_conf_lead', '심사팀장 (서명)', '심사팀장', stage2Data.conflictLeader || leadSigner?.name || project?.leadAuditorName || auditor?.name || '', leadSigner?.position || auditor?.grade || '선임심사원', leadSigner?.email || auditor?.email || '')}
                               </td>
                               <th className="w-1/6 bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold">심사팀원</th>
                               <td className="w-1/6 p-1 border-r border-slate-400 text-center font-bold">
                                 <input
                                   type="text"
-                                  value={stage2Data.conflictMember1 || '신현섭'}
+                                  value={stage2Data.conflictMember1 || teamSigners[0]?.name || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, conflictMember1: e.target.value })}
                                   className="w-full text-center bg-transparent font-bold"
                                 />
                               </td>
                               <td className="w-1/6 p-1 text-center">
-                                {renderSignatureCell('s2_conf_m1', '심사팀원 (서명)', '심사팀원', stage2Data.conflictMember1 || '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                                {renderSignatureCell('s2_conf_m1', '심사팀원 (서명)', '심사팀원', stage2Data.conflictMember1 || teamSigners[0]?.name || '', teamSigners[0]?.position || '심사원', teamSigners[0]?.email || '')}
                               </td>
                             </tr>
                             <tr className="border-b border-slate-400">
@@ -4230,7 +4230,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <td className="p-1.5">
                               <input
                                 type="text"
-                                value={stage2Data.ceoName || company.ceoName || '박진용'}
+                                value={stage2Data.ceoName || clientSigner?.name || company.ceoName || ''}
                                 onChange={(e) => setStage2Data({ ...stage2Data, ceoName: e.target.value })}
                                 className="w-full bg-transparent px-1 py-0.5 text-xs"
                               />
@@ -4606,7 +4606,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <input
                                   type="text"
                                   placeholder="시작일 (YYYY-MM-DD)"
-                                  value={stage2Data.internalAuditDateStart || (stage2Data.internalAuditDate ? stage2Data.internalAuditDate.split('~')[0]?.trim() : '2026-07-15')}
+                                  value={stage2Data.internalAuditDateStart || (stage2Data.internalAuditDate ? stage2Data.internalAuditDate.split('~')[0]?.trim() : '')}
                                   onChange={(e) => {
                                     const s = e.target.value;
                                     setStage2Data({
@@ -4621,7 +4621,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <input
                                   type="text"
                                   placeholder="종료일 (YYYY-MM-DD)"
-                                  value={stage2Data.internalAuditDateEnd || (stage2Data.internalAuditDate?.includes('~') ? stage2Data.internalAuditDate.split('~')[1]?.trim() : stage2Data.internalAuditDateStart || '2026-07-16')}
+                                  value={stage2Data.internalAuditDateEnd || (stage2Data.internalAuditDate?.includes('~') ? stage2Data.internalAuditDate.split('~')[1]?.trim() : stage2Data.internalAuditDateStart || '')}
                                   onChange={(e) => {
                                     const end = e.target.value;
                                     setStage2Data({
@@ -4662,7 +4662,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <input
                                   type="text"
                                   placeholder="시작일 (YYYY-MM-DD)"
-                                  value={stage2Data.mgmtReviewDateStart || (stage2Data.mgmtReviewDate ? stage2Data.mgmtReviewDate.split('~')[0]?.trim() : '2026-08-10')}
+                                  value={stage2Data.mgmtReviewDateStart || (stage2Data.mgmtReviewDate ? stage2Data.mgmtReviewDate.split('~')[0]?.trim() : '')}
                                   onChange={(e) => {
                                     const s = e.target.value;
                                     setStage2Data({
@@ -4677,7 +4677,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <input
                                   type="text"
                                   placeholder="종료일 (YYYY-MM-DD)"
-                                  value={stage2Data.mgmtReviewDateEnd || (stage2Data.mgmtReviewDate?.includes('~') ? stage2Data.mgmtReviewDate.split('~')[1]?.trim() : stage2Data.mgmtReviewDateStart || '2026-08-10')}
+                                  value={stage2Data.mgmtReviewDateEnd || (stage2Data.mgmtReviewDate?.includes('~') ? stage2Data.mgmtReviewDate.split('~')[1]?.trim() : stage2Data.mgmtReviewDateStart || '')}
                                   onChange={(e) => {
                                     const end = e.target.value;
                                     setStage2Data({
@@ -5109,7 +5109,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <td className="w-20 p-1 text-center font-mono">
                               <input
                                 type="text"
-                                value={stage2Data.findingsPage || '14 / 20'}
+                                value={stage2Data.findingsPage || ''}
                                 onChange={(e) => setStage2Data({ ...stage2Data, findingsPage: e.target.value })}
                                 className="w-full text-center bg-transparent text-xs font-mono focus:outline-none"
                               />
@@ -5120,7 +5120,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <td className="p-1 border-r border-slate-400">
                               <input
                                 type="text"
-                                value={stage2Data.findingsAuditor || stage2Data.scheduleLeader || auditor?.name || '남경호'}
+                                value={stage2Data.findingsAuditor || stage2Data.scheduleLeader || leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}
                                 onChange={(e) => setStage2Data({ ...stage2Data, findingsAuditor: e.target.value })}
                                 className="w-full bg-transparent px-1 text-xs focus:outline-none"
                               />
@@ -5129,7 +5129,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <td colSpan={3} className="p-1 font-mono">
                               <input
                                 type="text"
-                                value={stage2Data.findingsDate || stage2Data.auditDateEnd || '2026-09-11'}
+                                value={stage2Data.findingsDate || stage2Data.auditDateEnd || project?.endDate || project?.startDate || ''}
                                 onChange={(e) => setStage2Data({ ...stage2Data, findingsDate: e.target.value })}
                                 className="w-full bg-transparent px-1 text-xs font-mono focus:outline-none"
                               />
@@ -5378,14 +5378,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <span>확인 심사원명:</span>
                                 <input
                                   type="text"
-                                  value={stage2Data.prevObsAuditor || stage2Data.scheduleLeader || auditor?.name || '남경호'}
+                                  value={stage2Data.prevObsAuditor || stage2Data.scheduleLeader || leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, prevObsAuditor: e.target.value })}
                                   className="w-20 border-b border-slate-400 text-center bg-transparent font-bold"
                                 />
                               </div>
                             </td>
                             <td className="w-20 p-1 text-center">
-                              {renderSignatureCell('s2_p15_prevObsSig', '확인심사원', '확인심사원', stage2Data.prevObsAuditor || auditor?.name || '남경호')}
+                              {renderSignatureCell('s2_p15_prevObsSig', '확인심사원', '확인심사원', stage2Data.prevObsAuditor || leadSigner?.name || project?.leadAuditorName || auditor?.name || '')}
                             </td>
                           </tr>
                           <tr className="border-b border-slate-800">
@@ -5415,14 +5415,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <span>확인 심사원명:</span>
                                 <input
                                   type="text"
-                                  value={stage2Data.prevNcrAuditor || stage2Data.scheduleLeader || auditor?.name || '남경호'}
+                                  value={stage2Data.prevNcrAuditor || stage2Data.scheduleLeader || leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, prevNcrAuditor: e.target.value })}
                                   className="w-20 border-b border-slate-400 text-center bg-transparent font-bold"
                                 />
                               </div>
                             </td>
                             <td className="p-1 text-center">
-                              {renderSignatureCell('s2_p15_prevNcrSig', '확인심사원', '확인심사원', stage2Data.prevNcrAuditor || auditor?.name || '남경호')}
+                              {renderSignatureCell('s2_p15_prevNcrSig', '확인심사원', '확인심사원', stage2Data.prevNcrAuditor || leadSigner?.name || project?.leadAuditorName || auditor?.name || '')}
                             </td>
                           </tr>
                           {/* 심사결론 선택지 */}
@@ -5505,7 +5505,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       next[baseIdx] = { ...next[baseIdx], name: e.target.value };
                                       setStage2Data({ ...stage2Data, attendees: next });
                                     }}
-                                    placeholder={baseIdx === 0 ? company.ceoName || '박진용' : ''}
+                                    placeholder={baseIdx === 0 ? clientSigner?.name || company.ceoName || '' : ''}
                                     className="w-full text-center bg-transparent text-xs font-bold focus:outline-none"
                                   />
                                 </td>
@@ -5531,7 +5531,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       next[baseIdx + 1] = { ...next[baseIdx + 1], name: e.target.value };
                                       setStage2Data({ ...stage2Data, attendees: next });
                                     }}
-                                    placeholder={baseIdx === 0 ? '박진웅' : ''}
+                                    placeholder=""
                                     className="w-full text-center bg-transparent text-xs font-bold focus:outline-none"
                                   />
                                 </td>
@@ -5544,7 +5544,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                       next[baseIdx + 1] = { ...next[baseIdx + 1], role: e.target.value };
                                       setStage2Data({ ...stage2Data, attendees: next });
                                     }}
-                                    placeholder={baseIdx === 0 ? '품질총괄 / 부장' : ''}
+                                    placeholder=""
                                     className="w-full bg-transparent text-xs px-1 focus:outline-none"
                                   />
                                 </td>
@@ -5572,7 +5572,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <td className="p-1 border-r border-slate-400 font-bold text-center">
                                 <input
                                   type="text"
-                                  value={stage2Data.scheduleLeader || auditor?.name || '남경호'}
+                                  value={stage2Data.scheduleLeader || leadSigner?.name || project?.leadAuditorName || auditor?.name || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, scheduleLeader: e.target.value })}
                                   className="w-full text-center bg-transparent font-bold"
                                 />
@@ -5581,7 +5581,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <td className="p-1 border-r border-slate-400 font-bold text-center">
                                 <input
                                   type="text"
-                                  value={stage2Data.scheduleMember || '신현섭'}
+                                  value={stage2Data.scheduleMember || teamSigners[0]?.name || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, scheduleMember: e.target.value })}
                                   className="w-full text-center bg-transparent font-bold"
                                 />
@@ -5696,7 +5696,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <span>사후(</span>
                                 <input
                                   type="text"
-                                  value={stage2Data.nextSurvRound || '3'}
+                                  value={stage2Data.nextSurvRound || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, nextSurvRound: e.target.value })}
                                   className="w-6 border-b border-slate-400 text-center bg-transparent"
                                 />
@@ -5707,11 +5707,11 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <div className="flex items-center justify-between px-4">
                                 <input
                                   type="text"
-                                  value={stage2Data.nextAuditMonth || '2027-09'}
+                                  value={stage2Data.nextAuditMonth || ''}
                                   onChange={(e) => setStage2Data({ ...stage2Data, nextAuditMonth: e.target.value })}
                                   className="w-28 border-b border-slate-400 text-center font-mono bg-transparent"
                                 />
-                                <span>( <input type="text" value={stage2Data.nextAuditMd || '2.0'} onChange={(e) => setStage2Data({...stage2Data, nextAuditMd: e.target.value})} className="w-10 border-b border-slate-400 text-center font-bold bg-transparent" /> ) M/D</span>
+                                <span>( <input type="text" value={stage2Data.nextAuditMd || ''} onChange={(e) => setStage2Data({...stage2Data, nextAuditMd: e.target.value})} className="w-10 border-b border-slate-400 text-center font-bold bg-transparent" /> ) M/D</span>
                               </div>
                             </td>
                           </tr>
@@ -5764,9 +5764,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </thead>
                           <tbody>
                             {(stage2Data.renewalHistory || [
-                              { type: '최초 심사', count: '경 1', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
-                              { type: '1차 사후', count: '0', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
-                              { type: '2차 사후', count: '0', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
+                              { type: '최초 심사', count: '', leader: leadSigner?.name || project?.leadAuditorName || auditor?.name || '', effect: '적절', reason: '' },
+                              { type: '1차 사후', count: '', leader: leadSigner?.name || project?.leadAuditorName || auditor?.name || '', effect: '적절', reason: '' },
+                              { type: '2차 사후', count: '', leader: leadSigner?.name || project?.leadAuditorName || auditor?.name || '', effect: '적절', reason: '' },
                               { type: '기타', count: '', leader: '', effect: '적절', reason: '' },
                             ]).map((rItem: any, rIdx: number) => (
                               <tr key={rIdx} className="border-b border-slate-400">
@@ -5904,7 +5904,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               value={scopeConfirmData.companyNameEng}
                               onChange={(e) => handleUpdateScopeConfirmField('companyNameEng', e.target.value)}
                               className="w-full font-sans bg-transparent px-1 focus:outline-none"
-                              placeholder="e.g. WOOJIN TECH CO., LTD."
+                              placeholder="영문 상호명 입력"
                             />
                           </td>
                         </tr>
@@ -6207,7 +6207,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <td className="w-16 p-1 text-center font-serif">
                             <input
                               type="text"
-                              value={stage2Data.planSummaryRev || '0'}
+                              value={stage2Data.planSummaryRev || ''}
                               onChange={(e) => setStage2Data({ ...stage2Data, planSummaryRev: e.target.value })}
                               className="w-full bg-transparent text-center text-xs font-serif focus:bg-amber-50/50"
                             />
@@ -6338,16 +6338,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tr className="border-b border-slate-800 bg-slate-50 font-bold">
                             <th className="p-1 border-r border-slate-400 text-center">심 사 일</th>
                             {[0, 1, 2, 3, 4, 5].map((colIdx) => {
-                              const dVal = stage2Data.planSummary3YearDates?.[colIdx] ?? (colIdx === 0 ? '2024-09' : colIdx === 1 ? '2025-09' : colIdx === 2 ? '2026-09' : colIdx === 3 ? '2027-09' : '-');
+                              const dVal = stage2Data.planSummary3YearDates?.[colIdx] || '';
                               return (
                                 <td key={colIdx} className={`p-0.5 ${colIdx < 5 ? 'border-r border-slate-400' : ''} text-center font-mono`}>
                                   <input
                                     type="text"
                                     value={dVal}
                                     onChange={(e) => handleUpdate3YearDate(colIdx, e.target.value)}
-                                    className={`w-full bg-transparent text-center font-mono font-bold text-xs p-0.5 focus:bg-amber-50 focus:outline-none ${
-                                      colIdx === 2 ? 'text-teal-800' : 'text-slate-800'
-                                    }`}
+                                    className="w-full bg-transparent text-center font-mono font-bold text-xs p-0.5 focus:bg-amber-50 focus:outline-none text-slate-800"
                                     placeholder="-"
                                   />
                                 </td>
@@ -6553,7 +6551,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tr className="border-b border-slate-400">
                             <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심 사 원</th>
                             <td className="p-2">
-                              {renderSignatureCell(`car_auditor_init_${ncrItem.id}`, '심사원 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                              {renderSignatureCell(`car_auditor_init_${ncrItem.id}`, '심사원 (서명)', '심사팀장', ncrItem.auditorName || auditor?.name || '', auditor?.grade || '선임심사원', auditor?.email || '')}
                             </td>
                           </tr>
 
@@ -6631,11 +6629,11 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tr className="border-b border-slate-400 bg-slate-50">
                             <th className="p-2 border-r border-slate-400 text-left font-bold">심사팀장</th>
                             <td className="p-2 border-r border-slate-400">
-                              {renderSignatureCell(`car_lead_sign_${ncrItem.id}`, '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                              {renderSignatureCell(`car_lead_sign_${ncrItem.id}`, '심사팀장 (서명)', '심사팀장', ncrItem.auditorName || auditor?.name || '', auditor?.grade || '선임심사원', auditor?.email || '')}
                             </td>
                             <th className="p-2 border-r border-slate-400 text-left font-bold">인증고객</th>
                             <td className="p-2">
-                              {renderSignatureCell(`car_client_sign_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', stage2Data.contactPerson || scopeConfirmData.ceoName || company.ceoName || '박진용', stage2Data.contactPosition || '품질부장', stage2Data.email || company.contactEmail)}
+                              {renderSignatureCell(`car_client_sign_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', clientSigner?.name || stage2Data.contactPerson || scopeConfirmData.ceoName || company.ceoName || '', stage2Data.contactPosition || '대표이사', clientSigner?.email || stage2Data.email || company.contactEmail || '')}
                             </td>
                           </tr>
 

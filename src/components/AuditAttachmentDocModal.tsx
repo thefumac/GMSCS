@@ -134,7 +134,7 @@ export const AuditAttachmentDocModal: React.FC<AuditAttachmentDocModalProps> = (
                   <p className="text-slate-600">서식번호: F19-002 (Rev. 20240301)</p>
                 </div>
                 <div className="sm:text-right mt-1 sm:mt-0 text-slate-700 font-mono">
-                  <p>접수번호: GMS-CHG-20260908</p>
+                  <p>접수번호: {currentDoc.id ? `GMS-CHG-${currentDoc.id.replace(/[^0-9]/g, '').slice(-8) || currentDoc.id}` : ''}</p>
                 </div>
               </div>
 
@@ -157,9 +157,9 @@ export const AuditAttachmentDocModal: React.FC<AuditAttachmentDocModalProps> = (
                   </tr>
                   <tr className="border-b border-slate-400">
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">사업자번호</th>
-                    <td className="p-2 border-r border-slate-400 font-mono text-slate-900">{company.bizNumber || '214-88-92810'}</td>
+                    <td className="p-2 border-r border-slate-400 font-mono text-slate-900">{company.bizNumber || ''}</td>
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">인증규격</th>
-                    <td className="p-2 text-slate-900">ISO 9001 / ISO 14001</td>
+                    <td className="p-2 text-slate-900">{(company as any)?.standards?.join(' / ') || 'ISO 9001'}</td>
                   </tr>
                   <tr className="border-b border-slate-400">
                     <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">변경 구분</th>
@@ -173,7 +173,7 @@ export const AuditAttachmentDocModal: React.FC<AuditAttachmentDocModalProps> = (
                       <p className="font-semibold text-slate-900 mb-1">1. 변경 사유:</p>
                       <p className="text-slate-700 pl-2">{currentDoc.summary}</p>
                       <p className="font-semibold text-slate-900 mt-2 mb-1">2. 변경 후 인증범위:</p>
-                      <p className="text-slate-700 pl-2">{company.scope || '자동차 및 선박용 주조물 제작 및 정밀가공'}</p>
+                      <p className="text-slate-700 pl-2">{company.scope || ''}</p>
                     </td>
                   </tr>
                 </tbody>
@@ -198,7 +198,7 @@ export const AuditAttachmentDocModal: React.FC<AuditAttachmentDocModalProps> = (
                   <p className="text-slate-600">서식번호: F19-003 (Rev. 20240301)</p>
                 </div>
                 <div className="sm:text-right mt-1 sm:mt-0 text-slate-700 font-mono">
-                  <p>관리번호: GMS-WKD-20260908</p>
+                  <p>관리번호: {currentDoc.id ? `GMS-WKD-${currentDoc.id.replace(/[^0-9]/g, '').slice(-8) || currentDoc.id}` : ''}</p>
                 </div>
               </div>
 
