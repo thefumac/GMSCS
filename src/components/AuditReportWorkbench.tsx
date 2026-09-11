@@ -1991,10 +1991,19 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </tbody>
                       </table>
 
+                      {/* 표지 식별 중앙 대형 로고 */}
+                      <div className="flex justify-center items-center py-4 my-2">
+                        <img 
+                          src="/report-logo.png" 
+                          alt="GMSCS 인증원" 
+                          className="h-16 md:h-20 w-auto object-contain" 
+                        />
+                      </div>
+
                       {/* ◆ 1단계 심사의 목적 */}
-                      <div className="border border-slate-400 bg-slate-50 p-4 space-y-2 text-[11px] leading-relaxed text-slate-700 mb-6">
+                      <div className="border border-slate-400 bg-slate-50 p-3.5 space-y-1 text-[11px] leading-snug text-slate-700 mb-4">
                         <span className="font-bold text-slate-950 block text-xs">◆ 1단계 심사의 목적</span>
-                        <ol className="list-decimal list-inside space-y-1.5 pl-1">
+                        <ol className="list-decimal list-inside space-y-1 pl-1">
                           <li>경영시스템을 문서화한 정보 검토</li>
                           <li>조직의 위치 및 사업장별 상태를 평가하고, 2단계 심사를 위한 준비상태를 결정하기 위하여 조직의 인원들과 논의</li>
                           <li>표준 요구사항, 특히 경영시스템의 주요성과 또는 중대한 측면의 파악, 프로세스, 목표 및 운영과 관련된 조직의 상태 및 이해 정도를 검토</li>
@@ -3471,8 +3480,17 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </tbody>
                       </table>
 
+                      {/* 표지 식별 중앙 대형 로고 */}
+                      <div className="flex justify-center items-center py-4 my-2">
+                        <img 
+                          src="/report-logo.png" 
+                          alt="GMSCS 인증원" 
+                          className="h-16 md:h-20 w-auto object-contain" 
+                        />
+                      </div>
+
                       {/* ◆ 2단계 심사의 목적 */}
-                      <div className="border border-slate-400 bg-slate-50 p-4 space-y-2 text-[11px] leading-relaxed text-slate-700 mb-5">
+                      <div className="border border-slate-400 bg-slate-50 p-3.5 space-y-1 text-[11px] leading-snug text-slate-700 mb-4">
                         <span className="font-bold text-slate-950 block text-xs">◆ 2단계 심사의 목적</span>
                         <ol className="list-decimal list-inside space-y-1 pl-1">
                           <li>해당 경영시스템 표준의 모든 요구사항에 대한 적합성에 관한 정보 및 증거 확인</li>
