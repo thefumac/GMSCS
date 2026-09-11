@@ -1181,384 +1181,1174 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             <div className="w-full max-w-[850px] space-y-12 print:max-w-none print:w-full print:space-y-0">
 
               {/* ================================================================= */}
-              {/* 1단계 심사보고서 (1p ~ 6p 실물 PDF 완벽 일치 - 사후/갱신 미작성 시 팩에서 제외) */}
+              {/* 1단계 심사보고서 (1p ~ 6p 실물 공문서/워드 양식 100% 완벽 일치) */}
               {/* ================================================================= */}
               {(activeDocTab === 'stage1' || (activeDocTab === 'all' && includeStage1InPack)) && (
                 <div className="space-y-10">
+                  
                   {/* --- [1단계 1 PAGE : 표지] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-009(20251001)')}
-
-                    <div className="text-center py-6">
-                      <h1 className="text-3xl font-black tracking-tight text-slate-950 font-serif">
-                        적합성 평가 심사보고서(1st Stage)
-                      </h1>
-                    </div>
-
-                    {/* Table 0 */}
-                    <table className="w-full border-collapse border border-slate-700 text-xs">
-                      <tbody>
-                        <tr className="border-b border-slate-400">
-                          <th className="w-28 bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">고 객 명</th>
-                          <td className="p-2.5 font-bold text-sm text-slate-900">{company.companyName}</td>
-                        </tr>
-                        <tr className="border-b border-slate-400">
-                          <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 표 준</th>
-                          <td className="p-2.5 space-x-5 text-xs font-medium">
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 9001</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 14001</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ISO 45001</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ESG-MS</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>기타( )</span></label>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 유 형</th>
-                          <td className="p-2.5 space-x-5 text-xs font-medium">
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" defaultChecked /><span>최초</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" /><span>사후 ( )</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" /><span>갱신</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" /><span>전환</span></label>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-
-                    {/* ◆ 1단계 심사의 목적 */}
-                    <div className="border border-slate-400 bg-slate-50 p-4 space-y-2 text-[11px] leading-relaxed text-slate-700">
-                      <span className="font-bold text-slate-950 block text-xs">◆ 1단계 심사의 목적</span>
-                      <ol className="list-decimal list-inside space-y-1.5 pl-1">
-                        <li>경영시스템을 문서화한 정보 검토</li>
-                        <li>조직의 위치 및 사업장별 상태를 평가하고, 2단계 심사를 위한 준비상태를 결정하기 위하여 조직의 인원들과 논의</li>
-                        <li>표준 요구사항, 특히 경영시스템의 주요성과 또는 중대한 측면의 파악, 프로세스, 목표 및 운영과 관련된 조직의 상태 및 이해 정도를 검토</li>
-                        <li>다음을 포함하여 경영시스템의 인증범위와 관련된 필수 정보 획득</li>
-                        <li>2단계 심사를 위한 자원의 배정에 대해 검토하고 2단계 심사의 세부사항에 대하여 조직과 합의</li>
-                        <li>중대한 측면과 관련하여 조직의 경영시스템 및 사업장 운영에 대하여 충분히 이해함으로써 2단계 심사계획을 위한 중점사항 제공</li>
-                        <li>내부심사와 경영검토를 계획 및 수행하고 있는지의 여부를 평가하고, 인증고객이 2단계 심사를 받을 준비가 되었음을 평가</li>
-                      </ol>
-                    </div>
-
-                    {/* Table 1 & Table 2 서명 */}
-                    <div className="space-y-1 pt-2">
-                      <div className="flex justify-between text-[11px] text-slate-600 font-bold px-1">
-                        <span>※ 보고서 확인</span>
-                        <span>※ ISO 45001만 해당</span>
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div>
+                      {/* 공식 상단 헤더 (가운데: 1 단계 심사 보고서 / 우측: GMSCS 로고) */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-4">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          1 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
                       </div>
-                      <table className="w-full border-collapse border border-slate-700 text-xs">
+
+                      <div className="text-center py-5">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-950 font-serif">
+                          적합성 평가 심사보고서(1st Stage)
+                        </h1>
+                      </div>
+
+                      {/* Table 0 : 고객명 / 심사표준 / 심사유형 */}
+                      <table className="w-full border-collapse border border-slate-700 text-xs mb-6">
                         <tbody>
                           <tr className="border-b border-slate-400">
-                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">{company.ceoName || '박진용'}</td>
-                            <td className="w-36 p-1 border-r border-slate-400">
-                              {renderSignatureCell('s1_cust', '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
-                            </td>
-                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
-                            <td className="w-36 p-1">
-                              {renderSignatureCell('s1_work', '근로자대표 (서명)', '근로자대표', '김진수', '근로자대표', 'worker@k1metal.co.kr')}
-                            </td>
+                            <th className="w-28 bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">고 객 명</th>
+                            <td className="p-2.5 font-bold text-sm text-slate-900">{company.companyName}</td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀장</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
-                            <td className="p-1 border-r border-slate-400">
-                              {renderSignatureCell('s1_lead', '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
-                            </td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
-                            <td className="p-1 border-r border-slate-400">
-                              {renderSignatureCell('s1_team1', '심사팀원 (서명)', '심사팀원', '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                            <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 표 준</th>
+                            <td className="p-2.5 space-x-5 text-xs font-medium">
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 9001</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 14001</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ISO 45001</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ESG-MS</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>기타( )</span></label>
                             </td>
                           </tr>
                           <tr>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                            <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
-                            <td className="p-1 border-r border-slate-400">{renderSignatureCell('s1_t2', '심사팀원 (서명)', '심사팀원')}</td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
-                            <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
-                            <td className="p-1">{renderSignatureCell('s1_oth', '기타 (서명)', '확인심사원')}</td>
+                            <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 유 형</th>
+                            <td className="p-2.5 space-x-5 text-xs font-medium">
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" defaultChecked /><span>최초</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" /><span>사후 ( )</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" /><span>갱신</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s1_p1_type" /><span>전환</span></label>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
+
+                      {/* ◆ 1단계 심사의 목적 */}
+                      <div className="border border-slate-400 bg-slate-50 p-4 space-y-2 text-[11px] leading-relaxed text-slate-700 mb-6">
+                        <span className="font-bold text-slate-950 block text-xs">◆ 1단계 심사의 목적</span>
+                        <ol className="list-decimal list-inside space-y-1.5 pl-1">
+                          <li>경영시스템을 문서화한 정보 검토</li>
+                          <li>조직의 위치 및 사업장별 상태를 평가하고, 2단계 심사를 위한 준비상태를 결정하기 위하여 조직의 인원들과 논의</li>
+                          <li>표준 요구사항, 특히 경영시스템의 주요성과 또는 중대한 측면의 파악, 프로세스, 목표 및 운영과 관련된 조직의 상태 및 이해 정도를 검토</li>
+                          <li>다음을 포함하여 경영시스템의 인증범위와 관련된 필수 정보 획득</li>
+                          <li>2단계 심사를 위한 자원의 배정에 대해 검토하고 2단계 심사의 세부사항에 대하여 조직과 합의</li>
+                          <li>중대한 측면과 관련하여 조직의 경영시스템 및 사업장 운영에 대하여 충분히 이해함으로써 2단계 심사계획을 위한 중점사항 제공</li>
+                          <li>내부심사와 경영검토를 계획 및 수행하고 있는지의 여부를 평가하고, 인증고객이 2단계 심사를 받을 준비가 되었음을 평가</li>
+                        </ol>
+                      </div>
+
+                      {/* 서명 확인란 */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[11px] text-slate-600 font-bold px-1">
+                          <span>※ 보고서 확인</span>
+                          <span>※ ISO 45001만 해당</span>
+                        </div>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <tbody>
+                            <tr className="border-b border-slate-400">
+                              <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">{company.ceoName || '박진용'}</td>
+                              <td className="w-36 p-1 border-r border-slate-400">
+                                {renderSignatureCell('s1_cust', '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                              </td>
+                              <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
+                              <td className="w-36 p-1">
+                                {renderSignatureCell('s1_work', '근로자대표 (서명)', '근로자대표', '김진수', '근로자대표', 'worker@k1metal.co.kr')}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀장</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
+                              <td className="p-1 border-r border-slate-400">
+                                {renderSignatureCell('s1_lead', '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                              </td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
+                              <td className="p-1 border-r border-slate-400">
+                                {renderSignatureCell('s1_team1', '심사팀원 (서명)', '심사팀원', '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1 border-r border-slate-400">{renderSignatureCell('s1_t2', '심사팀원 (서명)', '심사팀원')}</td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1">{renderSignatureCell('s1_oth', '기타 (서명)', '확인심사원')}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 1 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-009(20251001)</span>
+                      <span>- 1 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [1단계 2 PAGE : I.고객현황 & Ⅱ.심사표준 & Ⅲ.공통심사내역 상반부] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-009(20251001)')}
-                    <div className="space-y-1.5">
-                      <h3 className="font-bold text-slate-950 text-xs">I. 고객 현황</h3>
-                      <p className="text-[11px] text-slate-600">
-                        다음 사항은 지엠에스씨에스㈜ 인증원 심사원에 의해 검토되고 고객에게 확인함 (변경사항이 있는 경우 최초 계약서를 아래에 기술한 내용으로 변경하는데 동의함)
-                      </p>
-                      <table className="w-full border-collapse border border-slate-700 text-xs">
-                        <tbody>
-                          <tr className="border-b border-slate-400">
-                            <th className="w-28 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">고 객 명</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">{company.companyName}</td>
-                            <th className="w-28 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">인증번호</th>
-                            <td className="p-2 font-mono">GMS-2609-08</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심사일자</th>
-                            <td colSpan={3} className="p-2">2026년 09월 08일</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">주사업장 주소</th>
-                            <td colSpan={3} className="p-2">{company.address || '경기 군포시 공단로140번길 46, 206호'}</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">추가사업장 주소</th>
-                            <td colSpan={3} className="p-2 text-slate-500">해당사항 없음 (단일 사업장)</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">Tel</th>
-                            <td className="p-2 border-r border-slate-400">{company.contactPhone || '031-360-7078'}</td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">Fax</th>
-                            <td className="p-2">031-353-8891</td>
-                          </tr>
-                          <tr>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">Home page</th>
-                            <td className="p-2 border-r border-slate-400">www.wjt.co.kr</td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">E-Mail</th>
-                            <td className="p-2 font-mono">{company.contactEmail || 'wjt-jypark@naver.com'}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  {/* --- [1단계 2 PAGE : I. 고객 현황 & Ⅲ 1 단계 심사 (공통 심사 내역 Part 1)] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          1 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <h3 className="font-bold text-slate-950 text-xs">Ⅱ. 심사표준</h3>
-                      <div className="border border-slate-400 p-2.5 bg-slate-50 space-x-6 text-xs font-semibold">
-                        <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 9001:2015</span></label>
-                        <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 14001:2015</span></label>
-                        <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ISO 45001:2018</span></label>
-                        <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ESG-MS</span></label>
+                      {/* I. 고객 현황 */}
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-slate-950 text-xs">I. 고객 현황</h3>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <tbody>
+                            <tr className="border-b border-slate-400">
+                              <th className="w-28 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고 객 명</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">{company.companyName}</td>
+                              <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">인증번호</th>
+                              <td className="p-2 font-mono">{(company as any).certNumber || 'GMS-2609-08'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사일자</th>
+                              <td colSpan={3} className="p-2 font-medium">
+                                {(contract as any)?.auditDateStart ? `${(contract as any).auditDateStart} ~ ${(contract as any).auditDateEnd || ''}` : '2026년 09월 08일'}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">
+                                주사업장<br />주 소
+                              </th>
+                              <td colSpan={3} className="p-2">{company.address || '경기 군포시 공단로140번길 46, 206호'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">
+                                추가사업장<br />주 소
+                              </th>
+                              <td colSpan={3} className="p-1.5 text-slate-500">
+                                {(company as any).subAddress1 || ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">
+                                추가사업장<br />주 소
+                              </th>
+                              <td colSpan={3} className="p-1.5 text-slate-500">
+                                {(company as any).subAddress2 || ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">
+                                추가사업장<br />주 소
+                              </th>
+                              <td colSpan={3} className="p-1.5 text-slate-500">
+                                {(company as any).subAddress3 || ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">
+                                추가사업장<br />주 소
+                              </th>
+                              <td colSpan={3} className="p-1.5 text-slate-500">
+                                {(company as any).subAddress4 || ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">
+                                추가사업장<br />주 소
+                              </th>
+                              <td colSpan={3} className="p-1.5 text-slate-500">
+                                {(company as any).subAddress5 || ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">Tel</th>
+                              <td className="p-2 border-r border-slate-400">{company.contactPhone || '031-360-7078'}</td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">Fax</th>
+                              <td className="p-2">{(company as any).fax || '031-353-8891'}</td>
+                            </tr>
+                            <tr>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">
+                                Home<br />page
+                              </th>
+                              <td className="p-2 border-r border-slate-400">{(company as any).website || 'www.wjt.co.kr'}</td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">E-Mail</th>
+                              <td className="p-2 font-mono">{company.contactEmail || 'wjt-jypark@naver.com'}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Ⅲ 1 단계 심사 */}
+                      <div className="space-y-1 pt-1">
+                        <h3 className="font-bold text-slate-950 text-xs">Ⅲ 1 단계 심사</h3>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <thead>
+                            <tr className="bg-slate-100 border-b border-slate-700">
+                              <th colSpan={2} className="p-2 text-center font-black tracking-widest text-slate-900">
+                                ◆ 공 통 심 사 내 역 ◆
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {/* 1번 문항 */}
+                            <tr className="border-b border-slate-400">
+                              <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">
+                                1
+                              </td>
+                              <td className="p-0">
+                                <div className="flex justify-between items-center p-2 border-b border-slate-300">
+                                  <span className="font-medium text-slate-900">
+                                    신청서와 설문서 상의 차이가 있는가? (사업장 위치, 조직 현황 등)
+                                  </span>
+                                  <div className="flex items-center gap-4 shrink-0 font-bold">
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name="s1_diff"
+                                        checked={stage1Data.diffFromApp === '있다'}
+                                        onChange={() => setStage1Data({ ...stage1Data, diffFromApp: '있다' })}
+                                      />
+                                      <span>있다</span>
+                                    </label>
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-teal-900">
+                                      <input
+                                        type="radio"
+                                        name="s1_diff"
+                                        checked={stage1Data.diffFromApp === '없다'}
+                                        onChange={() => setStage1Data({ ...stage1Data, diffFromApp: '없다' })}
+                                      />
+                                      <span>없다</span>
+                                    </label>
+                                  </div>
+                                </div>
+                                <div className="p-2 flex items-center gap-2 text-[11px] bg-white">
+                                  <span className="font-bold text-slate-700 underline shrink-0">있다면 :</span>
+                                  <input
+                                    type="text"
+                                    value={stage1Data.diffDetails || ''}
+                                    onChange={(e) => setStage1Data({ ...stage1Data, diffDetails: e.target.value })}
+                                    placeholder="차이점 내역을 기술하세요"
+                                    className="flex-1 border-b border-dotted border-slate-400 px-1 py-0.5 text-xs bg-transparent focus:outline-none"
+                                  />
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* 2번 문항: 경영시스템의 문서화된 정보 */}
+                            <tr className="border-b border-slate-400">
+                              <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">
+                                2
+                              </td>
+                              <td className="p-0">
+                                <div className="p-2 font-bold text-slate-900 border-b border-slate-300 bg-slate-50/50">
+                                  경영시스템의 문서화된 정보
+                                </div>
+                                <table className="w-full border-collapse text-xs">
+                                  <tbody>
+                                    <tr className="border-b border-slate-300">
+                                      <th className="w-28 bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
+                                        매뉴얼<br />문서번호
+                                      </th>
+                                      <td className="p-1.5 border-r border-slate-300">
+                                        <input
+                                          type="text"
+                                          value={stage1Data.manualDocNo || 'QM-01'}
+                                          onChange={(e) => setStage1Data({ ...stage1Data, manualDocNo: e.target.value })}
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs"
+                                        />
+                                      </td>
+                                      <th className="w-24 bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
+                                        제/개정<br />일자
+                                      </th>
+                                      <td className="p-1.5 border-r border-slate-300">
+                                        <input
+                                          type="text"
+                                          value={stage1Data.manualRevDate || '2026-01-10'}
+                                          onChange={(e) => setStage1Data({ ...stage1Data, manualRevDate: e.target.value })}
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
+                                        />
+                                      </td>
+                                      <th className="w-20 bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
+                                        개정<br />번호
+                                      </th>
+                                      <td className="p-1.5">
+                                        <input
+                                          type="text"
+                                          value={stage1Data.manualRevNo || 'Rev.4'}
+                                          onChange={(e) => setStage1Data({ ...stage1Data, manualRevNo: e.target.value })}
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
+                                        />
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <th className="bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
+                                        프로세스<br />문서번호
+                                      </th>
+                                      <td className="p-1.5 border-r border-slate-300">
+                                        <input
+                                          type="text"
+                                          value={stage1Data.processDocNo || 'QP-01~12'}
+                                          onChange={(e) => setStage1Data({ ...stage1Data, processDocNo: e.target.value })}
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs"
+                                        />
+                                      </td>
+                                      <th className="bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
+                                        제/개정<br />일자
+                                      </th>
+                                      <td className="p-1.5 border-r border-slate-300">
+                                        <input
+                                          type="text"
+                                          value={stage1Data.processRevDate || '2025-11-20'}
+                                          onChange={(e) => setStage1Data({ ...stage1Data, processRevDate: e.target.value })}
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
+                                        />
+                                      </td>
+                                      <th className="bg-slate-50 p-2 border-r border-slate-300 text-center font-bold">
+                                        개정<br />번호
+                                      </th>
+                                      <td className="p-1.5">
+                                        <input
+                                          type="text"
+                                          value={stage1Data.processRevNo || 'Rev.2'}
+                                          onChange={(e) => setStage1Data({ ...stage1Data, processRevNo: e.target.value })}
+                                          className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center"
+                                        />
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+
+                            {/* 3번 문항: 경영시스템 적용범위와 인증범위 확인 */}
+                            <tr className="border-b border-slate-400">
+                              <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">
+                                3
+                              </td>
+                              <td className="p-0">
+                                <div className="p-2 font-bold text-slate-900 border-b border-slate-300 bg-slate-50/50">
+                                  경영시스템 적용범위와 인증범위 확인
+                                </div>
+                                <div className="flex">
+                                  <div className="w-28 bg-slate-50 p-3 border-r border-slate-300 flex items-center justify-center font-bold text-center">
+                                    인증범위
+                                  </div>
+                                  <div className="flex-1 p-2">
+                                    <textarea
+                                      rows={2}
+                                      value={stage1Data.scopeConfirmed || ''}
+                                      onChange={(e) => setStage1Data({ ...stage1Data, scopeConfirmed: e.target.value })}
+                                      className="w-full border border-slate-300 rounded p-1.5 text-xs leading-relaxed"
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* 4번 문항: 적용제외 항목 및 타당성 근거 */}
+                            <tr className="border-b border-slate-400">
+                              <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">
+                                4
+                              </td>
+                              <td className="p-0">
+                                <div className="p-2 font-bold text-slate-900 border-b border-slate-300 bg-slate-50/50">
+                                  적용제외 항목 및 타당성 근거 (ISO 9001 만 해당)
+                                </div>
+                                <div className="flex border-t border-slate-200">
+                                  <div className="w-28 bg-slate-50 p-2 border-r border-slate-300 flex items-center justify-center font-bold text-center leading-snug">
+                                    적용 제외<br />조항 번호
+                                  </div>
+                                  <div className="w-36 p-1.5 border-r border-slate-300 flex items-center">
+                                    <input
+                                      type="text"
+                                      value={stage1Data.exclusionClause || '8.3'}
+                                      onChange={(e) => setStage1Data({ ...stage1Data, exclusionClause: e.target.value })}
+                                      className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
+                                    />
+                                  </div>
+                                  <div className="w-24 bg-slate-50 p-2 border-r border-slate-300 flex items-center justify-center font-bold text-center">
+                                    타당성 근거
+                                  </div>
+                                  <div className="flex-1 p-1.5 flex items-center">
+                                    <input
+                                      type="text"
+                                      value={stage1Data.exclusionReason || ''}
+                                      onChange={(e) => setStage1Data({ ...stage1Data, exclusionReason: e.target.value })}
+                                      className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* 5번 문항: 조직의 경영시스템에 대한 이해 정도 */}
+                            <tr>
+                              <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">
+                                5
+                              </td>
+                              <td className="p-0">
+                                <div className="p-2 font-bold text-slate-900 border-b border-slate-300 bg-slate-50/50">
+                                  조직의 경영시스템에 대한 이해 정도
+                                </div>
+                                <div className="divide-y divide-slate-200 text-xs">
+                                  <div className="flex justify-between items-center p-2">
+                                    <span>5.1 주요성과 및 중대한 측면이 파악되고 있는가?</span>
+                                    <div className="flex items-center gap-4 shrink-0 font-bold">
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                        <input
+                                          type="radio"
+                                          name="s1_q5_1"
+                                          checked={stage1Data.q5_1 === '적합'}
+                                          onChange={() => setStage1Data({ ...stage1Data, q5_1: '적합' })}
+                                        />
+                                        <span>적합</span>
+                                      </label>
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                        <input
+                                          type="radio"
+                                          name="s1_q5_1"
+                                          checked={stage1Data.q5_1 === '부적합'}
+                                          onChange={() => setStage1Data({ ...stage1Data, q5_1: '부적합' })}
+                                        />
+                                        <span>부적합</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-center p-2">
+                                    <span>5.2 조직의 운영과 관련된 프로세스를 이해하고 있는가?</span>
+                                    <div className="flex items-center gap-4 shrink-0 font-bold">
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                        <input
+                                          type="radio"
+                                          name="s1_q5_2"
+                                          checked={stage1Data.q5_2 === '적합'}
+                                          onChange={() => setStage1Data({ ...stage1Data, q5_2: '적합' })}
+                                        />
+                                        <span>적합</span>
+                                      </label>
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                        <input
+                                          type="radio"
+                                          name="s1_q5_2"
+                                          checked={stage1Data.q5_2 === '부적합'}
+                                          onChange={() => setStage1Data({ ...stage1Data, q5_2: '부적합' })}
+                                        />
+                                        <span>부적합</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-center p-2">
+                                    <span>5.3 조직의 목표 및 운영에 대해 파악하고 있는가?</span>
+                                    <div className="flex items-center gap-4 shrink-0 font-bold">
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                        <input
+                                          type="radio"
+                                          name="s1_q5_3"
+                                          checked={stage1Data.q5_3 === '적합'}
+                                          onChange={() => setStage1Data({ ...stage1Data, q5_3: '적합' })}
+                                        />
+                                        <span>적합</span>
+                                      </label>
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                        <input
+                                          type="radio"
+                                          name="s1_q5_3"
+                                          checked={stage1Data.q5_3 === '부적합'}
+                                          onChange={() => setStage1Data({ ...stage1Data, q5_3: '부적합' })}
+                                        />
+                                        <span>부적합</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-bold text-slate-950 text-xs">Ⅲ. 1단계 심사 (공통 심사 내역)</h3>
-                        <span className="text-[10.5px] text-rose-700 font-bold">
-                          ▶ 심사팀장은 신청서와 차이점 발견 시 즉시 인증원에 보고
-                        </span>
-                      </div>
-                      <table className="w-full border-collapse border border-slate-700 text-xs">
-                        <thead>
-                          <tr className="bg-slate-100 border-b border-slate-700">
-                            <th colSpan={3} className="p-2 text-center font-black tracking-wider text-slate-900 border-r border-slate-400">
-                              ◆ 공 통 심 사 내 역 ◆
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">1</td>
-                            <td className="p-2 border-r border-slate-400">신청서와 설문서 상의 차이가 있는가? (사업장 위치, 조직 현황 등)</td>
-                            <td className="w-32 p-2 text-center font-bold text-teal-900">없다</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">2</td>
-                            <td className="p-2 border-r border-slate-400">
-                              매뉴얼: QM-01 (Rev.4) | 프로세스: QP-01~12 (Rev.2)
-                            </td>
-                            <td className="p-2 text-center font-bold text-emerald-700">확인</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">3</td>
-                            <td className="p-2 border-r border-slate-400">
-                              경영시스템 적용범위: {stage1Data.scopeConfirmed}
-                            </td>
-                            <td className="p-2 text-center font-bold text-emerald-700">적합</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">4</td>
-                            <td className="p-2 border-r border-slate-400">
-                              적용제외 항목: 8.3 설계개발 제외 (주문 가공생산)
-                            </td>
-                            <td className="p-2 text-center font-bold text-slate-700">적용제외</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">5</td>
-                            <td className="p-2 border-r border-slate-400">5.1~5.3 주요성과, 프로세스, 목표 파악 여부</td>
-                            <td className="p-2 text-center font-bold text-emerald-700">적합</td>
-                          </tr>
-                          <tr>
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">6</td>
-                            <td className="p-2 border-r border-slate-400">내부심사 및 경영검토 실시 여부</td>
-                            <td className="p-2 text-center font-bold text-emerald-700">적합</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 2 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-009(20251001)</span>
+                      <span>- 2 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [1단계 3 PAGE : Ⅲ.규격별 심사내역 (ISO 14001, 45001, ESG)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-009(20251001)')}
-                    <div className="space-y-3">
-                      <h3 className="font-bold text-slate-950 text-xs">◆ 규격별 심사 내역 (ISO 14001 & ISO 45001 & ESG-MS)</h3>
+                  {/* --- [1단계 3 PAGE : 공통 심사 내역 Part 2 & ISO 14001 & ISO 45001] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          1 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
+                      {/* 공통 심사 내역 (이어서: 7~10번) */}
+                      <table className="w-full border-collapse border border-slate-700 text-xs">
+                        <tbody>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">7</td>
+                            <td className="p-2 border-r border-slate-400 font-medium">내부심사가 실시되었는가?</td>
+                            <td className="w-36 p-2 text-center font-bold">
+                              <div className="flex justify-center items-center gap-4">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_q7" checked={stage1Data.q6_internalAudit === '적합'} onChange={() => setStage1Data({...stage1Data, q6_internalAudit: '적합'})} />
+                                  <span>적합</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_q7" checked={stage1Data.q6_internalAudit === '부적합'} onChange={() => setStage1Data({...stage1Data, q6_internalAudit: '부적합'})} />
+                                  <span>부적합</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">8</td>
+                            <td className="p-2 border-r border-slate-400 font-medium">경영검토가 실시되었는가?</td>
+                            <td className="p-2 text-center font-bold">
+                              <div className="flex justify-center items-center gap-4">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_q8" checked={stage1Data.q7_managementReview === '적합'} onChange={() => setStage1Data({...stage1Data, q7_managementReview: '적합'})} />
+                                  <span>적합</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_q8" checked={stage1Data.q7_managementReview === '부적합'} onChange={() => setStage1Data({...stage1Data, q7_managementReview: '부적합'})} />
+                                  <span>부적합</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">8-2</td>
+                            <td className="p-2 border-r border-slate-400 font-medium">프로세스 및 장비에 대한 운영관리는 파악되고 있는가?</td>
+                            <td className="p-2 text-center font-bold">
+                              <div className="flex justify-center items-center gap-4">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_q8_2" checked={stage1Data.q8_operationControl === '적합'} onChange={() => setStage1Data({...stage1Data, q8_operationControl: '적합'})} />
+                                  <span>적합</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_q8_2" checked={stage1Data.q8_operationControl === '부적합'} onChange={() => setStage1Data({...stage1Data, q8_operationControl: '부적합'})} />
+                                  <span>부적합</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">9</td>
+                            <td className="p-2 border-r border-slate-400 font-medium">조직에 적용되는 법적, 규제적 요구사항이 파악되었는가?</td>
+                            <td className="p-2 text-center font-bold">
+                              <div className="flex justify-center items-center gap-4">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_q9" checked={stage1Data.q9_legalCompliance === '적합'} onChange={() => setStage1Data({...stage1Data, q9_legalCompliance: '적합'})} />
+                                  <span>적합</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_q9" checked={stage1Data.q9_legalCompliance === '부적합'} onChange={() => setStage1Data({...stage1Data, q9_legalCompliance: '부적합'})} />
+                                  <span>부적합</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">10</td>
+                            <td colSpan={2} className="p-0">
+                              <div className="flex justify-between items-center p-2 border-b border-slate-200">
+                                <span className="font-medium">최근 3년대 법규 위반사항이 있는가?</span>
+                                <div className="flex items-center gap-4 font-bold">
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-teal-900">
+                                    <input type="radio" name="s1_q10" checked={stage1Data.q10_legalViolation === '없다'} onChange={() => setStage1Data({...stage1Data, q10_legalViolation: '없다'})} />
+                                    <span>없다</span>
+                                  </label>
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-700">
+                                    <input type="radio" name="s1_q10" checked={stage1Data.q10_legalViolation === '있다'} onChange={() => setStage1Data({...stage1Data, q10_legalViolation: '있다'})} />
+                                    <span>있다</span>
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="p-2 flex items-center gap-2 text-[11px] bg-white">
+                                <span className="font-bold text-slate-700 underline shrink-0">있다면:</span>
+                                <input
+                                  type="text"
+                                  value={stage1Data.q10_violationDetails || ''}
+                                  onChange={(e) => setStage1Data({...stage1Data, q10_violationDetails: e.target.value})}
+                                  placeholder="위반사항 내역"
+                                  className="flex-1 border-b border-dotted border-slate-400 px-1 py-0.5 text-xs bg-transparent focus:outline-none"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* ◆ ISO 14001 심 사 내 역 ◆ */}
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <thead>
                           <tr className="bg-slate-100 border-b border-slate-700">
-                            <th colSpan={3} className="p-2 text-center font-black tracking-wider text-slate-900">
+                            <th colSpan={2} className="p-2 text-center font-black tracking-widest text-slate-900">
                               ◆ ISO 14001 심 사 내 역 ◆
                             </th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">1</td>
-                            <td className="p-2 border-r border-slate-400">환경 신고 및 허가 업종인가? (폐기물/절삭유 위탁처리 등)</td>
-                            <td className="w-32 p-2 text-center font-bold text-emerald-700">예</td>
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">1</td>
+                            <td className="p-0">
+                              <div className="flex justify-between items-center p-2 border-b border-slate-200">
+                                <span className="font-medium">환경 신고 및 허가 인허가사항 (대기, 수질, 토양, 위험물 취급, 화학물질 취급 등)</span>
+                                <div className="flex items-center gap-4 font-bold shrink-0">
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                    <input type="radio" name="s1_env1" checked={stage1Data.env1_permit === '예'} onChange={() => setStage1Data({...stage1Data, env1_permit: '예'})} />
+                                    <span>예</span>
+                                  </label>
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                    <input type="radio" name="s1_env1" checked={stage1Data.env1_permit === '아니오'} onChange={() => setStage1Data({...stage1Data, env1_permit: '아니오'})} />
+                                    <span>아니오</span>
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="p-2 flex items-center gap-2 text-[11px] bg-white">
+                                <span className="font-bold text-slate-700 underline shrink-0">있다면:</span>
+                                <input
+                                  type="text"
+                                  value={stage1Data.env1_details || '절삭유 및 폐유 위탁처리 계약 체결'}
+                                  onChange={(e) => setStage1Data({...stage1Data, env1_details: e.target.value})}
+                                  className="flex-1 border-b border-dotted border-slate-400 px-1 py-0.5 text-xs bg-transparent focus:outline-none"
+                                />
+                              </div>
+                            </td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">2</td>
-                            <td className="p-2 border-r border-slate-400">환경영향 평가 실시 및 중대 환경측면·준수의무 파악 여부</td>
-                            <td className="p-2 text-center font-bold text-emerald-700">예</td>
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">2</td>
+                            <td className="p-0">
+                              <div className="flex justify-between items-center p-2 border-b border-slate-200">
+                                <span className="font-bold">환경영향 평가를 실시 하였는가?</span>
+                                <div className="flex items-center gap-4 font-bold shrink-0">
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                    <input type="radio" name="s1_env2" checked={stage1Data.env2_aspect === '예'} onChange={() => setStage1Data({...stage1Data, env2_aspect: '예'})} />
+                                    <span>예</span>
+                                  </label>
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                    <input type="radio" name="s1_env2" checked={stage1Data.env2_aspect === '아니오'} onChange={() => setStage1Data({...stage1Data, env2_aspect: '아니오'})} />
+                                    <span>아니오</span>
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="divide-y divide-slate-200 pl-3">
+                                <div className="flex justify-between items-center p-2">
+                                  <span>중대한 환경측면은 파악 되었는가?</span>
+                                  <div className="flex items-center gap-4 font-bold shrink-0">
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                      <input type="radio" name="s1_env2_sig" checked={stage1Data.env2_significant === '예'} onChange={() => setStage1Data({...stage1Data, env2_significant: '예'})} />
+                                      <span>예</span>
+                                    </label>
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                      <input type="radio" name="s1_env2_sig" checked={stage1Data.env2_significant === '아니오'} onChange={() => setStage1Data({...stage1Data, env2_significant: '아니오'})} />
+                                      <span>아니오</span>
+                                    </label>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center p-2">
+                                  <span>준수의무 사항이 파악되고 준수평가를 실시 하였는가?</span>
+                                  <div className="flex items-center gap-4 font-bold shrink-0">
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                      <input type="radio" name="s1_env2_comp" checked={stage1Data.env2_compliance === '예'} onChange={() => setStage1Data({...stage1Data, env2_compliance: '예'})} />
+                                      <span>예</span>
+                                    </label>
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                      <input type="radio" name="s1_env2_comp" checked={stage1Data.env2_compliance === '아니오'} onChange={() => setStage1Data({...stage1Data, env2_compliance: '아니오'})} />
+                                      <span>아니오</span>
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
                           </tr>
                           <tr className="border-b border-slate-400">
                             <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">3</td>
-                            <td className="p-2 border-r border-slate-400">환경운영 기준 수립 및 환경관리자 선임 여부</td>
-                            <td className="p-2 text-center font-bold text-emerald-700">예</td>
-                          </tr>
-                          <tr className="bg-slate-100 border-b border-slate-700">
-                            <th colSpan={3} className="p-2 text-center font-black tracking-wider text-slate-900">
-                              ◆ ISO 45001 심 사 내 역 ◆
-                            </th>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">1</td>
-                            <td className="p-2 border-r border-slate-400">
-                              안전보건 책임자: {stage1Data.safe1_managerName} | 근로자대표: {stage1Data.safe1_workerRep}
+                            <td className="p-2 flex justify-between items-center">
+                              <span className="font-medium">환경운영 기준을 수립 하였는가? (지침서 파악)</span>
+                              <div className="flex items-center gap-4 font-bold shrink-0">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_env3" checked={stage1Data.env3_procedure === '예'} onChange={() => setStage1Data({...stage1Data, env3_procedure: '예'})} />
+                                  <span>예</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_env3" checked={stage1Data.env3_procedure === '아니오'} onChange={() => setStage1Data({...stage1Data, env3_procedure: '아니오'})} />
+                                  <span>아니오</span>
+                                </label>
+                              </div>
                             </td>
-                            <td className="p-2 text-center font-bold text-emerald-700">확인</td>
-                          </tr>
-                          <tr className="border-b border-slate-400">
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">2</td>
-                            <td className="p-2 border-r border-slate-400">위험성 평가 실시 및 근로자 참여 의사소통 여부</td>
-                            <td className="p-2 text-center font-bold text-emerald-700">예</td>
-                          </tr>
-                          <tr className="bg-slate-100 border-b border-slate-700">
-                            <th colSpan={3} className="p-2 text-center font-black tracking-wider text-slate-900">
-                              ◆ ESG-MS 심 사 내 역 ◆
-                            </th>
                           </tr>
                           <tr>
-                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">1</td>
-                            <td className="p-2 border-r border-slate-400">ESG 경영성과보고서 및 정량평가 작성 여부</td>
-                            <td className="p-2 text-center font-bold text-emerald-700">예</td>
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">4</td>
+                            <td className="p-2 flex justify-between items-center">
+                              <span className="font-medium">환경관리자는 선임 되었는가?</span>
+                              <div className="flex items-center gap-4 font-bold shrink-0">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_env4" checked={stage1Data.env4_manager === '예'} onChange={() => setStage1Data({...stage1Data, env4_manager: '예'})} />
+                                  <span>예</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_env4" checked={stage1Data.env4_manager === '아니오'} onChange={() => setStage1Data({...stage1Data, env4_manager: '아니오'})} />
+                                  <span>아니오</span>
+                                </label>
+                              </div>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
-                    </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 3 - [지엠에스씨에스㈜ 인증원]
-                    </div>
-                  </div>
-
-                  {/* --- [1단계 4 PAGE : Ⅳ.통합정도 & Ⅴ.조직참석자 & Ⅵ.심사팀참석자] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-009(20251001)')}
-                    <div className="space-y-1.5">
-                      <h3 className="font-bold text-slate-950 text-xs">Ⅳ. 통합경영시스템일 경우 통합 정도 파악</h3>
-                      <table className="w-full border-collapse border border-slate-700 text-xs">
-                        <tbody>
-                          {[
-                            { no: 1, text: '경영시스템 문서가 통합되어 있습니까?', val: '예' },
-                            { no: 2, text: '방침 및 목표가 통합되어 있습니까?', val: '예' },
-                            { no: 3, text: '전체 조직에 대한 경영검토가 이루어졌습니까', val: '예' },
-                            { no: 4, text: '내부심사가 통합적으로 수행되었습니까?', val: '예' },
-                            { no: 5, text: '프로세스 접근이 통합적으로 이루어졌습니까?', val: '예' },
-                            { no: 6, text: '지속적 개선(시정조치 등)이 통합적으로 접근 되었습니까?', val: '예' },
-                            { no: 7, text: '통합된 경영지원과 조직의 책임이 구성되어 있습니까?', val: '예' },
-                          ].map(item => (
-                            <tr key={item.no} className="border-b border-slate-400">
-                              <td className="w-8 p-1.5 text-center font-bold bg-slate-50 border-r border-slate-400">{item.no}</td>
-                              <td className="p-1.5 border-r border-slate-400">{item.text}</td>
-                              <td className="w-24 p-1.5 text-center font-bold text-emerald-700">{item.val}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <h3 className="font-bold text-slate-950 text-xs">Ⅴ. 조직의 심사 참석자</h3>
+                      {/* ◆ ISO 45001 심 사 내 역 ◆ */}
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <thead>
                           <tr className="bg-slate-100 border-b border-slate-700">
-                            <th className="p-1.5 border-r border-slate-400 text-center font-bold">참석자명</th>
-                            <th className="p-1.5 border-r border-slate-400 text-center font-bold">직무/직책</th>
-                            <th className="p-1.5 border-r border-slate-400 text-center font-bold">참석자명</th>
-                            <th className="p-1.5 text-center font-bold">직무/직책</th>
+                            <th colSpan={2} className="p-2 text-center font-black tracking-widest text-slate-900">
+                              ◆ ISO 45001 심 사 내 역 ◆
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-b border-slate-400">
-                            <td className="p-1.5 border-r border-slate-400 font-bold">{stage1Data.attendees[0]?.name}</td>
-                            <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[0]?.role}</td>
-                            <td className="p-1.5 border-r border-slate-400 font-bold">{stage1Data.attendees[1]?.name}</td>
-                            <td className="p-1.5">{stage1Data.attendees[1]?.role}</td>
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">1</td>
+                            <td className="p-0">
+                              <div className="p-2 font-bold text-slate-900 border-b border-slate-300 bg-slate-50/50">
+                                안전보건 관리체계상의 조직구조
+                              </div>
+                              <table className="w-full border-collapse text-xs">
+                                <tbody>
+                                  <tr className="border-b border-slate-200">
+                                    <th className="w-36 bg-slate-50 p-1.5 border-r border-slate-300 text-left font-medium">안전보건관리책임자 명</th>
+                                    <td className="p-1 border-r border-slate-300">
+                                      <input
+                                        type="text"
+                                        value={stage1Data.safe1_managerName || ''}
+                                        onChange={(e) => setStage1Data({...stage1Data, safe1_managerName: e.target.value})}
+                                        className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs"
+                                      />
+                                    </td>
+                                    <th className="w-36 bg-slate-50 p-1.5 border-r border-slate-300 text-left font-medium">안전관리자(대행 기관명)</th>
+                                    <td className="p-1">
+                                      <input
+                                        type="text"
+                                        value={stage1Data.safe1_safetyPerson || ''}
+                                        onChange={(e) => setStage1Data({...stage1Data, safe1_safetyPerson: e.target.value})}
+                                        className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs"
+                                      />
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th className="bg-slate-50 p-1.5 border-r border-slate-300 text-left font-medium">보건관리자(대행 기관명)</th>
+                                    <td className="p-1 border-r border-slate-300">
+                                      <input
+                                        type="text"
+                                        value={stage1Data.safe1_healthPerson || ''}
+                                        onChange={(e) => setStage1Data({...stage1Data, safe1_healthPerson: e.target.value})}
+                                        className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs"
+                                      />
+                                    </td>
+                                    <th className="bg-slate-50 p-1.5 border-r border-slate-300 text-left font-medium">근로자 대표</th>
+                                    <td className="p-1">
+                                      <input
+                                        type="text"
+                                        value={stage1Data.safe1_workerRep || ''}
+                                        onChange={(e) => setStage1Data({...stage1Data, safe1_workerRep: e.target.value})}
+                                        className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs"
+                                      />
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <td className="p-1.5 border-r border-slate-400 font-bold">{stage1Data.attendees[2]?.name}</td>
-                            <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[2]?.role}</td>
-                            <td className="p-1.5 border-r border-slate-400 font-bold">{stage1Data.attendees[3]?.name}</td>
-                            <td className="p-1.5">{stage1Data.attendees[3]?.role}</td>
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">2</td>
+                            <td className="p-2 flex justify-between items-center">
+                              <span className="font-bold">위험성 평가는 실시되었는가?</span>
+                              <div className="flex items-center gap-4 font-bold shrink-0">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_safe2" checked={stage1Data.safe2_riskEval === '예'} onChange={() => setStage1Data({...stage1Data, safe2_riskEval: '예'})} />
+                                  <span>예</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_safe2" checked={stage1Data.safe2_riskEval === '아니오'} onChange={() => setStage1Data({...stage1Data, safe2_riskEval: '아니오'})} />
+                                  <span>아니오</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">3</td>
+                            <td className="p-0">
+                              <div className="p-2 font-bold text-slate-900 border-b border-slate-300 bg-slate-50/50">
+                                위험성 평가에 대한 정보
+                              </div>
+                              <div className="divide-y divide-slate-200 pl-3">
+                                {[
+                                  { key: 'safe3_1', text: '3.1 유해·위험요인은 모두 파악되었는가?' },
+                                  { key: 'safe3_2', text: '3.2 위험성 평가는 적합하게 실시되었는가?' },
+                                  { key: 'safe3_3', text: '3.3 위험성 평가표는 적정한가?' },
+                                  { key: 'safe3_4', text: '3.4 위험성 평가 시 해당 근로자는 참여하였는가?' },
+                                  { key: 'safe3_5', text: '3.5 위험성 평가에 대한 관리대책은 적절한가?' },
+                                  { key: 'safe3_6', text: '3.6 위험성 평가에 대한 기록은 의사소통 되고 있는가?' },
+                                  { key: 'safe3_7', text: '3.7 관련 법규는 모두 파악되었는가?' },
+                                ].map(item => (
+                                  <div key={item.key} className="flex justify-between items-center p-1.5 text-xs">
+                                    <span>{item.text}</span>
+                                    <div className="flex items-center gap-4 font-bold shrink-0">
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                        <input
+                                          type="radio"
+                                          name={`s1_${item.key}`}
+                                          checked={(stage1Data as any)[item.key] === '예'}
+                                          onChange={() => setStage1Data({ ...stage1Data, [item.key]: '예' })}
+                                        />
+                                        <span>예</span>
+                                      </label>
+                                      <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                        <input
+                                          type="radio"
+                                          name={`s1_${item.key}`}
+                                          checked={(stage1Data as any)[item.key] === '아니오'}
+                                          onChange={() => setStage1Data({ ...stage1Data, [item.key]: '아니오' })}
+                                        />
+                                        <span>아니오</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">4</td>
+                            <td className="p-2 flex justify-between items-center">
+                              <span className="font-medium">안전보건방침은 적절하게 구성되었는가?</span>
+                              <div className="flex items-center gap-4 font-bold shrink-0">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_safe4" checked={stage1Data.safe4_team === '예'} onChange={() => setStage1Data({...stage1Data, safe4_team: '예'})} />
+                                  <span>예</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_safe4" checked={stage1Data.safe4_team === '아니오'} onChange={() => setStage1Data({...stage1Data, safe4_team: '아니오'})} />
+                                  <span>아니오</span>
+                                </label>
+                              </div>
+                            </td>
                           </tr>
                           <tr>
-                            <th className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">비 고</th>
-                            <td colSpan={3} className="p-1.5 text-[11px] text-slate-600">
-                              * 필수 참석자: 품질관리자, 환경관리자, 안전관리책임자, 근로자 대표 포함 완료
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">5</td>
+                            <td className="p-2 flex items-center gap-2">
+                              <span className="font-medium">중대한 위험성의 수:</span>
+                              <span className="inline-flex items-center gap-1 font-bold">
+                                (
+                                <input
+                                  type="text"
+                                  value={stage1Data.safe5_criticalCount || '1'}
+                                  onChange={(e) => setStage1Data({...stage1Data, safe5_criticalCount: e.target.value})}
+                                  className="w-10 text-center border-b border-slate-400 font-mono font-bold text-xs focus:outline-none"
+                                />
+                                ) 개
+                              </span>
                             </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 4 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-009(20251001)</span>
+                      <span>- 3 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [1단계 5 PAGE : Ⅶ.문서화된 정보 확인 (심사원 상세 기록)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-009(20251001)')}
-                    <div className="space-y-1.5">
+                  {/* --- [1단계 4 PAGE : ESG-MS & Ⅳ. 통합정도 & Ⅴ. 조직 참석자 & Ⅵ. 심사팀 참석자] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          1 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
+                      {/* ◆ ESG-MS 심 사 내 역 ◆ */}
+                      <table className="w-full border-collapse border border-slate-700 text-xs">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-700">
+                            <th colSpan={2} className="p-2 text-center font-black tracking-widest text-slate-900">
+                              ◆ ESG-MS 심 사 내 역 ◆
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">1</td>
+                            <td className="p-2 flex justify-between items-center">
+                              <span className="font-medium">ESG 경영성과보고서(지속가능경영보고서)가 작성되었는가?</span>
+                              <div className="flex items-center gap-4 font-bold shrink-0">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_esg1" checked={stage1Data.esg1_report === '예'} onChange={() => setStage1Data({...stage1Data, esg1_report: '예'})} />
+                                  <span>예</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_esg1" checked={stage1Data.esg1_report === '아니오'} onChange={() => setStage1Data({...stage1Data, esg1_report: '아니오'})} />
+                                  <span>아니오</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400">2</td>
+                            <td className="p-2 flex justify-between items-center">
+                              <span className="font-medium">ESG 성과관련 정량평가는 이루어지고 있는가?</span>
+                              <div className="flex items-center gap-4 font-bold shrink-0">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                  <input type="radio" name="s1_esg2" checked={stage1Data.esg2_quant === '예'} onChange={() => setStage1Data({...stage1Data, esg2_quant: '예'})} />
+                                  <span>예</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                  <input type="radio" name="s1_esg2" checked={stage1Data.esg2_quant === '아니오'} onChange={() => setStage1Data({...stage1Data, esg2_quant: '아니오'})} />
+                                  <span>아니오</span>
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="w-8 p-2 text-center font-bold bg-slate-50 border-r border-slate-400 align-top">3</td>
+                            <td className="p-0">
+                              <div className="flex justify-between items-center p-2 border-b border-slate-200">
+                                <span className="font-medium">고객지정 정보 요구사항이 있는가? (예: 공급망 협약)</span>
+                                <div className="flex items-center gap-4 font-bold shrink-0">
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                    <input type="radio" name="s1_esg3" checked={stage1Data.esg3_supply === '예'} onChange={() => setStage1Data({...stage1Data, esg3_supply: '예'})} />
+                                    <span>예</span>
+                                  </label>
+                                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                    <input type="radio" name="s1_esg3" checked={stage1Data.esg3_supply === '아니오'} onChange={() => setStage1Data({...stage1Data, esg3_supply: '아니오'})} />
+                                    <span>아니오</span>
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="p-2 flex items-center gap-2 text-[11px] bg-white">
+                                <span className="font-bold text-slate-700 underline shrink-0">있다면:</span>
+                                <input
+                                  type="text"
+                                  placeholder="고객 요구사항 기술"
+                                  className="flex-1 border-b border-dotted border-slate-400 px-1 py-0.5 text-xs bg-transparent focus:outline-none"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* 안내 문구 */}
+                      <p className="text-[10.5px] text-slate-700 font-medium px-1">
+                        ▶ 심사결점은 신청서와 차이점 발견 시 즉시 인증원에 보고하여 심사진행 및 변경서류를 발의합니다.
+                      </p>
+
+                      {/* Ⅳ. 통합경영시스템일 경우 통합 정도 파악 */}
+                      <div className="space-y-1 pt-1">
+                        <h3 className="font-bold text-slate-950 text-xs">Ⅳ. 통합경영시스템일 경우 통합 정도 파악</h3>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <tbody>
+                            {[
+                              { no: 1, text: '경영시스템 문서가 통합되어 있습니까?', key: 'ims1_doc' },
+                              { no: 2, text: '방침 및 목표가 통합되어 있습니까?', key: 'ims2_policy' },
+                              { no: 3, text: '전체 조직에 대한 경영검토가 이루어졌습니까?', key: 'ims3_review' },
+                              { no: 4, text: '내부심사가 통합적으로 수행되었습니까?', key: 'ims4_audit' },
+                              { no: 5, text: '프로세스 접근이 통합적으로 이루어졌습니까?', key: 'ims5_process' },
+                              { no: 6, text: '지속적 개선(시정조치 등)이 통합적으로 접근 되었습니까?', key: 'ims6_improve' },
+                              { no: 7, text: '통합된 경영지원과 조직의 책임이 규정되어 있습니까?', key: 'ims7_org' },
+                            ].map(item => (
+                              <tr key={item.no} className="border-b border-slate-400">
+                                <td className="w-8 p-1.5 text-center font-bold bg-slate-50 border-r border-slate-400">{item.no}</td>
+                                <td className="p-1.5 border-r border-slate-400 font-medium">{item.text}</td>
+                                <td className="w-32 p-1.5 text-center font-bold">
+                                  <div className="flex justify-center items-center gap-4">
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                      <input
+                                        type="radio"
+                                        name={`s1_${item.key}`}
+                                        checked={(stage1Data as any)[item.key] === '예'}
+                                        onChange={() => setStage1Data({ ...stage1Data, [item.key]: '예' })}
+                                      />
+                                      <span>예</span>
+                                    </label>
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-600">
+                                      <input
+                                        type="radio"
+                                        name={`s1_${item.key}`}
+                                        checked={(stage1Data as any)[item.key] === '아니오'}
+                                        onChange={() => setStage1Data({ ...stage1Data, [item.key]: '아니오' })}
+                                      />
+                                      <span>아니오</span>
+                                    </label>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Ⅴ. 조직의 심사 참석자 */}
+                      <div className="space-y-1 pt-1">
+                        <h3 className="font-bold text-slate-950 text-xs">Ⅴ. 조직의 심사 참석자</h3>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <thead>
+                            <tr className="bg-slate-100 border-b border-slate-700">
+                              <th className="w-28 p-1.5 border-r border-slate-400 text-center font-bold">참석자명</th>
+                              <th className="p-1.5 border-r border-slate-400 text-center font-bold">직무/직책</th>
+                              <th className="w-28 p-1.5 border-r border-slate-400 text-center font-bold">참석자명</th>
+                              <th className="p-1.5 text-center font-bold">직무/직책</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[0]?.name || company.ceoName || '박진용'}</td>
+                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[0]?.role || '대표이사 / 최고경영자'}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[1]?.name || '박진웅'}</td>
+                              <td className="p-1.5">{stage1Data.attendees[1]?.role || '품질관리팀장 / 부장'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[2]?.name || '이영희'}</td>
+                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[2]?.role || '환경안전관리자 / 차장'}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[3]?.name || '김진수'}</td>
+                              <td className="p-1.5">{stage1Data.attendees[3]?.role || '근로자대표 / 직장'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[4]?.name || '정민호'}</td>
+                              <td className="p-1.5 border-r border-slate-400">{stage1Data.attendees[4]?.role || '영업자재팀 / 과장'}</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center font-bold">{stage1Data.attendees[5]?.name || '윤상혁'}</td>
+                              <td className="p-1.5">{stage1Data.attendees[5]?.role || '가공팀 / 반장'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-1.5 border-r border-slate-400 text-center text-slate-400">-</td>
+                              <td className="p-1.5 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center text-slate-400">-</td>
+                              <td className="p-1.5 text-slate-400">-</td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-1.5 border-r border-slate-400 text-center text-slate-400">-</td>
+                              <td className="p-1.5 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1.5 border-r border-slate-400 text-center text-slate-400">-</td>
+                              <td className="p-1.5 text-slate-400">-</td>
+                            </tr>
+                            <tr>
+                              <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">비 고</th>
+                              <td colSpan={3} className="p-2 text-[11px] text-slate-600 leading-relaxed">
+                                * 필수 참석자: 품질은 품질관리자, 환경은 환경관리자, 안전보건은 안전보건관리책임자와 근로자 대표가 반드시 포함되어야 함 (작성법 예시: 홍길동, 품질관리자/과장)
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Ⅵ. 심사팀 참석자 */}
+                      <div className="space-y-1 pt-1">
+                        <h3 className="font-bold text-slate-950 text-xs">Ⅵ. 심사팀 참석자</h3>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <tbody>
+                            <tr className="border-b border-slate-400">
+                              <th className="w-20 bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀장</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
+                              <th className="w-20 bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
+                              <th className="w-20 bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
+                              <td className="p-2 text-slate-400">-</td>
+                            </tr>
+                            <tr>
+                              <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">심사팀원</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <th className="bg-slate-50 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
+                              <td className="p-2 text-slate-400">-</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-009(20251001)</span>
+                      <span>- 4 -</span>
+                      <span>지엠에스씨에스㈜</span>
+                    </div>
+                  </div>
+
+                  {/* --- [1단계 5 PAGE : Ⅶ. 문서화된 정보 확인 (심사원 상세 기록)] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div className="space-y-3">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          1 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <div className="flex justify-between items-center">
-                        <h3 className="font-bold text-slate-950 text-xs">Ⅶ. 문서화된 정보 확인 (요구사항별 심사원 상세 기록)</h3>
+                        <h3 className="font-bold text-slate-950 text-xs">Ⅶ. 문서화된 정보 확인</h3>
                         <span className="text-[10.5px] text-slate-500">※ 심사원 검토 내용 직접 작성</span>
                       </div>
 
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <thead>
                           <tr className="bg-slate-100 border-b border-slate-700">
+                            <th className="w-8 p-2 border-r border-slate-400 text-center font-bold">No.</th>
                             <th className="w-28 p-2 border-r border-slate-400 text-center font-bold">요구사항</th>
-                            <th className="p-2 border-r border-slate-400 text-center font-bold">문서화된 정보 확인 사항 (심사원의 심사 내용 기록)</th>
+                            <th className="p-2 border-r border-slate-400 text-center font-bold">문서화된 정보 확인 사항</th>
                             <th className="w-24 p-2 border-r border-slate-400 text-center font-bold">심사결과</th>
-                            <th className="w-36 p-2 text-center font-bold">확인 내역</th>
+                            <th className="w-40 p-2 text-center font-bold">실사확인 내역(면담/부적합)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {stage1Data.clauseNotes.map((item: { clause: string; notes: string; result: string; findings: string }, idx: number) => (
                             <tr key={idx} className="border-b border-slate-400 hover:bg-slate-50/50">
+                              <td className="p-2 text-center font-bold border-r border-slate-400 bg-slate-50 align-top">
+                                {idx + 1}
+                              </td>
                               <td className="p-2 font-bold text-slate-900 border-r border-slate-400 align-top bg-slate-50">
                                 {item.clause}
                               </td>
-                              <td className="p-1.5 border-r border-slate-400">
+                              <td className="p-1.5 border-r border-slate-400 align-top">
                                 <textarea
-                                  rows={2}
+                                  rows={3}
                                   value={item.notes}
                                   onChange={(e) => {
                                     const next = [...stage1Data.clauseNotes];
@@ -1568,32 +2358,60 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                   className="w-full border border-slate-300 rounded p-1.5 text-xs leading-relaxed focus:ring-1 focus:ring-teal-500 resize-y"
                                 />
                               </td>
-                              <td className="p-1.5 border-r border-slate-400 text-center align-top">
-                                <select
-                                  value={item.result}
-                                  onChange={(e) => {
-                                    const next = [...stage1Data.clauseNotes];
-                                    next[idx].result = e.target.value as any;
-                                    setStage1Data({ ...stage1Data, clauseNotes: next });
-                                  }}
-                                  className="w-full border rounded p-1 text-xs font-bold border-emerald-300 text-emerald-800 bg-emerald-50"
-                                >
-                                  <option value="적합">적합</option>
-                                  <option value="부적합">부적합</option>
-                                  <option value="관찰/권고">관찰/권고</option>
-                                </select>
+                              <td className="p-2 border-r border-slate-400 align-top">
+                                <div className="space-y-1.5 font-bold text-[11px]">
+                                  <label className="flex items-center gap-1.5 cursor-pointer text-emerald-800">
+                                    <input
+                                      type="radio"
+                                      name={`s1_res_${idx}`}
+                                      checked={item.result === '적합'}
+                                      onChange={() => {
+                                        const next = [...stage1Data.clauseNotes];
+                                        next[idx].result = '적합';
+                                        setStage1Data({ ...stage1Data, clauseNotes: next });
+                                      }}
+                                    />
+                                    <span>적합</span>
+                                  </label>
+                                  <label className="flex items-center gap-1.5 cursor-pointer text-rose-800">
+                                    <input
+                                      type="radio"
+                                      name={`s1_res_${idx}`}
+                                      checked={item.result === '부적합'}
+                                      onChange={() => {
+                                        const next = [...stage1Data.clauseNotes];
+                                        next[idx].result = '부적합';
+                                        setStage1Data({ ...stage1Data, clauseNotes: next });
+                                      }}
+                                    />
+                                    <span>부적합</span>
+                                  </label>
+                                  <label className="flex items-center gap-1.5 cursor-pointer text-amber-800">
+                                    <input
+                                      type="radio"
+                                      name={`s1_res_${idx}`}
+                                      checked={item.result === '권고사항' || item.result === '관찰/권고'}
+                                      onChange={() => {
+                                        const next = [...stage1Data.clauseNotes];
+                                        next[idx].result = '권고사항';
+                                        setStage1Data({ ...stage1Data, clauseNotes: next });
+                                      }}
+                                    />
+                                    <span>관찰/권고</span>
+                                  </label>
+                                </div>
                               </td>
                               <td className="p-1.5 align-top">
-                                <input
-                                  type="text"
+                                <textarea
+                                  rows={3}
                                   value={item.findings}
                                   onChange={(e) => {
                                     const next = [...stage1Data.clauseNotes];
                                     next[idx].findings = e.target.value;
                                     setStage1Data({ ...stage1Data, clauseNotes: next });
                                   }}
-                                  placeholder="특이사항..."
-                                  className="w-full border border-slate-300 rounded p-1 text-xs"
+                                  placeholder="실사 확인 특이사항 기술..."
+                                  className="w-full border border-slate-300 rounded p-1.5 text-xs resize-y"
                                 />
                               </td>
                             </tr>
@@ -1602,83 +2420,160 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </table>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 5 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-009(20251001)</span>
+                      <span>- 5 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [1단계 6 PAGE : Ⅷ.1단계 심사 결과 및 결론] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-009(20251001)')}
+                  {/* --- [1단계 6 PAGE : Ⅷ. 1단계 심사 결과 및 결론] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
                     <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          1 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <h3 className="font-bold text-slate-950 text-xs">Ⅷ. 1단계 심사 결과</h3>
                       
                       {/* 1) 관찰사항 또는 부적합 사항 기술 */}
-                      <table className="w-full border-collapse border border-slate-700 text-xs">
-                        <thead>
-                          <tr className="bg-slate-100 border-b border-slate-700">
-                            <th className="w-10 p-1.5 border-r border-slate-400 text-center font-bold">No.</th>
-                            <th className="w-24 p-1.5 border-r border-slate-400 text-center font-bold">관찰/부적합</th>
-                            <th className="p-1.5 border-r border-slate-400 text-center font-bold">관련 내역</th>
-                            <th className="w-32 p-1.5 text-center font-bold">시정조치 확인일자</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {stage1Data.findingsTable.map((row: any) => (
-                            <tr key={row.no} className="border-b border-slate-400">
-                              <td className="p-1.5 text-center font-bold border-r border-slate-400 bg-slate-50">{row.no}</td>
-                              <td className="p-1.5 text-center border-r border-slate-400 font-bold text-amber-800">{row.type}</td>
-                              <td className="p-1.5 border-r border-slate-400">{row.details}</td>
-                              <td className="p-1.5 text-center font-mono">{row.dueDate}</td>
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 text-xs block">
+                          1) 관찰사항 또는 부적합 사항을 기술 하시오 (있다면)
+                        </span>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <thead>
+                            <tr className="bg-slate-100 border-b border-slate-700">
+                              <th className="w-10 p-1.5 border-r border-slate-400 text-center font-bold">No.</th>
+                              <th className="w-28 p-1.5 border-r border-slate-400 text-center font-bold">권고/부적합</th>
+                              <th className="p-1.5 border-r border-slate-400 text-center font-bold">관련 내역</th>
+                              <th className="w-32 p-1.5 text-center font-bold">시정조치 확인일자</th>
                             </tr>
-                          ))}
-                          <tr className="bg-slate-50 border-b border-slate-700">
-                            <th className="p-1.5 border-r border-slate-400 text-center font-bold">심 사 결 과</th>
-                            <td colSpan={3} className="p-2 space-x-6 text-xs font-bold text-slate-900">
-                              <span>중부적합: 0 건</span>
-                              <span>경부적합: 0 건</span>
-                              <span>관찰사항: 1 건</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td colSpan={4} className="p-2 text-[11px] text-slate-600 bg-white">
-                              ☛ 경부적합은 심사 일로부터 1개월 이내, 중부적합은 3개월 이내에 시정조치를 하셔야 합니다.
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {[
+                              { no: 1, type: '권고사항', details: '계측기 점검주기 라벨 일부 마모되어 재부착 필요', dueDate: '2026-10-15' },
+                              { no: 2, type: '', details: '', dueDate: '' },
+                              { no: 3, type: '', details: '', dueDate: '' },
+                              { no: 4, type: '', details: '', dueDate: '' },
+                              { no: 5, type: '', details: '', dueDate: '' },
+                            ].map((row) => (
+                              <tr key={row.no} className="border-b border-slate-400">
+                                <td className="p-1.5 text-center font-bold border-r border-slate-400 bg-slate-50">{row.no}</td>
+                                <td className="p-1.5 text-center border-r border-slate-400 font-bold text-amber-800">{row.type}</td>
+                                <td className="p-1.5 border-r border-slate-400">{row.details}</td>
+                                <td className="p-1.5 text-center font-mono">{row.dueDate}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-slate-50 border-b border-slate-700">
+                              <th className="p-2 border-r border-slate-400 text-center font-bold">심 사 결 과</th>
+                              <td colSpan={3} className="p-2 space-x-6 text-xs font-bold text-slate-900">
+                                <span>중부적합: 0 건</span>
+                                <span>경부적합: 0 건</span>
+                                <span>관찰사항: 1 건</span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan={4} className="p-2 text-[11px] text-slate-600 bg-white leading-relaxed">
+                                ※ 경부적합은 심사 일로부터 1개월 이내, 중부적합은 3개월 이내에 시정조치를 하셔야 합니다.
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
 
                       {/* 2) 심사총평 */}
-                      <div className="space-y-1">
-                        <span className="font-bold text-slate-800 text-[11px] block">2) 심사총평</span>
+                      <div className="space-y-1 pt-1">
+                        <span className="font-bold text-slate-900 text-xs block">2) 심사총평</span>
                         <textarea
-                          rows={3}
+                          rows={4}
                           value={stage1Data.overallSummary}
                           onChange={(e) => setStage1Data({ ...stage1Data, overallSummary: e.target.value })}
-                          className="w-full border border-slate-400 rounded p-2 text-xs leading-relaxed focus:ring-1 focus:ring-teal-500"
+                          className="w-full border border-slate-700 rounded p-2.5 text-xs leading-relaxed focus:ring-1 focus:ring-teal-500"
                         />
                       </div>
 
                       {/* 3) 1단계 심사 결론 */}
-                      <div className="space-y-1.5">
-                        <span className="font-bold text-slate-800 text-[11px] block">3) 1단계 심사 결론</span>
-                        <div className="border border-slate-700 p-3 bg-slate-50 space-y-1.5">
-                          <label className="flex items-center gap-2 cursor-pointer font-bold text-teal-950">
-                            <input type="radio" name="s1_p6_concl" checked={stage1Data.conclusion === 'pass'} onChange={() => setStage1Data({...stage1Data, conclusion: 'pass'})} className="text-teal-700" />
-                            <span>부적합이 발견되지 않아 2단계 심사로 진행 가능합니다.</span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-                            <input type="radio" name="s1_p6_concl" checked={stage1Data.conclusion === 'corrective'} onChange={() => setStage1Data({...stage1Data, conclusion: 'corrective'})} className="text-teal-700" />
-                            <span>부적합이 발견되어 시정조치 완료 후 2단계 심사로 진행 가능합니다.</span>
-                          </label>
-                        </div>
+                      <div className="space-y-1.5 pt-1">
+                        <span className="font-bold text-slate-900 text-xs block">3) 1단계 심사 결론</span>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <thead>
+                            <tr className="bg-slate-100 border-b border-slate-700">
+                              <th className="p-2 border-r border-slate-400 text-center font-bold">심사 결론</th>
+                              <th className="w-28 p-2 text-center font-bold">결론 확인</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-2.5 border-r border-slate-400 font-medium">
+                                부적합이 발견되지 않아 2단계 심사로 진행 가능합니다.
+                              </td>
+                              <td className="p-2.5 text-center">
+                                <label className="inline-flex items-center gap-1.5 font-bold text-teal-950 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="s1_p6_concl"
+                                    checked={stage1Data.conclusion === 'pass'}
+                                    onChange={() => setStage1Data({ ...stage1Data, conclusion: 'pass' })}
+                                    className="text-teal-700"
+                                  />
+                                  <span>확인</span>
+                                </label>
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <td className="p-2.5 border-r border-slate-400 font-medium">
+                                부적합이 발견되어 시정조치 완료 후 2단계 심사로 진행 가능합니다.
+                              </td>
+                              <td className="p-2.5 text-center">
+                                <label className="inline-flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="s1_p6_concl"
+                                    checked={stage1Data.conclusion === 'corrective'}
+                                    onChange={() => setStage1Data({ ...stage1Data, conclusion: 'corrective' })}
+                                    className="text-teal-700"
+                                  />
+                                  <span>확인</span>
+                                </label>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="p-2.5 border-r border-slate-400 font-medium text-slate-600">
+                                중대한 부적합이 발견되어 2단계 심사로 진행이 불가능 합니다.
+                              </td>
+                              <td className="p-2.5 text-center">
+                                <label className="inline-flex items-center gap-1.5 font-medium text-slate-500 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="s1_p6_concl"
+                                    checked={stage1Data.conclusion === 'fail'}
+                                    onChange={() => setStage1Data({ ...stage1Data, conclusion: 'fail' })}
+                                    className="text-rose-700"
+                                  />
+                                  <span>확인</span>
+                                </label>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 6 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-009(20251001)</span>
+                      <span>- 6 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
+
                 </div>
               )}
 
