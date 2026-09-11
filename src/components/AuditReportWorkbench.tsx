@@ -132,13 +132,14 @@ export interface NcrItem {
 type DocTabKey = 'all' | 'stage1' | 'stage2' | 'cert_confirm' | 'plan_summary' | 'ncr' | 'proof_upload';
 
 // 초기 증빙 서류 목록
+// 초기 증빙 서류 목록 (실제 업로드 전 기본 빈 상태)
 const initialProofDocs: ProofDocument[] = [
-  { docType: '사업자등록증 / 공장등록증', uploaded: true, fileName: '사업자등록증_우진테크.pdf', uploadedAt: '2026-09-08', verified: true },
-  { docType: '심사 신청서 및 표준계약서 사본', uploaded: true, fileName: 'F16-004_표준계약서_체결본.pdf', uploadedAt: '2026-09-08', verified: true },
-  { docType: '공정도 (제조/서비스 흐름도)', uploaded: true, fileName: '정밀가공_제조공정도.pdf', uploadedAt: '2026-09-09', verified: true },
-  { docType: '조직도 및 비상연락망', uploaded: true, fileName: '2026_조직기구표.pdf', uploadedAt: '2026-09-09', verified: true },
-  { docType: '국민연금 가입자 명부 (인원확인)', uploaded: true, fileName: '국민연금_가입자내역(22명).pdf', uploadedAt: '2026-09-09', verified: true },
-  { docType: '환경/안전 인허가증 (대기/폐수/소방)', uploaded: true, fileName: '환경인허가_신고필증.pdf', uploadedAt: '2026-09-09', verified: true },
+  { docType: '사업자등록증 / 공장등록증', uploaded: false, fileName: '', uploadedAt: '', verified: false },
+  { docType: '심사 신청서 및 표준계약서 사본', uploaded: false, fileName: '', uploadedAt: '', verified: false },
+  { docType: '공정도 (제조/서비스 흐름도)', uploaded: false, fileName: '', uploadedAt: '', verified: false },
+  { docType: '조직도 및 비상연락망', uploaded: false, fileName: '', uploadedAt: '', verified: false },
+  { docType: '국민연금 가입자 명부 (인원확인)', uploaded: false, fileName: '', uploadedAt: '', verified: false },
+  { docType: '환경/안전 인허가증 (대기/폐수/소방)', uploaded: false, fileName: '', uploadedAt: '', verified: false },
 ];
 
 export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
@@ -157,7 +158,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
   // 실 인증번호 계산 (DB 연동: Company.certNo, certNumber, contract.certNumber, project.certNo)
   const compAny = company as any;
-  const realCertNo = (company as any).certNo || (company as any).certNumber || (contract as any)?.certNumber || (contract as any)?.contractNumber || (project as any)?.certNo || 'Q260512';
+  const realCertNo = (company as any).certNo || (company as any).certNumber || (contract as any)?.certNumber || (contract as any)?.contractNumber || (project as any)?.certNo || '';
 
   // 로컬 스토리지 키
   const storageKey = useMemo(() => `GMSCS_PACK_FULL_${company.id || company.companyName}`, [company]);
@@ -182,11 +183,11 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    const defaultLeadName = project?.leadAuditorName || auditor?.name || '남경호';
-    const defaultMemberName = (project?.teamAuditorNames && project.teamAuditorNames[0]) || (compAny.assignedAuditorName && compAny.assignedAuditorName !== defaultLeadName ? compAny.assignedAuditorName : '신현섭');
+    const defaultLeadName = project?.leadAuditorName || auditor?.name || '';
+    const defaultMemberName = (project?.teamAuditorNames && project.teamAuditorNames[0]) || (compAny.assignedAuditorName && compAny.assignedAuditorName !== defaultLeadName ? compAny.assignedAuditorName : '');
     const leadAuditorObj = auditors.find(a => a.name === defaultLeadName) || auditor;
     const memberAuditorObj = auditors.find(a => a.name === defaultMemberName);
-    const companySharedEmail = company.contactEmail || (company as any).email || 'wjt-jypark@naver.com';
+    const companySharedEmail = company.contactEmail || (company as any).email || '';
 
     return [
       {
@@ -194,7 +195,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         roleType: '심사팀장',
         name: defaultLeadName,
         position: leadAuditorObj?.grade || '선임심사원',
-        email: leadAuditorObj?.email || 'auditor@gmscs.co.kr',
+        email: leadAuditorObj?.email || auditor?.email || '',
         useCompanyEmail: false,
         status: '대기'
       },
@@ -203,24 +204,24 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         roleType: '심사팀원',
         name: defaultMemberName,
         position: memberAuditorObj?.grade || '심사원',
-        email: memberAuditorObj?.email || 'auditor2@gmscs.co.kr',
+        email: memberAuditorObj?.email || '',
         useCompanyEmail: false,
         status: '대기'
       },
       {
         id: 'signer-client',
         roleType: '고객담당자',
-        name: company.contactPerson || company.ceoName || '박진웅',
-        position: compAny.contactPosition || '품질부장',
-        email: company.contactEmail || (company as any).email || 'wjt-jypark@naver.com',
+        name: company.contactPerson || company.ceoName || '',
+        position: compAny.contactPosition || '담당자',
+        email: company.contactEmail || (company as any).email || '',
         useCompanyEmail: false,
         status: '대기'
       },
       {
         id: 'signer-worker',
         roleType: '근로자대표',
-        name: '김진수',
-        position: '근로자대표 / 생산관리',
+        name: '',
+        position: '근로자대표',
         email: companySharedEmail,
         useCompanyEmail: true,
         status: '대기'
@@ -236,32 +237,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    return {
-      's1_cust': {
-        slotId: 's1_cust',
-        slotLabel: '고객 확인 (서명)',
-        role: '고객확인',
-        signerName: company.ceoName || company.contactPerson || '대표자',
-        signerPosition: '대표이사',
-        signerEmail: company.contactEmail || (company as any).email || 'signer@company.com',
-        signedAt: '2026-09-08 17:30',
-        signatureHash: 'SIG-EMAIL-89A4-F291',
-        isVerified: true,
-        ipAddress: '211.234.120.45'
-      },
-      's1_lead': {
-        slotId: 's1_lead',
-        slotLabel: '심사 팀장 (서명)',
-        role: '심사팀장',
-        signerName: auditor?.name || '남경호',
-        signerPosition: auditor?.grade || '선임심사원',
-        signerEmail: auditor?.email || 'auditor@gmscs.co.kr',
-        signedAt: '2026-09-08 17:45',
-        signatureHash: 'SIG-EMAIL-CC41-901B',
-        isVerified: true,
-        ipAddress: '112.170.88.19'
-      }
-    };
+    return {};
   });
 
   // 서명 팝업 State
@@ -286,82 +262,82 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   // 1단계 심사 데이터 State (Page 1~6)
   const [stage1Data, setStage1Data] = useState(() => {
     const defaultData = {
-      auditType: project?.auditType || contract?.contractType || '2차 사후관리심사',
-      auditStandards: project?.standards?.join(', ') || contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
+      auditType: project?.auditType || contract?.contractType || '',
+      auditStandards: project?.standards?.join(', ') || contract?.standards?.join(', ') || '',
       diffFromApp: '없다',
       diffDetails: '',
-      manualDocNo: 'QM-01',
-      manualRevDate: '2026-01-10',
-      manualRevNo: 'Rev.4',
-      processDocNo: 'QP-01~12',
-      processRevDate: '2025-11-20',
-      processRevNo: 'Rev.2',
-      scopeConfirmed: company.scope || company.industry || '금속 절삭가공 제품의 제조(AL가공, SUS가공, 광학부품, 산업용 카메라부품)',
-      exclusionClause: '8.3',
-      exclusionReason: '고객 제공 도면에 의한 주문 가공 생산으로 설계 및 개발 활동 없음',
-      q5_1: '적합',
-      q5_2: '적합',
-      q5_3: '적합',
-      q6_internalAudit: '적합',
-      q7_managementReview: '적합',
-      q8_operationControl: '적합',
-      q9_legalCompliance: '적합',
-      q10_legalViolation: '없다',
+      manualDocNo: '',
+      manualRevDate: '',
+      manualRevNo: '',
+      processDocNo: '',
+      processRevDate: '',
+      processRevNo: '',
+      scopeConfirmed: company.scope || company.industry || '',
+      exclusionClause: '',
+      exclusionReason: '',
+      q5_1: '',
+      q5_2: '',
+      q5_3: '',
+      q6_internalAudit: '',
+      q7_managementReview: '',
+      q8_operationControl: '',
+      q9_legalCompliance: '',
+      q10_legalViolation: '',
       q10_violationDetails: '',
       // ISO 14001
-      env1_permit: '예',
-      env1_details: '절삭유 및 폐유 위탁처리 계약 체결',
-      env2_aspect: '예',
-      env2_significant: '예',
-      env2_compliance: '예',
-      env3_procedure: '예',
-      env4_manager: '예',
+      env1_permit: '',
+      env1_details: '',
+      env2_aspect: '',
+      env2_significant: '',
+      env2_compliance: '',
+      env3_procedure: '',
+      env4_manager: '',
       // ISO 45001
-      safe1_managerName: `${company.ceoName || '박진용'} 대표이사`,
-      safe1_safetyPerson: '대한산업안전협회 위탁',
-      safe1_healthPerson: '산업보건연구소',
-      safe1_workerRep: '김진수 직장 (근로자대표)',
-      safe2_riskEval: '예',
-      safe3_1: '예',
-      safe3_2: '예',
-      safe3_3: '예',
-      safe3_4: '예',
-      safe3_5: '예',
-      safe3_6: '예',
-      safe3_7: '예',
-      safe4_team: '예',
-      safe5_criticalCount: '1',
+      safe1_managerName: company.ceoName ? `${company.ceoName} 대표이사` : '',
+      safe1_safetyPerson: '',
+      safe1_healthPerson: '',
+      safe1_workerRep: '',
+      safe2_riskEval: '',
+      safe3_1: '',
+      safe3_2: '',
+      safe3_3: '',
+      safe3_4: '',
+      safe3_5: '',
+      safe3_6: '',
+      safe3_7: '',
+      safe4_team: '',
+      safe5_criticalCount: '',
       // ESG-MS
-      esg1_report: '예',
-      esg2_quant: '예',
-      esg3_supply: '예',
+      esg1_report: '',
+      esg2_quant: '',
+      esg3_supply: '',
       // 통합경영시스템
-      ims1_doc: '예',
-      ims2_policy: '예',
-      ims3_review: '예',
-      ims4_audit: '예',
-      ims5_process: '예',
-      ims6_improve: '예',
-      ims7_org: '예',
+      ims1_doc: '',
+      ims2_policy: '',
+      ims3_review: '',
+      ims4_audit: '',
+      ims5_process: '',
+      ims6_improve: '',
+      ims7_org: '',
       // 참석자
       attendees: [
-        { name: company.ceoName || '박진용', role: '대표이사 / 최고경영자' },
-        { name: company.contactPerson || '박진웅', role: `${compAny.contactPosition || '품질총괄 / 부장'} (고객담당)` },
-        { name: '이영희', role: '환경안전관리자 / 차장' },
-        { name: '김진수', role: '생산1팀 / 근로자대표' },
-        { name: '정민호', role: '영업자재팀 / 과장' },
-        { name: '윤상혁', role: '가공팀 / 반장' },
+        { name: company.ceoName || '', role: '대표이사 / 최고경영자' },
+        { name: company.contactPerson || '', role: `${compAny.contactPosition || '담당자'} (고객담당)` },
+        { name: '', role: '' },
+        { name: '', role: '' },
+        { name: '', role: '' },
+        { name: '', role: '' },
       ],
       // 5p: Ⅶ. 문서화된 정보 확인 (심사원 상세 기록)
       clauseNotes: [
-        { clause: '4. 조직상황', notes: '내·외부 이슈 등록부(Doc.QP-01) 및 이해관계자(카메라 광학부품 고객사 등) 요구사항이 2026년 경영계획에 적정하게 반영됨.', result: '적합', findings: '' },
-        { clause: '5. 리더십', notes: '최고경영자의 품질/환경 방침이 사내 정문 및 가공 라인에 공표되었으며, 조직 내 품질책임이 명확히 분장됨.', result: '적합', findings: '' },
-        { clause: '6. 기획', notes: '품질 및 환경 리스크 평가표가 수립되어 있으며, 2026년 가공 불량률 0.3% 이하 목표 달성 세부계획서가 수립됨.', result: '적합', findings: '' },
-        { clause: '7. 지원', notes: 'CNC/MCT 적격성 관리대장, 교육훈련 계획 및 계측기(마이크로미터 등 18종) 교정검사 성적서가 유효하게 유지 관리됨.', result: '적합', findings: '' },
-        { clause: '8. 운용', notes: 'AL/SUS 절삭가공 공정표준서, 초중종물 검사기준서(QP-08)가 현장에 비치되어 있으며 정상 운용 기록됨.', result: '적합', findings: '' },
-        { clause: '9. 성과평가', notes: '2026년 상반기 내부심사(2026.07.15 실시) 및 경영검토(2026.08.10 실시)가 체계적으로 이행 및 보고됨.', result: '적합', findings: '' },
-        { clause: '10. 개선', notes: '고객불만 및 부적합품 발생에 대한 시정조치 요구서(NCR) 원인분석 및 유효성 확인이 완결됨.', result: '적합', findings: '' },
-        { clause: '기타문서', notes: '공장등록증, 폐기물 위탁계약서 등 인허가 관련 서류 적정 유지.', result: '적합', findings: '' },
+        { clause: '4. 조직상황', notes: '', result: '', findings: '' },
+        { clause: '5. 리더십', notes: '', result: '', findings: '' },
+        { clause: '6. 기획', notes: '', result: '', findings: '' },
+        { clause: '7. 지원', notes: '', result: '', findings: '' },
+        { clause: '8. 운용', notes: '', result: '', findings: '' },
+        { clause: '9. 성과평가', notes: '', result: '', findings: '' },
+        { clause: '10. 개선', notes: '', result: '', findings: '' },
+        { clause: '기타문서', notes: '', result: '', findings: '' },
       ],
       // 6p: Ⅷ. 1단계 심사 결과
       findingsTable: [
@@ -399,176 +375,147 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   // 2단계 심사 데이터 State (Page 7~16)
   const [stage2Data, setStage2Data] = useState(() => {
     const defaultData = {
-      auditType: project?.auditType || contract?.contractType || '2차 사후관리심사',
-      auditStandards: project?.standards?.join(', ') || contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
-      auditDateStart: (project as any)?.stage2StartDate || project?.startDate || (project as any)?.stage1StartDate || '2026-09-10',
-      auditDateEnd: (project as any)?.stage2EndDate || project?.endDate || (project as any)?.stage1EndDate || '2026-09-11',
-      auditMd: project?.appliedMd ? String(normalizeMd(project.appliedMd)) : '2.0',
+      auditType: project?.auditType || contract?.contractType || '',
+      auditStandards: project?.standards?.join(', ') || contract?.standards?.join(', ') || '',
+      auditDateStart: (project as any)?.stage2StartDate || project?.startDate || (project as any)?.stage1StartDate || '',
+      auditDateEnd: (project as any)?.stage2EndDate || project?.endDate || (project as any)?.stage1EndDate || '',
+      auditMd: project?.appliedMd ? String(normalizeMd(project.appliedMd)) : '',
       // 시작/종결회의 질의응답
-      meetingNotes: '1. 시작회의: 최고경영자 및 근로자대표 참석 하에 심사 일정 및 안전수칙 확인 완료.\n2. 종결회의: 심사 결과 전반에 대한 공유 및 지속적 개선 방향에 대해 상호 질의응답 진행함.',
+      meetingNotes: '',
       // 심사 세부 일정표 (심사팀장이 작성 / 심사원별 시간, 프로세스, 부서 계획 수립)
-      scheduleLeader: project?.leadAuditorName || auditor?.name || '남경호',
-      scheduleMember: (project?.teamAuditorNames && project.teamAuditorNames.length > 0) ? project.teamAuditorNames.join(', ') : '신현섭',
-      schedules: [
-        { id: '1', date: '09/10', time1: '09:00~09:30', process1: '시작회의 / 현장순회', dept1: '경영진 및 전 부서', time2: '09:00~09:30', process2: '시작회의 / 현장순회', dept2: '경영진 및 전 부서', remarks: '공통' },
-        { id: '2', date: '09/10', time1: '09:30~12:00', process1: '경영책임 / 리더십', dept1: '경영지원팀', time2: '09:30~12:00', process2: '품질/환경 기획', dept2: '품질보증팀', remarks: '' },
-        { id: '3', date: '09/10', time1: '12:00~13:00', process1: '중식 및 심사팀 회의', dept1: '심사팀', time2: '12:00~13:00', process2: '중식 및 심사팀 회의', dept2: '심사팀', remarks: '' },
-        { id: '4', date: '09/10', time1: '13:00~15:30', process1: 'CNC 가공 공정', dept1: '생산1팀', time2: '13:00~15:30', process2: '정밀측정 / 검교정', dept2: '품질검사팀', remarks: '' },
-        { id: '5', date: '09/10', time1: '15:30~17:30', process1: '위험성평가 / 안전관리', dept1: '안전환경팀', time2: '15:30~17:30', process2: '폐기물 / 환경측면', dept2: '안전환경팀', remarks: '' },
-        { id: '6', date: '09/10', time1: '17:30~18:00', process1: '1일차 일일 브리핑', dept1: '경영대리인', time2: '17:30~18:00', process2: '1일차 일일 브리핑', dept2: '경영대리인', remarks: '' },
-        { id: '7', date: '09/11', time1: '09:00~12:00', process1: '영업 / 주문 검토', dept1: '영업관리팀', time2: '09:00~12:00', process2: '자재구매 / 협력사', dept2: '구매자재팀', remarks: '' },
-        { id: '8', date: '09/11', time1: '12:00~13:00', process1: '중식', dept1: '심사팀', time2: '12:00~13:00', process2: '중식', dept2: '심사팀', remarks: '' },
-        { id: '9', date: '09/11', time1: '13:00~15:00', process1: '내부심사 / 경영검토', dept1: '경영혁신팀', time2: '13:00~15:00', process2: '부적합 / 시정조치', dept2: '품질보증팀', remarks: '' },
-        { id: '10', date: '09/11', time1: '15:00~17:00', process1: '심사결과 정리 / 종결회의', dept1: '전 부서장', time2: '15:00~17:00', process2: '종결회의 / 리포트 서명', dept2: '최고경영자', remarks: '' },
-      ],
-      conflictDate: (project as any)?.stage2StartDate || project?.startDate || (project as any)?.stage1StartDate || '2026-09-10',
-      conflictLeader: project?.leadAuditorName || auditor?.name || '남경호',
-      conflictMember1: (project?.teamAuditorNames && project.teamAuditorNames[0]) || '신현섭',
+      scheduleLeader: project?.leadAuditorName || auditor?.name || '',
+      scheduleMember: (project?.teamAuditorNames && project.teamAuditorNames.length > 0) ? project.teamAuditorNames.join(', ') : '',
+      schedules: Array.from({ length: 10 }, (_, i) => ({
+        id: String(i + 1),
+        date: '',
+        time1: '',
+        process1: '',
+        dept1: '',
+        time2: '',
+        process2: '',
+        dept2: '',
+        remarks: ''
+      })),
+      conflictDate: (project as any)?.stage2StartDate || project?.startDate || (project as any)?.stage1StartDate || '',
+      conflictLeader: project?.leadAuditorName || auditor?.name || '',
+      conflictMember1: (project?.teamAuditorNames && project.teamAuditorNames[0]) || '',
       conflictMember2: (project?.teamAuditorNames && project.teamAuditorNames[1]) || '',
       conflictMember3: '',
       conflictMember4: '',
       conflictMember5: '',
       // 고객현황
-      clientName: company.companyName,
-      ceoName: company.ceoName || '박진용',
+      clientName: company.companyName || '',
+      ceoName: company.ceoName || '',
       certNo: realCertNo,
-      mainAddress: company.address || '경기 군포시 공단로140번길 46, 206호',
+      mainAddress: company.address || '',
       subAddress1: (company as any).subAddress1 || '',
       subAddress2: (company as any).subAddress2 || '',
       subAddress3: (company as any).subAddress3 || '',
       subAddress4: (company as any).subAddress4 || '',
       subAddress5: (company as any).subAddress5 || '',
-      tel: company.contactPhone || '031-360-7078',
-      fax: (company as any).fax || '031-353-8891',
-      mobile: (company as any).contactMobile || '010-9088-7078',
-      email: company.contactEmail || 'wjt-jypark@naver.com',
-      contactPerson: company.contactPerson || '박진웅',
-      contactPosition: (company as any).contactPosition || '품질부장',
+      tel: company.contactPhone || '',
+      fax: (company as any).fax || '',
+      mobile: (company as any).contactMobile || '',
+      email: company.contactEmail || '',
+      contactPerson: company.contactPerson || '',
+      contactPosition: (company as any).contactPosition || '',
       stdIso9001: true,
-      stdIso14001: true,
+      stdIso14001: false,
       stdIso45001: false,
       stdEsg: false,
       stdOther: '',
       typeChoice: '사후',
-      survRound: '2',
-      scopeText: company.scope || company.industry || '금속 절삭가공 제품의 제조(AL가공, SUS가공, 광학부품, 산업용 카메라부품)',
-      scopeCode: '17 (기계 및 장비 제조업)',
+      survRound: '',
+      scopeText: company.scope || company.industry || '',
+      scopeCode: (company as any).eaCode || (company as any).scopeCode || '',
       // 공통 심사 내역 (Table 19)
-      c1_appDiff: '적',
-      c2_planDiff: '무',
-      c3_programIssue: '무',
-      c4_systemMaintained: '적',
-      c5_scopeAdequate: '적',
-      c6_meetsStandard: '적',
-      c7_clientCooperation: '적',
-      c8_monitoring: '적',
-      c9_continualImprovement: '적',
-      c10_imsAdequate: '적',
-      c11_prevNcrEffective: '적',
-      c12_markUsage: '적',
-      c13_1_interaction: '적',
-      c13_2_operation: '적',
-      c13_3_will: '적',
-      c13_4_prevReport: '적',
-      c14_survChanges: '무',
-      performanceNotes: '설비 안정화로 가공 정밀도가 대폭 개선되었으며, 집진 설비 가동으로 작업 환경 쾌적성 확보.',
-      internalAuditDateStart: '2026-07-15',
-      internalAuditDateEnd: '2026-07-16',
-      internalAuditDate: '2026-07-15 ~ 2026-07-16',
-      internalAuditNotes: '품질/환경 전 프로세스 내부심사 완료, 시정조치 1건 조치완료 확인',
-      mgmtReviewDateStart: '2026-08-10',
-      mgmtReviewDateEnd: '2026-08-10',
-      mgmtReviewDate: '2026-08-10',
-      mgmtReviewNotes: '대표이사 주관 경영검토 회의록 및 사업 목표 승인 확인',
-      coreProcessNotes: '영업 수주 -> 도면검토/NC프로그래밍 -> 원자재 입고 -> CNC/MCT 가공 -> 세척 -> 삼차원검사 -> 출하',
-      keyCustomers: '주요 협력사, 광학 카메라모듈 업체, 정밀기계 제작사',
-      complaintNotes: '치수 공차 관련 불만 1건 접수, 툴체인저 공구 보정주기 단축으로 유효성 완료.',
-      legalNotes: '산업안전보건법 및 대기환경보전법 준수평가 성적서 기준치 이내 적합.',
-      exclusionClause: '8.3 설계 및 개발 (고객 도면 주문생산)',
-      stage1ChangeNotes: '1단계 심사 이후 특이 변경사항 없음.',
+      c1_appDiff: '',
+      c2_planDiff: '',
+      c3_programIssue: '',
+      c4_systemMaintained: '',
+      c5_scopeAdequate: '',
+      c6_meetsStandard: '',
+      c7_clientCooperation: '',
+      c8_monitoring: '',
+      c9_continualImprovement: '',
+      c10_imsAdequate: '',
+      c11_prevNcrEffective: '',
+      c12_markUsage: '',
+      c13_1_interaction: '',
+      c13_2_operation: '',
+      c13_3_will: '',
+      c13_4_prevReport: '',
+      c14_survChanges: '',
+      performanceNotes: '',
+      internalAuditDateStart: '',
+      internalAuditDateEnd: '',
+      internalAuditDate: '',
+      internalAuditNotes: '',
+      mgmtReviewDateStart: '',
+      mgmtReviewDateEnd: '',
+      mgmtReviewDate: '',
+      mgmtReviewNotes: '',
+      coreProcessNotes: '',
+      keyCustomers: '',
+      complaintNotes: '',
+      legalNotes: '',
+      exclusionClause: '',
+      stage1ChangeNotes: '',
       // ISO 14001 추가
-      envAspect: '절삭유 누유 리스크, 가공 알루미늄 칩 폐기물, 전력 사용량',
-      envEvalDate: '2026-04-10',
-      envEvaluator: '이영희 차장',
-      envEvalResult: '적합',
-      envLegalDate: '2026-06-20',
-      envLegalEvaluator: '이영희 차장',
-      envLegalResult: '적합',
+      envAspect: '',
+      envEvalDate: '',
+      envEvaluator: '',
+      envEvalResult: '',
+      envLegalDate: '',
+      envLegalEvaluator: '',
+      envLegalResult: '',
       // ISO 45001 추가
-      safeRiskAspect: 'MCT 고속 회전체 협착, 에어건 비산물 안구상해, 중량물 운반 요통',
-      safeEvalDate: '2026-05-15',
-      safeEvaluator: '김진수 근로자대표 외 2명',
-      safeLegalDate: '2026-06-25',
-      safeLegalEvaluator: '박진용 대표이사',
-      safeLegalResult: '적합',
+      safeRiskAspect: '',
+      safeEvalDate: '',
+      safeEvaluator: '',
+      safeLegalDate: '',
+      safeLegalEvaluator: '',
+      safeLegalResult: '',
       // ESG-MS 추가
-      esgEvalDate: '2026-08-18',
-      esgScoreEnv: '88',
-      esgScoreSocial: '92',
-      esgScoreGov: '90',
+      esgEvalDate: '',
+      esgScoreEnv: '',
+      esgScoreSocial: '',
+      esgScoreGov: '',
       // PROCESS Audit NOTE (13p)
       auditNotes: [
-        {
-          clause: '4. 조직상황',
-          content: '[확인 내용]: 2026년도 조직 내/외부 이슈 분석표 및 이해관계자 요구사항 분석 기록(Doc No. QP-01) 검토.\n[객관적 증거]: 2026년 1월 광학부품 경량화 및 원소재(AL6061) 단가 변동 리스크 대응 전략 과제 수립 확인.'
-        },
-        {
-          clause: '5. 리더십',
-          content: '[확인 내용]: 최고경영자 면담 및 품질/환경 경영방침 전파 상태 확인.\n[객관적 증거]: 가공 현장 게시판에 방침 게시, 현장 가공 OP 3명 인터뷰 결과 품질목표 인지 양호.'
-        },
-        {
-          clause: '6. 기획',
-          content: '[확인 내용]: 품질목표(공정불량률 0.3% 이하, 납기준수율 99%) 및 환경목표 추진실적 검토.\n[객관적 증거]: 2026년 상반기 목표 달성도 집계표(달성률 98.6%), 리스크 평가표 개정 이력 확인.'
-        },
-        {
-          clause: '7. 지원',
-          content: '[확인 내용]: 설비 보전관리, 측정기기 교정검사 성적서 확인.\n[객관적 증거]: 3차원 측정기(교정일자 2026-03-12, KTR-2026-9912) 및 하이트게이지 검교정 필증 유효.'
-        },
-        {
-          clause: '8. 운용',
-          content: '[확인 내용]: 원자재 입고검사, NC 프로그램 관리, CNC 1호기~10호기 가공 공정, 최종검사 식별 추적성 확인.\n[객관적 증거]: LOT No. WJ2609-08 작업지시서, 초중종물 치수검사 성적서, 부적합품 전용 보관대 확인.'
-        },
-        {
-          clause: '9. 성과평가',
-          content: '[확인 내용]: 고객만족도 조사(2026년 7월, 종합 94.2점), 내부심사(2026.07.15), 경영검토 보고서 확인.\n[객관적 증거]: 내부심사 결과보고서(Doc.QP-09-01), 경영검토 회의록 대표이사 승인 서명 확인.'
-        },
-        {
-          clause: '10. 개선',
-          content: '[확인 내용]: 지속적 개선 활동 및 시정조치 유효성 평가 확인.\n[객관적 증거]: NC-2026-01호(MCT 3호기 절삭유 비산방지 커버 교체 완료) 전후 사진 및 유효성 서명 확인.'
-        }
+        { clause: '4. 조직상황', content: '' },
+        { clause: '5. 리더십', content: '' },
+        { clause: '6. 기획', content: '' },
+        { clause: '7. 지원', content: '' },
+        { clause: '8. 운용', content: '' },
+        { clause: '9. 성과평가', content: '' },
+        { clause: '10. 개선', content: '' }
       ],
       // 14p 심사발견 사항 요약
-      findingsAuditor: auditor?.name || '남경호',
-      findingsDate: '2026-09-11',
-      findingsPage: '14 / 20',
-      ncrSummaryLines: [
-        '1. 경부적합 1건: 가공2팀 버니어캘리퍼스(VC-04) 교정검사 라벨 마모 및 일상점검 기록 누락',
-        '', '', '', '', '', '', '', '', ''
-      ],
-      obsSummaryLines: [
-        '1. 권고사항 1: 원자재 보관대 일부 알루미늄 봉재의 식별 태그 탈락 방지 관리 권고',
-        '2. 권고사항 2: 측정실 온습도 기록부 작성 주기(일 2회) 철저 이행 권고',
-        '', '', '', '', '', '', '', ''
-      ],
+      findingsAuditor: auditor?.name || project?.leadAuditorName || '',
+      findingsDate: '',
+      findingsPage: '',
+      ncrSummaryLines: ['', '', '', '', '', '', '', '', '', ''],
+      obsSummaryLines: ['', '', '', '', '', '', '', '', '', ''],
       // 15p 2. 심사결론 & 3. 조직의 참석자 & 4. 심사팀
-      countMinor: '1',
+      countMinor: '0',
       countMajor: '0',
-      countObs: '2',
-      auditorResultReview: '적합', // 적합 | 부적합 | 보완 필요
-      overallSummary: '본 조직은 ISO 9001:2015 및 ISO 14001:2015 규격에 부합하는 경영시스템을 구축하여 안정적으로 실행하고 있으며, 최고경영자의 품질/환경 방침에 따른 전 부서의 실천 의지와 3차원 측정기를 통한 전수 품질 보증 체계가 우수함.',
-      prevObsResult: '적합',
-      prevObsAuditor: auditor?.name || '남경호',
-      prevNcrResult: '적합',
-      prevNcrAuditor: auditor?.name || '남경호',
-      conclusionOption: '1', // 1: 어떠한 부적합도..., 2: 경부적합 시정조치 후..., 3: 중부적합 재심사..., 4: 기타
+      countObs: '0',
+      auditorResultReview: '',
+      overallSummary: '',
+      prevObsResult: '',
+      prevObsAuditor: '',
+      prevNcrResult: '',
+      prevNcrAuditor: '',
+      conclusionOption: '',
       conclusionOther: '',
       attendees: [
-        { name: company.ceoName || '박진용', role: '대표이사 / 최고경영자' },
-        { name: '박진웅', role: '품질총괄 / 부장' },
-        { name: '이영희', role: '환경안전관리자 / 차장' },
-        { name: '김진수', role: '생산1팀 / 근로자대표' },
-        { name: '정민호', role: '영업자재팀 / 과장' },
-        { name: '윤상혁', role: '가공팀 / 반장' },
+        { name: company.ceoName || '', role: '대표이사 / 최고경영자' },
+        { name: company.contactPerson || '', role: `${compAny.contactPosition || '담당자'}` },
+        { name: '', role: '' },
+        { name: '', role: '' },
+        { name: '', role: '' },
+        { name: '', role: '' },
         { name: '', role: '' },
         { name: '', role: '' },
         { name: '', role: '' },
@@ -577,15 +524,15 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         { name: '', role: '' },
       ],
       // 16p 5. 차기심사 안내 & 6. 갱신심사 시 작성
-      nextSurvChoice: '사후',
-      nextSurvRound: '3',
-      nextAuditMonth: '2027-09',
-      nextAuditMd: '2.0',
+      nextSurvChoice: '',
+      nextSurvRound: '',
+      nextAuditMonth: '',
+      nextAuditMd: '',
       renewalHistory: [
-        { type: '최초 심사', count: '경 1', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
-        { type: '1차 사후', count: '0', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
-        { type: '2차 사후', count: '0', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
-        { type: '기타', count: '', leader: '', effect: '적절', reason: '' },
+        { type: '최초 심사', count: '', leader: '', effect: '', reason: '' },
+        { type: '1차 사후', count: '', leader: '', effect: '', reason: '' },
+        { type: '2차 사후', count: '', leader: '', effect: '', reason: '' },
+        { type: '기타', count: '', leader: '', effect: '', reason: '' },
       ],
       // 18p F16-012 심사계획 및 요약서 [ 3년심사관리용 ]
       planSummaryRev: '0',
@@ -593,25 +540,25 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         '경영진', '품질보증', '생산1팀', '생산2팀', '자재구매', '영업팀', '환경안전', '설비공무', '연구개발', '경영지원'
       ],
       planSummaryDeptMatrix: {
-        '4. 조직상황': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '5. 리더십': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '6. 기획': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '7. 지원': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '8. 운용': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '9. 성과평가': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '10. 개선': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
-        '인증마크 사용': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '4. 조직상황': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '5. 리더십': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '6. 기획': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '7. 지원': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '8. 운용': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '9. 성과평가': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '10. 개선': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+        '인증마크 사용': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
         '부적합': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
       },
-      planSummary3YearDates: ['2024-09', '2025-09', '2026-09', '2027-09', '-', '-'],
+      planSummary3YearDates: ['', '', '', '', '', ''],
       planSummary3YearMatrix: {
-        '4. 조직 상황': ['v', 'v', 'v', '○', '○', '○'],
-        '5. 리더십': ['v', 'v', 'v', '○', '○', '○'],
-        '6. 기획': ['v', 'v', 'v', '○', '○', '○'],
-        '7. 지원': ['v', 'v', 'v', '○', '○', '○'],
-        '8. 운용': ['v', 'v', 'v', '○', '○', '○'],
-        '9. 성과평가': ['v', 'v', 'v', '○', '○', '○'],
-        '10. 개선': ['v', 'v', 'v', '○', '○', '○'],
+        '4. 조직 상황': ['-', '-', '-', '-', '-', '-'],
+        '5. 리더십': ['-', '-', '-', '-', '-', '-'],
+        '6. 기획': ['-', '-', '-', '-', '-', '-'],
+        '7. 지원': ['-', '-', '-', '-', '-', '-'],
+        '8. 운용': ['-', '-', '-', '-', '-', '-'],
+        '9. 성과평가': ['-', '-', '-', '-', '-', '-'],
+        '10. 개선': ['-', '-', '-', '-', '-', '-'],
       }
     };
 
@@ -648,29 +595,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    return [
-      {
-        id: 'ncr-1',
-        ncrNo: 'NCR-2026-09-01',
-        standard: 'ISO 9001:2015',
-        clause: '7.1.5 (측정 자원)',
-        dept: '가공2팀',
-        auditorName: auditor?.name || '남경호',
-        auditType: '사후 2차',
-        grade: '경부적합',
-        issueDate: '2026-09-11',
-        details: '가공 2공장 버니어캘리퍼스 1종(No. VC-04)의 교정검사 라벨이 마모되어 식별이 불가하며, 일상 점검 대장에 일부 점검일자 기록이 누락됨.',
-        correctionAction: '해당 버니어캘리퍼스 교정 라벨 재발행 부착 및 일상 점검 대장 보완 기록 완료.',
-        causeAnalysis: '[Man/Method]: 작업자 라벨 취급 부주의 및 월간 계측기 정기 대조 절차 미흡.',
-        recurrencePrevent: '전 계측기 라벨 보호 비닐 코팅 부착 및 매월 1일 품질관리자 교정상태 전수 점검 의무화.',
-        actionDate: '2026-09-25',
-        clientSigned: true,
-        auditorVerified: true,
-        verificationResult: '적절함',
-        effectiveResult: '효과적'
-      }
-    ];
+    return [];
   });
+
+
 
   // 사무국 인증관리 연동 심사보고서 작성 공지사항 상태
   const [cbNotices, setCbNotices] = useState<AuditReportNoticeItem[]>(() => loadAuditReportNotices());
@@ -1286,20 +1214,20 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     }
     const compAny = company as any;
     return {
-      certNo: realCertNo,
-      companyNameKor: company.companyName,
-      companyNameEng: compAny.companyNameEng || compAny.engName || 'WOOJIN TECH CO., LTD.',
-      ceoName: company.ceoName || '박진용',
-      addressKor: company.address || '경기 군포시 공단로140번길 46, 206호',
-      addressEng: compAny.addressEng || compAny.engAddress || '#206, 46, Gongdan-ro 140beon-gil, Gunpo-si, Gyeonggi-do, Korea',
+      certNo: realCertNo || '',
+      companyNameKor: company.companyName || '',
+      companyNameEng: compAny.companyNameEng || compAny.engName || '',
+      ceoName: company.ceoName || '',
+      addressKor: company.address || '',
+      addressEng: compAny.addressEng || compAny.engAddress || '',
       factoryAddressKor: compAny.factoryAddress || '',
       factoryAddressEng: compAny.factoryAddressEng || '',
-      scopeKor: compAny.scope || company.industry || '금속 절삭가공 제품의 제조(AL가공, SUS가공, 광학부품, 산업용 카메라부품)',
-      scopeEng: compAny.scopeEng || 'Manufacture of metal machining parts (AL machining, SUS machining, optical parts, camera parts)',
-      iafCode: compAny.iafCode || '17',
-      standards: contract?.standards?.join(', ') || compAny.standards || 'ISO 9001:2015, ISO 14001:2015',
+      scopeKor: compAny.scope || company.industry || '',
+      scopeEng: compAny.scopeEng || '',
+      iafCode: compAny.iafCode || compAny.eaCode || '',
+      standards: contract?.standards?.join(', ') || compAny.standards || project?.standards?.join(', ') || '',
       identityConfirmed: '1단계 심사 시 확인된 내용과 동일함 (확인 완료)',
-      updatedAt: '2026-09-11'
+      updatedAt: new Date().toISOString().slice(0, 10)
     };
   });
 
