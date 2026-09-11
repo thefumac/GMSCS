@@ -241,23 +241,23 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
   // 4대 라이프사이클 프로세스 데이터 행 산출
   const processRows: ProcessRowData[] = useMemo(() => {
     return projects.map((p, idx) => {
-      const comp = companyMap.get(p.companyId);
-      const contract = contractMap.get(p.companyId);
+      const comp = companyMap.get(p.companyId) || companies.find(c => c.id === p.companyId || c.companyName === p.companyName);
+      const contract = contractMap.get(p.companyId) || (contracts ? contracts.find(c => c.companyId === p.companyId || c.companyName === p.companyName) : undefined);
 
       const compAny = comp as any;
-      const ceoName = comp?.ceoName || '대표';
-      const bizNumber = comp?.bizNumber || '000-00-00000';
-      const address = comp?.address || '서울특별시 구로구 디지털로 288';
-      const contactPerson = comp?.contactPerson || '인증담당';
-      const contactPhone = comp?.contactPhone || '02-850-1000';
-      const contactEmail = comp?.contactEmail || 'quality@company.co.kr';
+      const ceoName = comp?.ceoName || '';
+      const bizNumber = comp?.bizNumber || '';
+      const address = comp?.address || '';
+      const contactPerson = comp?.contactPerson || '';
+      const contactPhone = comp?.contactPhone || '';
+      const contactEmail = comp?.contactEmail || compAny?.email || '';
 
       const rawStd = compAny?.standards;
       const standardsList: string[] = p.standards && p.standards.length > 0 
         ? p.standards 
         : (rawStd ? (typeof rawStd === 'string' ? rawStd.split(/[/,;]+/) : rawStd) : ['ISO 9001:2015']);
       const standardsText = standardsList.map((s: string) => cleanStandardName(s)).join(', ');
-      const certNo = compAny?.certNo || contract?.certNumber || 'Q240101';
+      const certNo = compAny?.certNo || compAny?.certNumber || contract?.certNumber || (contract as any)?.contractNumber || '';
       const kabMd = p.appliedMd || p.kabStandardMd || 2.5;
 
       // 1. Pre-AUDIT 하위 항목 날짜

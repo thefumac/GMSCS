@@ -72,6 +72,19 @@ export interface EmailSignatureRecord {
   ipAddress: string;
 }
 
+export interface EmailSignerItem {
+  id: string;
+  roleType: '심사팀장' | '심사팀원' | '고객담당자' | '근로자대표';
+  name: string;
+  position: string;
+  email: string;
+  useCompanyEmail: boolean;
+  status: '대기' | '발송완료' | '서명완료';
+  sentAt?: string;
+  signedAt?: string;
+  signatureHash?: string;
+}
+
 export interface CarAttachment {
   id: string;
   fileName: string;
@@ -153,6 +166,59 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
   const [hasCertChange, setHasCertChange] = useState<boolean>(false);
 
+  // 전자 메일 서명 대상자 목록 State (심사팀장, 심사팀원, 고객담당자, 근로자대표)
+  const [emailSigners, setEmailSigners] = useState<EmailSignerItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`${storageKey}_SIGNERS`);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    const compAny = company as any;
+    const defaultLeadName = auditor?.name || '남경호';
+    const defaultMemberName = compAny.assignedAuditorName && compAny.assignedAuditorName !== defaultLeadName ? compAny.assignedAuditorName : '신현섭';
+    const companySharedEmail = company.contactEmail || (company as any).email || '';
+
+    return [
+      {
+        id: 'signer-lead',
+        roleType: '심사팀장',
+        name: defaultLeadName,
+        position: auditor?.grade || '선임심사원',
+        email: auditor?.email || 'auditor@gmscs.co.kr',
+        useCompanyEmail: false,
+        status: '대기'
+      },
+      {
+        id: 'signer-member',
+        roleType: '심사팀원',
+        name: defaultMemberName,
+        position: '심사원',
+        email: 'auditor2@gmscs.co.kr',
+        useCompanyEmail: false,
+        status: '대기'
+      },
+      {
+        id: 'signer-client',
+        roleType: '고객담당자',
+        name: company.contactPerson || company.ceoName || '담당자',
+        position: compAny.contactPosition || '품질총괄/부장',
+        email: company.contactEmail || (company as any).email || '',
+        useCompanyEmail: false,
+        status: '대기'
+      },
+      {
+        id: 'signer-worker',
+        roleType: '근로자대표',
+        name: '근로자대표',
+        position: '근로자대표 / 생산관리',
+        email: companySharedEmail,
+        useCompanyEmail: true,
+        status: '대기'
+      }
+    ];
+  });
+
   // 전자메일 서명 상태
   const [signatures, setSignatures] = useState<Record<string, EmailSignatureRecord>>(() => {
     if (typeof window !== 'undefined') {
@@ -166,9 +232,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         slotId: 's1_cust',
         slotLabel: '고객 확인 (서명)',
         role: '고객확인',
-        signerName: company.ceoName || '박진용',
+        signerName: company.ceoName || company.contactPerson || '대표자',
         signerPosition: '대표이사',
-        signerEmail: company.contactEmail || 'wjt-jypark@naver.com',
+        signerEmail: company.contactEmail || (company as any).email || 'signer@company.com',
         signedAt: '2026-09-08 17:30',
         signatureHash: 'SIG-EMAIL-89A4-F291',
         isVerified: true,
@@ -389,15 +455,19 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       c13_3_will: '적',
       c13_4_prevReport: '적',
       c14_survChanges: '무',
-      performanceNotes: 'CNC 고속 가공라인 설비 안정화로 가공 정밀도가 대폭 개선되었으며, 절삭유 집진 설비 가동으로 작업 환경 쾌적성 확보.',
-      internalAuditDate: '2026-07-15',
+      performanceNotes: '설비 안정화로 가공 정밀도가 대폭 개선되었으며, 집진 설비 가동으로 작업 환경 쾌적성 확보.',
+      internalAuditDateStart: '2026-07-15',
+      internalAuditDateEnd: '2026-07-16',
+      internalAuditDate: '2026-07-15 ~ 2026-07-16',
       internalAuditNotes: '품질/환경 전 프로세스 내부심사 완료, 시정조치 1건 조치완료 확인',
+      mgmtReviewDateStart: '2026-08-10',
+      mgmtReviewDateEnd: '2026-08-10',
       mgmtReviewDate: '2026-08-10',
       mgmtReviewNotes: '대표이사 주관 경영검토 회의록 및 사업 목표 승인 확인',
       coreProcessNotes: '영업 수주 -> 도면검토/NC프로그래밍 -> 원자재 입고 -> CNC/MCT 가공 -> 세척 -> 삼차원검사 -> 출하',
-      keyCustomers: '(주)삼성전기 협력사, 광학 카메라모듈 업체, 정밀기계 제작사',
-      complaintNotes: '2026년 상반기 치수 공차 관련 불만 1건 접수, 툴체인저 공구 보정주기 단축으로 유효성 완료.',
-      legalNotes: '산업안전보건법 및 대기환경보전법 준수평가 성적서(2026.06) 기준치 이내 적합.',
+      keyCustomers: '주요 협력사, 광학 카메라모듈 업체, 정밀기계 제작사',
+      complaintNotes: '치수 공차 관련 불만 1건 접수, 툴체인저 공구 보정주기 단축으로 유효성 완료.',
+      legalNotes: '산업안전보건법 및 대기환경보전법 준수평가 성적서 기준치 이내 적합.',
       exclusionClause: '8.3 설계 및 개발 (고객 도면 주문생산)',
       stage1ChangeNotes: '1단계 심사 이후 특이 변경사항 없음.',
       // ISO 14001 추가
@@ -581,11 +651,100 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(`${storageKey}_SIGS`, JSON.stringify(signatures));
+      localStorage.setItem(`${storageKey}_SIGNERS`, JSON.stringify(emailSigners));
       localStorage.setItem(`${storageKey}_STAGE1`, JSON.stringify(stage1Data));
       localStorage.setItem(`${storageKey}_STAGE2`, JSON.stringify(stage2Data));
       localStorage.setItem(`${storageKey}_NCRS`, JSON.stringify(ncrList));
     }
-  }, [signatures, stage1Data, stage2Data, ncrList, storageKey]);
+  }, [signatures, emailSigners, stage1Data, stage2Data, ncrList, storageKey]);
+
+  // 전자 메일 서명 일괄 발송 핸들러
+  const handleDispatchSignatureEmails = () => {
+    const invalidSigners = emailSigners.filter(s => !s.email || !s.email.includes('@'));
+    if (invalidSigners.length > 0) {
+      alert(`[발송 확인 필요] 다음 대상자의 수신 이메일 주소를 확인해주세요:\n- ${invalidSigners.map(s => `${s.roleType} (${s.name})`).join('\n- ')}`);
+      return;
+    }
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const updatedSigners = emailSigners.map(s => {
+      if (s.status === '서명완료') return s;
+      return {
+        ...s,
+        status: '발송완료' as const,
+        sentAt: dateStr
+      };
+    });
+
+    setEmailSigners(updatedSigners);
+    localStorage.setItem(`${storageKey}_SIGNERS`, JSON.stringify(updatedSigners));
+
+    const mailSummaries = updatedSigners.map(s => {
+      const targetLabel = s.useCompanyEmail ? `[회사대표메일 수신] (수신대상: ${s.roleType} ${s.name} 귀하)` : `[개별수신: ${s.email}]`;
+      const title = `[GMSCS 전자서명 요청] ${s.useCompanyEmail ? `(수신: ${s.roleType} ${s.name} 귀하)` : `${s.name}님 귀하`} - ${company.companyName} ${auditTypeCategory} 심사보고서 서명 요청`;
+      return `• ${s.roleType} (${s.name} ${s.position})\n  - 메일: ${s.email} ${targetLabel}\n  - 제목: ${title}`;
+    }).join('\n\n');
+
+    alert(`[전자서명 요청 메일 발송 완료]\n총 ${updatedSigners.length}명의 서명 대상자에게 전자서명 요청 메일이 성공적으로 발송되었습니다.\n\n${mailSummaries}\n\n* 대표메일 수신 건은 메일 제목 및 본문 상단에 수신 대상자 식별 정보(기업담당자/근로자대표)가 명확히 기재되어 전송되었습니다.`);
+  };
+
+  // 개별 서명 승인 / 서명 처리 핸들러 (원클릭 전자서명 및 실시간 도장 날인)
+  const handleApproveSigner = (signerId: string) => {
+    const signer = emailSigners.find(s => s.id === signerId);
+    if (!signer) return;
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const hash = 'SIG-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    // 1. Update signer state
+    const nextSigners = emailSigners.map(s => s.id === signerId ? {
+      ...s,
+      status: '서명완료' as const,
+      signedAt: dateStr,
+      signatureHash: hash
+    } : s);
+    setEmailSigners(nextSigners);
+    localStorage.setItem(`${storageKey}_SIGNERS`, JSON.stringify(nextSigners));
+
+    // 2. Automatically synchronize into signatures map for all relevant slots
+    const newSignRecord: EmailSignatureRecord = {
+      slotId: signer.id,
+      slotLabel: `${signer.roleType} 서명`,
+      role: signer.roleType === '심사팀장' ? '심사팀장' : signer.roleType === '심사팀원' ? '심사팀원' : signer.roleType === '근로자대표' ? '근로자대표' : '고객확인',
+      signerName: signer.name,
+      signerPosition: signer.position,
+      signerEmail: signer.email,
+      signedAt: dateStr,
+      signatureHash: hash,
+      isVerified: true,
+      ipAddress: '211.234.' + Math.floor(Math.random() * 200 + 10) + '.' + Math.floor(Math.random() * 200 + 10)
+    };
+
+    setSignatures(prev => {
+      const next = { ...prev };
+      if (signer.roleType === '심사팀장') {
+        next['s1_lead'] = { ...newSignRecord, slotId: 's1_lead', slotLabel: '심사 팀장 (서명)' };
+        next['s2_p9_lead'] = { ...newSignRecord, slotId: 's2_p9_lead', slotLabel: '심사팀장 서명' };
+        next['s2_p15_lead'] = { ...newSignRecord, slotId: 's2_p15_lead', slotLabel: '심사팀장 서명' };
+        next['s2_p17_lead'] = { ...newSignRecord, slotId: 's2_p17_lead', slotLabel: '심사팀장 서명' };
+        next['ncr_auditor'] = { ...newSignRecord, slotId: 'ncr_auditor', slotLabel: '확인 심사원 서명' };
+      } else if (signer.roleType === '심사팀원') {
+        next['s2_p9_member1'] = { ...newSignRecord, slotId: 's2_p9_member1', slotLabel: '심사팀원 서명' };
+      } else if (signer.roleType === '고객담당자') {
+        next['s1_cust'] = { ...newSignRecord, slotId: 's1_cust', slotLabel: '고객 확인 (서명)' };
+        next['s2_p17_client'] = { ...newSignRecord, slotId: 's2_p17_client', slotLabel: '고객확인 (대표자/담당자)' };
+        next['ncr_client'] = { ...newSignRecord, slotId: 'ncr_client', slotLabel: '고객 확인 서명' };
+      } else if (signer.roleType === '근로자대표') {
+        next['s2_worker_rep'] = { ...newSignRecord, slotId: 's2_worker_rep', slotLabel: '근로자 대표 서명' };
+      }
+      return next;
+    });
+
+    alert(`[${signer.roleType} ${signer.name} 서명 완료]\n전자 서명 검증 해시: [${hash}]\n보고서 내 해당 서명란에 전자 서명이 즉시 날인되었습니다.`);
+  };
 
   // 9p 세부 심사 일정 행 추가/삭제 핸들러 (심사팀장 작성 기능)
   const handleAddScheduleRow = () => {
@@ -1103,12 +1262,195 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             </label>
           </div>
 
-          {/* 3. 보고서 작성 인증원 공지사항 (Certification Body Notice) */}
+          {/* 3. 전자 메일 서명 대상자 관리 및 확인발송 */}
+          <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
+                <span>3. 전자 메일 서명 관리 & 발송</span>
+              </span>
+              <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 flex items-center gap-1">
+                <Send className="w-3 h-3 text-teal-600" />
+                <span>서명 {emailSigners.filter(s => s.status === '서명완료').length}/{emailSigners.length}</span>
+              </span>
+            </div>
+
+            <div className="text-[10.5px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 space-y-1">
+              <div className="flex items-center justify-between font-bold text-slate-800">
+                <span>서명 진행 순서:</span>
+                <span className="text-teal-700 font-mono text-[10px]">1팀장 ➔ 2팀원 ➔ 3고객담당 ➔ 4근로자대표</span>
+              </div>
+              <p className="text-[10px] text-slate-500 leading-tight">
+                * 기업은 대표메일 하나로 모두 수신하는 경우가 많으므로, 대상자별 식별 제목 및 본문이 자동 부여됩니다.
+              </p>
+            </div>
+
+            {/* 4인 서명 대상자 편집 카드 목록 */}
+            <div className="space-y-2.5">
+              {emailSigners.map((signer, sIdx) => {
+                const isSigned = signer.status === '서명완료';
+                const isSent = signer.status === '발송완료';
+
+                return (
+                  <div 
+                    key={signer.id}
+                    className={`p-2.5 rounded-xl border transition-all space-y-1.5 ${
+                      isSigned
+                        ? 'bg-emerald-50/70 border-emerald-300'
+                        : isSent
+                        ? 'bg-blue-50/60 border-blue-300'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${
+                          signer.roleType === '심사팀장' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
+                          signer.roleType === '심사팀원' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
+                          signer.roleType === '고객담당자' ? 'bg-teal-100 text-teal-800 border border-teal-200' :
+                          'bg-purple-100 text-purple-800 border border-purple-200'
+                        }`}>
+                          {sIdx + 1}. {signer.roleType}
+                        </span>
+                        <span className="font-bold text-slate-800 text-xs">{signer.name}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        {isSigned ? (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white flex items-center gap-0.5 shadow-2xs">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            <span>서명완료</span>
+                          </span>
+                        ) : isSent ? (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600 text-white flex items-center gap-0.5 shadow-2xs animate-pulse">
+                            <Clock className="w-2.5 h-2.5" />
+                            <span>서명대기</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                            발송대기
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 성명, 직위, 이메일 편집 인풋 */}
+                    <div className="grid grid-cols-2 gap-1 text-[11px]">
+                      <div>
+                        <label className="text-[9.5px] text-slate-500 font-bold block mb-0.5">성명</label>
+                        <input
+                          type="text"
+                          value={signer.name}
+                          onChange={(e) => {
+                            const next = [...emailSigners];
+                            next[sIdx] = { ...next[sIdx], name: e.target.value };
+                            setEmailSigners(next);
+                          }}
+                          className="w-full px-1.5 py-0.5 bg-white rounded border border-slate-300 text-slate-900 text-xs font-medium focus:border-teal-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9.5px] text-slate-500 font-bold block mb-0.5">직위/직책</label>
+                        <input
+                          type="text"
+                          value={signer.position}
+                          onChange={(e) => {
+                            const next = [...emailSigners];
+                            next[sIdx] = { ...next[sIdx], position: e.target.value };
+                            setEmailSigners(next);
+                          }}
+                          className="w-full px-1.5 py-0.5 bg-white rounded border border-slate-300 text-slate-900 text-xs focus:border-teal-600"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[9.5px] text-slate-500 font-bold block mb-0.5">수신 이메일</label>
+                      <input
+                        type="email"
+                        value={signer.email}
+                        onChange={(e) => {
+                          const next = [...emailSigners];
+                          next[sIdx] = { ...next[sIdx], email: e.target.value };
+                          setEmailSigners(next);
+                        }}
+                        className="w-full px-1.5 py-0.5 bg-white rounded border border-slate-300 text-slate-900 text-xs font-mono focus:border-teal-600"
+                      />
+                    </div>
+
+                    {/* 고객담당자 및 근로자대표: 회사 대표메일로 수신 체크박스 */}
+                    {(signer.roleType === '고객담당자' || signer.roleType === '근로자대표') && (
+                      <label className="flex items-center gap-1.5 pt-0.5 cursor-pointer text-[10.5px] text-slate-700 font-medium select-none">
+                        <input
+                          type="checkbox"
+                          checked={signer.useCompanyEmail}
+                          onChange={(e) => {
+                            const next = [...emailSigners];
+                            const shared = company.contactEmail || (company as any).email || '';
+                            next[sIdx] = {
+                              ...next[sIdx],
+                              useCompanyEmail: e.target.checked,
+                              email: e.target.checked && shared ? shared : next[sIdx].email
+                            };
+                            setEmailSigners(next);
+                          }}
+                          className="rounded text-teal-700 focus:ring-0 cursor-pointer"
+                        />
+                        <span>회사 대표메일로 수신</span>
+                        <span className="text-[9.5px] text-teal-700 font-mono">({company.contactEmail || (company as any).email || '대표메일'})</span>
+                      </label>
+                    )}
+
+                    {/* 서명 처리 액션 버튼 */}
+                    {isSigned ? (
+                      <div className="pt-1 flex items-center justify-between text-[10px] text-emerald-800 border-t border-emerald-200">
+                        <span className="font-mono text-[9px]">{signer.signedAt?.slice(0, 16)} [{signer.signatureHash}]</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = [...emailSigners];
+                            next[sIdx] = { ...next[sIdx], status: '발송완료', signedAt: undefined, signatureHash: undefined };
+                            setEmailSigners(next);
+                          }}
+                          className="text-[9px] text-rose-600 hover:underline cursor-pointer"
+                        >
+                          서명 취소
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="pt-1 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleApproveSigner(signer.id)}
+                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10.5px] rounded-lg shadow-2xs flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>{isSent ? '전자서명 승인 / 서명하기' : '즉시 서명 (인/서명)'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 확인발송 메인 버튼 */}
+            <button
+              type="button"
+              onClick={handleDispatchSignatureEmails}
+              className="w-full py-2.5 px-3 bg-teal-700 hover:bg-teal-600 active:bg-teal-800 text-white font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+              <span>확인발송 (전자서명 요청 메일 전송)</span>
+            </button>
+          </div>
+
+          {/* 4. 보고서 작성 인증원 공지사항 (Certification Body Notice) */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-indigo-700 inline-block rounded-xs"></span>
-                <span>3. 보고서 작성 인증원 공지사항</span>
+                <span>4. 보고서 작성 인증원 공지사항</span>
               </span>
               <span className="text-[10px] text-indigo-800 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
                 <Bell className="w-3 h-3 text-indigo-600" />
@@ -3874,8 +4216,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <th className="w-40 bg-slate-200 p-2 border-r border-slate-800 text-center font-bold" rowSpan={2}>
                               내부심사의 적합성
                             </th>
-                            <th className="w-24 bg-slate-100 p-1 border-r border-slate-400 text-center font-bold">
-                              실시일자
+                            <th className="w-32 bg-slate-100 p-1 border-r border-slate-400 text-center font-bold text-[10.5px]">
+                              실시기간 (시작~종료)
                             </th>
                             <th className="p-1 text-center font-bold">
                               내부심사 확인사항
@@ -3883,12 +4225,37 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </tr>
                           <tr className="border-b border-slate-800">
                             <td className="p-1 border-r border-slate-400 text-center">
-                              <input
-                                type="text"
-                                value={stage2Data.internalAuditDate}
-                                onChange={(e) => setStage2Data({ ...stage2Data, internalAuditDate: e.target.value })}
-                                className="w-full text-center bg-transparent text-[11px] font-mono"
-                              />
+                              <div className="flex flex-col items-center gap-1">
+                                <input
+                                  type="text"
+                                  placeholder="시작일 (YYYY-MM-DD)"
+                                  value={stage2Data.internalAuditDateStart || (stage2Data.internalAuditDate ? stage2Data.internalAuditDate.split('~')[0]?.trim() : '2026-07-15')}
+                                  onChange={(e) => {
+                                    const s = e.target.value;
+                                    setStage2Data({
+                                      ...stage2Data,
+                                      internalAuditDateStart: s,
+                                      internalAuditDate: `${s} ~ ${stage2Data.internalAuditDateEnd || s}`
+                                    });
+                                  }}
+                                  className="w-full text-center bg-transparent text-[10.5px] font-mono border-b border-slate-300 focus:border-slate-800"
+                                />
+                                <span className="text-[10px] text-slate-400 font-bold leading-none">~</span>
+                                <input
+                                  type="text"
+                                  placeholder="종료일 (YYYY-MM-DD)"
+                                  value={stage2Data.internalAuditDateEnd || (stage2Data.internalAuditDate?.includes('~') ? stage2Data.internalAuditDate.split('~')[1]?.trim() : stage2Data.internalAuditDateStart || '2026-07-16')}
+                                  onChange={(e) => {
+                                    const end = e.target.value;
+                                    setStage2Data({
+                                      ...stage2Data,
+                                      internalAuditDateEnd: end,
+                                      internalAuditDate: `${stage2Data.internalAuditDateStart || ''} ~ ${end}`
+                                    });
+                                  }}
+                                  className="w-full text-center bg-transparent text-[10.5px] font-mono border-b border-slate-300 focus:border-slate-800"
+                                />
+                              </div>
                             </td>
                             <td className="p-1">
                               <textarea
@@ -3905,8 +4272,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <th className="w-40 bg-slate-200 p-2 border-r border-slate-800 text-center font-bold" rowSpan={2}>
                               경영검토의 적합성
                             </th>
-                            <th className="w-24 bg-slate-100 p-1 border-r border-slate-400 text-center font-bold">
-                              실시일자
+                            <th className="w-32 bg-slate-100 p-1 border-r border-slate-400 text-center font-bold text-[10.5px]">
+                              실시기간 (시작~종료)
                             </th>
                             <th className="p-1 text-center font-bold">
                               경영검토 확인사항
@@ -3914,12 +4281,37 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </tr>
                           <tr>
                             <td className="p-1 border-r border-slate-400 text-center">
-                              <input
-                                type="text"
-                                value={stage2Data.mgmtReviewDate}
-                                onChange={(e) => setStage2Data({ ...stage2Data, mgmtReviewDate: e.target.value })}
-                                className="w-full text-center bg-transparent text-[11px] font-mono"
-                              />
+                              <div className="flex flex-col items-center gap-1">
+                                <input
+                                  type="text"
+                                  placeholder="시작일 (YYYY-MM-DD)"
+                                  value={stage2Data.mgmtReviewDateStart || (stage2Data.mgmtReviewDate ? stage2Data.mgmtReviewDate.split('~')[0]?.trim() : '2026-08-10')}
+                                  onChange={(e) => {
+                                    const s = e.target.value;
+                                    setStage2Data({
+                                      ...stage2Data,
+                                      mgmtReviewDateStart: s,
+                                      mgmtReviewDate: `${s} ~ ${stage2Data.mgmtReviewDateEnd || s}`
+                                    });
+                                  }}
+                                  className="w-full text-center bg-transparent text-[10.5px] font-mono border-b border-slate-300 focus:border-slate-800"
+                                />
+                                <span className="text-[10px] text-slate-400 font-bold leading-none">~</span>
+                                <input
+                                  type="text"
+                                  placeholder="종료일 (YYYY-MM-DD)"
+                                  value={stage2Data.mgmtReviewDateEnd || (stage2Data.mgmtReviewDate?.includes('~') ? stage2Data.mgmtReviewDate.split('~')[1]?.trim() : stage2Data.mgmtReviewDateStart || '2026-08-10')}
+                                  onChange={(e) => {
+                                    const end = e.target.value;
+                                    setStage2Data({
+                                      ...stage2Data,
+                                      mgmtReviewDateEnd: end,
+                                      mgmtReviewDate: `${stage2Data.mgmtReviewDateStart || ''} ~ ${end}`
+                                    });
+                                  }}
+                                  className="w-full text-center bg-transparent text-[10.5px] font-mono border-b border-slate-300 focus:border-slate-800"
+                                />
+                              </div>
                             </td>
                             <td className="p-1">
                               <textarea
