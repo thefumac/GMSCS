@@ -34,7 +34,8 @@ import {
   Plus,
   Trash2,
   Paperclip,
-  Bell
+  Bell,
+  Edit3
 } from 'lucide-react';
 import type { Company, Auditor, AuditReport, AuditContractRecord, ProofDocument, AuditProject } from '../types';
 import { normalizeMd } from '../data/legacyDataLoader';
@@ -578,7 +579,33 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         { type: '1차 사후', count: '0', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
         { type: '2차 사후', count: '0', leader: auditor?.name || '남경호', effect: '적절', reason: '' },
         { type: '기타', count: '', leader: '', effect: '적절', reason: '' },
-      ]
+      ],
+      // 18p F16-012 심사계획 및 요약서 [ 3년심사관리용 ]
+      planSummaryRev: '0',
+      planSummaryDepts: [
+        '경영진', '품질보증', '생산1팀', '생산2팀', '자재구매', '영업팀', '환경안전', '설비공무', '연구개발', '경영지원'
+      ],
+      planSummaryDeptMatrix: {
+        '4. 조직상황': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '5. 리더십': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '6. 기획': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '7. 지원': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '8. 운용': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '9. 성과평가': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '10. 개선': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '인증마크 사용': { '0': 'v', '1': 'v', '2': 'v', '3': 'v', '4': 'v', '5': 'v', '6': 'v', '7': 'v', '8': 'v', '9': 'v' },
+        '부적합': { '0': '-', '1': '-', '2': '-', '3': '-', '4': '-', '5': '-', '6': '-', '7': '-', '8': '-', '9': '-' },
+      },
+      planSummary3YearDates: ['2024-09', '2025-09', '2026-09', '2027-09', '-', '-'],
+      planSummary3YearMatrix: {
+        '4. 조직 상황': ['v', 'v', 'v', '○', '○', '○'],
+        '5. 리더십': ['v', 'v', 'v', '○', '○', '○'],
+        '6. 기획': ['v', 'v', 'v', '○', '○', '○'],
+        '7. 지원': ['v', 'v', 'v', '○', '○', '○'],
+        '8. 운용': ['v', 'v', 'v', '○', '○', '○'],
+        '9. 성과평가': ['v', 'v', 'v', '○', '○', '○'],
+        '10. 개선': ['v', 'v', 'v', '○', '○', '○'],
+      }
     };
 
     if (typeof window !== 'undefined') {
@@ -595,6 +622,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             obsSummaryLines: Array.isArray(parsed.obsSummaryLines) && parsed.obsSummaryLines.length > 0 ? parsed.obsSummaryLines : defaultData.obsSummaryLines,
             attendees: Array.isArray(parsed.attendees) && parsed.attendees.length > 0 ? parsed.attendees : defaultData.attendees,
             renewalHistory: Array.isArray(parsed.renewalHistory) && parsed.renewalHistory.length > 0 ? parsed.renewalHistory : defaultData.renewalHistory,
+            planSummaryDepts: Array.isArray(parsed.planSummaryDepts) && parsed.planSummaryDepts.length > 0 ? parsed.planSummaryDepts : defaultData.planSummaryDepts,
+            planSummaryDeptMatrix: parsed.planSummaryDeptMatrix || defaultData.planSummaryDeptMatrix,
+            planSummary3YearDates: Array.isArray(parsed.planSummary3YearDates) && parsed.planSummary3YearDates.length > 0 ? parsed.planSummary3YearDates : defaultData.planSummary3YearDates,
+            planSummary3YearMatrix: parsed.planSummary3YearMatrix || defaultData.planSummary3YearMatrix,
           };
         } catch (e) {}
       }
@@ -983,6 +1014,97 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     if (confirm('해당 시정조치 요구서를 삭제하시겠습니까?')) {
       setNcrList(ncrList.filter(item => item.id !== id));
     }
+  };
+
+  // 18p F16-012 심사계획 및 요약서 매트릭스 도우미
+  const handleToggleDeptMatrixCell = (req: string, dIdx: number) => {
+    setStage2Data((prev: any) => {
+      const current = prev.planSummaryDeptMatrix?.[req]?.[dIdx] ?? 'v';
+      const next = current === 'v' ? '-' : current === '-' ? '○' : 'v';
+      return {
+        ...prev,
+        planSummaryDeptMatrix: {
+          ...(prev.planSummaryDeptMatrix || {}),
+          [req]: {
+            ...(prev.planSummaryDeptMatrix?.[req] || {}),
+            [dIdx]: next
+          }
+        }
+      };
+    });
+  };
+
+  const handleUpdateDeptMatrixText = (req: string, dIdx: number, val: string) => {
+    setStage2Data((prev: any) => ({
+      ...prev,
+      planSummaryDeptMatrix: {
+        ...(prev.planSummaryDeptMatrix || {}),
+        [req]: {
+          ...(prev.planSummaryDeptMatrix?.[req] || {}),
+          [dIdx]: val
+        }
+      }
+    }));
+  };
+
+  const handleUpdateDeptName = (dIdx: number, name: string) => {
+    setStage2Data((prev: any) => {
+      const depts = [...(prev.planSummaryDepts || ['경영진', '품질보증', '생산1팀', '생산2팀', '자재구매', '영업팀', '환경안전', '설비공무', '연구개발', '경영지원'])];
+      depts[dIdx] = name;
+      return { ...prev, planSummaryDepts: depts };
+    });
+  };
+
+  const handleUpdate3YearDate = (colIdx: number, val: string) => {
+    setStage2Data((prev: any) => {
+      const dates = [...(prev.planSummary3YearDates || ['2024-09', '2025-09', '2026-09', '2027-09', '-', '-'])];
+      dates[colIdx] = val;
+      return { ...prev, planSummary3YearDates: dates };
+    });
+  };
+
+  const handleToggle3YearCell = (req: string, colIdx: number) => {
+    setStage2Data((prev: any) => {
+      const rowArr = [...(prev.planSummary3YearMatrix?.[req] || ['v', 'v', 'v', '○', '○', '○'])];
+      const current = rowArr[colIdx] ?? (colIdx < 3 ? 'v' : '○');
+      const next = current === 'v' ? '○' : current === '○' ? '-' : 'v';
+      rowArr[colIdx] = next;
+      return {
+        ...prev,
+        planSummary3YearMatrix: {
+          ...(prev.planSummary3YearMatrix || {}),
+          [req]: rowArr
+        }
+      };
+    });
+  };
+
+  const handleApplyDefaultPlanSummary = () => {
+    setStage2Data((prev: any) => ({
+      ...prev,
+      planSummaryDepts: ['경영진', '품질보증', '생산1팀', '생산2팀', '자재구매', '영업팀', '환경안전', '설비공무', '연구개발', '경영지원'],
+      planSummaryDeptMatrix: {
+        '4. 조직상황': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '5. 리더십': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '6. 기획': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '7. 지원': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '8. 운용': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '9. 성과평가': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '10. 개선': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '인증마크 사용': { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' },
+        '부적합': { 0: '-', 1: '-', 2: '-', 3: '-', 4: '-', 5: '-', 6: '-', 7: '-', 8: '-', 9: '-' },
+      },
+      planSummary3YearDates: ['2024-09', '2025-09', '2026-09', '2027-09', '-', '-'],
+      planSummary3YearMatrix: {
+        '4. 조직 상황': ['v', 'v', 'v', '○', '○', '○'],
+        '5. 리더십': ['v', 'v', 'v', '○', '○', '○'],
+        '6. 기획': ['v', 'v', 'v', '○', '○', '○'],
+        '7. 지원': ['v', 'v', 'v', '○', '○', '○'],
+        '8. 운용': ['v', 'v', 'v', '○', '○', '○'],
+        '9. 성과평가': ['v', 'v', 'v', '○', '○', '○'],
+        '10. 개선': ['v', 'v', 'v', '○', '○', '○'],
+      }
+    }));
   };
 
   // 시정조치 요구서 증빙자료 파일 첨부 핸들러 (PDF 또는 이미지)
@@ -5897,17 +6019,51 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               )}
 
               {/* ================================================================= */}
-              {/* 3년 심사계획 요약서 (media_1789131080848.png right) */}
+              {/* 3년 심사계획 요약서 (F16-012 [3년심사관리용] - 심사원 실시간 편집/입력) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'plan_summary') && (
                 <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-3 relative flex flex-col justify-between">
                   <div className="space-y-2.5">
+                    {/* 상단 빠른 조작 도구바 (인쇄 시 숨김) */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-100/90 border border-slate-300 rounded text-xs no-print print:hidden">
+                      <div className="flex items-center gap-1.5 text-slate-700 font-bold">
+                        <Edit3 className="w-3.5 h-3.5 text-cyan-700" />
+                        <span>[심사원 입력 모드] 심사계획 및 요약서 (F16-012)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleApplyDefaultPlanSummary}
+                          className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded text-[11px] font-medium transition cursor-pointer shadow-2xs"
+                          title="표준 체크값(v/○) 및 10개 부서명 기본값 복원"
+                        >
+                          기본값 세팅
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStage2Data((prev: any) => {
+                              const newMatrix: Record<string, Record<number, string>> = {};
+                              ['4. 조직상황', '5. 리더십', '6. 기획', '7. 지원', '8. 운용', '9. 성과평가', '10. 개선', '인증마크 사용'].forEach(r => {
+                                newMatrix[r] = { 0: 'v', 1: 'v', 2: 'v', 3: 'v', 4: 'v', 5: 'v', 6: 'v', 7: 'v', 8: 'v', 9: 'v' };
+                              });
+                              newMatrix['부적합'] = { 0: '-', 1: '-', 2: '-', 3: '-', 4: '-', 5: '-', 6: '-', 7: '-', 8: '-', 9: '-' };
+                              return { ...prev, planSummaryDeptMatrix: newMatrix };
+                            });
+                          }}
+                          className="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-800 rounded text-[11px] font-medium transition cursor-pointer shadow-2xs"
+                        >
+                          상단 매트릭스 전체 v 적용
+                        </button>
+                      </div>
+                    </div>
+
                     {/* 공식 상단 헤더 */}
                     <div className="flex justify-between items-center border-b border-slate-300 pb-1 mb-2">
                       <div className="w-24"></div>
                       <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
                         심사계획 및 요약서
-                        <span className="block text-xs font-normal text-slate-600 mt-0.5">[3 년심사관리용]</span>
+                        <span className="block text-xs font-normal text-slate-600 mt-0.5">[ 3 년심사관리용 ]</span>
                       </h2>
                       <div className="w-28 flex justify-end">
                         <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
@@ -5924,7 +6080,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               type="text"
                               value={stage2Data.clientName || company.companyName}
                               onChange={(e) => setStage2Data({ ...stage2Data, clientName: e.target.value })}
-                              className="w-full bg-transparent px-1 text-xs font-bold"
+                              className="w-full bg-transparent px-1 text-xs font-bold focus:bg-amber-50/50"
                             />
                           </td>
                           <th className="w-20 bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold">인증번호</th>
@@ -5933,34 +6089,41 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               type="text"
                               value={stage2Data.certNo}
                               onChange={(e) => setStage2Data({ ...stage2Data, certNo: e.target.value })}
-                              className="w-full bg-transparent px-1 text-xs font-mono"
+                              className="w-full bg-transparent px-1 text-xs font-mono focus:bg-amber-50/50"
                             />
                           </td>
                           <th className="w-16 bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold">Rev.</th>
-                          <td className="w-16 p-1 text-center font-serif">0</td>
+                          <td className="w-16 p-1 text-center font-serif">
+                            <input
+                              type="text"
+                              value={stage2Data.planSummaryRev || '0'}
+                              onChange={(e) => setStage2Data({ ...stage2Data, planSummaryRev: e.target.value })}
+                              className="w-full bg-transparent text-center text-xs font-serif focus:bg-amber-50/50"
+                            />
+                          </td>
                         </tr>
                         <tr className="border-b border-slate-800">
                           <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold">심사표준</th>
                           <td colSpan={5} className="p-1.5 space-x-3 text-xs">
                             <label className="inline-flex items-center gap-1 cursor-pointer">
-                              <input type="checkbox" checked={stage2Data.stdIso9001} onChange={(e) => setStage2Data({...stage2Data, stdIso9001: e.target.checked})} />
+                              <input type="checkbox" checked={stage2Data.stdIso9001} onChange={(e) => setStage2Data({...stage2Data, stdIso9001: e.target.checked})} className="rounded text-cyan-700" />
                               <span>ISO9001</span>
                             </label>
                             <label className="inline-flex items-center gap-1 cursor-pointer">
-                              <input type="checkbox" checked={stage2Data.stdIso14001} onChange={(e) => setStage2Data({...stage2Data, stdIso14001: e.target.checked})} />
+                              <input type="checkbox" checked={stage2Data.stdIso14001} onChange={(e) => setStage2Data({...stage2Data, stdIso14001: e.target.checked})} className="rounded text-cyan-700" />
                               <span>ISO14001</span>
                             </label>
                             <label className="inline-flex items-center gap-1 cursor-pointer">
-                              <input type="checkbox" checked={stage2Data.stdIso45001} onChange={(e) => setStage2Data({...stage2Data, stdIso45001: e.target.checked})} />
+                              <input type="checkbox" checked={stage2Data.stdIso45001} onChange={(e) => setStage2Data({...stage2Data, stdIso45001: e.target.checked})} className="rounded text-cyan-700" />
                               <span>ISO45001</span>
                             </label>
                             <label className="inline-flex items-center gap-1 cursor-pointer">
-                              <input type="checkbox" checked={stage2Data.stdEsg} onChange={(e) => setStage2Data({...stage2Data, stdEsg: e.target.checked})} />
+                              <input type="checkbox" checked={stage2Data.stdEsg} onChange={(e) => setStage2Data({...stage2Data, stdEsg: e.target.checked})} className="rounded text-cyan-700" />
                               <span>ESG-MS</span>
                             </label>
                             <label className="inline-flex items-center gap-1 cursor-pointer">
                               <span>기타(</span>
-                              <input type="text" value={stage2Data.stdOther || ''} onChange={(e) => setStage2Data({...stage2Data, stdOther: e.target.value})} className="w-16 border-b border-slate-400 text-center bg-transparent" />
+                              <input type="text" value={stage2Data.stdOther || ''} onChange={(e) => setStage2Data({...stage2Data, stdOther: e.target.value})} className="w-20 border-b border-slate-400 text-center bg-transparent" />
                               <span>)</span>
                             </label>
                           </td>
@@ -5968,53 +6131,87 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </tbody>
                     </table>
 
-                    {/* Matrix 1: 프로세스 / 부서별 요구사항 체크 매트릭스 */}
+                    {/* Matrix 1: 프로세스 / 부서별 요구사항 체크 매트릭스 (심사원 직접 수정 및 토글) */}
                     <table className="w-full border-collapse border border-slate-800 text-[10.5px]">
                       <thead>
                         <tr className="bg-slate-100 border-b border-slate-800">
                           <th className="w-24 p-1 border-r border-slate-400 text-center font-bold leading-tight">
                             프로세스<br />부서명
                           </th>
-                          {['경영진', '품질보증', '생산1팀', '생산2팀', '자재구매', '영업팀', '환경안전', '설비공무', '연구개발', '경영지원'].map((dept, dIdx) => (
-                            <th key={dIdx} className="p-1 border-r border-slate-400 text-center font-bold">
-                              {dept}
+                          {(stage2Data.planSummaryDepts || ['경영진', '품질보증', '생산1팀', '생산2팀', '자재구매', '영업팀', '환경안전', '설비공무', '연구개발', '경영지원']).map((dept: string, dIdx: number) => (
+                            <th key={dIdx} className="p-0.5 border-r border-slate-400 text-center font-bold">
+                              <input
+                                type="text"
+                                value={dept}
+                                onChange={(e) => handleUpdateDeptName(dIdx, e.target.value)}
+                                className="w-full bg-transparent text-center font-bold text-[10.5px] p-0.5 focus:bg-amber-50 focus:outline-none"
+                                title="부서명 클릭하여 수정 가능"
+                              />
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {[
-                          { req: '4. 조직상황' },
-                          { req: '5. 리더십' },
-                          { req: '6. 기획' },
-                          { req: '7. 지원' },
-                          { req: '8. 운용' },
-                          { req: '9. 성과평가' },
-                          { req: '10. 개선' },
-                          { req: '인증마크 사용' },
-                          { req: '부적합' },
-                        ].map((row, rIdx) => (
-                          <tr key={rIdx} className="border-b border-slate-400 text-center">
-                            <th className="p-1 font-bold text-left bg-slate-50 border-r border-slate-400 pl-2">
-                              {row.req}
-                            </th>
-                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((cIdx) => (
-                              <td key={cIdx} className="p-0.5 border-r border-slate-400 text-center text-teal-800 font-bold">
-                                {row.req === '부적합' ? '-' : 'v'}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
+                          '4. 조직상황',
+                          '5. 리더십',
+                          '6. 기획',
+                          '7. 지원',
+                          '8. 운용',
+                          '9. 성과평가',
+                          '10. 개선',
+                          '인증마크 사용',
+                          '부적합'
+                        ].map((reqName, rIdx) => {
+                          const isNcrRow = reqName === '부적합';
+                          return (
+                            <tr key={rIdx} className="border-b border-slate-400 text-center">
+                              <th className="p-1 font-bold text-left bg-slate-50 border-r border-slate-400 pl-2">
+                                {reqName}
+                              </th>
+                              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((cIdx) => {
+                                const val = stage2Data.planSummaryDeptMatrix?.[reqName]?.[cIdx] ?? (isNcrRow ? '-' : 'v');
+                                if (isNcrRow) {
+                                  return (
+                                    <td key={cIdx} className="p-0.5 border-r border-slate-400 text-center font-bold text-slate-700">
+                                      <input
+                                        type="text"
+                                        value={val}
+                                        onChange={(e) => handleUpdateDeptMatrixText(reqName, cIdx, e.target.value)}
+                                        className="w-full bg-transparent text-center font-bold text-xs p-0.5 focus:bg-amber-50 focus:outline-none"
+                                        placeholder="-"
+                                      />
+                                    </td>
+                                  );
+                                }
+                                return (
+                                  <td
+                                    key={cIdx}
+                                    onClick={() => handleToggleDeptMatrixCell(reqName, cIdx)}
+                                    className={`p-0.5 border-r border-slate-400 text-center font-bold cursor-pointer hover:bg-cyan-50/60 transition select-none ${
+                                      val === 'v' ? 'text-teal-800' : val === '○' ? 'text-slate-800' : 'text-slate-400'
+                                    }`}
+                                    title="클릭하여 v / - / ○ 전환"
+                                  >
+                                    {val || '-'}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
-                    <div className="text-[9.5px] text-slate-700 font-bold pl-1">
-                      ● 부적합 발견 시 : 부적합 수 ( / 건 ) [ 예: 품질관리부 ( / 1건 ) ]
+                    <div className="text-[9.5px] text-slate-700 font-bold pl-1 flex items-center justify-between">
+                      <span>● 부적합 발견 시 : 부적합 수 ( / 건 ) [ 예: 품질관리부 ( / 1 건 ) ]</span>
+                      <span className="text-slate-500 font-normal no-print print:hidden">※ 매트릭스 셀을 클릭하면 v / - / ○ 상태가 순환 변경됩니다.</span>
                     </div>
 
                     {/* Matrix 2: ▶ 3년 심사계획 */}
                     <div className="space-y-1 pt-1">
-                      <div className="font-bold text-xs text-slate-950">
-                        ▶ 3년 심사계획
+                      <div className="font-bold text-xs text-slate-950 flex items-center justify-between">
+                        <span>▶ 3년 심사계획</span>
+                        <span className="text-[10px] text-slate-500 font-normal no-print print:hidden">※ 심사일 입력 및 각 차수별 요구사항 셀 클릭 시 v / ○ / - 전환</span>
                       </div>
                       <table className="w-full border-collapse border border-slate-800 text-[10.5px]">
                         <thead>
@@ -6029,12 +6226,22 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           </tr>
                           <tr className="border-b border-slate-800 bg-slate-50 font-bold">
                             <th className="p-1 border-r border-slate-400 text-center">심 사 일</th>
-                            <td className="p-1 border-r border-slate-400 text-center font-mono">2024-09</td>
-                            <td className="p-1 border-r border-slate-400 text-center font-mono">2025-09</td>
-                            <td className="p-1 border-r border-slate-400 text-center font-mono font-bold text-teal-800">2026-09</td>
-                            <td className="p-1 border-r border-slate-400 text-center font-mono">2027-09</td>
-                            <td className="p-1 border-r border-slate-400 text-center font-mono">-</td>
-                            <td className="p-1 text-center font-mono">-</td>
+                            {[0, 1, 2, 3, 4, 5].map((colIdx) => {
+                              const dVal = stage2Data.planSummary3YearDates?.[colIdx] ?? (colIdx === 0 ? '2024-09' : colIdx === 1 ? '2025-09' : colIdx === 2 ? '2026-09' : colIdx === 3 ? '2027-09' : '-');
+                              return (
+                                <td key={colIdx} className={`p-0.5 ${colIdx < 5 ? 'border-r border-slate-400' : ''} text-center font-mono`}>
+                                  <input
+                                    type="text"
+                                    value={dVal}
+                                    onChange={(e) => handleUpdate3YearDate(colIdx, e.target.value)}
+                                    className={`w-full bg-transparent text-center font-mono font-bold text-xs p-0.5 focus:bg-amber-50 focus:outline-none ${
+                                      colIdx === 2 ? 'text-teal-800' : 'text-slate-800'
+                                    }`}
+                                    placeholder="-"
+                                  />
+                                </td>
+                              );
+                            })}
                           </tr>
                           <tr className="bg-slate-100 border-b border-slate-800 text-[10px]">
                             <th className="p-1 border-r border-slate-400 text-center font-bold">심사차수 요구사항</th>
@@ -6048,24 +6255,34 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </thead>
                         <tbody>
                           {[
-                            { req: '4. 조직 상황', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                            { req: '5. 리더십', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                            { req: '6. 기획', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                            { req: '7. 지원', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                            { req: '8. 운용', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                            { req: '9. 성과평가', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                            { req: '10. 개선', c0: 'v', c1: 'v', c2: 'v', c3: '○', c4: '○', c5: '○' },
-                          ].map((row, rIdx) => (
+                            '4. 조직 상황',
+                            '5. 리더십',
+                            '6. 기획',
+                            '7. 지원',
+                            '8. 운용',
+                            '9. 성과평가',
+                            '10. 개선'
+                          ].map((reqName, rIdx) => (
                             <tr key={rIdx} className="border-b border-slate-400 text-center">
                               <th className="p-1 font-bold text-left bg-slate-50 border-r border-slate-400 pl-2">
-                                {row.req}
+                                {reqName}
                               </th>
-                              <td className="p-1 border-r border-slate-400 text-teal-800 font-bold">{row.c0}</td>
-                              <td className="p-1 border-r border-slate-400 text-teal-800 font-bold">{row.c1}</td>
-                              <td className="p-1 border-r border-slate-400 text-teal-800 font-bold">{row.c2}</td>
-                              <td className="p-1 border-r border-slate-400 text-slate-600 font-bold">{row.c3}</td>
-                              <td className="p-1 border-r border-slate-400 text-slate-400">{row.c4}</td>
-                              <td className="p-1 text-slate-400">{row.c5}</td>
+                              {[0, 1, 2, 3, 4, 5].map((colIdx) => {
+                                const rowArr = stage2Data.planSummary3YearMatrix?.[reqName] || ['v', 'v', 'v', '○', '○', '○'];
+                                const val = rowArr[colIdx] ?? (colIdx < 3 ? 'v' : '○');
+                                return (
+                                  <td
+                                    key={colIdx}
+                                    onClick={() => handleToggle3YearCell(reqName, colIdx)}
+                                    className={`p-1 ${colIdx < 5 ? 'border-r border-slate-400' : ''} text-center font-bold cursor-pointer hover:bg-cyan-50/60 transition select-none ${
+                                      val === 'v' ? 'text-teal-800' : val === '○' ? 'text-slate-600' : 'text-slate-400'
+                                    }`}
+                                    title="클릭하여 v / ○ / - 전환"
+                                  >
+                                    {val || '○'}
+                                  </td>
+                                );
+                              })}
                             </tr>
                           ))}
                         </tbody>
