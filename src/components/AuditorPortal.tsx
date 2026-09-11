@@ -503,6 +503,19 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   const [certSubmitTo, setCertSubmitTo] = useState<string>('한국인정지원센터(KAB)');
   const [isCertPrintModalOpen, setIsCertPrintModalOpen] = useState<boolean>(false);
 
+  // 정산 정보 및 입금 계좌 설정 모달 상태 (개인포털 직접 등록/수정)
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState<boolean>(false);
+  const [auditorPayoutMethod, setAuditorPayoutMethod] = useState<'원천징수' | '세금계산서'>(
+    currentAuditor.payoutMethod || (currentAuditor.isBusinessEntity ? '세금계산서' : '원천징수')
+  );
+  const [auditorBankName, setAuditorBankName] = useState<string>(currentAuditor.bankName || '기업은행');
+  const [auditorAccountNumber, setAuditorAccountNumber] = useState<string>(currentAuditor.accountNumber || '110-***-123456');
+  const [auditorAccountHolder, setAuditorAccountHolder] = useState<string>(currentAuditor.accountHolder || currentAuditor.name);
+  const [auditorBizName, setAuditorBizName] = useState<string>(currentAuditor.businessName || '');
+  const [auditorBizCeo, setAuditorBizCeo] = useState<string>(currentAuditor.businessCeo || currentAuditor.name);
+  const [auditorBizNumber, setAuditorBizNumber] = useState<string>(currentAuditor.businessNumber || '');
+  const [auditorTaxEmail, setAuditorTaxEmail] = useState<string>(currentAuditor.taxEmail || currentAuditor.email || '');
+
   // 1. 현재 로그인한 심사원에게 배정된 기업만 정확히 선별 (담당 심사원/팀장/팀원 및 직접 수행 프로젝트)
   const myCompanyIds = useMemo(() => {
     const ids = new Set<string>();
@@ -1980,16 +1993,28 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               <div className="text-[11px] text-amber-800 mt-0.5">송이실업 갱신심사 수당 반영</div>
             </div>
 
-            <div className="bg-indigo-50/60 border border-indigo-200 p-3.5 rounded-xl">
-              <div className="flex items-center justify-between text-indigo-800 text-xs">
-                <span>정산 처리 계좌</span>
-                <CreditCard className="w-4 h-4 text-indigo-600" />
+            <div className="bg-indigo-50/60 border border-indigo-200 p-3.5 rounded-xl flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between text-indigo-800 text-xs">
+                  <span className="font-bold">정산 방식 및 입금 계좌</span>
+                  <CreditCard className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-xs font-black text-indigo-900 font-mono mt-1.5 truncate">
+                  {auditorBankName} {auditorAccountNumber}
+                </div>
+                <div className="text-[11px] text-indigo-700/80 mt-0.5">
+                  예금주: {auditorAccountHolder} ({auditorPayoutMethod === '세금계산서' ? '세금계산서' : '3.3% 원천징수'})
+                </div>
               </div>
-              <div className="text-xs font-black text-indigo-900 font-mono mt-1.5 truncate">
-                기업은행 110-***-123456
-              </div>
-              <div className="text-[11px] text-indigo-700/80 mt-0.5">
-                예금주: {currentAuditor.name} ({currentAuditor.affiliation || '비상근'})
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPayoutModalOpen(true)}
+                  className="w-full py-1 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] transition flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                >
+                  <Sliders className="w-3 h-3" />
+                  <span>정산방식 / 계좌 설정</span>
+                </button>
               </div>
             </div>
           </div>
@@ -2990,6 +3015,198 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>발급 신청서 제출</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4-B. 심사비 정산 방식 및 계좌 설정 모달 (심사원 직접 관리)                   */}
+      {/* ========================================================================= */}
+      {isPayoutModalOpen && (
+        <div className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-extrabold text-slate-900 text-sm">
+                  심사비 정산 방식 및 입금 계좌 설정
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPayoutModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* 정산 방식 선택 */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">
+                  심사비 정산 방식 선택 <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setAuditorPayoutMethod('원천징수')}
+                    className={`py-2 px-3 rounded-xl font-bold border transition cursor-pointer text-center ${
+                      auditorPayoutMethod === '원천징수'
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    3.3% 사업소득 원천징수
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuditorPayoutMethod('세금계산서');
+                      if (!auditorTaxEmail && currentAuditor.email) setAuditorTaxEmail(currentAuditor.email);
+                      if (!auditorBizCeo && currentAuditor.name) setAuditorBizCeo(currentAuditor.name);
+                    }}
+                    className={`py-2 px-3 rounded-xl font-bold border transition cursor-pointer text-center ${
+                      auditorPayoutMethod === '세금계산서'
+                        ? 'bg-blue-700 text-white border-blue-700 shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    전자세금계산서 발행
+                  </button>
+                </div>
+              </div>
+
+              {/* 전자세금계산서 선택 시 사업자 정보 입력 */}
+              {auditorPayoutMethod === '세금계산서' && (
+                <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-3 animate-in fade-in">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5 pb-1 border-b border-blue-100">
+                    <Building2 className="w-4 h-4 text-blue-700" />
+                    <span>전자세금계산서 발행 사업자 정보</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">
+                        사업자명 (상호) <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={auditorBizName}
+                        onChange={(e) => setAuditorBizName(e.target.value)}
+                        placeholder="예: 지엠에스컨설팅"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-blue-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">
+                        대표자 성명 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={auditorBizCeo}
+                        onChange={(e) => setAuditorBizCeo(e.target.value)}
+                        placeholder={currentAuditor.name}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-blue-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">
+                        사업자등록번호 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={auditorBizNumber}
+                        onChange={(e) => setAuditorBizNumber(e.target.value)}
+                        placeholder="000-00-00000"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-mono text-slate-900 font-semibold focus:outline-hidden focus:border-blue-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">
+                        계산서 수신 이메일 <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={auditorTaxEmail}
+                        onChange={(e) => setAuditorTaxEmail(e.target.value)}
+                        placeholder="tax@domain.com"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-mono text-slate-900 font-semibold focus:outline-hidden focus:border-blue-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 입금 계좌 정보 */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
+                <div className="font-bold text-slate-800 flex items-center gap-1.5 pb-1 border-b border-slate-200">
+                  <CreditCard className="w-4 h-4 text-emerald-600" />
+                  <span>수당 입금 계좌 정보</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">입금 은행 <span className="text-rose-500">*</span></label>
+                    <select
+                      value={auditorBankName}
+                      onChange={(e) => setAuditorBankName(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600"
+                    >
+                      {['기업은행', '국민은행', '신한은행', '우리은행', '하나은행', '농협은행', '카카오뱅크', '토스뱅크', 'SC제일은행', '대구은행', '부산은행', '우체국'].map(b => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">계좌번호 <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      value={auditorAccountNumber}
+                      onChange={(e) => setAuditorAccountNumber(e.target.value)}
+                      placeholder="계좌번호 입력"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 font-mono text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">예금주명 <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      value={auditorAccountHolder}
+                      onChange={(e) => setAuditorAccountHolder(e.target.value)}
+                      placeholder={currentAuditor.name}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsPayoutModalOpen(false)}
+                className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert('[정산 및 계좌 정보 저장 완료]\n심사비 정산 방식과 입금 계좌 정보가 정상 저장되었습니다.\n사무국 심사비 지급 시 해당 계좌로 안전하게 정산 처리됩니다.');
+                  setIsPayoutModalOpen(false);
+                }}
+                className="px-5 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>정산 정보 저장</span>
               </button>
             </div>
           </div>

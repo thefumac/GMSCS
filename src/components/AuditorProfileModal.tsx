@@ -168,6 +168,10 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   // Selected Career Cert Preview Modal State
   const [selectedCertForPrint, setSelectedCertForPrint] = useState<CareerCertRequestItem | null>(null);
 
+  // Year filter for Audit History Tab (접속년도 기본 선택)
+  const currentYearStr = new Date().getFullYear().toString(); // e.g. "2026"
+  const [selectedHistoryYear, setSelectedHistoryYear] = useState<string>(currentYearStr);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Photo upload handler
@@ -324,6 +328,33 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   const totalCumulativeMd = useMemo(() => {
     return auditorAuditHistory.reduce((acc, cur) => acc + cur.appliedMd, 0);
   }, [auditorAuditHistory]);
+
+  // Extract available years from history + current year (내림차순)
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    years.add(currentYearStr);
+    auditorAuditHistory.forEach(item => {
+      const y = item.startDate ? item.startDate.substring(0, 4) : '';
+      if (y && y.length === 4) years.add(y);
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [auditorAuditHistory, currentYearStr]);
+
+  // Filter audit history by selected year
+  const filteredAuditHistory = useMemo(() => {
+    if (selectedHistoryYear === 'all') {
+      return auditorAuditHistory;
+    }
+    return auditorAuditHistory.filter(item => {
+      const y = item.startDate ? item.startDate.substring(0, 4) : (item.auditDate ? item.auditDate.substring(0, 4) : '');
+      return y === selectedHistoryYear;
+    });
+  }, [auditorAuditHistory, selectedHistoryYear]);
+
+  // Total MD for selected year
+  const selectedYearMd = useMemo(() => {
+    return filteredAuditHistory.reduce((acc, cur) => acc + cur.appliedMd, 0);
+  }, [filteredAuditHistory]);
 
   // Approve / Reject Career Certificate Request (사무국 권한)
   const handleApproveCertRequest = (reqId: string) => {
@@ -779,142 +810,77 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                 </div>
               </div>
 
-              {/* Payout & Bank Info (세금계산서 클릭 시 세부 입력 표시) */}
+              {/* Payout & Bank Info (개인포털 입력 항목 - 사무국 팝업에서는 조회 전용) */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3.5">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <DollarSign className="w-4 h-4 text-emerald-600" />
-                    <span>심사비 정산 방식 및 입금 계좌</span>
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPayoutMethod('원천징수')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        payoutMethod === '원천징수'
-                          ? 'bg-emerald-700 text-white shadow-2xs'
-                          : 'bg-white text-slate-600 border border-slate-300'
-                      }`}
-                    >
-                      3.3% 원천징수
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPayoutMethod('세금계산서');
-                        if (!taxEmail && email) setTaxEmail(email);
-                        if (!businessCeo && name) setBusinessCeo(name);
-                      }}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        payoutMethod === '세금계산서'
-                          ? 'bg-blue-700 text-white shadow-2xs'
-                          : 'bg-white text-slate-600 border border-slate-300'
-                      }`}
-                    >
-                      세금계산서
-                    </button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-200">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <DollarSign className="w-4 h-4 text-emerald-600" />
+                      <span>심사비 정산 방식 및 입금 계좌 (개인포털 등록 정보)</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      ※ 심사비 정산 방식 및 입금 계좌는 심사원이 개인 포털에서 직접 등록/수정하며, 여기서는 조회만 제공됩니다.
+                    </p>
+                  </div>
+                  <div className="shrink-0 pt-1 sm:pt-0">
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs ${
+                      payoutMethod === '세금계산서'
+                        ? 'bg-blue-700 text-white'
+                        : 'bg-emerald-700 text-white'
+                    }`}>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{payoutMethod === '세금계산서' ? '전자세금계산서 발행' : '3.3% 사업소득 원천징수'}</span>
+                    </span>
                   </div>
                 </div>
 
-                {/* 세금계산서 선택 시 사업자 발행 정보 표시 */}
+                {/* 세금계산서 정보 (발행 방식일 때) */}
                 {payoutMethod === '세금계산서' && (
-                  <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl space-y-3 animate-in fade-in text-xs">
+                  <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2.5 text-xs">
                     <div className="font-bold text-blue-900 flex items-center gap-1.5 pb-1 border-b border-blue-100">
                       <Building2 className="w-3.5 h-3.5 text-blue-700" />
                       <span>전자세금계산서 발행 정보</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div>
-                        <label className="block text-slate-700 font-bold mb-1">
-                          사업자명 (상호) <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={businessName}
-                          onChange={(e) => setBusinessName(e.target.value)}
-                          placeholder="상호명 입력"
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
-                        />
+                      <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                        <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">사업자명 (상호)</span>
+                        <span className="font-bold text-slate-900 text-xs">{businessName || auditor.businessName || '-'}</span>
                       </div>
 
-                      <div>
-                        <label className="block text-slate-700 font-bold mb-1">
-                          대표자 성명 <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={businessCeo}
-                          onChange={(e) => setBusinessCeo(e.target.value)}
-                          placeholder={name || '대표자명'}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
-                        />
+                      <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                        <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">대표자 성명</span>
+                        <span className="font-bold text-slate-900 text-xs">{businessCeo || auditor.businessCeo || auditor.name || '-'}</span>
                       </div>
 
-                      <div>
-                        <label className="block text-slate-700 font-bold mb-1">
-                          사업자등록번호 <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={businessNumber}
-                          onChange={(e) => setBusinessNumber(e.target.value)}
-                          placeholder="000-00-00000"
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
-                        />
+                      <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                        <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">사업자등록번호</span>
+                        <span className="font-mono font-bold text-blue-950 text-xs">{businessNumber || auditor.businessNumber || '-'}</span>
                       </div>
 
-                      <div>
-                        <label className="block text-slate-700 font-bold mb-1">
-                          수신 이메일 <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={taxEmail}
-                          onChange={(e) => setTaxEmail(e.target.value)}
-                          placeholder={email || 'tax@domain.com'}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-slate-900 text-xs focus:outline-hidden focus:border-blue-600"
-                        />
+                      <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                        <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">계산서 수신 이메일</span>
+                        <span className="font-mono font-bold text-blue-950 text-xs truncate block">{taxEmail || auditor.taxEmail || auditor.email || '-'}</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 계좌 정보 */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1">입금 은행</label>
-                    <select
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
-                    >
-                      {BANK_LIST.map((b) => (
-                        <option key={b} value={b}>{b}</option>
-                      ))}
-                    </select>
+                {/* 계좌 정보 (Read-only) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">입금 은행</span>
+                    <span className="font-bold text-slate-900 text-xs">{bankName || auditor.bankName || '-'}</span>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1">계좌번호</label>
-                    <input
-                      type="text"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="계좌번호 입력"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-mono font-semibold text-slate-900 focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
-                    />
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">계좌번호</span>
+                    <span className="font-mono font-bold text-slate-900 text-xs">{accountNumber || auditor.accountNumber || '-'}</span>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1">예금주명</label>
-                    <input
-                      type="text"
-                      value={accountHolder}
-                      onChange={(e) => setAccountHolder(e.target.value)}
-                      placeholder={name || '예금주'}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600 text-xs shadow-2xs"
-                    />
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="block text-[10.5px] font-bold text-slate-500 mb-0.5">예금주</span>
+                    <span className="font-bold text-slate-900 text-xs">{accountHolder || auditor.accountHolder || auditor.name || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -922,11 +888,11 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
           )}
 
           {/* ----------------------------------------------------------------------- */}
-          {/* TAB 2: 심사이력                                                         */}
+          {/* TAB 2: 심사이력 (년도별 조회 기능, 최초 접속년도 기본)                     */}
           {/* ----------------------------------------------------------------------- */}
           {activeTab === 'history' && (
             <div className="space-y-4 animate-in fade-in">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-slate-200">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
                 <div>
                   <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                     <Briefcase className="w-4 h-4 text-indigo-700" />
@@ -936,10 +902,35 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     해당 심사원이 팀장(선임심사원) 및 심사팀원으로 참여한 실제 심사 기록과 부여 역할 목록입니다.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-900 font-bold text-xs border border-indigo-200">
-                    총 {auditorAuditHistory.length}건 심사 수행 (누적 {totalCumulativeMd.toFixed(1)} MD)
-                  </span>
+
+                {/* 년도별 조회 선택 바 */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-300">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1.5" />
+                    <span className="text-[11px] font-bold text-slate-600">조회 년도:</span>
+                    <select
+                      value={selectedHistoryYear}
+                      onChange={(e) => setSelectedHistoryYear(e.target.value)}
+                      className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-indigo-950 focus:outline-hidden focus:border-indigo-600 shadow-2xs cursor-pointer"
+                    >
+                      <option value={currentYearStr}>{currentYearStr}년 (접속년도)</option>
+                      {availableYears.filter(y => y !== currentYearStr).map(y => (
+                        <option key={y} value={y}>{y}년</option>
+                      ))}
+                      <option value="all">전체 연도 보기</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-900 font-bold text-xs border border-indigo-200">
+                      {selectedHistoryYear === 'all' ? '전체 실적' : `${selectedHistoryYear}년 실적`}: {filteredAuditHistory.length}건 ({selectedYearMd.toFixed(1)} MD)
+                    </span>
+                    {selectedHistoryYear !== 'all' && (
+                      <span className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-semibold text-[11px] border border-slate-200">
+                        총 누적 {totalCumulativeMd.toFixed(1)} MD
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -959,14 +950,27 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-900 bg-white">
-                    {auditorAuditHistory.length === 0 ? (
+                    {filteredAuditHistory.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="py-12 text-center text-slate-400">
-                          등록된 심사 수행 이력이 없습니다.
+                          <div className="space-y-2">
+                            <p className="font-semibold text-slate-600">
+                              {selectedHistoryYear === 'all' ? '등록된 심사 수행 이력이 없습니다.' : `${selectedHistoryYear}년도에 등록된 심사 수행 이력이 없습니다.`}
+                            </p>
+                            {selectedHistoryYear !== 'all' && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedHistoryYear('all')}
+                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition cursor-pointer border border-slate-300"
+                              >
+                                전체 연도 심사 이력 보기
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ) : (
-                      auditorAuditHistory.map((rec, idx) => (
+                      filteredAuditHistory.map((rec, idx) => (
                         <tr key={rec.id} className="hover:bg-slate-50 transition">
                           <td className="py-2 px-1 text-center font-mono text-slate-400 border-r border-slate-200">
                             {idx + 1}
