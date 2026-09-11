@@ -266,6 +266,13 @@ export function getMergedContracts(): CertContract[] {
   });
 }
 
+export function normalizeMd(md: number | string | undefined): number {
+  if (md === undefined || md === null || md === '') return 1.0;
+  const num = typeof md === 'string' ? parseFloat(md) : md;
+  if (isNaN(num) || num <= 0) return 1.0;
+  return Math.max(0.5, Math.round(num * 2) / 2);
+}
+
 // Map real GMS audit projects to AuditProject[] with defensive deduplication
 export function getMergedProjects(): AuditProject[] {
   const rawList = realAuditProjectsRaw as unknown as AuditProject[];
@@ -274,8 +281,17 @@ export function getMergedProjects(): AuditProject[] {
   rawList.forEach(p => {
     // 키: 회사명 + 시작일 + 종료일 + 심사유형
     const key = [p.companyName.trim(), p.startDate, p.endDate, p.auditType].join('__');
+    const cleanMd = normalizeMd(p.appliedMd);
+    const cleanKabMd = normalizeMd(p.kabStandardMd || p.appliedMd);
+
     if (!map.has(key)) {
-      map.set(key, { ...p, standards: [...(p.standards || [])], teamAuditorNames: [...(p.teamAuditorNames || [])] });
+      map.set(key, {
+        ...p,
+        appliedMd: cleanMd,
+        kabStandardMd: cleanKabMd,
+        standards: [...(p.standards || [])],
+        teamAuditorNames: [...(p.teamAuditorNames || [])]
+      });
     } else {
       const existing = map.get(key)!;
       // 규격 합집합 병합
@@ -289,7 +305,9 @@ export function getMergedProjects(): AuditProject[] {
       (p.teamAuditorNames || []).forEach(t => {
         if (!existing.teamAuditorNames!.includes(t)) existing.teamAuditorNames!.push(t);
       });
-      // 금액 등 유효값 우선 보존
+      // MD 및 금액 등 유효값 우선 보존
+      if (cleanMd > existing.appliedMd) existing.appliedMd = cleanMd;
+      if (cleanKabMd > existing.kabStandardMd) existing.kabStandardMd = cleanKabMd;
       if ((!existing.finalFee || existing.finalFee === 0) && p.finalFee) existing.finalFee = p.finalFee;
       if ((!existing.billedAmount || existing.billedAmount === 0) && p.billedAmount) existing.billedAmount = p.billedAmount;
     }

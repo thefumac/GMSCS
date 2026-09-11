@@ -36,7 +36,8 @@ import {
   Paperclip,
   Bell
 } from 'lucide-react';
-import type { Company, Auditor, AuditReport, AuditContractRecord, ProofDocument } from '../types';
+import type { Company, Auditor, AuditReport, AuditContractRecord, ProofDocument, AuditProject } from '../types';
+import { normalizeMd } from '../data/legacyDataLoader';
 import {
   AuditReportNoticeItem,
   loadAuditReportNotices
@@ -54,6 +55,7 @@ interface AuditReportWorkbenchProps {
   report?: AuditReport;
   auditor?: Auditor;
   auditors?: Auditor[];
+  project?: AuditProject;
   onClose: () => void;
   onSave?: (data: any) => void;
   onUpdateCompany?: (updated: Company) => void;
@@ -144,6 +146,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   report,
   auditor,
   auditors = [],
+  project,
   onClose,
   onSave,
   onUpdateCompany
@@ -151,12 +154,16 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   const [activeDocTab, setActiveDocTab] = useState<DocTabKey>('all');
   const [proofDocs, setProofDocs] = useState<ProofDocument[]>(initialProofDocs);
 
+  // 실 인증번호 계산 (DB 연동: Company.certNo, certNumber, contract.certNumber, project.certNo)
+  const compAny = company as any;
+  const realCertNo = (company as any).certNo || (company as any).certNumber || (contract as any)?.certNumber || (contract as any)?.contractNumber || (project as any)?.certNo || 'Q260512';
+
   // 로컬 스토리지 키
   const storageKey = useMemo(() => `GMSCS_PACK_FULL_${company.id || company.companyName}`, [company]);
 
   // 심사 구분
   const [auditTypeCategory, setAuditTypeCategory] = useState<'최초' | '갱신' | '사후' | '전환' | '규격추가' | '재심사'>(() => {
-    const t = contract?.contractType || '사후';
+    const t = project?.auditType || contract?.contractType || '사후';
     if (t.includes('최초')) return '최초';
     if (t.includes('갱신') || t.includes('재인')) return '갱신';
     if (t.includes('전환')) return '전환';
@@ -174,18 +181,19 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    const compAny = company as any;
-    const defaultLeadName = auditor?.name || '남경호';
-    const defaultMemberName = compAny.assignedAuditorName && compAny.assignedAuditorName !== defaultLeadName ? compAny.assignedAuditorName : '신현섭';
-    const companySharedEmail = company.contactEmail || (company as any).email || '';
+    const defaultLeadName = project?.leadAuditorName || auditor?.name || '남경호';
+    const defaultMemberName = (project?.teamAuditorNames && project.teamAuditorNames[0]) || (compAny.assignedAuditorName && compAny.assignedAuditorName !== defaultLeadName ? compAny.assignedAuditorName : '신현섭');
+    const leadAuditorObj = auditors.find(a => a.name === defaultLeadName) || auditor;
+    const memberAuditorObj = auditors.find(a => a.name === defaultMemberName);
+    const companySharedEmail = company.contactEmail || (company as any).email || 'wjt-jypark@naver.com';
 
     return [
       {
         id: 'signer-lead',
         roleType: '심사팀장',
         name: defaultLeadName,
-        position: auditor?.grade || '선임심사원',
-        email: auditor?.email || 'auditor@gmscs.co.kr',
+        position: leadAuditorObj?.grade || '선임심사원',
+        email: leadAuditorObj?.email || 'auditor@gmscs.co.kr',
         useCompanyEmail: false,
         status: '대기'
       },
@@ -193,24 +201,24 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         id: 'signer-member',
         roleType: '심사팀원',
         name: defaultMemberName,
-        position: '심사원',
-        email: 'auditor2@gmscs.co.kr',
+        position: memberAuditorObj?.grade || '심사원',
+        email: memberAuditorObj?.email || 'auditor2@gmscs.co.kr',
         useCompanyEmail: false,
         status: '대기'
       },
       {
         id: 'signer-client',
         roleType: '고객담당자',
-        name: company.contactPerson || company.ceoName || '담당자',
-        position: compAny.contactPosition || '품질총괄/부장',
-        email: company.contactEmail || (company as any).email || '',
+        name: company.contactPerson || company.ceoName || '박진웅',
+        position: compAny.contactPosition || '품질부장',
+        email: company.contactEmail || (company as any).email || 'wjt-jypark@naver.com',
         useCompanyEmail: false,
         status: '대기'
       },
       {
         id: 'signer-worker',
         roleType: '근로자대표',
-        name: '근로자대표',
+        name: '김진수',
         position: '근로자대표 / 생산관리',
         email: companySharedEmail,
         useCompanyEmail: true,
@@ -274,8 +282,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   // 1단계 심사 데이터 State (Page 1~6)
   const [stage1Data, setStage1Data] = useState(() => {
     const defaultData = {
-      auditType: contract?.contractType || '2차 사후관리심사',
-      auditStandards: contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
+      auditType: project?.auditType || contract?.contractType || '2차 사후관리심사',
+      auditStandards: project?.standards?.join(', ') || contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
       diffFromApp: '없다',
       diffDetails: '',
       manualDocNo: 'QM-01',
@@ -305,7 +313,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       env3_procedure: '예',
       env4_manager: '예',
       // ISO 45001
-      safe1_managerName: '박진용 대표이사',
+      safe1_managerName: `${company.ceoName || '박진용'} 대표이사`,
       safe1_safetyPerson: '대한산업안전협회 위탁',
       safe1_healthPerson: '산업보건연구소',
       safe1_workerRep: '김진수 직장 (근로자대표)',
@@ -334,7 +342,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       // 참석자
       attendees: [
         { name: company.ceoName || '박진용', role: '대표이사 / 최고경영자' },
-        { name: '박진웅', role: '품질총괄 / 부장' },
+        { name: company.contactPerson || '박진웅', role: `${compAny.contactPosition || '품질총괄 / 부장'} (고객담당)` },
         { name: '이영희', role: '환경안전관리자 / 차장' },
         { name: '김진수', role: '생산1팀 / 근로자대표' },
         { name: '정민호', role: '영업자재팀 / 과장' },
@@ -383,16 +391,16 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   // 2단계 심사 데이터 State (Page 7~16)
   const [stage2Data, setStage2Data] = useState(() => {
     const defaultData = {
-      auditType: contract?.contractType || '2차 사후관리심사',
-      auditStandards: contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
-      auditDateStart: '2026-09-10',
-      auditDateEnd: '2026-09-11',
-      auditMd: '2.0',
+      auditType: project?.auditType || contract?.contractType || '2차 사후관리심사',
+      auditStandards: project?.standards?.join(', ') || contract?.standards?.join(', ') || 'ISO 9001:2015, ISO 14001:2015',
+      auditDateStart: (project as any)?.stage2StartDate || project?.startDate || (project as any)?.stage1StartDate || '2026-09-10',
+      auditDateEnd: (project as any)?.stage2EndDate || project?.endDate || (project as any)?.stage1EndDate || '2026-09-11',
+      auditMd: project?.appliedMd ? String(normalizeMd(project.appliedMd)) : '2.0',
       // 시작/종결회의 질의응답
       meetingNotes: '1. 시작회의: 최고경영자 및 근로자대표 참석 하에 심사 일정 및 안전수칙 확인 완료.\n2. 종결회의: 심사 결과 전반에 대한 공유 및 지속적 개선 방향에 대해 상호 질의응답 진행함.',
       // 심사 세부 일정표 (심사팀장이 작성 / 심사원별 시간, 프로세스, 부서 계획 수립)
-      scheduleLeader: auditor?.name || '남경호',
-      scheduleMember: '신현섭',
+      scheduleLeader: project?.leadAuditorName || auditor?.name || '남경호',
+      scheduleMember: (project?.teamAuditorNames && project.teamAuditorNames.length > 0) ? project.teamAuditorNames.join(', ') : '신현섭',
       schedules: [
         { id: '1', date: '09/10', time1: '09:00~09:30', process1: '시작회의 / 현장순회', dept1: '경영진 및 전 부서', time2: '09:00~09:30', process2: '시작회의 / 현장순회', dept2: '경영진 및 전 부서', remarks: '공통' },
         { id: '2', date: '09/10', time1: '09:30~12:00', process1: '경영책임 / 리더십', dept1: '경영지원팀', time2: '09:30~12:00', process2: '품질/환경 기획', dept2: '품질보증팀', remarks: '' },
@@ -405,17 +413,17 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         { id: '9', date: '09/11', time1: '13:00~15:00', process1: '내부심사 / 경영검토', dept1: '경영혁신팀', time2: '13:00~15:00', process2: '부적합 / 시정조치', dept2: '품질보증팀', remarks: '' },
         { id: '10', date: '09/11', time1: '15:00~17:00', process1: '심사결과 정리 / 종결회의', dept1: '전 부서장', time2: '15:00~17:00', process2: '종결회의 / 리포트 서명', dept2: '최고경영자', remarks: '' },
       ],
-      conflictDate: '2026-09-10',
-      conflictLeader: auditor?.name || '남경호',
-      conflictMember1: '신현섭',
-      conflictMember2: '',
+      conflictDate: (project as any)?.stage2StartDate || project?.startDate || (project as any)?.stage1StartDate || '2026-09-10',
+      conflictLeader: project?.leadAuditorName || auditor?.name || '남경호',
+      conflictMember1: (project?.teamAuditorNames && project.teamAuditorNames[0]) || '신현섭',
+      conflictMember2: (project?.teamAuditorNames && project.teamAuditorNames[1]) || '',
       conflictMember3: '',
       conflictMember4: '',
       conflictMember5: '',
       // 고객현황
       clientName: company.companyName,
       ceoName: company.ceoName || '박진용',
-      certNo: (company as any).certNumber || 'GMS-2609-08',
+      certNo: realCertNo,
       mainAddress: company.address || '경기 군포시 공단로140번길 46, 206호',
       subAddress1: (company as any).subAddress1 || '',
       subAddress2: (company as any).subAddress2 || '',
@@ -759,11 +767,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         ...prev,
         contactPerson: signer.name,
         contactPosition: signer.position,
-        ceoName: prev.ceoName || signer.name
-      }));
-      setScopeConfirmData((prev: any) => ({
-        ...prev,
-        ceoName: prev.ceoName || signer.name
+        email: signer.email || prev.email
       }));
     } else if (signer.roleType === '근로자대표') {
       setStage1Data((prev: any) => ({
@@ -799,26 +803,39 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         next['s1_lead'] = { ...newSignRecord, slotId: 's1_lead', slotLabel: '심사 팀장 (서명)' };
         next['s2_lead'] = { ...newSignRecord, slotId: 's2_lead', slotLabel: '심사팀장 (서명)' };
         next['s2_p9_lead'] = { ...newSignRecord, slotId: 's2_p9_lead', slotLabel: '심사팀장 서명' };
+        next['s2_conf_lead'] = { ...newSignRecord, slotId: 's2_conf_lead', slotLabel: '심사팀장 서명' };
         next['s2_p15_lead'] = { ...newSignRecord, slotId: 's2_p15_lead', slotLabel: '심사팀장 서명' };
+        next['cert_lead_p17'] = { ...newSignRecord, slotId: 'cert_lead_p17', slotLabel: '심사팀장 서명' };
         next['s2_p17_lead'] = { ...newSignRecord, slotId: 's2_p17_lead', slotLabel: '심사팀장 서명' };
         next['ncr_auditor'] = { ...newSignRecord, slotId: 'ncr_auditor', slotLabel: '확인 심사원 서명' };
+        ncrList.forEach(item => {
+          next[`car_lead_sign_${item.id}`] = { ...newSignRecord, slotId: `car_lead_sign_${item.id}`, slotLabel: '심사팀장 서명' };
+        });
       } else if (signer.roleType === '심사팀원') {
         if (memberIdx === 0 || memberIdx === -1) {
           next['s2_team1'] = { ...newSignRecord, slotId: 's2_team1', slotLabel: '심사팀원1 (서명)' };
           next['s2_p9_member1'] = { ...newSignRecord, slotId: 's2_p9_member1', slotLabel: '심사팀원1 서명' };
+          next['s2_conf_m1'] = { ...newSignRecord, slotId: 's2_conf_m1', slotLabel: '심사팀원1 서명' };
         } else if (memberIdx === 1) {
           next['s2_team2'] = { ...newSignRecord, slotId: 's2_team2', slotLabel: '심사팀원2 (서명)' };
           next['s2_p9_member2'] = { ...newSignRecord, slotId: 's2_p9_member2', slotLabel: '심사팀원2 서명' };
+          next['s2_conf_m2'] = { ...newSignRecord, slotId: 's2_conf_m2', slotLabel: '심사팀원2 서명' };
         } else if (memberIdx === 2) {
           next['s2_team3'] = { ...newSignRecord, slotId: 's2_team3', slotLabel: '심사팀원3 (서명)' };
+          next['s2_conf_m3'] = { ...newSignRecord, slotId: 's2_conf_m3', slotLabel: '심사팀원3 서명' };
         } else if (memberIdx === 3) {
           next['s2_team4'] = { ...newSignRecord, slotId: 's2_team4', slotLabel: '심사팀원4 (서명)' };
+          next['s2_conf_m4'] = { ...newSignRecord, slotId: 's2_conf_m4', slotLabel: '심사팀원4 서명' };
         }
       } else if (signer.roleType === '고객담당자') {
         next['s1_cust'] = { ...newSignRecord, slotId: 's1_cust', slotLabel: '고객 확인 (서명)' };
         next['s2_cust'] = { ...newSignRecord, slotId: 's2_cust', slotLabel: '고객 확인 (서명)' };
+        next['cert_cust_p17'] = { ...newSignRecord, slotId: 'cert_cust_p17', slotLabel: '고객확인 (대표자/담당자)' };
         next['s2_p17_client'] = { ...newSignRecord, slotId: 's2_p17_client', slotLabel: '고객확인 (대표자/담당자)' };
         next['ncr_client'] = { ...newSignRecord, slotId: 'ncr_client', slotLabel: '고객 확인 서명' };
+        ncrList.forEach(item => {
+          next[`car_client_sign_${item.id}`] = { ...newSignRecord, slotId: `car_client_sign_${item.id}`, slotLabel: '인증고객 확인 (서명)' };
+        });
       } else if (signer.roleType === '근로자대표') {
         next['s2_work'] = { ...newSignRecord, slotId: 's2_work', slotLabel: '근로자대표 (서명)' };
         next['s2_worker_rep'] = { ...newSignRecord, slotId: 's2_worker_rep', slotLabel: '근로자 대표 서명' };
@@ -1130,7 +1147,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     }
     const compAny = company as any;
     return {
-      certNo: (contract as any)?.certNumber || contract?.contractNumber || compAny.certNo || 'GMS-2609-08',
+      certNo: realCertNo,
       companyNameKor: company.companyName,
       companyNameEng: compAny.companyNameEng || compAny.engName || 'WOOJIN TECH CO., LTD.',
       ceoName: company.ceoName || '박진용',
@@ -1941,12 +1958,12 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <th className="w-28 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고 객 명</th>
                               <td className="p-2 border-r border-slate-400 font-bold">{company.companyName}</td>
                               <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">인증번호</th>
-                              <td className="p-2 font-mono">{(company as any).certNumber || 'GMS-2609-08'}</td>
+                              <td className="p-2 font-mono">{stage2Data.certNo || realCertNo}</td>
                             </tr>
                             <tr className="border-b border-slate-400">
                               <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사일자</th>
                               <td colSpan={3} className="p-2 font-medium">
-                                {(contract as any)?.auditDateStart ? `${(contract as any).auditDateStart} ~ ${(contract as any).auditDateEnd || ''}` : '2026년 09월 08일'}
+                                {(project as any)?.stage2StartDate ? `${(project as any).stage2StartDate} ~ ${(project as any).stage2EndDate || ''}` : (project?.startDate ? `${project.startDate} ~ ${project.endDate || ''}` : `${stage2Data.auditDateStart} ~ ${stage2Data.auditDateEnd}`)}
                               </td>
                             </tr>
                             <tr className="border-b border-slate-400">
@@ -3354,9 +3371,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <tbody>
                             <tr className="border-b border-slate-400">
                               <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
-                              <td className="p-2 border-r border-slate-400 font-bold">{stage2Data.ceoName || company.ceoName || '박진용'}</td>
+                              <td className="p-2 border-r border-slate-400 font-bold">{stage2Data.contactPerson || stage2Data.ceoName || company.contactPerson || company.ceoName || '담당자'}</td>
                               <td className="w-36 p-1 border-r border-slate-400">
-                                {renderSignatureCell('s2_cust', '고객 확인 (서명)', '고객확인', stage2Data.ceoName || company.ceoName || '박진용', '대표이사', stage2Data.email || company.contactEmail)}
+                                {renderSignatureCell('s2_cust', '고객 확인 (서명)', '고객확인', stage2Data.contactPerson || stage2Data.ceoName || company.contactPerson || company.ceoName || '담당자', stage2Data.contactPosition || '품질부장', stage2Data.email || company.contactEmail)}
                               </td>
                               <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
                               <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
@@ -5846,8 +5863,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <td colSpan={2} className="p-2">
                             <div className="grid grid-cols-2 gap-4">
                               <div className="border border-slate-400 p-2 rounded bg-slate-50/50">
-                                <span className="font-bold text-slate-800 block mb-1">고객확인 (대표자)</span>
-                                {renderSignatureCell('cert_cust_p17', '고객 확인 (서명)', '고객확인', scopeConfirmData.ceoName || company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                                <span className="font-bold text-slate-800 block mb-1">고객확인 (대표자/담당자)</span>
+                                {renderSignatureCell('cert_cust_p17', '고객 확인 (서명)', '고객확인', stage2Data.contactPerson || scopeConfirmData.ceoName || company.ceoName || '박진용', stage2Data.contactPosition || '품질부장', stage2Data.email || company.contactEmail)}
                               </div>
                               <div className="border border-slate-400 p-2 rounded bg-slate-50/50">
                                 <span className="font-bold text-slate-800 block mb-1">심사팀장</span>
@@ -6127,7 +6144,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             <td className="p-2 border-r border-slate-400 font-mono">
                               <input
                                 type="text"
-                                value={ncrItem.certNo || scopeConfirmData.certNo || 'GMS-2609-08'}
+                                value={ncrItem.certNo || scopeConfirmData.certNo || stage2Data.certNo || realCertNo}
                                 onChange={(e) => {
                                   const next = [...ncrList];
                                   next[ncrIdx].certNo = e.target.value;
@@ -6290,7 +6307,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             </td>
                             <th className="p-2 border-r border-slate-400 text-left font-bold">인증고객</th>
                             <td className="p-2">
-                              {renderSignatureCell(`car_client_sign_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', scopeConfirmData.ceoName || company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                              {renderSignatureCell(`car_client_sign_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', stage2Data.contactPerson || scopeConfirmData.ceoName || company.ceoName || '박진용', stage2Data.contactPosition || '품질부장', stage2Data.email || company.contactEmail)}
                             </td>
                           </tr>
 

@@ -999,6 +999,7 @@ export function App() {
           <AuditReportWorkbench
             company={targetComp}
             contract={auditContracts.find(c => c.companyId === targetComp.id || c.companyName === targetComp.companyName)}
+            project={projects.find(p => p.companyId === targetComp.id || p.companyName === targetComp.companyName)}
             report={Object.values(reports).find(r => r.companyName === targetComp.companyName)}
             auditor={currentAuditorObj}
             auditors={auditors}
@@ -1482,6 +1483,7 @@ export function App() {
             <AuditReportWorkbench
               company={workbenchCompany}
               contract={auditContracts.find(c => c.companyId === workbenchCompany.id || c.companyName === workbenchCompany.companyName)}
+              project={projects.find(p => p.companyId === workbenchCompany.id || p.companyName === workbenchCompany.companyName)}
               report={Object.values(reports).find(r => r.companyName === workbenchCompany.companyName)}
               auditor={currentAuditorObj}
               auditors={auditors}
