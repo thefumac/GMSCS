@@ -1564,7 +1564,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                 <span className="text-teal-700 font-mono text-[10px]">1팀장 ➔ 2팀원 ➔ 3고객담당 ➔ 4근로자대표</span>
               </div>
               <p className="text-[10px] text-slate-500 leading-tight">
-                * 기업은 대표메일 하나로 모두 수신하는 경우가 많으므로, 대상자별 식별 제목 및 본문이 자동 부여됩니다.
+                * 근로자대표는 ISO 45001 심사 시에만 확인 및 서명을 진행합니다.
               </p>
             </div>
 
@@ -2009,7 +2009,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       <div className="space-y-1">
                         <div className="flex justify-between text-[11px] text-slate-600 font-bold px-1">
                           <span>※ 보고서 확인</span>
-                          <span>※ ISO 45001만 해당</span>
+                          <span>* 근로자대표는 ISO 45001 심사시만 확인</span>
                         </div>
                         <table className="w-full border-collapse border border-slate-700 text-xs">
                           <tbody>
@@ -3487,7 +3487,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       <div className="space-y-1">
                         <div className="flex justify-between text-[11px] text-slate-600 font-bold px-1">
                           <span>※ 보고서 확인</span>
-                          <span>※ ISO 45001만 해당</span>
+                          <span>* 근로자대표는 ISO 45001 심사시만 확인</span>
                         </div>
                         <table className="w-full border-collapse border border-slate-800 text-xs">
                           <tbody>
