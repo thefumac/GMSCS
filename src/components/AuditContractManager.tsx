@@ -36,12 +36,14 @@ import {
   AuditContractType,
   AuditProject,
   CertChangeApplicationData,
-  WeekendAuditReasonData 
+  WeekendAuditReasonData,
+  AdditionalSite
 } from '../types';
 import { calculateKabMd } from '../services/kabMdEngine';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { checkAuditPeriodForHolidays } from '../utils/koreanHolidays';
 import { NewCompanyModal } from './NewCompanyModal';
+import { cleanCeoName, cleanPersonName, splitPersonAndPosition, formatCeoDisplay } from '../utils/personUtils';
 
 interface AuditContractManagerProps {
   companies: Company[];
@@ -142,7 +144,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [newCeoName, setNewCeoName] = useState<string>('박경원');
   const [newBizNumber, setNewBizNumber] = useState<string>('513-85-18153');
   const [newAddress, setNewAddress] = useState<string>('경북 고령군 다산면 다산산단2길 88');
-  const [newContactPerson, setNewContactPerson] = useState<string>('정순호 이사');
+  const [newContactPerson, setNewContactPerson] = useState<string>('정순호');
   const [newContactPhone, setNewContactPhone] = useState<string>('054-955-9197');
   const [newContactEmail, setNewContactEmail] = useState<string>('quality@kwonmetal.co.kr');
   const [newIndustry, setNewIndustry] = useState<string>('자동차 및 선박용 주조물 제조');
@@ -162,14 +164,28 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [planKsicCode, setPlanKsicCode] = useState<string>('C2431');
   const [planCustomerNumber, setPlanCustomerNumber] = useState<string>('');
 
-  // 고객사 선택 시 해당 기업 정보로 자동 동기화
+  // [J] 심사 일정 및 심사원 배정 상태 선언
+  const [plannedStartDate, setPlannedStartDate] = useState<string>('2026-10-24');
+  const [plannedEndDate, setPlannedEndDate] = useState<string>('2026-10-25');
+  const [leadAuditorId, setLeadAuditorId] = useState<string>(auditors[0]?.id || '');
+  const [teamAuditorId, setTeamAuditorId] = useState<string>(auditors[1]?.id || '');
+
+  const [isDirty, setIsDirty] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<string>('');
+  const isInitialMount = React.useRef<boolean>(true);
+
+  // 고객사 선택 시 해당 기업 정보로 자동 동기화 (단일 DB 연결)
   useEffect(() => {
     if (selectedCompany) {
+      const cleanedCeo = cleanCeoName(selectedCompany.ceoName);
+      const parsedContact = splitPersonAndPosition(selectedCompany.contactPerson, selectedCompany.contactPosition || '담당자');
+
       setNewCompanyName(selectedCompany.companyName);
-      setNewCeoName(selectedCompany.ceoName || '');
+      setNewCeoName(cleanedCeo);
       setNewBizNumber(selectedCompany.bizNumber || '');
       setNewAddress(selectedCompany.address || '');
-      setNewContactPerson(selectedCompany.contactPerson || '');
+      setNewContactPerson(parsedContact.name);
       setNewContactPhone(selectedCompany.contactPhone || '');
       setNewContactEmail(selectedCompany.contactEmail || '');
       setNewIndustry(selectedCompany.industry || '');
@@ -180,11 +196,47 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
       const compAny = selectedCompany as any;
       setPlanDept(compAny.department || '품질보증부');
-      setPlanContactPosition(compAny.contactPosition || (selectedCompany.contactPerson?.includes('이사') ? '이사' : '부장'));
+      setPlanContactPosition(selectedCompany.contactPosition || parsedContact.position || '담당자');
       setPlanFax(compAny.fax || compAny.contactFax || '');
-      setPlanSubAddress(compAny.subAddress || '');
+      
+      // 복수 추가사업장 주소 자동 연동 (1순위: additionalSites[0].address)
+      const subAddr = selectedCompany.additionalSites?.[0]?.address || compAny.subAddress || compAny.factoryAddress || '';
+      setPlanSubAddress(subAddr);
       setPlanKsicCode(compAny.ksicCode || 'C2431');
       setPlanCustomerNumber(compAny.customerNumber || compAny.certNo || (selectedCompany.bizNumber ? 'Q' + selectedCompany.bizNumber.replace(/[^0-9]/g, '').slice(-6) : ''));
+
+      // 심사원 자동 배정: 기업의 assignedAuditorName 또는 managingAuditorId 매칭
+      const assignedStr = selectedCompany.assignedAuditorName || compAny.assignedAuditor || '';
+      if (assignedStr) {
+        const auditorNames = assignedStr.split(/[,/]+/).map((s: string) => s.trim()).filter(Boolean);
+        if (auditorNames.length > 0) {
+          const matchedLead = auditors.find(a => a.name === auditorNames[0] || a.id === selectedCompany.managingAuditorId);
+          if (matchedLead) {
+            setLeadAuditorId(matchedLead.id);
+          }
+          if (auditorNames.length > 1) {
+            const matchedTeam = auditors.find(a => a.name === auditorNames[1]);
+            if (matchedTeam) {
+              setTeamAuditorId(matchedTeam.id);
+            } else {
+              setTeamAuditorId('');
+            }
+          } else {
+            setTeamAuditorId('');
+          }
+        }
+      } else if (selectedCompany.managingAuditorId) {
+        const matched = auditors.find(a => a.id === selectedCompany.managingAuditorId);
+        if (matched) {
+          setLeadAuditorId(matched.id);
+        }
+      }
+
+      // 이전 심사일 기준으로 심사일자 동기화
+      const targetMonth = selectedCompany.lastAuditDate ? selectedCompany.lastAuditDate.substring(5, 7) : '10';
+      setPlannedStartDate(`2026-${targetMonth}-24`);
+      setPlannedEndDate(`2026-${targetMonth}-25`);
+      setPlanDate(`2026-${targetMonth}-10`);
 
       // 전환 기업 등록인 경우 전환심사로 자동 제안
       if (selectedCompany.isTransfer) {
@@ -205,8 +257,35 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
           setNewStandards(stds);
         }
       }
+      setIsDirty(false);
     }
-  }, [selectedCompanyId, selectedCompany]);
+  }, [selectedCompanyId, selectedCompany, auditors]);
+
+  // 변경 감지 (미저장 이탈 방지용)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    setIsDirty(true);
+  }, [
+    receptionType, hasCertChange, addedStandards,
+    newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope, newAgency,
+    planDate, planDocSeq, planDept, planContactPosition, planFax, planSubAddress, planKsicCode, planCustomerNumber,
+    plannedStartDate, plannedEndDate, leadAuditorId, teamAuditorId
+  ]);
+
+  // 페이지 이탈 시 경고
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   // 심사계획서 문서번호 산출 로직: GMS-인증-년월일8자리일련번호2자리 (예: GMS-인증- 2026062501)
   const planDocNumber = useMemo(() => {
@@ -332,12 +411,6 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const finalFee = docAuditFee + onsiteAuditFee + travelExpense + lodgingExpense + applicationFee;
   const vat = Math.round(finalFee * 0.1);
   const totalWithVat = finalFee + vat;
-
-  // [J] 심사 일정 및 심사원 배정
-  const [plannedStartDate, setPlannedStartDate] = useState<string>('2026-10-24');
-  const [plannedEndDate, setPlannedEndDate] = useState<string>('2026-10-25');
-  const [leadAuditorId, setLeadAuditorId] = useState<string>(auditors[0]?.id || '');
-  const [teamAuditorId, setTeamAuditorId] = useState<string>(auditors[1]?.id || '');
 
   // 한글 심사일정 포맷팅 함수 (예: 2026년 06월 29일 ~ 06월 30일)
   const formattedKoSchedule = useMemo(() => {
@@ -551,10 +624,19 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     plannedStartDate, plannedEndDate, dispatchStatus, auditorReply, agencyReply, weekendData, certChangeData
   ]);
 
-  // 전산 저장 핸들러
+  // 전산 저장 & 동기화 핸들러
   const handleSave = () => {
+    setIsSyncing(true);
     onSaveContract(currentContractRecord);
-    alert(`[심사계약 및 계획서 전산 등록 완료]\n계약번호: ${currentContractRecord.contractNumber}\n고객사: ${currentContractRecord.companyName}\n적용 MD: ${appliedMd} MD (총 ₩${totalWithVat.toLocaleString()}원, VAT포함)`);
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    setTimeout(() => {
+      setIsSyncing(false);
+      setIsDirty(false);
+      setLastSyncedTime(timeStr);
+      alert(`[심사계약 및 계획서 저장 & 동기화 완료 (${timeStr})]\n계약번호: ${currentContractRecord.contractNumber}\n고객사: ${currentContractRecord.companyName}\n적용 MD: ${appliedMd} MD (총 ₩${totalWithVat.toLocaleString()}원, VAT포함)\n\n입력 데이터가 시스템 및 계획서·청구서 7종 서식과 성공적으로 동기화되었습니다.`);
+    }, 600);
   };
 
   // 3자 일괄 발송 핸들러
@@ -616,16 +698,25 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 text-xs">
+          {lastSyncedTime && (
+            <span className="text-[11px] text-sky-700 font-mono hidden md:inline-block mr-1">
+              ✓ 저장됨 ({lastSyncedTime})
+            </span>
+          )}
           <span className="text-slate-500 font-mono">
             최종청구액: <strong className="text-cyan-950 font-bold text-sm font-mono">₩{totalWithVat.toLocaleString()}</strong> (VAT포함)
           </span>
           <button
             type="button"
             onClick={handleSave}
-            className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md font-bold transition cursor-pointer flex items-center gap-1"
+            disabled={isSyncing}
+            className={`px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white rounded-md font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm border border-sky-400 ${
+              isSyncing ? 'animate-pulse opacity-90' : ''
+            }`}
+            title="좌측 입력 내용 및 우측 심사계약서·계획서·청구서 전체 서식 전산 저장 & 동기화"
           >
-            <FileCheck className="w-3.5 h-3.5" />
-            <span>전산 저장</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>{isSyncing ? '저장 & 동기화 중...' : '저장 & 동기화'}</span>
           </button>
           <button
             type="button"
@@ -755,11 +846,18 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               <select
                 value={selectedCompanyId}
                 onChange={(e) => {
-                  setSelectedCompanyId(e.target.value);
-                  const target = companies.find(c => c.id === e.target.value);
+                  const targetId = e.target.value;
+                  if (isDirty) {
+                    if (!window.confirm('저장 & 동기화되지 않은 변경사항이 있습니다.\n저장하지 않고 다른 고객사로 이동하시겠습니까?')) {
+                      return;
+                    }
+                  }
+                  setSelectedCompanyId(targetId);
+                  const target = companies.find(c => c.id === targetId);
                   if (target) {
                     setCurrentEmployeeCount(target.totalEmployees || 48);
                   }
+                  setIsDirty(false);
                 }}
                 className="w-full bg-slate-50 border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-500"
               >
@@ -1948,8 +2046,8 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                           <th className="w-20 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             대 표 자
                           </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-slate-950 text-center">
-                            {activeCompany.ceoName}
+                          <td className="p-2 print:p-1 border-r border-slate-950 text-slate-950 text-center font-semibold">
+                            {cleanCeoName(activeCompany.ceoName)}
                           </td>
                           <th className="w-20 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             고객번호
@@ -1981,7 +2079,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                             담당자/직책
                           </th>
                           <td className="p-2 print:p-1 text-slate-950 text-center font-semibold" colSpan={2}>
-                            {activeCompany.contactPerson}
+                            {cleanPersonName(activeCompany.contactPerson)}
                           </td>
                           <td className="p-2 print:p-1 text-slate-950 text-center font-semibold">
                             {planContactPosition}
@@ -1991,7 +2089,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr className="border-b border-slate-950">
                           <td className="p-2 print:p-1 border-r border-slate-950 text-slate-950" rowSpan={2}>
                             <span className="font-semibold text-slate-950 mr-1">사업장1:</span>
-                            <span>{planSubAddress}</span>
+                            <span>{activeCompany.additionalSites?.[0]?.address || planSubAddress || '-'}</span>
                           </td>
                           <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             전    화
@@ -2106,10 +2204,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                           <td className="p-1.5 print:p-0.5 border-r border-slate-950">GMS</td>
                           <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold">{selectedLeadAuditor?.name}</td>
                           <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-mono text-[11px] print:text-[9px]">{selectedLeadAuditor?.mobile}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">{selectedTeamAuditor ? '심사원' : ''}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">{selectedTeamAuditor ? (activeAgencyName || 'GMS') : ''}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold">{selectedTeamAuditor?.name || ''}</td>
-                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">{selectedTeamAuditor?.mobile || ''}</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">{selectedTeamAuditor ? '심사원' : '-'}</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">{selectedTeamAuditor ? (selectedTeamAuditor.agency && selectedTeamAuditor.agency !== '사무국직영' ? selectedTeamAuditor.agency : 'GMS') : '-'}</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold">{selectedTeamAuditor?.name || '-'}</td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">{selectedTeamAuditor?.mobile || '-'}</td>
                         </tr>
 
                         {/* 4행: 검증심사원 */}

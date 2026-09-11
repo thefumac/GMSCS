@@ -36,6 +36,7 @@ import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettl
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { AuditPlanInvoiceDocModal } from './AuditPlanInvoiceDocModal';
 import { AuditAttachmentDocModal, AttachmentDocItem } from './AuditAttachmentDocModal';
+import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
 
 export interface CompanyAuditHistoryModalProps {
   isOpen: boolean;
@@ -418,7 +419,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">대표자명:</span>
-                      <span className="text-slate-900 font-normal">{effectiveCompany.ceoName}</span>
+                      <span className="text-slate-900 font-normal">{cleanCeoName(effectiveCompany.ceoName)} 대표이사</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">사업자등록번호:</span>
@@ -433,7 +434,9 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                   <div className="space-y-2">
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">실무 담당자:</span>
-                      <span className="text-slate-900 font-medium">{effectiveCompany.contactPerson || ''}</span>
+                      <span className="text-slate-900 font-medium">
+                        {cleanPersonName(effectiveCompany.contactPerson)} {effectiveCompany.contactPosition || '담당자'}
+                      </span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">담당자 연락처:</span>
@@ -444,11 +447,33 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                       <span className="font-mono text-cyan-800 font-normal">{effectiveCompany.contactEmail || ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">소재지 주소:</span>
+                      <span className="text-slate-500 font-normal">대표 사업장 주소:</span>
                       <span className="text-slate-800 font-normal truncate max-w-[240px]">{effectiveCompany.address || ''}</span>
                     </div>
                   </div>
                 </div>
+
+                {/* 추가사업장 (Multi-Site) 목록 렌더링 */}
+                {effectiveCompany.additionalSites && effectiveCompany.additionalSites.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 mb-2">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-700" />
+                      <span>등록된 추가사업장 ({effectiveCompany.additionalSites.length}개소)</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                      {effectiveCompany.additionalSites.map((site: any, sIdx: number) => (
+                        <div key={site.id || sIdx} className="p-2 bg-white border border-slate-200 rounded-lg space-y-0.5">
+                          <div className="flex items-center justify-between font-bold text-slate-800">
+                            <span>#{sIdx + 1} {site.siteName}</span>
+                            {site.employees && <span className="font-mono text-cyan-800 font-medium">{site.employees}명</span>}
+                          </div>
+                          <p className="text-slate-600 truncate">{site.address}</p>
+                          {site.scope && <p className="text-slate-500 text-[10.5px]">범위: {site.scope}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 1-2. 인증범위 요약 박스 (국문 & 영문) */}

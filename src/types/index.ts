@@ -24,13 +24,24 @@ export type PaymentStatus = '미입금' | '부분입금' | '입금완료';
 
 export type TaxInvoiceStatus = '미발행' | '청구발행' | '영수발행';
 
+export interface AdditionalSite {
+  id: string;
+  siteName: string; // 사업장명 / 공장명 / 지사명 (예: '제2공장', '연구소', '천안공장')
+  address: string; // 사업장 주소 / 소재지
+  zipCode?: string; // 우편번호
+  phone?: string; // 전화번호
+  employees?: number; // 해당 사업장 상주 인원수
+  scope?: string; // 해당 사업장 생산품목 / 업무범위
+}
+
 export interface Company {
   id: string;
   bizNumber: string; // 사업자등록번호 (000-00-00000)
   companyName: string;
   ceoName: string;
-  address: string;
+  address: string; // 대표 사업장 본사 소재지
   contactPerson: string;
+  contactPosition?: string; // 담당자 직책 (부장, 과장, 이사 등)
   contactPhone: string;
   contactEmail: string;
   managingAuditorId?: string; // 담당 심사원 ID
@@ -50,6 +61,16 @@ export interface Company {
   initialContractDate?: string; // 최초 계약일
   initialContractType?: string; // 계약 구분 (신규 / 갱신 / 전환 등)
   standardInitialDates?: Record<string, string>; // 규격별 최초 계약일자
+
+  // 심사 일정 및 인증 이력
+  initialCertDate?: string;  // 최초 인증일
+  lastAuditDate?: string;    // 이전 인증심사일
+  expiryDate?: string;       // 인증 유효기간 만료일
+  certNo?: string;           // 인증서 번호
+  standards?: string;        // 등록 규격 목록 (예: 'ISO 9001:2015, ISO 14001:2015')
+
+  // 복수 추가사업장 (Multi-Site) 정보
+  additionalSites?: AdditionalSite[];
   
   // 전환 심사 및 이전 인증기관 이력
   isTransfer?: boolean; // 전환 여부 (true: 타 기관 전환, false: 일반 신규)

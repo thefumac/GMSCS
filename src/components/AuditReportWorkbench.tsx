@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import type { Company, Auditor, AuditReport, AuditContractRecord, ProofDocument, AuditProject } from '../types';
 import { normalizeMd } from '../data/legacyDataLoader';
+import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
 import {
   AuditReportNoticeItem,
   loadAuditReportNotices
@@ -211,8 +212,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       {
         id: 'signer-client',
         roleType: '고객담당자',
-        name: company.contactPerson || company.ceoName || '',
-        position: compAny.contactPosition || '담당자',
+        name: cleanPersonName(company.contactPerson) || cleanCeoName(company.ceoName) || '',
+        position: company.contactPosition || compAny.contactPosition || '담당자',
         email: company.contactEmail || (company as any).email || '',
         useCompanyEmail: false,
         status: '대기'
@@ -268,6 +269,29 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const isInitialMount = React.useRef(true);
+
+  // 브라우저 닫기/새로고침 시 미저장 이탈 경고
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleCloseWithGuard = () => {
+    if (isDirty) {
+      if (!window.confirm('저장 & 동기화되지 않은 심사보고서 작성 내용이 있습니다.\n저장하지 않고 심사보고서 작성을 종료하시겠습니까?')) {
+        return;
+      }
+    }
+    onClose();
+  };
 
   // 1단계 심사 데이터 State (Page 1~6)
   const [stage1Data, setStage1Data] = useState(() => {
@@ -520,8 +544,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       conclusionOption: '',
       conclusionOther: '',
       attendees: [
-        { name: company.ceoName || '', role: '대표이사 / 최고경영자' },
-        { name: company.contactPerson || '', role: `${compAny.contactPosition || '담당자'}` },
+        { name: cleanCeoName(company.ceoName) || '', role: '대표이사 / 최고경영자' },
+        { name: cleanPersonName(company.contactPerson) || '', role: `${company.contactPosition || compAny.contactPosition || '담당자'}` },
         { name: '', role: '' },
         { name: '', role: '' },
         { name: '', role: '' },
@@ -878,9 +902,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     
     setTimeout(() => {
       setIsSyncing(false);
+      setIsDirty(false);
       setLastSyncedTime(timeStr);
       alert(`[저장 & 동기화 완료 (${timeStr})]\n작성 중인 1·2단계 심사보고서, 현장 관찰기록, 시정조치 요구서(CAR) 및 서명 데이터가 안전하게 저장되었습니다.`);
-    }, 300);
+    }, 600);
   };
 
   // 보고서 제출 함수 (사무국 검토대기 상태 즉시 전환 및 전역 브로드캐스트)
@@ -923,6 +948,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         stage: '검토'
       });
     }
+
+    setIsDirty(false);
 
     // 전역 이벤트 브로드캐스트
     window.dispatchEvent(new CustomEvent('gmscs-report-submitted', {
@@ -1313,6 +1340,15 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     }
   };
 
+  // 작성 내용 변경 감지 (미저장 이탈 방지용)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    setIsDirty(true);
+  }, [stage1Data, stage2Data, signatures, emailSigners, ncrList, scopeConfirmData]);
+
   // 1단계 작성 여부 판단 (사후 1,2차, 갱신 심사 등에서 1단계가 비어있으면 팩에서 자동 제외)
   const isStage1Empty = useMemo(() => {
     const findings = stage1Data.clauseFindings || {};
@@ -1409,9 +1445,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       <div className="bg-slate-900 text-white px-5 py-2.5 flex items-center justify-between border-b border-slate-700 shrink-0 no-print print:hidden">
         <div className="flex items-center gap-3">
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-            title="닫기"
+            onClick={handleCloseWithGuard}
+            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="닫기 (이탈 방지)"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -1432,18 +1468,20 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
         <div className="flex items-center gap-2">
           {lastSyncedTime && (
-            <span className="text-[11px] text-emerald-400 font-mono hidden md:inline-block mr-1">
+            <span className="text-[11px] text-sky-400 font-mono hidden md:inline-block mr-1">
               ✓ 저장됨 ({lastSyncedTime})
             </span>
           )}
           <button
             onClick={handleSaveAll}
             disabled={isSyncing}
-            className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1.5 border border-emerald-600 shadow-xs transition-colors cursor-pointer"
+            className={`px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-bold flex items-center gap-1.5 border border-sky-400 shadow-sm transition-all cursor-pointer ${
+              isSyncing ? 'animate-pulse opacity-90' : ''
+            }`}
             title="현재 작성 중인 모든 심사 내용 및 서명 데이터 저장 & 동기화"
           >
             <RefreshCcw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? '동기화 중...' : '저장 & 동기화'}</span>
+            <span>{isSyncing ? '저장 & 동기화 중...' : '저장 & 동기화'}</span>
           </button>
           <button
             onClick={() => window.print()}

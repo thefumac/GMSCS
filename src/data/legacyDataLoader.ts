@@ -1,9 +1,9 @@
 import legacyAuditorsRaw from './legacyAuditors.json';
 import legacyCompaniesRaw from './legacyCompanies.json';
 import realAuditProjectsRaw from './realAuditProjects.json';
-import { Auditor, Company, StandardCode, AuditorAffiliation, CertContract, AuditProject, AuditType, AuditStatus } from '../types';
+import { Auditor, Company, StandardCode, AuditorAffiliation, CertContract, AuditProject, AuditType, AuditStatus, AdditionalSite } from '../types';
+import { cleanCeoName, splitPersonAndPosition } from '../utils/personUtils';
 
-// Map legacy auditors to Auditor[]
 // Map legacy auditors to Auditor[]
 export function getMergedAuditors(): Auditor[] {
   return legacyAuditorsRaw.map((la: any, idx) => {
@@ -59,7 +59,7 @@ export function getMergedAuditors(): Auditor[] {
       birthDate: la.birthDate || '',
       education: la.education || '',
       major: la.major || '',
-      agency: la.agency || '',
+      agency: la.agency || 'GMS',
       regDate: la.regDate || '',
       grade,
       status: (la.status === '위촉' || !la.status) ? '활동' : '휴식',
@@ -140,13 +140,39 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       }
     }
 
+    // 대표자명 및 담당자 성명/직책 정제
+    const cleanedCeo = cleanCeoName(lc.ceoName || (lc.contactPerson?.includes('대표') ? lc.contactPerson : '대표이사'));
+    const parsedContact = splitPersonAndPosition(lc.contactPerson || '품질팀장', '담당자');
+
+    const month = (idx % 12) + 1;
+    const day = (idx % 25) + 1;
+    const initialYear = 2024 - (idx % 3);
+    const initialDate = `${initialYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const lastAuditDate = `2025-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const expiryDate = `${initialYear + 3}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    // 기본 추가사업장 예시 (기존 데이터에 2공장 등이 있는 경우 구조화)
+    const additionalSites: AdditionalSite[] = [];
+    if (lc.name.includes('1공장') || lc.name.includes('2공장')) {
+      additionalSites.push({
+        id: `site-${idx}-1`,
+        siteName: lc.name.includes('1공장') ? '제2공장 (가공라인)' : '제1공장 (주조라인)',
+        address: lc.address ? `${lc.address} (제2사업장)` : '경북 고령군 다산면 다산산단로 102',
+        zipCode: lc.zipCode || '40123',
+        phone: lc.phone || '',
+        employees: 12,
+        scope: lc.scope || '금속 가공 및 조립'
+      });
+    }
+
     return {
       id: `comp-legacy-${lc.no || idx + 1}`,
       bizNumber: lc.bizNo || `000-00-${String(idx).padStart(5, '0')}`,
       companyName: lc.name,
-      ceoName: lc.ceoName || '대표이사',
+      ceoName: cleanedCeo,
       address: lc.address || '',
-      contactPerson: lc.contactPerson || '품질팀장',
+      contactPerson: parsedContact.name,
+      contactPosition: parsedContact.position,
       contactPhone: lc.phone || '',
       contactEmail: lc.email || '',
       managingAuditorId: assignedAuditor.id,
@@ -154,7 +180,6 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       totalEmployees: (() => {
         const rawEmp = parseInt(lc.employees, 10);
         if (rawEmp && rawEmp > 1) return rawEmp;
-        // 목록 스크랩 기본값 1 또는 누락된 경우: 업종(IAF) 및 기업 고유 번호 기반 현실적인 인원수 (15~75명)
         const iafNum = parseInt(lc.iafCode || '17', 10) || 17;
         const base = (iafNum === 17 || iafNum === 28 || iafNum === 14) ? 22 : 14;
         return base + ((idx * 11) % 52);
@@ -176,7 +201,11 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       isAuditorChanged: (lc as any).isAuditorChanged || false,
       auditorHistory: (lc as any).auditorHistory || [],
       initialContractType: idx % 12 === 7 ? '재인증' : idx % 5 === 2 ? '전환' : '신규',
-      initialContractDate: `202${(idx % 4) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`,
+      initialContractDate: initialDate,
+      initialCertDate: initialDate,
+      lastAuditDate: lastAuditDate,
+      expiryDate: expiryDate,
+      additionalSites: additionalSites,
       standardInitialDates: {
         '9001': `202${(idx % 4) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`,
         '14001': `202${((idx + 1) % 4) + 2}-${String(((idx + 3) % 12) + 1).padStart(2, '0')}-${String(((idx + 5) % 28) + 1).padStart(2, '0')}`,

@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { AuditContractRecord, Company, Auditor } from '../types';
+import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
 
 interface AuditPlanInvoiceDocModalProps {
   isOpen: boolean;
@@ -285,8 +286,8 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                         <th className="w-20 bg-slate-100 p-2 border-r border-slate-950 text-center font-bold text-slate-950">
                           대 표 자
                         </th>
-                        <td className="p-2 border-r border-slate-950 text-slate-950 text-center">
-                          {company?.ceoName || ''}
+                        <td className="p-2 border-r border-slate-950 text-slate-950 text-center font-semibold">
+                          {cleanCeoName(company?.ceoName || (contract as any).ceoName)}
                         </td>
                         <th className="w-20 bg-slate-100 p-2 border-r border-slate-950 text-center font-bold text-slate-950">
                           고객번호
@@ -302,7 +303,7 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                         </th>
                         <td className="p-2 border-r border-slate-950 text-slate-950" rowSpan={2}>
                           <span className="font-semibold text-slate-950 mr-1">주사업장:</span>
-                          <span>{company?.address || ''}</span>
+                          <span>{company?.address || (contract as any).companyAddress || (contract as any).address || ''}</span>
                         </td>
                         <th className="w-24 bg-slate-100 p-2 border-r border-slate-950 text-center font-bold text-slate-950">
                           담당부서
@@ -317,23 +318,23 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                           담당자/직책
                         </th>
                         <td className="p-2 text-slate-950 text-center font-semibold" colSpan={2}>
-                          {company?.contactPerson || ''}
+                          {cleanPersonName(company?.contactPerson || (contract as any).contactPerson)}
                         </td>
                         <td className="p-2 text-slate-950 text-center font-semibold">
-                          {compAny?.contactPosition || '부장'}
+                          {company?.contactPosition || compAny?.contactPosition || '담당자'}
                         </td>
                       </tr>
 
                       <tr className="border-b border-slate-950">
                         <td className="p-2 border-r border-slate-950 text-slate-950" rowSpan={2}>
                           <span className="font-semibold text-slate-950 mr-1">사업장1:</span>
-                          <span>{compAny?.subAddress || ''}</span>
+                          <span>{company?.additionalSites?.[0]?.address || compAny?.subAddress || '-'}</span>
                         </td>
                         <th className="w-24 bg-slate-100 p-2 border-r border-slate-950 text-center font-bold text-slate-950">
                           전    화
                         </th>
                         <td className="p-2 font-mono text-slate-950 text-center" colSpan={3}>
-                          {company?.contactPhone || ''}
+                          {company?.contactPhone || (contract as any).contactPhone || ''}
                         </td>
                       </tr>
 
@@ -435,11 +436,11 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                       <tr className="border-b border-slate-950 text-slate-950">
                         <td className="p-1.5 border-r border-slate-950 font-bold">심사팀장</td>
                         <td className="p-1.5 border-r border-slate-950">GMS</td>
-                        <td className="p-1.5 border-r border-slate-950 font-bold">{contract.leadAuditorName || auditor?.name || '김홍덕'}</td>
-                        <td className="p-1.5 border-r border-slate-950 font-mono text-[11px]">{auditor?.mobile || '010-3396-5555'}</td>
-                        <td className="p-1.5 border-r border-slate-950">{contract.teamAuditorName ? '심사원' : ''}</td>
-                        <td className="p-1.5 border-r border-slate-950">{contract.teamAuditorName ? (contract.agency || 'GMS') : ''}</td>
-                        <td className="p-1.5 border-r border-slate-950 font-bold">{contract.teamAuditorName || ''}</td>
+                        <td className="p-1.5 border-r border-slate-950 font-bold">{contract.leadAuditorName || auditor?.name || '-'}</td>
+                        <td className="p-1.5 border-r border-slate-950 font-mono text-[11px]">{auditor?.mobile || '-'}</td>
+                        <td className="p-1.5 border-r border-slate-950">{contract.teamAuditorName ? '심사원' : '-'}</td>
+                        <td className="p-1.5 border-r border-slate-950">{contract.teamAuditorName ? 'GMS' : '-'}</td>
+                        <td className="p-1.5 border-r border-slate-950 font-bold">{contract.teamAuditorName || '-'}</td>
                         <td className="p-1.5 font-mono text-[11px]">-</td>
                       </tr>
 

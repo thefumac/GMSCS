@@ -12,10 +12,12 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  HelpCircle
+  HelpCircle,
+  MapPin
 } from 'lucide-react';
-import { Company, Auditor, TransferAttachment, StandardCode } from '../types';
+import { Company, Auditor, TransferAttachment, StandardCode, AdditionalSite } from '../types';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
+import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
 
 export interface NewCompanyModalProps {
   isOpen: boolean;
@@ -59,7 +61,7 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
     transferAttachments: []
   });
 
-  // 추가 확장 필드 (영문명, 공장주소 등)
+  // 추가 확장 필드 (영문명 등)
   const [extraFields, setExtraFields] = useState({
     companyNameEng: '',
     ceoNameEng: '',
@@ -77,7 +79,34 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
     managingAuditorName: ''
   });
 
+  // 복수 추가사업장 (Multi-Site) 상태
+  const [additionalSites, setAdditionalSites] = useState<AdditionalSite[]>([]);
+
   if (!isOpen) return null;
+
+  // 추가사업장 추가/수정/삭제 핸들러
+  const handleAddSite = () => {
+    setAdditionalSites(prev => [
+      ...prev,
+      {
+        id: `site-${Date.now()}-${prev.length + 1}`,
+        siteName: `제${prev.length + 2}공장`,
+        address: '',
+        zipCode: '',
+        phone: '',
+        employees: 5,
+        scope: ''
+      }
+    ]);
+  };
+
+  const handleUpdateSite = (id: string, field: keyof AdditionalSite, value: any) => {
+    setAdditionalSites(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
+  const handleRemoveSite = (id: string) => {
+    setAdditionalSites(prev => prev.filter(s => s.id !== id));
+  };
 
   // 인증 규격 토글
   const toggleStandard = (std: string) => {
@@ -151,14 +180,18 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
       }
     }
 
-    const compId = `comp-custom-${Date.now()}`;
+    const cleanedCeo = cleanCeoName(formData.ceoName);
+    const parsedContact = splitPersonAndPosition(formData.contactPerson || formData.ceoName || '담당자', extraFields.contactPosition || '품질부장');
+
+    const compId = `COMP-NEW-${Date.now()}`;
     const newCompany: Company = {
       id: compId,
       companyName: formData.companyName.trim(),
-      ceoName: formData.ceoName.trim(),
+      ceoName: cleanedCeo,
       bizNumber: formData.bizNumber.trim(),
       address: formData.address.trim(),
-      contactPerson: formData.contactPerson || formData.ceoName || '담당자',
+      contactPerson: parsedContact.name,
+      contactPosition: extraFields.contactPosition || parsedContact.position,
       contactPhone: formData.contactPhone || '02-000-0000',
       contactEmail: formData.contactEmail || 'contact@company.co.kr',
       clientType: formData.clientType || '직영',
@@ -170,6 +203,10 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
       createdAt: new Date().toISOString().slice(0, 10),
       consultant: formData.consultant,
       agency: formData.agency,
+      initialCertDate: new Date().toISOString().slice(0, 10),
+      lastAuditDate: new Date().toISOString().slice(0, 10),
+      expiryDate: `${new Date().getFullYear() + 3}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`,
+      additionalSites: additionalSites.filter(s => s.address.trim() || s.siteName.trim()),
       // 전환 심사 데이터
       isTransfer: formData.isTransfer,
       transferType: formData.isTransfer ? formData.transferType : undefined,
@@ -185,9 +222,9 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
         companyNameEng: extraFields.companyNameEng,
         ceoNameEng: extraFields.ceoNameEng,
         addressEng: extraFields.addressEng,
-        factoryAddress: extraFields.factoryAddress,
+        factoryAddress: additionalSites[0]?.address || extraFields.factoryAddress,
         factoryAddressEng: extraFields.factoryAddressEng,
-        contactPosition: extraFields.contactPosition,
+        contactPosition: extraFields.contactPosition || parsedContact.position,
         contactMobile: extraFields.contactMobile,
         fax: extraFields.fax,
         corpNumber: extraFields.corpNumber,
@@ -200,7 +237,7 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
     };
 
     onSave(newCompany);
-    alert(`[${newCompany.companyName}] 신규 고객사가 성공적으로 등록되었습니다.\n고객관리 및 심사관리에서 즉시 심사 프로젝트를 생성할 수 있습니다.`);
+    alert(`[${newCompany.companyName}] 신규 고객사가 성공적으로 등록되었습니다.\n추가사업장 ${newCompany.additionalSites?.length || 0}개소가 저장되었으며, 심사진행현황 및 심사문서 7종에서 즉시 호출됩니다.`);
     onClose();
   };
 
@@ -508,7 +545,7 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-700 font-bold mb-1">본사 주소 (국문) *</label>
+                <label className="block text-slate-700 font-bold mb-1">본사 주소 (대표 사업장) *</label>
                 <input
                   type="text"
                   required
@@ -529,6 +566,110 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono focus:ring-1 focus:ring-cyan-600 focus:outline-none"
                 />
               </div>
+            </div>
+
+            {/* 복수 추가사업장 (Multi-Site) 동적 관리 카드 */}
+            <div className="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-cyan-700" />
+                  <div>
+                    <h5 className="font-bold text-slate-900 text-xs">추가사업장 (지사 / 공장 / 연구소 등 Multi-Site)</h5>
+                    <p className="text-[11px] text-slate-500">본사 외 심사 대상 추가 사업장이 있는 경우 모두 등록합니다. (심사계획서 및 보고서 자동 반영)</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddSite}
+                  className="px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ 추가사업장 추가</span>
+                </button>
+              </div>
+
+              {additionalSites.length === 0 ? (
+                <div className="text-center py-4 bg-white border border-dashed border-slate-300 rounded-lg text-xs text-slate-500">
+                  등록된 추가사업장이 없습니다. (단일 본사 사업장만 있는 경우 생략 가능)
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {additionalSites.map((site, index) => (
+                    <div key={site.id} className="p-3 bg-white border border-slate-200 rounded-lg shadow-2xs space-y-2 relative">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-bold flex items-center justify-center">
+                            {index + 1}
+                          </span>
+                          <span className="font-bold text-xs text-slate-800">추가사업장 #{index + 1}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSite(site.id)}
+                          className="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1 rounded transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>삭제</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        <div>
+                          <label className="block text-slate-600 font-medium text-[11px] mb-0.5">사업장명 (공장/지사명)</label>
+                          <input
+                            type="text"
+                            placeholder="예: 제2공장 (주조라인)"
+                            value={site.siteName}
+                            onChange={(e) => handleUpdateSite(site.id, 'siteName', e.target.value)}
+                            className="w-full border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-600 font-medium text-[11px] mb-0.5">사업장 주소 (소재지)</label>
+                          <input
+                            type="text"
+                            placeholder="예: 충남 아산시 둔포면 아산밸리로 123"
+                            value={site.address}
+                            onChange={(e) => handleUpdateSite(site.id, 'address', e.target.value)}
+                            className="w-full border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-600 font-medium text-[11px] mb-0.5">인원수 (명)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="5"
+                            value={site.employees || ''}
+                            onChange={(e) => handleUpdateSite(site.id, 'employees', Number(e.target.value))}
+                            className="w-full border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-600 font-medium text-[11px] mb-0.5">전화번호</label>
+                          <input
+                            type="text"
+                            placeholder="예: 041-530-0000"
+                            value={site.phone || ''}
+                            onChange={(e) => handleUpdateSite(site.id, 'phone', e.target.value)}
+                            className="w-full border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                          />
+                        </div>
+                        <div className="sm:col-span-3">
+                          <label className="block text-slate-600 font-medium text-[11px] mb-0.5">해당 사업장 활동/생산품목 (Scope)</label>
+                          <input
+                            type="text"
+                            placeholder="예: 자동차용 알루미늄 다이캐스팅 주조 및 가공"
+                            value={site.scope || ''}
+                            onChange={(e) => handleUpdateSite(site.id, 'scope', e.target.value)}
+                            className="w-full border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
