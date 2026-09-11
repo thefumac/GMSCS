@@ -2578,109 +2578,159 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               )}
 
               {/* ================================================================= */}
-              {/* 2단계 심사보고서 (7p ~ 16p 실물 PDF 완벽 일치 & 동적 확장) */}
+              {/* 2단계 심사보고서 (7p ~ 16p 실물 PDF/워드 공문서 완벽 일치 & 팀원4+기타1 확장) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'stage2') && (
                 <div className="space-y-10">
-                  {/* --- [2단계 7 PAGE : 표지] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
-
-                    <div className="text-center py-6">
-                      <h1 className="text-3xl font-black tracking-tight text-slate-950 font-serif">
-                        적합성 평가 심사보고서(2nd Stage)
-                      </h1>
-                    </div>
-
-                    {/* Table 13 */}
-                    <table className="w-full border-collapse border border-slate-700 text-xs">
-                      <tbody>
-                        <tr className="border-b border-slate-400">
-                          <th className="w-28 bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">고 객 명</th>
-                          <td className="p-2.5 font-bold text-sm text-slate-900">{company.companyName}</td>
-                        </tr>
-                        <tr className="border-b border-slate-400">
-                          <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 표 준</th>
-                          <td className="p-2.5 space-x-5 text-xs font-medium">
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 9001</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 14001</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ISO 45001</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ESG-MS</span></label>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 유 형</th>
-                          <td className="p-2.5 space-x-5 text-xs font-medium">
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" defaultChecked /><span>최초</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" /><span>사후 ( )</span></label>
-                            <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" /><span>갱신</span></label>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-
-                    {/* ◆ 2단계 심사의 목적 */}
-                    <div className="border border-slate-400 bg-slate-50 p-4 space-y-2 text-[11px] leading-relaxed text-slate-700">
-                      <span className="font-bold text-slate-950 block text-xs">◆ 2단계 심사의 목적</span>
-                      <ol className="list-decimal list-inside space-y-1.5 pl-1">
-                        <li>해당 경영시스템 표준의 모든 요구사항에 대한 적합성에 관한 정보 및 증거 확인</li>
-                        <li>주요 성과 목표 및 세부목표 대비 성과의 모니터링, 측정, 보고 및 검토</li>
-                        <li>적용 가능한 법적, 규제적, 계약적 요구사항을 충족시키는 조직의 경영시스템 성과 확인</li>
-                        <li>프로세스의 운영 관리, 내부심사 및 경영검토, 클라이언트의 방침에 대한 경영책임 검토</li>
-                        <li>심사는 샘플링 방식으로 진행되며, 심사팀에 의해 발견되지 못한 부적합 사항이 있을 수 있습니다.</li>
-                      </ol>
-                    </div>
-
-                    {/* Table 14 & Table 15 서명 */}
-                    <div className="space-y-1 pt-2">
-                      <div className="flex justify-between text-[11px] text-slate-600 font-bold px-1">
-                        <span>※ 보고서 확인</span>
-                        <span>※ ISO 45001만 해당</span>
+                  
+                  {/* --- [2단계 7 PAGE : 표지 & 심사팀(팀장+팀원4+기타1) 서명] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div>
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-4">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
                       </div>
-                      <table className="w-full border-collapse border border-slate-700 text-xs">
+
+                      <div className="text-center py-5">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-950 font-serif">
+                          적합성 평가 심사보고서(2nd Stage)
+                        </h1>
+                      </div>
+
+                      {/* Table 13 : 고객명 / 심사표준 / 심사유형 */}
+                      <table className="w-full border-collapse border border-slate-700 text-xs mb-5">
                         <tbody>
                           <tr className="border-b border-slate-400">
-                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">{company.ceoName || '박진용'}</td>
-                            <td className="w-36 p-1 border-r border-slate-400">
-                              {renderSignatureCell('s2_cust', '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
-                            </td>
-                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
-                            <td className="w-36 p-1">
-                              {renderSignatureCell('s2_work', '근로자대표 (서명)', '근로자대표', '김진수', '근로자대표', 'worker@k1metal.co.kr')}
-                            </td>
+                            <th className="w-28 bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">고 객 명</th>
+                            <td className="p-2.5 font-bold text-sm text-slate-900">{company.companyName}</td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀장</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
-                            <td className="p-1 border-r border-slate-400">
-                              {renderSignatureCell('s2_lead', '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                            <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 표 준</th>
+                            <td className="p-2.5 space-x-5 text-xs font-medium">
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 9001</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" defaultChecked /><span>ISO 14001</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ISO 45001</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>ESG-MS</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="checkbox" /><span>기타( )</span></label>
                             </td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
-                            <td className="p-1 border-r border-slate-400">
-                              {renderSignatureCell('s2_team1', '심사팀원 (서명)', '심사팀원', '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                          </tr>
+                          <tr>
+                            <th className="bg-slate-100 p-2.5 border-r border-slate-400 text-center font-bold">심 사 유 형</th>
+                            <td className="p-2.5 space-x-5 text-xs font-medium">
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" defaultChecked /><span>최초</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" /><span>사후 ( )</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" /><span>갱신</span></label>
+                              <label className="inline-flex items-center gap-1.5"><input type="radio" name="s2_p7_type" /><span>전환</span></label>
                             </td>
                           </tr>
                         </tbody>
                       </table>
+
+                      {/* ◆ 2단계 심사의 목적 */}
+                      <div className="border border-slate-400 bg-slate-50 p-4 space-y-2 text-[11px] leading-relaxed text-slate-700 mb-5">
+                        <span className="font-bold text-slate-950 block text-xs">◆ 2단계 심사의 목적</span>
+                        <ol className="list-decimal list-inside space-y-1 pl-1">
+                          <li>해당 경영시스템 표준의 모든 요구사항에 대한 적합성에 관한 정보 및 증거 확인</li>
+                          <li>주요 성과 목표 및 세부목표 대비 성과의 모니터링, 측정, 보고 및 검토</li>
+                          <li>적용 가능한 법적, 규제적, 계약적 요구사항을 충족시키는 조직의 경영시스템 성과 확인</li>
+                          <li>프로세스의 운영 관리, 내부심사 및 경영검토, 클라이언트의 방침에 대한 경영책임 검토</li>
+                          <li>심사는 샘플링 방식으로 진행되며, 심사팀에 의해 발견되지 못한 부적합 사항이 있을 수 있습니다.</li>
+                        </ol>
+                      </div>
+
+                      {/* Table 14 & Table 15 서명란 (팀장 제외 4명 + 기타 1명 = 총 6명 심사단 서명) */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[11px] text-slate-600 font-bold px-1">
+                          <span>※ 보고서 확인</span>
+                          <span>※ ISO 45001만 해당</span>
+                        </div>
+                        <table className="w-full border-collapse border border-slate-700 text-xs">
+                          <tbody>
+                            <tr className="border-b border-slate-400">
+                              <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고객 확인</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">{company.ceoName || '박진용'}</td>
+                              <td className="w-36 p-1 border-r border-slate-400">
+                                {renderSignatureCell('s2_cust', '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                              </td>
+                              <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">근로자 대표</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">김진수 (직장)</td>
+                              <td className="w-36 p-1">
+                                {renderSignatureCell('s2_work', '근로자대표 (서명)', '근로자대표', '김진수', '근로자대표', 'worker@k1metal.co.kr')}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀장</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">{auditor?.name || '남경호'}</td>
+                              <td className="p-1 border-r border-slate-400">
+                                {renderSignatureCell('s2_lead', '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                              </td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
+                              <td className="p-2 border-r border-slate-400 font-bold">신현섭</td>
+                              <td className="p-1">
+                                {renderSignatureCell('s2_team1', '심사팀원 (서명)', '심사팀원', '신현섭', '심사원', 'auditor2@gmscs.co.kr')}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-400">
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1 border-r border-slate-400">
+                                {renderSignatureCell('s2_team2', '심사팀원 (서명)', '심사팀원')}
+                              </td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1">
+                                {renderSignatureCell('s2_team3', '심사팀원 (서명)', '심사팀원')}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사 팀원</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1 border-r border-slate-400">
+                                {renderSignatureCell('s2_team4', '심사팀원 (서명)', '심사팀원')}
+                              </td>
+                              <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">기 타</th>
+                              <td className="p-2 border-r border-slate-400 text-slate-400">-</td>
+                              <td className="p-1">
+                                {renderSignatureCell('s2_oth', '기타 (서명)', '확인심사원')}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 7 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 7 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
                   {/* --- [2단계 8 PAGE : 회의록(Table 16) & 이해관계서(Table 17)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
                     <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <h3 className="font-bold text-slate-950 text-xs">시작/종결회의 안건 (Table 16)</h3>
                       <div className="grid grid-cols-2 gap-4 text-xs">
                         <div className="border border-slate-400 p-3 bg-slate-50 space-y-1">
                           <span className="font-bold text-slate-900 block border-b border-slate-300 pb-1">시작회의 안건</span>
-                          <ol className="list-decimal list-inside space-y-0.5 text-[11px] text-slate-700">
+                          <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-700 leading-relaxed">
                             <li>인사말 및 심사협조에 대한 감사의 말씀</li>
                             <li>참석자 소개 및 근로자대표 참석 확인</li>
                             <li>심사의 목적, 표준, 인증범위 확인</li>
@@ -2690,7 +2740,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </div>
                         <div className="border border-slate-400 p-3 bg-slate-50 space-y-1">
                           <span className="font-bold text-slate-900 block border-b border-slate-300 pb-1">종결회의 안건</span>
-                          <ol className="list-decimal list-inside space-y-0.5 text-[11px] text-slate-700">
+                          <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-700 leading-relaxed">
                             <li>심사협조에 대한 감사 및 결과 요약 보고</li>
                             <li>부적합 및 관찰사항 설명 및 처리기준 안내</li>
                             <li>차기 사후심사 안내 및 이의제기 절차</li>
@@ -2699,7 +2749,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </div>
                       </div>
 
-                      <div className="border border-slate-700 p-4 space-y-3 bg-white">
+                      <div className="border border-slate-700 p-4 space-y-3 bg-white mt-4">
                         <div className="text-center font-bold text-sm text-slate-950 underline underline-offset-4 font-serif">
                           이해관계유무 확인서 (Table 17)
                         </div>
@@ -2715,49 +2765,73 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 8 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 8 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
                   {/* --- [2단계 9 PAGE : ◆ 고객현황 (Table 18)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
                     <div className="space-y-3">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <h3 className="font-bold text-slate-950 text-xs">◆ 고객현황 (Table 18)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <tbody>
                           <tr className="border-b border-slate-400">
-                            <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">고 객 명</th>
+                            <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고 객 명</th>
                             <td className="p-2 border-r border-slate-400 font-bold">{company.companyName}</td>
-                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">대표자</th>
+                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">대표자</th>
                             <td className="p-2 border-r border-slate-400">{company.ceoName || '박진용'}</td>
-                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">인증번호</th>
-                            <td className="p-2 font-mono">GMS-2609-08</td>
+                            <th className="w-20 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">인증번호</th>
+                            <td className="p-2 font-mono">{(company as any).certNumber || 'GMS-2609-08'}</td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">주사업장 주소</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">주사업장 주소</th>
                             <td colSpan={5} className="p-2">{company.address || '경기 군포시 공단로140번길 46, 206호'}</td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">TEL</th>
+                            <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">추가사업장 주소</th>
+                            <td colSpan={5} className="p-1.5 text-slate-500">{(company as any).subAddress1 || ''}</td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">추가사업장 주소</th>
+                            <td colSpan={5} className="p-1.5 text-slate-500">{(company as any).subAddress2 || ''}</td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-1.5 border-r border-slate-400 text-center font-bold text-[11px]">추가사업장 주소</th>
+                            <td colSpan={5} className="p-1.5 text-slate-500">{(company as any).subAddress3 || ''}</td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">TEL</th>
                             <td className="p-2 border-r border-slate-400">{company.contactPhone || '031-360-7078'}</td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">FAX</th>
-                            <td className="p-2 border-r border-slate-400">031-353-8891</td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">E-mail</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">FAX</th>
+                            <td className="p-2 border-r border-slate-400">{(company as any).fax || '031-353-8891'}</td>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">E-mail</th>
                             <td className="p-2 font-mono">{company.contactEmail || 'wjt-jypark@naver.com'}</td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심사일자</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사일자</th>
                             <td colSpan={3} className="p-2 font-mono">
-                              시작일: 2026-09-10 ~ 종료일: 2026-09-11
+                              {(contract as any)?.auditDateStart ? `${(contract as any).auditDateStart} ~ ${(contract as any).auditDateEnd || ''}` : '2026-09-10 ~ 2026-09-11'}
                             </td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심사일수</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">심사일수</th>
                             <td className="p-2 font-bold">2.0 M/D</td>
                           </tr>
                           <tr>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">인증범위</th>
-                            <td colSpan={5} className="p-2 font-semibold text-slate-800">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">인증범위</th>
+                            <td colSpan={5} className="p-2 font-medium text-slate-800 leading-relaxed">
                               {company.scope || company.industry || '금속 절삭가공 제품의 제조(AL가공, SUS가공, 광학부품, 산업용 카메라부품)'}
                             </td>
                           </tr>
@@ -2765,20 +2839,32 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </table>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 9 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 9 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [2단계 10 PAGE & 11 PAGE : 1.2단계심사 공통내역 (Table 19)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
-                    <div className="space-y-2">
+                  {/* --- [2단계 10 PAGE & 11 PAGE : 1. 2단계심사 공통내역 (Table 19)] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
+                    <div className="space-y-3">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <h3 className="font-bold text-slate-950 text-xs">1. 2단계심사 적합성 평가 - 공통 심사 내역 (Table 19)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <thead>
                           <tr className="bg-slate-100 border-b border-slate-700">
-                            <th colSpan={3} className="p-2 text-center font-black tracking-wider text-slate-900">
+                            <th colSpan={3} className="p-2 text-center font-black tracking-widest text-slate-900">
                               ◆ 공 통 심 사 내 역 ◆
                             </th>
                           </tr>
@@ -2791,13 +2877,18 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             { text: '구축된 시스템이 정해진 절차와 방법에 의거 적절히 시행/유지되고 있는가?', res: '적' },
                             { text: '인증범위는 적절한가?', res: '적' },
                             { text: '인증고객의 시스템이 인증심사기준에 부합하는가?', res: '적' },
+                            { text: '피심사 조직의 적극적 협조 및 자원 제공 여부', res: '적' },
                             { text: '주요성과 및 세부목표 대비 성과의 모니터링, 측정, 보고, 검토', res: '적' },
-                            { text: '지속적 개선을 위한 조치', res: '적' },
-                            { text: '사후 / 갱신심사 시 인증마크 사용의 적절성', res: '적' },
+                            { text: '지속적 개선을 위한 조치 (시정조치 등)', res: '적' },
+                            { text: '통합경영시스템 운영의 적절성 (해당 시)', res: '적' },
+                            { text: '이전 심사 지적사항(시정조치)의 유효성 확인', res: '적' },
+                            { text: '사후 / 갱신심사 시 인증마크 및 로고 사용의 적절성', res: '적' },
+                            { text: '재인증(갱신) 심사 시 지난 3년간의 시스템 성과 검토', res: '적' },
+                            { text: '사후관리 기간 중 조직 및 시스템 변경사항', res: '무' },
                           ].map((row, rIdx) => (
                             <tr key={rIdx} className="border-b border-slate-400">
                               <td className="w-8 p-1.5 text-center font-bold bg-slate-50 border-r border-slate-400">{rIdx + 1}</td>
-                              <td className="p-1.5 border-r border-slate-400">{row.text}</td>
+                              <td className="p-1.5 border-r border-slate-400 font-medium">{row.text}</td>
                               <td className="w-24 p-1.5 text-center font-bold text-emerald-700">{row.res}</td>
                             </tr>
                           ))}
@@ -2805,21 +2896,33 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </table>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 10 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 10~11 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [2단계 12 PAGE & 13 PAGE & 14 PAGE : PROCESS Audit NOTE (Table 20~23) - 동적 확장] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
+                  {/* --- [2단계 12~14 PAGE : PROCESS Audit NOTE (Table 20~23)] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
                     <div className="space-y-3">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <div className="flex justify-between items-center border-b border-slate-700 pb-1">
-                        <h3 className="text-base font-black tracking-tight text-slate-950 font-serif">
+                        <h3 className="text-sm font-black tracking-tight text-slate-950 font-serif">
                           PROCESS Audit NOTE (현장 심사 세부 확인 사항)
                         </h3>
                         <span className="text-[11px] text-slate-600">
-                          ► 객관적 증거 확인 기록 (12p ~ 14p+ 동적 확장)
+                          ► 객관적 증거 확인 기록
                         </span>
                       </div>
 
@@ -2853,7 +2956,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </tbody>
                       </table>
 
-                      {/* 14p: 심사발견사항 요약 (Table 23) */}
+                      {/* 심사발견사항 요약 (Table 23) */}
                       <div className="space-y-1.5 pt-2">
                         <h4 className="font-bold text-slate-900 text-xs">심사발견사항 요약 (Table 23)</h4>
                         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -2879,23 +2982,35 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 12~14 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 12~14 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [2단계 15 PAGE : 2.심사결론 (Table 24) & 3.참석자 & 4.심사팀] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
+                  {/* --- [2단계 15 PAGE : 2. 심사결론 (Table 24) & 3. 참석자 & 4. 심사팀] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
                     <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <h3 className="font-bold text-slate-950 text-xs">2. 심사결론 (Table 24)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <tbody>
                           <tr className="border-b border-slate-400 bg-slate-50">
                             <th className="w-32 p-2 border-r border-slate-400 text-center font-bold">심사 발견사항</th>
                             <td className="p-2 space-x-6 font-bold text-slate-900">
-                              <span>경부적합: 0 건</span>
                               <span>중부적합: 0 건</span>
+                              <span>경부적합: 0 건</span>
                               <span>관찰사항: 2 건</span>
                             </td>
                           </tr>
@@ -2927,24 +3042,36 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       <div className="grid grid-cols-2 gap-4 text-xs pt-2">
                         <div className="border border-slate-400 p-2.5 rounded bg-slate-50">
                           <span className="font-bold text-slate-900 block mb-1">3. 조직의 참석자 (Table 25)</span>
-                          <span className="text-slate-700">박진용 대표이사, 박진웅 부장, 김진수 근로자대표</span>
+                          <span className="text-slate-700">박진용 대표이사, 박진웅 부장, 김진수 근로자대표, 이영희 차장, 정민호 과장</span>
                         </div>
                         <div className="border border-slate-400 p-2.5 rounded bg-slate-50">
                           <span className="font-bold text-slate-900 block mb-1">4. 심사팀 (Table 26)</span>
-                          <span className="text-slate-700">심사팀장: 남경호 선임심사원 / 심사팀원: 신현섭 심사원</span>
+                          <span className="text-slate-700">심사팀장: 남경호 선임심사원 / 심사팀원: 신현섭 심사원 외</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 15 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 15 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
 
-                  {/* --- [2단계 16 PAGE : 5.차기심사 안내(Table 27) & 6.갱신심사 시 작성(Table 28)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
-                    {renderReportPageHeader('F16-011(20251001)')}
+                  {/* --- [2단계 16 PAGE : 5. 차기심사 안내(Table 27) & 6. 갱신심사 시 작성(Table 28)] --- */}
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative flex flex-col justify-between">
                     <div className="space-y-4">
+                      {/* 공식 상단 헤더 */}
+                      <div className="flex justify-between items-center border-b border-slate-300 pb-2 mb-3">
+                        <div className="w-24"></div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-widest text-slate-950 font-serif text-center flex-1">
+                          2 단계 심사 보고서
+                        </h2>
+                        <div className="w-28 flex justify-end">
+                          <img src="/report-logo.png" alt="GMSCS" className="h-7 md:h-8 object-contain" />
+                        </div>
+                      </div>
+
                       <h3 className="font-bold text-slate-950 text-xs">5. 차기심사 안내 (Table 27)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <thead>
@@ -2998,8 +3125,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       </div>
                     </div>
 
-                    <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                      - 16 - [지엠에스씨에스㈜ 인증원]
+                    <div className="pt-4 flex justify-between items-center text-[10px] text-slate-500 font-serif border-t border-slate-200">
+                      <span>양식번호: F16-011(20251001)</span>
+                      <span>- 16 -</span>
+                      <span>지엠에스씨에스㈜</span>
                     </div>
                   </div>
                 </div>
