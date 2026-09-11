@@ -1275,6 +1275,7 @@ export function App() {
             onDispatchPlanAndInvoice={handleDispatchPlanAndInvoice}
             onSimulateResponse={handleSimulateResponse}
             onOpenCompanyAuditHistory={(comp: any) => setHistoryModalCompany(comp)}
+            onAddCompany={handleAddCompany}
           />
         )}
 

@@ -21,7 +21,12 @@ import {
   ClipboardList,
   HelpCircle,
   RefreshCw,
-  Database
+  Database,
+  Plus,
+  ArrowRightLeft,
+  Edit3,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { 
   Company, 
@@ -36,6 +41,7 @@ import {
 import { calculateKabMd } from '../services/kabMdEngine';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { checkAuditPeriodForHolidays } from '../utils/koreanHolidays';
+import { NewCompanyModal } from './NewCompanyModal';
 
 interface AuditContractManagerProps {
   companies: Company[];
@@ -50,6 +56,7 @@ interface AuditContractManagerProps {
   onDispatchPlanAndInvoice?: (contractId: string, target: '기업' | '심사원' | '협력기관' | 'all') => void;
   onSimulateResponse?: (contractId: string, role: 'auditor' | 'agency' | 'client', action: 'agree' | 'request_adjust') => void;
   onOpenCompanyAuditHistory?: (company: Company) => void;
+  onAddCompany?: (company: Company) => void;
 }
 
 // 금액 한글 표기 변환 함수
@@ -95,7 +102,8 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   onUpdateProject: _onUpdateProject,
   onDispatchPlanAndInvoice,
   onSimulateResponse,
-  onOpenCompanyAuditHistory
+  onOpenCompanyAuditHistory,
+  onAddCompany
 }) => {
   // -------------------------------------------------------------
   // [1] 접수 구분 (4대 모드: 정기사후/갱신 vs 규격추가 vs 신규인증 vs 전환심사)
@@ -103,11 +111,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [receptionType, setReceptionType] = useState<AuditContractType>('정기사후');
   const [hasCertChange, setHasCertChange] = useState<boolean>(false);
 
-  // [A] 기존 고객사 선택 및 검색
+  // [A] 기존/신규 고객사 선택 및 검색
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>(() => {
     return companies[0]?.id || '';
   });
   const [companySearchQuery, setCompanySearchQuery] = useState<string>('');
+  const [isNewCompanyModalOpen, setIsNewCompanyModalOpen] = useState<boolean>(false);
+  const [isManualEditOpen, setIsManualEditOpen] = useState<boolean>(false);
   
   const selectedCompany = useMemo(() => {
     return companies.find(c => c.id === selectedCompanyId) || companies[0];
@@ -115,19 +125,19 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // 필터된 기업 목록 (검색)
   const filteredCompanyList = useMemo(() => {
-    if (!companySearchQuery.trim()) return companies.slice(0, 40);
+    if (!companySearchQuery.trim()) return companies.slice(0, 50);
     const q = companySearchQuery.toLowerCase();
     return companies.filter(c => 
       c.companyName.toLowerCase().includes(q) || 
-      c.bizNumber.includes(q) || 
-      c.ceoName.includes(q)
-    ).slice(0, 40);
+      (c.bizNumber || '').includes(q) || 
+      (c.ceoName || '').toLowerCase().includes(q)
+    ).slice(0, 50);
   }, [companies, companySearchQuery]);
 
   // [B] 규격 추가 모드 특화
   const [addedStandards, setAddedStandards] = useState<StandardCode[]>(['ESG-MS:2023']);
 
-  // [C] 신규 / 전환 기업 수동 입력 필드
+  // [C] 신규 / 전환 기업 상세 편집 필드
   const [newCompanyName, setNewCompanyName] = useState<string>('(주)케이원메탈2공장');
   const [newCeoName, setNewCeoName] = useState<string>('박경원');
   const [newBizNumber, setNewBizNumber] = useState<string>('513-85-18153');
@@ -142,9 +152,48 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [newStandards, setNewStandards] = useState<StandardCode[]>(['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018']);
   const [newAgency, setNewAgency] = useState<string>('아이비컨설팅');
 
+  // 고객사 선택 시 해당 기업 정보로 자동 동기화
+  useEffect(() => {
+    if (selectedCompany) {
+      setNewCompanyName(selectedCompany.companyName);
+      setNewCeoName(selectedCompany.ceoName || '');
+      setNewBizNumber(selectedCompany.bizNumber || '');
+      setNewAddress(selectedCompany.address || '');
+      setNewContactPerson(selectedCompany.contactPerson || '');
+      setNewContactPhone(selectedCompany.contactPhone || '');
+      setNewContactEmail(selectedCompany.contactEmail || '');
+      setNewIndustry(selectedCompany.industry || '');
+      setNewIafCode(selectedCompany.iafCode || '17');
+      setNewScope(selectedCompany.scope || '');
+      setNewAgency(selectedCompany.consultant || selectedCompany.agency || '아이비컨설팅');
+      setCurrentEmployeeCount(selectedCompany.totalEmployees || 48);
+
+      // 전환 기업 등록인 경우 전환심사로 자동 제안
+      if (selectedCompany.isTransfer) {
+        setReceptionType('전환심사');
+      }
+
+      // 등록된 규격 파싱 및 동기화
+      const compAny = selectedCompany as any;
+      if (compAny.standards && typeof compAny.standards === 'string') {
+        const stds: StandardCode[] = [];
+        if (compAny.standards.includes('9001')) stds.push('ISO 9001:2015');
+        if (compAny.standards.includes('14001')) stds.push('ISO 14001:2015');
+        if (compAny.standards.includes('45001')) stds.push('ISO 45001:2018');
+        if (compAny.standards.includes('27001')) stds.push('ISO 27001:2022');
+        if (compAny.standards.includes('13485')) stds.push('ISO 13485:2016');
+        if (compAny.standards.includes('22000')) stds.push('ISO 22000:2018');
+        if (compAny.standards.includes('ESG')) stds.push('ESG-MS:2023');
+        if (stds.length > 0) {
+          setNewStandards(stds);
+        }
+      }
+    }
+  }, [selectedCompanyId, selectedCompany]);
+
   // 활성 회사 정보
-  const activeCompany = useMemo(() => {
-    if (receptionType === '신규인증' || receptionType === '전환심사') {
+  const activeCompany: Company = useMemo(() => {
+    if (!selectedCompany) {
       return {
         id: 'new-comp-01',
         companyName: newCompanyName,
@@ -157,14 +206,34 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         industry: newIndustry,
         iafCode: newIafCode,
         totalEmployees: 35,
-        scope: newScope || ''
-      } as Company;
+        scope: newScope || '',
+        clientType: '직영',
+        riskLevel: 'Medium',
+        createdAt: '2026-09-11'
+      };
     }
+
+    if (isManualEditOpen) {
+      return {
+        ...selectedCompany,
+        companyName: newCompanyName,
+        ceoName: newCeoName,
+        bizNumber: newBizNumber,
+        address: newAddress,
+        contactPerson: newContactPerson,
+        contactPhone: newContactPhone,
+        contactEmail: newContactEmail,
+        industry: newIndustry,
+        iafCode: newIafCode,
+        scope: newScope || selectedCompany.scope || ''
+      };
+    }
+
     return selectedCompany;
-  }, [receptionType, newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope, selectedCompany]);
+  }, [selectedCompany, isManualEditOpen, newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope]);
 
   // [D] 인원수 변동 검증 State
-  const defaultEmpCount = receptionType === '신규인증' || receptionType === '전환심사' ? 35 : (selectedCompany?.totalEmployees || 48);
+  const defaultEmpCount = selectedCompany?.totalEmployees || 48;
   const [currentEmployeeCount, setCurrentEmployeeCount] = useState<number>(defaultEmpCount);
   const previousEmployeeCount = selectedCompany?.totalEmployees || 48;
   const isEmployeeChanged = receptionType !== '신규인증' && currentEmployeeCount !== previousEmployeeCount;
@@ -193,12 +262,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   // [F] 심사 표준 (규격)
   const activeStandards: StandardCode[] = useMemo(() => {
     if (receptionType === '신규인증' || receptionType === '전환심사') {
-      return newStandards;
+      return newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode];
     }
     if (receptionType === '규격추가') {
       return Array.from(new Set(['ISO 9001:2015' as StandardCode, 'ISO 14001:2015' as StandardCode, ...addedStandards]));
     }
-    return ['ISO 9001:2015' as StandardCode, 'ISO 14001:2015' as StandardCode, 'ISO 45001:2018' as StandardCode];
+    return newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode, 'ISO 14001:2015' as StandardCode, 'ISO 45001:2018' as StandardCode];
   }, [receptionType, newStandards, addedStandards]);
 
   // [G] KAB 공식 표준 MD 산출
@@ -590,178 +659,236 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
             </div>
           </div>
 
-          {/* 2. 고객사 DB 호출 또는 신규 입력 */}
-          {receptionType === '정기사후' || receptionType === '규격추가' || receptionType === '갱신심사' || receptionType === '인증변경' || receptionType === '재심사' ? (
-            <div className="space-y-2 border-t border-slate-200 pt-3">
-              <div className="flex items-center justify-between">
-                <label className="font-bold text-slate-900">2. 고객사 DB 호출</label>
-                {onOpenCompanyAuditHistory && (
+          {/* 2. 심사 대상 고객사 DB 검색 및 선택 (모든 접수 구분 공통 지원) */}
+          <div className="space-y-2.5 border-t border-slate-200 pt-3">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-900 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-cyan-700" />
+                <span>2. 심사 대상 고객사 DB 검색 및 선택</span>
+              </label>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewCompanyModalOpen(true)}
+                  className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-cyan-700 to-sky-700 hover:from-cyan-800 hover:to-sky-800 text-white rounded text-[11px] font-medium shadow-2xs transition cursor-pointer"
+                  title="신규 고객 및 타기관 전환 고객 등록 모달"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>신규 등록</span>
+                </button>
+                {onOpenCompanyAuditHistory && selectedCompany && (
                   <button
                     type="button"
                     onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
                     className="text-[11px] text-cyan-700 hover:underline font-bold cursor-pointer"
                   >
-                    이전 심사이력 팝업 ↗
+                    이력 팝업 ↗
                   </button>
                 )}
               </div>
+            </div>
 
-              {/* 검색 및 드롭다운 */}
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
-                  <input
-                    type="text"
-                    placeholder="고객사명 / 사업자번호 / 대표자 검색..."
-                    value={companySearchQuery}
-                    onChange={(e) => setCompanySearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-md pl-8 pr-2.5 py-1.5 text-xs focus:bg-white focus:outline-none focus:border-slate-500"
-                  />
-                </div>
-
-                <select
-                  value={selectedCompanyId}
-                  onChange={(e) => {
-                    setSelectedCompanyId(e.target.value);
-                    const target = companies.find(c => c.id === e.target.value);
-                    if (target) {
-                      setCurrentEmployeeCount(target.totalEmployees || 48);
-                    }
-                  }}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-500"
-                >
-                  {filteredCompanyList.map(comp => (
-                    <option key={comp.id} value={comp.id}>
-                      {comp.companyName} (대표: {comp.ceoName} · IAF {comp.iafCode || '14'})
-                    </option>
-                  ))}
-                </select>
+            {/* 검색 및 드롭다운 */}
+            <div className="space-y-1.5">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+                <input
+                  type="text"
+                  placeholder="고객사명 / 사업자번호 / 대표자 검색..."
+                  value={companySearchQuery}
+                  onChange={(e) => setCompanySearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-md pl-8 pr-2.5 py-1.5 text-xs focus:bg-white focus:outline-none focus:border-slate-500"
+                />
               </div>
 
-              {/* 규격 추가 모드일 때 추가 규격 선택 */}
-              {receptionType === '규격추가' && (
-                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-md space-y-1.5">
-                  <span className="font-bold text-slate-800 text-[11px] block flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-cyan-600" />
-                    <span>추가할 신규 규격 선택:</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(e) => {
+                  setSelectedCompanyId(e.target.value);
+                  const target = companies.find(c => c.id === e.target.value);
+                  if (target) {
+                    setCurrentEmployeeCount(target.totalEmployees || 48);
+                  }
+                }}
+                className="w-full bg-slate-50 border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-500"
+              >
+                {filteredCompanyList.map(comp => (
+                  <option key={comp.id} value={comp.id}>
+                    {comp.companyName} (대표: {comp.ceoName} · IAF {comp.iafCode || '14'} {comp.isTransfer ? '· 전환고객' : ''})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 전환 고객사 감지 배너 */}
+            {selectedCompany?.isTransfer && (
+              <div className="p-2.5 bg-cyan-50 border border-cyan-200 rounded-lg text-xs space-y-1">
+                <div className="flex items-center justify-between font-bold text-cyan-950">
+                  <span className="flex items-center gap-1">
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-cyan-700" />
+                    <span>타 기관 전환 심사 고객 ({selectedCompany.transferType || '타기관 인증 전환'})</span>
                   </span>
-                  <div className="grid grid-cols-2 gap-1">
-                    {(['ESG-MS:2023', 'ISO 45001:2018', 'ISO 50001:2018', 'ISO 27001:2022'] as StandardCode[]).map(std => (
-                      <label key={std} className="flex items-center space-x-1.5 text-[11px] text-slate-700 cursor-pointer">
+                  <span className="text-[10px] px-1.5 py-0.2 bg-cyan-200/80 text-cyan-900 rounded font-mono font-bold">
+                    {selectedCompany.prevCertificationBody || '한국품질재단(KFQ)'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-cyan-900/90 leading-tight">
+                  이전 인증번호: <span className="font-mono font-semibold">{selectedCompany.prevCertNumber || 'KFQ-QA-10928'}</span>
+                  {selectedCompany.prevCertExpiryDate && ` · 이전 만료: ${selectedCompany.prevCertExpiryDate}`}
+                </div>
+                {selectedCompany.transferReason && (
+                  <div className="text-[10.5px] text-cyan-800 italic pt-0.5 border-t border-cyan-200/60">
+                    사유: {selectedCompany.transferReason}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 신규인증 / 전환심사 / 규격추가 시 적용할 심사 규격 다중 선택 */}
+            {(receptionType === '신규인증' || receptionType === '전환심사' || receptionType === '규격추가') && (
+              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-md space-y-1.5">
+                <span className="font-bold text-slate-800 text-[11px] block flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-cyan-600" />
+                    <span>적용 심사 규격 선택:</span>
+                  </span>
+                  <span className="text-[10px] text-slate-500">선택 {receptionType === '규격추가' ? addedStandards.length : newStandards.length}개</span>
+                </span>
+                <div className="grid grid-cols-2 gap-1">
+                  {(['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018', 'ISO 27001:2022', 'ISO 13485:2016', 'ISO 22000:2018', 'ESG-MS:2023'] as StandardCode[]).map(std => {
+                    const isChecked = receptionType === '규격추가' ? addedStandards.includes(std) : newStandards.includes(std);
+                    return (
+                      <label key={std} className="flex items-center space-x-1.5 text-[11px] text-slate-700 cursor-pointer hover:text-slate-900">
                         <input
                           type="checkbox"
-                          checked={addedStandards.includes(std)}
+                          checked={isChecked}
                           onChange={(e) => {
-                            if (e.target.checked) setAddedStandards([...addedStandards, std]);
-                            else setAddedStandards(addedStandards.filter(s => s !== std));
+                            if (receptionType === '규격추가') {
+                              if (e.target.checked) setAddedStandards([...addedStandards, std]);
+                              else setAddedStandards(addedStandards.filter(s => s !== std));
+                            } else {
+                              if (e.target.checked) setNewStandards([...newStandards, std]);
+                              else setNewStandards(newStandards.filter(s => s !== std));
+                            }
                           }}
-                          className="rounded text-cyan-700"
+                          className="rounded text-cyan-700 accent-cyan-700"
                         />
                         <span>{std}</span>
                       </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* DB 호출된 기업 정보 요약 (플랫 테두리) */}
-              <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">사업자번호:</span>
-                  <span className="font-mono text-slate-900 font-semibold">{selectedCompany.bizNumber || '513-85-18153'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">소재지:</span>
-                  <span className="truncate max-w-[200px] text-slate-900">{selectedCompany.address}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">담당자:</span>
-                  <span className="text-slate-900">{selectedCompany.contactPerson || '정순호 이사'} ({selectedCompany.contactPhone || '054-955-9197'})</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">보유 인증번호:</span>
-                  <span className="font-mono text-slate-900 font-semibold">QE240207 / OH240235</span>
+                    );
+                  })}
                 </div>
               </div>
+            )}
 
-              {/* DB 호출된 인증범위 요약 박스 (동일 디자인) */}
-              <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700 mt-1.5">
-                <div className="flex justify-between items-center pb-0.5 border-b border-slate-200/80">
-                  <span className="text-slate-500 font-bold">인증범위:</span>
-                  <span className="text-[10px] text-cyan-800 font-semibold">IAF {selectedCompany.iafCode || '17'}</span>
-                </div>
-                <div className="text-slate-900 font-medium leading-relaxed break-keep pt-0.5">
-                  {selectedCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
-                </div>
+            {/* DB 호출된 기업 정보 요약 (플랫 테두리) */}
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700">
+              <div className="flex justify-between">
+                <span className="text-slate-500">사업자번호:</span>
+                <span className="font-mono text-slate-900 font-semibold">{activeCompany.bizNumber || '513-85-18153'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">대표자:</span>
+                <span className="text-slate-900 font-medium">{activeCompany.ceoName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">소재지:</span>
+                <span className="truncate max-w-[200px] text-slate-900">{activeCompany.address}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">실무담당자:</span>
+                <span className="text-slate-900">{activeCompany.contactPerson || '정순호 이사'} ({activeCompany.contactPhone || '054-955-9197'})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">IAF 코드:</span>
+                <span className="font-mono text-cyan-900 font-bold">IAF {activeCompany.iafCode || '17'}</span>
               </div>
             </div>
-          ) : (
-            /* 신규/전환 기업 직접 입력란 */
-            <div className="space-y-2 border-t border-slate-200 pt-3">
-              <label className="font-bold text-slate-900">2. 신규 기업 정보 입력</label>
-              <div className="space-y-1.5">
-                <input
-                  type="text"
-                  placeholder="기업명"
-                  value={newCompanyName}
-                  onChange={(e) => setNewCompanyName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
-                />
-                <div className="grid grid-cols-2 gap-1.5">
-                  <input
-                    type="text"
-                    placeholder="대표자명"
-                    value={newCeoName}
-                    onChange={(e) => setNewCeoName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
-                  />
-                  <input
-                    type="text"
-                    placeholder="사업자번호"
-                    value={newBizNumber}
-                    onChange={(e) => setNewBizNumber(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
-                  />
+
+            {/* DB 호출된 인증범위 요약 박스 */}
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700">
+              <div className="flex justify-between items-center pb-0.5 border-b border-slate-200/80">
+                <span className="text-slate-500 font-bold">인증범위 (국문/영문):</span>
+                <button
+                  type="button"
+                  onClick={() => setIsManualEditOpen(!isManualEditOpen)}
+                  className="text-[10px] text-cyan-700 hover:text-cyan-900 font-bold flex items-center gap-0.5 cursor-pointer"
+                >
+                  <Edit3 className="w-2.5 h-2.5" />
+                  <span>{isManualEditOpen ? '수정 접기 ▲' : '정보 직접 수정 ▼'}</span>
+                </button>
+              </div>
+              <div className="text-slate-900 font-medium leading-relaxed break-keep pt-0.5">
+                {activeCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작 (현장 확인 확정)'}
+              </div>
+            </div>
+
+            {/* 정보 직접 수정 모드 펼침 영역 */}
+            {isManualEditOpen && (
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-md space-y-2 text-xs animate-in fade-in">
+                <div className="font-bold text-amber-900 text-[11px] flex items-center justify-between pb-1 border-b border-amber-200/80">
+                  <span>계약·계획서 반영 기업정보 직접 수정</span>
+                  <span className="text-[10px] text-amber-700 font-normal">현재 계약 문서에만 적용</span>
                 </div>
-                <input
-                  type="text"
-                  placeholder="소재지 주소"
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
-                />
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="space-y-1.5">
                   <input
                     type="text"
-                    placeholder="담당자명"
-                    value={newContactPerson}
-                    onChange={(e) => setNewContactPerson(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
+                    placeholder="기업명"
+                    value={newCompanyName}
+                    onChange={(e) => setNewCompanyName(e.target.value)}
+                    className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs"
                   />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="대표자명"
+                      value={newCeoName}
+                      onChange={(e) => setNewCeoName(e.target.value)}
+                      className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs"
+                    />
+                    <input
+                      type="text"
+                      placeholder="사업자번호"
+                      value={newBizNumber}
+                      onChange={(e) => setNewBizNumber(e.target.value)}
+                      className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs"
+                    />
+                  </div>
                   <input
                     type="text"
-                    placeholder="담당자 연락처"
-                    value={newContactPhone}
-                    onChange={(e) => setNewContactPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
+                    placeholder="소재지 주소"
+                    value={newAddress}
+                    onChange={(e) => setNewAddress(e.target.value)}
+                    className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs"
                   />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[11px] font-bold text-slate-700">인증범위 (국문/영문):</span>
-                    <span className="text-[10px] text-slate-400">선택사항 (미입력 가능)</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="담당자명"
+                      value={newContactPerson}
+                      onChange={(e) => setNewContactPerson(e.target.value)}
+                      className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs"
+                    />
+                    <input
+                      type="text"
+                      placeholder="담당자 연락처"
+                      value={newContactPhone}
+                      onChange={(e) => setNewContactPhone(e.target.value)}
+                      className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs"
+                    />
                   </div>
                   <textarea
                     rows={2}
-                    placeholder="인증범위 입력 (미입력 시 계획서·청구서에 현장심사 시 확정 안내문이 자동 기재됩니다)"
+                    placeholder="인증범위 수정"
                     value={newScope}
                     onChange={(e) => setNewScope(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs resize-none placeholder:text-slate-400 focus:bg-white focus:outline-none"
+                    className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs resize-none placeholder:text-slate-400 focus:outline-none"
                   />
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* 3. 인원수 변동 확인 */}
           <div className="space-y-1.5 border-t border-slate-200 pt-3">
@@ -2643,6 +2770,23 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         </div>
 
       </div>
+
+      {/* 신규 고객 등록 모달 (신규/전환) */}
+      <NewCompanyModal
+        isOpen={isNewCompanyModalOpen}
+        onClose={() => setIsNewCompanyModalOpen(false)}
+        onSave={(newCompany) => {
+          onAddCompany?.(newCompany);
+          setSelectedCompanyId(newCompany.id);
+          setIsNewCompanyModalOpen(false);
+          if (newCompany.isTransfer) {
+            setReceptionType('전환심사');
+          } else {
+            setReceptionType('신규인증');
+          }
+        }}
+        auditors={auditors}
+      />
     </div>
   );
 };
