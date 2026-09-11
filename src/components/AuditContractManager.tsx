@@ -243,20 +243,35 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         setReceptionType('전환심사');
       }
 
-      // 등록된 규격 파싱 및 동기화
-      if (compAny.standards && typeof compAny.standards === 'string') {
-        const stds: StandardCode[] = [];
-        if (compAny.standards.includes('9001')) stds.push('ISO 9001:2015');
-        if (compAny.standards.includes('14001')) stds.push('ISO 14001:2015');
-        if (compAny.standards.includes('45001')) stds.push('ISO 45001:2018');
-        if (compAny.standards.includes('27001')) stds.push('ISO 27001:2022');
-        if (compAny.standards.includes('13485')) stds.push('ISO 13485:2016');
-        if (compAny.standards.includes('22000')) stds.push('ISO 22000:2018');
-        if (compAny.standards.includes('ESG')) stds.push('ESG-MS:2023');
-        if (stds.length > 0) {
-          setNewStandards(stds);
-        }
+      // 등록된 규격 파싱 및 동기화 (기존 보유 인증규격 자동 추출)
+      const extractedStds: StandardCode[] = [];
+      const rawStds = compAny.standards || compAny.certifiedStandards || '';
+      if (Array.isArray(rawStds)) {
+        rawStds.forEach((s: string) => {
+          if (s.includes('9001') && !extractedStds.includes('ISO 9001:2015')) extractedStds.push('ISO 9001:2015');
+          if (s.includes('14001') && !extractedStds.includes('ISO 14001:2015')) extractedStds.push('ISO 14001:2015');
+          if (s.includes('45001') && !extractedStds.includes('ISO 45001:2018')) extractedStds.push('ISO 45001:2018');
+          if (s.includes('27001') && !extractedStds.includes('ISO 27001:2022')) extractedStds.push('ISO 27001:2022');
+          if (s.includes('13485') && !extractedStds.includes('ISO 13485:2016')) extractedStds.push('ISO 13485:2016');
+          if (s.includes('22000') && !extractedStds.includes('ISO 22000:2018')) extractedStds.push('ISO 22000:2018');
+          if (s.includes('50001') && !extractedStds.includes('ISO 50001:2018')) extractedStds.push('ISO 50001:2018');
+          if (s.includes('ESG') && !extractedStds.includes('ESG-MS:2023')) extractedStds.push('ESG-MS:2023');
+        });
+      } else if (typeof rawStds === 'string' && rawStds.trim().length > 0) {
+        if (rawStds.includes('9001') && !extractedStds.includes('ISO 9001:2015')) extractedStds.push('ISO 9001:2015');
+        if (rawStds.includes('14001') && !extractedStds.includes('ISO 14001:2015')) extractedStds.push('ISO 14001:2015');
+        if (rawStds.includes('45001') && !extractedStds.includes('ISO 45001:2018')) extractedStds.push('ISO 45001:2018');
+        if (rawStds.includes('27001') && !extractedStds.includes('ISO 27001:2022')) extractedStds.push('ISO 27001:2022');
+        if (rawStds.includes('13485') && !extractedStds.includes('ISO 13485:2016')) extractedStds.push('ISO 13485:2016');
+        if (rawStds.includes('22000') && !extractedStds.includes('ISO 22000:2018')) extractedStds.push('ISO 22000:2018');
+        if (rawStds.includes('50001') && !extractedStds.includes('ISO 50001:2018')) extractedStds.push('ISO 50001:2018');
+        if (rawStds.includes('ESG') && !extractedStds.includes('ESG-MS:2023')) extractedStds.push('ESG-MS:2023');
       }
+      if (extractedStds.length === 0) {
+        extractedStds.push('ISO 9001:2015', 'ISO 14001:2015');
+      }
+      setNewStandards(extractedStds);
+      setAddedStandards(extractedStds);
       setIsDirty(false);
     }
   }, [selectedCompanyId, selectedCompany, auditors]);
@@ -339,7 +354,8 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const calculatedAuditStageText = useMemo(() => {
     if (receptionType === '신규인증') return '최초 인증심사 (1단계/2단계)';
     if (receptionType === '전환심사') return '전환 심사 (타인증원 이관)';
-    if (receptionType === '규격추가') return '규격추가 심사 (신규 규격 최초 단계 적용)';
+    if (receptionType === '규격추가') return '규격추가 심사 (신규 규격 추가)';
+    if (receptionType === '입회심사') return '입회심사 (인정기구/사무국 입회)';
     if (receptionType === '인증변경') return '인증변경 심사 (상호/소재지/인원/범위 변경)';
     if (receptionType === '재심사') return '재심사 (부적합 시정 후 재심사)';
     if (receptionType === '갱신심사') return '갱신심사 (재인증)';
@@ -357,7 +373,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
       return newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode];
     }
     if (receptionType === '규격추가') {
-      return Array.from(new Set(['ISO 9001:2015' as StandardCode, 'ISO 14001:2015' as StandardCode, ...addedStandards]));
+      return addedStandards.length > 0 ? addedStandards : newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode];
     }
     return newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode, 'ISO 14001:2015' as StandardCode, 'ISO 45001:2018' as StandardCode];
   }, [receptionType, newStandards, addedStandards]);
@@ -729,25 +745,30 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
           
           {/* 1. 심사 구분 선택 */}
           <div className="space-y-1.5">
-            <label className="font-bold text-slate-900 block flex items-center justify-between">
+            <label className="font-bold text-slate-900 block">
               <span>1. 심사 구분 및 접수 성격</span>
-              <span className="text-[11px] text-cyan-800 font-medium">[{receptionType}]</span>
             </label>
             <div className="grid grid-cols-3 gap-1.5">
-              {(['신규인증', '갱신심사', '정기사후', '전환심사', '규격추가', '재심사'] as AuditContractType[]).map(type => (
+              {(['신규인증', '갱신심사', '정기사후', '전환심사', '규격추가', '입회심사'] as AuditContractType[]).map(type => (
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setReceptionType(type)}
+                  onClick={() => {
+                    setReceptionType(type);
+                    if (type === '규격추가' && addedStandards.length === 0 && newStandards.length > 0) {
+                      setAddedStandards([...newStandards]);
+                    }
+                  }}
                   className={`py-1.5 px-1.5 rounded-md font-bold text-center border transition cursor-pointer text-[11px] ${
                     receptionType === type
                       ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-white text-slate-700 border-slate-300'
+                      : 'bg-slate-100 hover:bg-white text-slate-700 border-slate-200'
                   }`}
                 >
                   {type === '정기사후' ? '사후관리 (1·2차)' :
                    type === '갱신심사' ? '갱신심사 (재인)' :
                    type === '신규인증' ? '최초 (신규)' :
+                   type === '입회심사' ? '입회심사' :
                    type === '재심사' ? '재심사' : type}
                 </button>
               ))}
@@ -878,12 +899,14 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 <span className="font-bold text-slate-800 text-[11px] block flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-cyan-600" />
-                    <span>적용 심사 규격 선택:</span>
+                    <span>{receptionType === '규격추가' ? '인증 및 추가 심사 규격 (보유규격 자동체크):' : '적용 심사 규격 선택:'}</span>
                   </span>
-                  <span className="text-[10px] text-slate-500">선택 {receptionType === '규격추가' ? addedStandards.length : newStandards.length}개</span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    선택 {receptionType === '규격추가' ? addedStandards.length : newStandards.length}개
+                  </span>
                 </span>
                 <div className="grid grid-cols-2 gap-1">
-                  {(['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018', 'ISO 27001:2022', 'ISO 13485:2016', 'ISO 22000:2018', 'ESG-MS:2023'] as StandardCode[]).map(std => {
+                  {(['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018', 'ISO 27001:2022', 'ISO 13485:2016', 'ISO 22000:2018', 'ISO 50001:2018', 'ESG-MS:2023'] as StandardCode[]).map(std => {
                     const isChecked = receptionType === '규격추가' ? addedStandards.includes(std) : newStandards.includes(std);
                     return (
                       <label key={std} className="flex items-center space-x-1.5 text-[11px] text-slate-700 cursor-pointer hover:text-slate-900">
@@ -892,10 +915,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                           checked={isChecked}
                           onChange={(e) => {
                             if (receptionType === '규격추가') {
-                              if (e.target.checked) setAddedStandards([...addedStandards, std]);
+                              if (e.target.checked) setAddedStandards(Array.from(new Set([...addedStandards, std])));
                               else setAddedStandards(addedStandards.filter(s => s !== std));
                             } else {
-                              if (e.target.checked) setNewStandards([...newStandards, std]);
+                              if (e.target.checked) setNewStandards(Array.from(new Set([...newStandards, std])));
                               else setNewStandards(newStandards.filter(s => s !== std));
                             }
                           }}

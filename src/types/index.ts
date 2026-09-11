@@ -170,7 +170,7 @@ export interface CertContract {
   status: '유효' | '만료임박' | '만료' | '정지';
 }
 
-export type AuditContractType = '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경' | '재심사';
+export type AuditContractType = '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경' | '입회심사' | '재심사';
 
 export interface CertChangeApplicationData {
   appliedDate: string;
@@ -240,7 +240,7 @@ export interface AuditContractRecord {
   companyId: string;
   companyName: string;
   contractType: AuditContractType;
-  receptionType?: '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경' | '재심사';
+  receptionType?: AuditContractType;
   standards: StandardCode[];
   addedStandards?: StandardCode[]; // 규격추가 시
   changeDetails?: string; // 인증변경 시 사유/내용
