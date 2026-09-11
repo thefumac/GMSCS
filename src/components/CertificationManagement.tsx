@@ -23,7 +23,11 @@ import {
   RefreshCw,
   Send,
   Building2,
-  Users
+  Users,
+  FileText,
+  Bell,
+  Search,
+  BookOpen
 } from 'lucide-react';
 import { Auditor, Company, AuditProject, AuditorSettlement, CommitteeScheduleItem } from '../types';
 import { 
@@ -38,8 +42,14 @@ import {
   saveInstituteEvents
 } from '../utils/committeeSchedule';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
+import {
+  AuditReportNoticeItem,
+  loadAuditReportNotices,
+  saveAuditReportNotices,
+  DEFAULT_AUDIT_REPORT_NOTICES
+} from '../utils/auditReportNotices';
 
-export type CertSubTab = 'standards' | 'committee' | 'events' | 'kab' | 'settlements' | 'general' | 'mail';
+export type CertSubTab = 'standards' | 'reportNotices' | 'committee' | 'events' | 'kab' | 'settlements' | 'general' | 'mail';
 
 export interface CertificationManagementProps {
   auditors: Auditor[];
@@ -87,6 +97,98 @@ export const CertificationManagement: React.FC<CertificationManagementProps> = (
   const [eventLocation, setEventLocation] = useState<string>('GMSCS 본원 세미나실');
   const [eventTargetAudience, setEventTargetAudience] = useState<string>('선임심사원 및 심사원');
   const [eventNotes, setEventNotes] = useState<string>('');
+
+  // 심사보고서 작성 공지 관리 상태
+  const [reportNotices, setReportNotices] = useState<AuditReportNoticeItem[]>(() => loadAuditReportNotices());
+  const [selectedNoticeCategory, setSelectedNoticeCategory] = useState<string>('all');
+  const [noticeSearchTerm, setNoticeSearchTerm] = useState<string>('');
+  const [editingNoticeId, setEditingNoticeId] = useState<string | null>(null);
+  const [noticeCategoryInput, setNoticeCategoryInput] = useState<string>('공통사항');
+  const [noticeStandardNameInput, setNoticeStandardNameInput] = useState<string>('전 규격 공통');
+  const [noticeTitleInput, setNoticeTitleInput] = useState<string>('');
+  const [noticeContentInput, setNoticeContentInput] = useState<string>('');
+  const [noticePriorityInput, setNoticePriorityInput] = useState<'필독' | '중요' | '일반'>('중요');
+  const [noticeAuthorInput, setNoticeAuthorInput] = useState<string>('GMSCS 인증원 사무국');
+  const [isAddingNewNotice, setIsAddingNewNotice] = useState<boolean>(false);
+  const [noticeSaveSuccess, setNoticeSaveSuccess] = useState<boolean>(false);
+
+  const handleSaveNotice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noticeTitleInput.trim() || !noticeContentInput.trim()) {
+      alert('공지 제목과 공지 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let updated: AuditReportNoticeItem[];
+
+    if (editingNoticeId) {
+      updated = reportNotices.map(n => {
+        if (n.id === editingNoticeId) {
+          return {
+            ...n,
+            category: noticeCategoryInput,
+            standardName: noticeStandardNameInput,
+            title: noticeTitleInput.trim(),
+            content: noticeContentInput.trim(),
+            priority: noticePriorityInput,
+            author: noticeAuthorInput.trim() || 'GMSCS 인증원 사무국',
+            updatedAt: todayStr
+          };
+        }
+        return n;
+      });
+    } else {
+      const newNotice: AuditReportNoticeItem = {
+        id: `notice-custom-${Date.now()}`,
+        category: noticeCategoryInput,
+        standardName: noticeStandardNameInput,
+        title: noticeTitleInput.trim(),
+        content: noticeContentInput.trim(),
+        priority: noticePriorityInput,
+        author: noticeAuthorInput.trim() || 'GMSCS 인증원 사무국',
+        updatedAt: todayStr
+      };
+      updated = [newNotice, ...reportNotices];
+    }
+
+    setReportNotices(updated);
+    saveAuditReportNotices(updated);
+    setIsAddingNewNotice(false);
+    setEditingNoticeId(null);
+    setNoticeTitleInput('');
+    setNoticeContentInput('');
+    setNoticeSaveSuccess(true);
+    setTimeout(() => setNoticeSaveSuccess(false), 2500);
+  };
+
+  const handleStartEditNotice = (n: AuditReportNoticeItem) => {
+    setEditingNoticeId(n.id);
+    setNoticeCategoryInput(n.category);
+    setNoticeStandardNameInput(n.standardName || (n.category === '공통사항' ? '전 규격 공통' : ''));
+    setNoticeTitleInput(n.title);
+    setNoticeContentInput(n.content);
+    setNoticePriorityInput(n.priority);
+    setNoticeAuthorInput(n.author);
+    setIsAddingNewNotice(true);
+  };
+
+  const handleDeleteNotice = (id: string) => {
+    if (window.confirm('이 공지사항을 삭제하시겠습니까? 심사보고서 작성 워크벤치에서도 삭제됩니다.')) {
+      const updated = reportNotices.filter(n => n.id !== id);
+      setReportNotices(updated);
+      saveAuditReportNotices(updated);
+    }
+  };
+
+  const handleRestoreDefaultNotices = () => {
+    if (window.confirm('기본 인증원 심사보고서 작성 표준 공지사항(11건)으로 복원하시겠습니까?')) {
+      setReportNotices(DEFAULT_AUDIT_REPORT_NOTICES);
+      saveAuditReportNotices(DEFAULT_AUDIT_REPORT_NOTICES);
+      setNoticeSaveSuccess(true);
+      setTimeout(() => setNoticeSaveSuccess(false), 2500);
+    }
+  };
 
   // 1. 인증가능 규격 데이터 (공통 상수 참조)
   const availableStandards = GMS_AVAILABLE_STANDARDS;
@@ -301,6 +403,24 @@ export const CertificationManagement: React.FC<CertificationManagementProps> = (
 
             <button
               type="button"
+              onClick={() => setActiveSubTab('reportNotices')}
+              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition text-left cursor-pointer ${
+                activeSubTab === 'reportNotices'
+                  ? 'bg-white text-slate-950 border border-slate-300 shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 border border-transparent'
+              }`}
+            >
+              <FileText className={`w-4 h-4 ${activeSubTab === 'reportNotices' ? 'text-cyan-700' : 'text-slate-400'}`} />
+              <div className="flex-1 min-w-0 flex items-center justify-between">
+                <span>심사보고서 작성 공지</span>
+                <span className="text-[10px] bg-cyan-100 text-cyan-800 px-1.5 py-0.5 rounded font-bold font-mono">
+                  {reportNotices.length}
+                </span>
+              </div>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveSubTab('committee')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition text-left cursor-pointer ${
                 activeSubTab === 'committee'
@@ -451,6 +571,331 @@ export const CertificationManagement: React.FC<CertificationManagementProps> = (
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* 1-2. 심사보고서 작성 공지사항 관리 뷰 */}
+        {activeSubTab === 'reportNotices' && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">심사보고서 작성 인증원 공지사항 관리 (사무국 지침)</h3>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800">
+                    총 {reportNotices.length}건 등록됨
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  인증원이 심사 가능한 모든 규격별 및 전 규격 공통 심사보고서 작성 지침과 착안점을 등록·수정·관리합니다. 심사보고서 작성 워크벤치에 실시간 연동됩니다.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleRestoreDefaultNotices}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition cursor-pointer shadow-2xs"
+                  title="기본 11개 표준 공지사항으로 초기화"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>표준 공지 복원</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingNoticeId(null);
+                    setNoticeCategoryInput('공통사항');
+                    setNoticeStandardNameInput('전 규격 공통');
+                    setNoticeTitleInput('');
+                    setNoticeContentInput('');
+                    setNoticePriorityInput('중요');
+                    setNoticeAuthorInput('GMSCS 인증원 사무국');
+                    setIsAddingNewNotice(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ 새 공지사항 등록</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 저장 성공 알림 메시지 */}
+            {noticeSaveSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-lg text-xs text-emerald-800 font-bold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>공지사항이 성공적으로 저장되었습니다. 심사보고서 작성 워크벤치에 즉시 반영됩니다.</span>
+              </div>
+            )}
+
+            {/* 공지 등록 / 수정 폼 */}
+            {isAddingNewNotice && (
+              <form onSubmit={handleSaveNotice} className="p-4 bg-slate-50 rounded-xl border border-cyan-300 shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-cyan-700" />
+                    <span>{editingNoticeId ? '심사보고서 작성 공지사항 수정' : '새 심사보고서 작성 공지사항 등록'}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingNewNotice(false);
+                      setEditingNoticeId(null);
+                    }}
+                    className="text-slate-400 hover:text-slate-700 text-xs cursor-pointer font-bold"
+                  >
+                    닫기 ✕
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* 적용 규격 / 구분 */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">적용 대상 / 규격</label>
+                    <select
+                      value={noticeCategoryInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNoticeCategoryInput(val);
+                        if (val === '공통사항') {
+                          setNoticeStandardNameInput('전 규격 공통');
+                        } else {
+                          const matched = GMS_AVAILABLE_STANDARDS.find(s => s.code === val);
+                          if (matched) {
+                            setNoticeStandardNameInput(matched.name);
+                          }
+                        }
+                      }}
+                      className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white focus:ring-1 focus:ring-cyan-500 font-semibold text-slate-800 cursor-pointer"
+                    >
+                      <option value="공통사항">전 규격 공통사항</option>
+                      {GMS_AVAILABLE_STANDARDS.map(std => (
+                        <option key={std.code} value={std.code}>
+                          {std.code} ({std.name.split(' ')[0]})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 규격명 표기 */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">표시 표준명</label>
+                    <input
+                      type="text"
+                      value={noticeStandardNameInput}
+                      onChange={(e) => setNoticeStandardNameInput(e.target.value)}
+                      placeholder="예: 품질경영시스템 (QMS) 또는 전 규격 공통"
+                      className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white focus:ring-1 focus:ring-cyan-500 text-slate-800"
+                    />
+                  </div>
+
+                  {/* 중요도 */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">중요도 구분</label>
+                    <select
+                      value={noticePriorityInput}
+                      onChange={(e) => setNoticePriorityInput(e.target.value as any)}
+                      className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white focus:ring-1 focus:ring-cyan-500 font-bold text-slate-800 cursor-pointer"
+                    >
+                      <option value="필독">🚨 필독 (긴급/핵심지침)</option>
+                      <option value="중요">⭐ 중요 (착안점 권고사항)</option>
+                      <option value="일반">📌 일반 (안내 및 참고사항)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 공지 제목 */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">공지 제목</label>
+                  <input
+                    type="text"
+                    value={noticeTitleInput}
+                    onChange={(e) => setNoticeTitleInput(e.target.value)}
+                    placeholder="예: ISO 9001 프로세스 감사노트 및 객관적 증거 명시 지침"
+                    className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white focus:ring-1 focus:ring-cyan-500 font-bold text-slate-900"
+                    required
+                  />
+                </div>
+
+                {/* 공지 상세 내용 */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    공지 상세 내용 (줄바꿈 및 항목별 번호/불릿 기호 지원)
+                  </label>
+                  <textarea
+                    rows={5}
+                    value={noticeContentInput}
+                    onChange={(e) => setNoticeContentInput(e.target.value)}
+                    placeholder="• 4.4 프로세스 접근법 및 리스크 기반 사고 적용 여부 철저 확인&#10;• 8.5 생산 및 서비스 제공의 공정 관리 상태, 식별 및 추적성 기록 기재"
+                    className="w-full text-xs p-2.5 border border-slate-300 rounded-lg bg-white focus:ring-1 focus:ring-cyan-500 font-mono text-slate-800 leading-relaxed"
+                    required
+                  />
+                </div>
+
+                {/* 작성 주체 & 저장 버튼 */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <span className="font-bold text-[11px]">발행처:</span>
+                    <input
+                      type="text"
+                      value={noticeAuthorInput}
+                      onChange={(e) => setNoticeAuthorInput(e.target.value)}
+                      className="text-xs p-1 border border-slate-300 rounded bg-white w-40"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingNewNotice(false);
+                        setEditingNoticeId(null);
+                      }}
+                      className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 cursor-pointer"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{editingNoticeId ? '수정 완료' : '공지사항 저장'}</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* 필터 및 검색 바 */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-100 rounded-lg border border-slate-200">
+              <div className="flex flex-wrap items-center gap-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedNoticeCategory('all')}
+                  className={`px-2.5 py-1 rounded-md font-bold text-xs transition cursor-pointer ${
+                    selectedNoticeCategory === 'all'
+                      ? 'bg-cyan-700 text-white shadow-2xs'
+                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-300'
+                  }`}
+                >
+                  전체 ({reportNotices.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedNoticeCategory('공통사항')}
+                  className={`px-2.5 py-1 rounded-md font-bold text-xs transition cursor-pointer ${
+                    selectedNoticeCategory === '공통사항'
+                      ? 'bg-cyan-700 text-white shadow-2xs'
+                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-300'
+                  }`}
+                >
+                  공통사항 ({reportNotices.filter(n => n.category === '공통사항').length})
+                </button>
+                {GMS_AVAILABLE_STANDARDS.map(std => {
+                  const count = reportNotices.filter(n => n.category === std.code).length;
+                  if (count === 0 && selectedNoticeCategory !== std.code) return null;
+                  return (
+                    <button
+                      key={std.code}
+                      type="button"
+                      onClick={() => setSelectedNoticeCategory(std.code)}
+                      className={`px-2.5 py-1 rounded-md font-bold text-xs transition cursor-pointer ${
+                        selectedNoticeCategory === std.code
+                          ? 'bg-cyan-700 text-white shadow-2xs'
+                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-300'
+                      }`}
+                    >
+                      {std.code.split(':')[0]} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 검색창 */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={noticeSearchTerm}
+                  onChange={(e) => setNoticeSearchTerm(e.target.value)}
+                  placeholder="공지 제목 또는 본문 검색..."
+                  className="pl-8 pr-3 py-1 text-xs border border-slate-300 rounded-md bg-white focus:ring-1 focus:ring-cyan-500 w-48 text-slate-800"
+                />
+              </div>
+            </div>
+
+            {/* 공지사항 카드 목록 */}
+            <div className="space-y-2.5">
+              {reportNotices
+                .filter(n => {
+                  if (selectedNoticeCategory !== 'all' && n.category !== selectedNoticeCategory) return false;
+                  if (noticeSearchTerm.trim()) {
+                    const q = noticeSearchTerm.toLowerCase();
+                    return n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.category.toLowerCase().includes(q);
+                  }
+                  return true;
+                })
+                .map((notice) => (
+                  <div
+                    key={notice.id}
+                    className="p-3.5 bg-white rounded-xl border border-slate-300 shadow-2xs hover:border-cyan-300 transition-colors space-y-2"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        {/* 중요도 뱃지 */}
+                        <span className={`px-2 py-0.5 rounded text-[10.5px] font-extrabold ${
+                          notice.priority === '필독'
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : notice.priority === '중요'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}>
+                          {notice.priority === '필독' ? '🚨 필독' : notice.priority === '중요' ? '⭐ 중요' : '📌 일반'}
+                        </span>
+
+                        {/* 규격 뱃지 */}
+                        <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold font-mono ${
+                          notice.category === '공통사항'
+                            ? 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                            : 'bg-cyan-50 text-cyan-900 border border-cyan-200'
+                        }`}>
+                          {notice.category} {notice.standardName && notice.category !== '공통사항' ? `(${notice.standardName.split(' ')[0]})` : ''}
+                        </span>
+
+                        {/* 제목 */}
+                        <h4 className="font-bold text-slate-900 text-xs">{notice.title}</h4>
+                      </div>
+
+                      {/* 작성자, 작성일 및 수정/삭제 액션 */}
+                      <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                        <span>{notice.author} · {notice.updatedAt}</span>
+                        <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditNotice(notice)}
+                            className="p-1 rounded text-cyan-700 hover:bg-cyan-50 cursor-pointer"
+                            title="수정하기"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNotice(notice.id)}
+                            className="p-1 rounded text-rose-600 hover:bg-rose-50 cursor-pointer"
+                            title="삭제하기"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 본문 내용 */}
+                    <div className="text-xs text-slate-700 whitespace-pre-wrap font-normal leading-relaxed pl-1">
+                      {notice.content}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         )}

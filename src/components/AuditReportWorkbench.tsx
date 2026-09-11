@@ -33,9 +33,14 @@ import {
   Search,
   Plus,
   Trash2,
-  Paperclip
+  Paperclip,
+  Bell
 } from 'lucide-react';
 import type { Company, Auditor, AuditReport, AuditContractRecord, ProofDocument } from '../types';
+import {
+  AuditReportNoticeItem,
+  loadAuditReportNotices
+} from '../utils/auditReportNotices';
 
 // ============================================================
 // 2025 Audit Report Pack (251001) PDF 실물 1:1 완벽 복제 시스템
@@ -433,6 +438,27 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       }
     ];
   });
+
+  // 사무국 인증관리 연동 심사보고서 작성 공지사항 상태
+  const [cbNotices, setCbNotices] = useState<AuditReportNoticeItem[]>(() => loadAuditReportNotices());
+  const [selectedNoticeFilter, setSelectedNoticeFilter] = useState<string>('all');
+  const [expandedNoticeId, setExpandedNoticeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleNoticesUpdate = (e: any) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setCbNotices(e.detail);
+      } else {
+        setCbNotices(loadAuditReportNotices());
+      }
+    };
+    window.addEventListener('gmscs-audit-notices-updated', handleNoticesUpdate);
+    window.addEventListener('storage', handleNoticesUpdate);
+    return () => {
+      window.removeEventListener('gmscs-audit-notices-updated', handleNoticesUpdate);
+      window.removeEventListener('storage', handleNoticesUpdate);
+    };
+  }, []);
 
   // LocalStorage 저장
   useEffect(() => {
@@ -907,37 +933,105 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             </label>
           </div>
 
-          {/* 3. 규격별 심사 핵심 착안점 가이드 (Reference Tips) */}
+          {/* 3. 보고서 작성 인증원 공지사항 (Certification Body Notice) */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-indigo-700 inline-block rounded-xs"></span>
-                <span>3. 규격별 심사 착안점 가이드</span>
+                <span>3. 보고서 작성 인증원 공지사항</span>
               </span>
-              <span className="text-[10px] text-indigo-800 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
-                Checkpoints
+              <span className="text-[10px] text-indigo-800 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                <Bell className="w-3 h-3 text-indigo-600" />
+                <span>사무국 공지 ({cbNotices.length})</span>
               </span>
             </div>
 
-            <div className="space-y-2 text-[11px] text-slate-600">
-              <div className="p-2 bg-slate-50 rounded border border-slate-200 space-y-1">
-                <strong className="text-slate-900 font-bold block text-[11.5px]">ISO 9001 (품질)</strong>
-                <p>• 4.4 프로세스 접근법 및 리스크 기반 사고 적용 여부</p>
-                <p>• 8.5 생산 및 서비스 제공의 공정 관리 상태</p>
-                <p>• 9.2 내부심사 및 9.3 경영검토 이행 실적</p>
-              </div>
-              <div className="p-2 bg-slate-50 rounded border border-slate-200 space-y-1">
-                <strong className="text-slate-900 font-bold block text-[11.5px]">ISO 14001 (환경)</strong>
-                <p>• 6.1.2 환경측면 및 중대한 환경영향 평가</p>
-                <p>• 6.1.3 준수의무사항(인허가, 배출기준) 평가</p>
-                <p>• 8.2 비상사태 대비 및 대응 훈련</p>
-              </div>
-              <div className="p-2 bg-slate-50 rounded border border-slate-200 space-y-1">
-                <strong className="text-slate-900 font-bold block text-[11.5px]">ISO 45001 (안전보건)</strong>
-                <p>• 5.4 근로자의 협의 및 참여 (산업안전보건위원회)</p>
-                <p>• 6.1.2 위험성평가(위험요인 파악 및 통제)</p>
-                <p>• 8.1.4 도급/외주업체 안전보건 관리</p>
-              </div>
+            {/* 규격 및 공통 필터 탭 바 */}
+            <div className="flex flex-wrap gap-1 border-b border-slate-100 pb-1.5 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setSelectedNoticeFilter('all')}
+                className={`px-2 py-0.5 rounded font-bold transition cursor-pointer ${
+                  selectedNoticeFilter === 'all'
+                    ? 'bg-indigo-700 text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                전체 ({cbNotices.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedNoticeFilter('공통사항')}
+                className={`px-2 py-0.5 rounded font-bold transition cursor-pointer ${
+                  selectedNoticeFilter === '공통사항'
+                    ? 'bg-indigo-700 text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                공통사항 ({cbNotices.filter(n => n.category === '공통사항').length})
+              </button>
+              {Array.from(new Set(cbNotices.map(n => n.category).filter(c => c !== '공통사항'))).map(stdCode => {
+                const count = cbNotices.filter(n => n.category === stdCode).length;
+                return (
+                  <button
+                    key={stdCode}
+                    type="button"
+                    onClick={() => setSelectedNoticeFilter(stdCode)}
+                    className={`px-2 py-0.5 rounded font-bold transition cursor-pointer ${
+                      selectedNoticeFilter === stdCode
+                        ? 'bg-indigo-700 text-white shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {stdCode.split(':')[0]} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 공지 목록 (스크롤 지원) */}
+            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-0.5">
+              {cbNotices
+                .filter(n => {
+                  if (selectedNoticeFilter === 'all') return true;
+                  return n.category === selectedNoticeFilter;
+                })
+                .map((notice) => (
+                  <div
+                    key={notice.id}
+                    className="p-2.5 bg-slate-50 hover:bg-white rounded-lg border border-slate-200 hover:border-indigo-300 space-y-1.5 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-extrabold ${
+                          notice.priority === '필독'
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : notice.priority === '중요'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}>
+                          {notice.priority === '필독' ? '🚨필독' : notice.priority === '중요' ? '⭐중요' : '📌일반'}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-600 font-mono">
+                          {notice.category}
+                        </span>
+                      </div>
+                      <span className="text-[9.5px] text-slate-400">{notice.updatedAt}</span>
+                    </div>
+
+                    <strong className="text-slate-900 font-bold block text-[11.5px] leading-snug">
+                      {notice.title}
+                    </strong>
+
+                    <div className="text-[11px] text-slate-700 whitespace-pre-wrap leading-relaxed pl-0.5">
+                      {notice.content}
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div className="p-2 bg-indigo-50/60 rounded border border-indigo-100 text-[10.5px] text-indigo-900 leading-tight">
+              💡 <strong>안내:</strong> 본 공지사항은 <strong>[사무국 인증관리 &gt; 심사보고서 작성 공지]</strong>에서 규격별/공통으로 등록 및 수정되며 본 화면에 실시간 연동됩니다.
             </div>
           </div>
 
