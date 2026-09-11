@@ -361,7 +361,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   const verifiedCount = Object.values(signatures).filter(s => s.isVerified).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4 animate-in fade-in duration-200 no-print-bg">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4 animate-in fade-in duration-200 no-print-bg">
       <div className={`bg-slate-900 border border-slate-700 rounded-2xl w-full flex flex-col shadow-2xl overflow-hidden transition-all duration-300 ${
         isFullscreen ? 'h-full max-w-none rounded-none' : 'max-w-[1550px] h-[95vh]'
       }`}>

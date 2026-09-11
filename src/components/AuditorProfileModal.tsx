@@ -237,16 +237,24 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   };
 
   // =========================================================================
-  // Dynamic MD and Audit History Calculation from Projects DB (DB 데이터만 집계)
+  // Dynamic MD and Audit History Calculation from Projects DB (심의위 승인 및 완료 심사만 집계)
   // =========================================================================
   const auditorAuditHistory = useMemo(() => {
     const auditorName = auditor.name.trim();
     if (!auditorName) return [];
 
+    const todayStr = '2026-09-12';
+
     return projects.filter(p => {
       const isLead = (p.leadAuditorName || '').includes(auditorName);
       const isTeam = (p.teamAuditorNames || []).some(t => t.includes(auditorName));
-      return isLead || isTeam;
+      if (!isLead && !isTeam) return false;
+
+      // 심사이력 조건: 심의위 승인 및 최종 완료/인증발행된 프로젝트만 이력으로 인정 (계획수립/심사진행/심의대기/심의진행 등 미완료 배제)
+      const isCompleted = p.status === '인증발행';
+      const isPastOrToday = Boolean(p.startDate && p.startDate <= todayStr);
+
+      return isCompleted && isPastOrToday;
     }).map((p, idx) => {
       const isLead = (p.leadAuditorName || '').includes(auditorName);
       const role = isLead ? '선임심사원(팀장)' : '심사원(팀원)';
@@ -477,12 +485,8 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   누적 {totalCumulativeMd.toFixed(1)} MD
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5 font-normal flex items-center gap-2 flex-wrap">
+              <p className="text-xs text-slate-400 mt-0.5 font-normal flex items-center gap-2">
                 <span>등록번호: <strong className="font-mono text-slate-200">{gmsNumber || '-'}</strong></span>
-                <span>•</span>
-                <span>거주지역: <strong className="text-slate-200">{residentialRegion || '-'}</strong></span>
-                <span>•</span>
-                <span>생년월일: <strong className="font-mono text-slate-200">{birthDate ? `${birthDate} ${gender ? `(${gender})` : ''}` : '-'}</strong></span>
               </p>
             </div>
           </div>
