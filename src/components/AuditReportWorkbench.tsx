@@ -32,7 +32,8 @@ import {
   ClipboardList,
   Search,
   Plus,
-  Trash2
+  Trash2,
+  Paperclip
 } from 'lucide-react';
 import type { Company, Auditor, AuditReport, AuditContractRecord, ProofDocument } from '../types';
 
@@ -66,9 +67,20 @@ export interface EmailSignatureRecord {
   ipAddress: string;
 }
 
+export interface CarAttachment {
+  id: string;
+  fileName: string;
+  fileSize?: string;
+  fileType: 'pdf' | 'image';
+  dataUrl?: string;
+  uploadedAt: string;
+  description?: string;
+}
+
 export interface NcrItem {
   id: string;
   ncrNo: string;
+  certNo?: string;
   standard: string;
   clause: string;
   dept: string;
@@ -77,14 +89,23 @@ export interface NcrItem {
   grade: '경부적합' | '중부적합';
   issueDate: string;
   details: string;
+  // 시정조치 및 증빙자료
   correctionAction: string;
+  correctionAttachments?: CarAttachment[];
+  // 원인분석 (4M) 및 재발방지대책 & 증빙자료
   causeAnalysis: string;
   recurrencePrevent: string;
+  preventAttachments?: CarAttachment[];
   actionDate: string;
   clientSigned: boolean;
   auditorVerified: boolean;
+  verificationType?: '문서확인' | '현장확인';
   verificationResult: '적절함' | '부적절함(보완 필요)';
   effectiveResult: '효과적' | '효과적이지 않음';
+  verificationDate?: string;
+  verifierAuditorName?: string;
+  effectiveDate?: string;
+  effectiveAuditorName?: string;
 }
 
 type DocTabKey = 'all' | 'stage1' | 'stage2' | 'cert_confirm' | 'plan_summary' | 'ncr' | 'proof_upload';
@@ -464,15 +485,74 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     setActiveDocTab('ncr');
   };
 
-  // NCR 삭제 함수
+  // 시정조치 요구서(CAR) 삭제 함수
   const handleDeleteNcr = (id: string) => {
     if (ncrList.length <= 1) {
-      alert('최소 1건의 NCR 양식이 유지되어야 합니다.');
+      alert('최소 1건의 시정조치 요구서 양식이 유지되어야 합니다.');
       return;
     }
-    if (confirm('해당 NCR 보고서를 삭제하시겠습니까?')) {
+    if (confirm('해당 시정조치 요구서를 삭제하시겠습니까?')) {
       setNcrList(ncrList.filter(item => item.id !== id));
     }
+  };
+
+  // 시정조치 요구서 증빙자료 파일 첨부 핸들러 (PDF 또는 이미지)
+  const handleCarFileUpload = (
+    ncrIdx: number,
+    section: 'correction' | 'prevent',
+    files: FileList | null
+  ) => {
+    if (!files || files.length === 0) return;
+    
+    Array.from(files).forEach(file => {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        const newAttachment: CarAttachment = {
+          id: `car-att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          fileName: file.name,
+          fileSize: (file.size / 1024 < 1024) ? `${Math.round(file.size / 1024)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          fileType: isPdf ? 'pdf' : 'image',
+          dataUrl: dataUrl,
+          uploadedAt: new Date().toISOString().slice(0, 10),
+          description: isPdf ? 'PDF 증빙 서류' : '시정조치 개선 전후 사진'
+        };
+
+        setNcrList((prev: NcrItem[]) => {
+          const next = [...prev];
+          const target = { ...next[ncrIdx] };
+          if (section === 'correction') {
+            target.correctionAttachments = [...(target.correctionAttachments || []), newAttachment];
+          } else {
+            target.preventAttachments = [...(target.preventAttachments || []), newAttachment];
+          }
+          next[ncrIdx] = target;
+          return next;
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 시정조치 증빙자료 첨부 삭제 핸들러
+  const handleDeleteCarAttachment = (
+    ncrIdx: number,
+    section: 'correction' | 'prevent',
+    attId: string
+  ) => {
+    setNcrList((prev: NcrItem[]) => {
+      const next = [...prev];
+      const target = { ...next[ncrIdx] };
+      if (section === 'correction') {
+        target.correctionAttachments = (target.correctionAttachments || []).filter(a => a.id !== attId);
+      } else {
+        target.preventAttachments = (target.preventAttachments || []).filter(a => a.id !== attId);
+      }
+      next[ncrIdx] = target;
+      return next;
+    });
   };
 
   // 서명 검증 완료 처리
@@ -686,8 +766,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     },
     {
       id: 'ncr' as DocTabKey,
-      label: `부적합보고서 (${ncrList.length}건)`,
-      icon: AlertTriangle,
+      label: `시정조치 요구서 (${ncrList.length}건)`,
+      icon: FileCheck,
       activeColor: 'bg-white border-t-2 border-t-rose-700 text-rose-950'
     },
     {
@@ -729,14 +809,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => window.print()}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>A4 인쇄 / PDF 출력</span>
           </button>
           <button
             onClick={handleSaveAll}
-            className="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+            className="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
           >
             <Save className="w-3.5 h-3.5" />
             <span>전산 저장</span>
@@ -746,8 +826,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
       {/* 안내 서브 헤더 띠 */}
       <div className="bg-slate-800 text-slate-300 px-5 py-1.5 text-[11px] flex justify-between items-center border-b border-slate-700 shrink-0">
-        <span>좌측 입력란에 값을 지정하면 우측 공식 서식(1·2단계 1~20p+, NCR 등)에 실시간으로 100% 자동 동기화됩니다.</span>
-        <span className="text-teal-300 font-mono">1단계(1~6p) / 2단계(7~16p) / 인정확인(17p) / 계획(18p) / NCR(19p~)</span>
+        <span>좌측 참고 패널의 가이드를 확인하며 우측 공식 서식(1·2단계, 인정확인서, 3년계획, 시정조치 요구서 등)을 작성하세요.</span>
+        <span className="text-teal-300 font-mono">1단계 / 2단계 / 인정범위확인(Table 29) / 3년계획(Table 30~32) / 시정조치요구서(F18-002)</span>
       </div>
 
       {/* 2. 메인 컨텐츠 영역 (좌측 참고 패널 2.8 : 우측 종이 바인더 7.2) */}
@@ -861,20 +941,20 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             </div>
           </div>
 
-          {/* 4. 부적합(NCR) 및 프로세스 노트 바로가기 도구 */}
+          {/* 4. 시정조치 요구서(CAR) 및 동적 페이지 관리 도구 */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-rose-700 inline-block rounded-xs"></span>
-                <span>4. 동적 페이지 관리 도구</span>
+                <span>4. 시정조치 요구서(CAR) 관리</span>
               </span>
               <button
                 type="button"
                 onClick={handleAddNcr}
-                className="px-2 py-0.5 rounded bg-rose-50 border border-rose-300 hover:bg-rose-100 text-rose-800 font-bold text-[10.5px] flex items-center gap-1 transition-colors"
+                className="px-2 py-0.5 rounded bg-rose-50 border border-rose-300 hover:bg-rose-100 text-rose-800 font-bold text-[10.5px] flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
-                <span>NCR 추가</span>
+                <span>+ 요구서 추가</span>
               </button>
             </div>
 
@@ -900,13 +980,13 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                 </button>
               </div>
               <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
-                <span>부적합 보고서(NCR): <strong>{ncrList.length}건</strong></span>
+                <span>시정조치 요구서(CAR): <strong>{ncrList.length}건</strong></span>
                 <button
                   type="button"
                   onClick={() => setActiveDocTab('ncr')}
                   className="px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 font-bold text-[10px] hover:bg-slate-100 cursor-pointer"
                 >
-                  NCR 보기
+                  요구서 보기
                 </button>
               </div>
             </div>
@@ -2126,7 +2206,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               )}
 
               {/* ================================================================= */}
-              {/* 부적합 보고서 (NCR - Table 33 동적 확장) */}
+              {/* 시정조치 요구서 (CAR - Table 34, Form GMSCS-F18-002) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'ncr') && (
                 <div className="space-y-10">
@@ -2135,38 +2215,196 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                       <div className="flex justify-between items-center border-b-2 border-slate-800 pb-2">
                         <div>
                           <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
-                            부적합 보고서 (Non-Conformity Report)
+                            시정조치 요구서 (Corrective Action Request)
                           </h1>
                           <span className="text-xs font-mono text-slate-500">Form No: GMSCS-F18-002 (Rev.0)</span>
                         </div>
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-rose-800 block">부적합 [{ncrIdx + 1} / {ncrList.length}]</span>
+                        <div className="text-right flex items-center gap-3">
+                          <span className="text-xs font-bold text-rose-800 bg-rose-50 px-2 py-1 rounded border border-rose-200">
+                            요구서 [{ncrIdx + 1} / {ncrList.length}]
+                          </span>
+                          {ncrList.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteNcr(ncrItem.id)}
+                              className="px-2 py-1 text-xs text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded border border-rose-300 flex items-center gap-1 transition-colors no-print cursor-pointer"
+                              title="이 시정조치 요구서 삭제"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>삭제</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
                       <table className="w-full border-collapse border border-slate-700 text-xs">
                         <tbody>
+                          {/* Row 1 */}
                           <tr className="border-b border-slate-400">
                             <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">고 객 명</th>
-                            <td className="p-2 border-r border-slate-400 font-bold">{company.companyName}</td>
+                            <td className="p-2 border-r border-slate-400 font-bold text-slate-900">{company.companyName}</td>
                             <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">부적합 번호</th>
-                            <td className="p-2 font-mono font-bold text-rose-800">{ncrItem.ncrNo}</td>
+                            <td className="p-2 font-mono font-bold text-rose-800">
+                              <input
+                                type="text"
+                                value={ncrItem.ncrNo}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].ncrNo = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                className="w-full font-mono font-bold text-rose-800 bg-transparent border-b border-transparent focus:border-rose-500 focus:bg-rose-50/50 p-0.5 text-xs"
+                              />
+                            </td>
                           </tr>
+
+                          {/* Row 2 */}
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">적용표준</th>
-                            <td className="p-2 border-r border-slate-400">{ncrItem.standard}</td>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">표준조항</th>
-                            <td className="p-2 font-mono">{ncrItem.clause}</td>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">인증번호</th>
+                            <td className="p-2 border-r border-slate-400 font-mono">
+                              <input
+                                type="text"
+                                value={ncrItem.certNo || scopeConfirmData.certNo || 'GMS-2609-08'}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].certNo = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                className="w-full font-mono bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-0.5 text-xs"
+                              />
+                            </td>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">발행일자</th>
+                            <td className="p-2 font-mono">
+                              <input
+                                type="date"
+                                value={ncrItem.issueDate}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].issueDate = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                className="w-full font-mono bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-0.5 text-xs"
+                              />
+                            </td>
                           </tr>
+
+                          {/* Row 3~5 */}
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">부적합등급</th>
-                            <td colSpan={3} className="p-2 space-x-6 font-bold text-amber-800">
-                              {ncrItem.grade} (발행일로부터 1개월 이내 시정조치 제출)
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold" rowSpan={3}>적용표준</th>
+                            <td className="p-2 border-r border-slate-400" rowSpan={3}>
+                              <div className="space-y-1.5">
+                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                  <input type="checkbox" defaultChecked={ncrItem.standard.includes('9001')} className="rounded text-teal-700" />
+                                  <span>ISO 9001:2015</span>
+                                </label>
+                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                  <input type="checkbox" defaultChecked={ncrItem.standard.includes('14001')} className="rounded text-teal-700" />
+                                  <span>ISO 14001:2015</span>
+                                </label>
+                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                  <input type="checkbox" defaultChecked={ncrItem.standard.includes('45001')} className="rounded text-teal-700" />
+                                  <span>ISO 45001:2018</span>
+                                </label>
+                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                  <input type="checkbox" defaultChecked={ncrItem.standard.includes('ESG')} className="rounded text-teal-700" />
+                                  <span>ESG-MS</span>
+                                </label>
+                              </div>
+                            </td>
+                            <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">표준항목</th>
+                            <td className="p-2 font-mono">
+                              <input
+                                type="text"
+                                value={ncrItem.clause}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].clause = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                className="w-full font-mono bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-0.5 text-xs"
+                                placeholder="예: 7.1.5 (측정 자원)"
+                              />
                             </td>
                           </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">부적합사항 내용</th>
-                            <td colSpan={3} className="p-2">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심사부서</th>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={ncrItem.dept}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].dept = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                className="w-full bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-0.5 text-xs"
+                                placeholder="예: 품질관리부, 가공2팀"
+                              />
+                            </td>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심 사 원</th>
+                            <td className="p-2">
+                              {renderSignatureCell(`car_auditor_init_${ncrItem.id}`, '심사원 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                            </td>
+                          </tr>
+
+                          {/* Row 6 */}
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">심사구분</th>
+                            <td className="p-2 border-r border-slate-400 space-x-3">
+                              <label className="inline-flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`audit_type_${ncrItem.id}`} defaultChecked={stage1Data.auditType.includes('최초') || stage1Data.auditType.includes('갱신')} />
+                                <span>최초(갱신)</span>
+                              </label>
+                              <label className="inline-flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`audit_type_${ncrItem.id}`} defaultChecked={stage1Data.auditType.includes('사후')} />
+                                <span>사후</span>
+                              </label>
+                              <label className="inline-flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`audit_type_${ncrItem.id}`} />
+                                <span>기타</span>
+                              </label>
+                            </td>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">부적합등급</th>
+                            <td className="p-2 space-x-4 font-bold">
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer text-amber-800">
+                                <input
+                                  type="radio"
+                                  name={`ncr_grade_${ncrItem.id}`}
+                                  checked={ncrItem.grade === '경부적합'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].grade = '경부적합';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>경부적합 (1개월 이내)</span>
+                              </label>
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer text-rose-800">
+                                <input
+                                  type="radio"
+                                  name={`ncr_grade_${ncrItem.id}`}
+                                  checked={ncrItem.grade === '중부적합'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].grade = '중부적합';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>중부적합 (3개월 이내)</span>
+                              </label>
+                            </td>
+                          </tr>
+
+                          {/* Row 7: 부적합사항 내용 */}
+                          <tr className="border-b border-slate-400 bg-slate-50">
+                            <th colSpan={4} className="p-2 text-left font-bold text-slate-900 border-b border-slate-400">
+                              ▶ 부적합사항 내용 (심사원 기술)
+                            </th>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td colSpan={4} className="p-2">
                               <textarea
                                 rows={3}
                                 value={ncrItem.details}
@@ -2175,22 +2413,122 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                   next[ncrIdx].details = e.target.value;
                                   setNcrList(next);
                                 }}
-                                className="w-full border border-slate-300 rounded p-1.5 text-xs leading-relaxed"
+                                placeholder="구체적인 부적합 발생 사실 및 객관적 증거를 기술하세요."
+                                className="w-full border border-slate-300 rounded p-2 text-xs leading-relaxed focus:border-rose-500 focus:bg-rose-50/20"
                               />
                             </td>
                           </tr>
+
+                          {/* Row 8: 부적합 발행 서명 */}
                           <tr className="border-b border-slate-400 bg-slate-50">
-                            <th className="p-2 border-r border-slate-400 text-left font-bold">발행 심사원</th>
+                            <th className="p-2 border-r border-slate-400 text-left font-bold">심사팀장</th>
                             <td className="p-2 border-r border-slate-400">
-                              {renderSignatureCell(`ncr_auditor_${ncrItem.id}`, '심사원 (서명)', '심사팀장', auditor?.name || '남경호', '선임심사원', auditor?.email)}
+                              {renderSignatureCell(`car_lead_sign_${ncrItem.id}`, '심사팀장 (서명)', '심사팀장', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
                             </td>
-                            <th className="p-2 border-r border-slate-400 text-left font-bold">고객 확인</th>
+                            <th className="p-2 border-r border-slate-400 text-left font-bold">인증고객</th>
                             <td className="p-2">
-                              {renderSignatureCell(`ncr_cust_${ncrItem.id}`, '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                              {renderSignatureCell(`car_client_sign_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', scopeConfirmData.ceoName || company.ceoName || '박진용', '대표이사', company.contactEmail)}
                             </td>
                           </tr>
+
+                          {/* Row 9~10: 시정내용 및 시정조치 증빙자료 첨부 */}
+                          <tr className="border-b border-slate-400 bg-slate-50">
+                            <th colSpan={4} className="p-2 text-left font-bold text-slate-900 border-b border-slate-400">
+                              ▶ 시정내용 (1. 해당 부적합사항 시정 및 시정조치 개선 증빙자료 첨부)
+                            </th>
+                          </tr>
                           <tr className="border-b border-slate-400">
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">원인분석 (4M)</th>
+                            <td colSpan={4} className="p-2.5 space-y-2">
+                              <textarea
+                                rows={2}
+                                value={ncrItem.correctionAction}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].correctionAction = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                placeholder="해당 부적합 건에 대한 즉각적인 시정 조치 내용을 기술하세요."
+                                className="w-full border border-slate-300 rounded p-2 text-xs leading-relaxed focus:border-teal-500 focus:bg-teal-50/20"
+                              />
+
+                              {/* 시정조치 증빙자료 파일 첨부 컨트롤러 */}
+                              <div className="bg-slate-50 border border-slate-300 rounded-lg p-2.5 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <Paperclip className="w-3.5 h-3.5 text-teal-700" />
+                                    <span className="font-bold text-xs text-slate-800">시정조치 증빙 첨부자료 (PDF / 개선 사진)</span>
+                                    <span className="text-[10px] text-slate-500">
+                                      ({(ncrItem.correctionAttachments || []).length}건 첨부됨 - 보고서 팩에 묶음 저장)
+                                    </span>
+                                  </div>
+                                  <label className="px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors no-print">
+                                    <Upload className="w-3 h-3" />
+                                    <span>파일 첨부 (PDF / 이미지)</span>
+                                    <input
+                                      type="file"
+                                      accept="application/pdf,image/*"
+                                      multiple
+                                      onChange={(e) => handleCarFileUpload(ncrIdx, 'correction', e.target.files)}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                </div>
+
+                                {/* 첨부된 증빙자료 목록 및 썸네일 미리보기 */}
+                                {(ncrItem.correctionAttachments || []).length > 0 ? (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                                    {(ncrItem.correctionAttachments || []).map((att) => (
+                                      <div key={att.id} className="bg-white border border-slate-200 rounded p-2 flex items-start gap-2 shadow-2xs group relative">
+                                        {att.fileType === 'image' && att.dataUrl ? (
+                                          <img src={att.dataUrl} alt={att.fileName} className="w-12 h-12 object-cover rounded border border-slate-200 shrink-0" />
+                                        ) : (
+                                          <div className="w-12 h-12 rounded bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700 font-mono font-bold text-[11px] shrink-0">
+                                            PDF
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0 text-[11px]">
+                                          <span className="font-bold text-slate-900 block truncate" title={att.fileName}>{att.fileName}</span>
+                                          <span className="text-[10px] text-slate-500 block font-mono">{att.fileSize} · {att.uploadedAt}</span>
+                                          {att.dataUrl && (
+                                            <a
+                                              href={att.dataUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-[10px] text-teal-700 font-semibold hover:underline inline-flex items-center gap-0.5 mt-0.5"
+                                            >
+                                              <ExternalLink className="w-2.5 h-2.5" />
+                                              <span>보기 / 다운로드</span>
+                                            </a>
+                                          )}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteCarAttachment(ncrIdx, 'correction', att.id)}
+                                          className="p-1 rounded text-slate-300 hover:text-rose-600 no-print"
+                                          title="삭제"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-[11px] text-slate-500 italic py-1 text-center bg-white rounded border border-dashed border-slate-200">
+                                    첨부된 증빙 서류가 없습니다. (PDF 문서 또는 사진 첨부 가능)
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Row 11~13: 4M 원인분석 & 재발방지대책 & 증빙 첨부 */}
+                          <tr className="border-b border-slate-400 bg-slate-50">
+                            <th colSpan={4} className="p-2 text-left font-bold text-slate-900 border-b border-slate-400">
+                              ▶ 원인분석(4M) 및 재발방지대책 (인증고객 작성)
+                            </th>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">1. 원인분석(4M)</th>
                             <td colSpan={3} className="p-2">
                               <textarea
                                 rows={2}
@@ -2200,13 +2538,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                   next[ncrIdx].causeAnalysis = e.target.value;
                                   setNcrList(next);
                                 }}
+                                placeholder="부적합 발생 원인을 4M(Man, Machine, Material, Method) 등에 의거 분석하여 기술하세요."
                                 className="w-full border border-slate-300 rounded p-1.5 text-xs"
                               />
                             </td>
                           </tr>
-                          <tr>
-                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">재발방지대책</th>
-                            <td colSpan={3} className="p-2">
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">2. 재발방지대책</th>
+                            <td colSpan={3} className="p-2.5 space-y-2">
                               <textarea
                                 rows={2}
                                 value={ncrItem.recurrencePrevent}
@@ -2215,15 +2554,252 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                   next[ncrIdx].recurrencePrevent = e.target.value;
                                   setNcrList(next);
                                 }}
+                                placeholder="부적합 근본 원인을 제거하기 위한 재발방지대책을 구체적으로 기술하세요."
                                 className="w-full border border-slate-300 rounded p-1.5 text-xs"
                               />
+
+                              {/* 재발방지 증빙자료 첨부 컨트롤러 */}
+                              <div className="bg-slate-50 border border-slate-300 rounded-lg p-2.5 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <Paperclip className="w-3.5 h-3.5 text-indigo-700" />
+                                    <span className="font-bold text-xs text-slate-800">재발방지 증빙 첨부자료 (개정 절차서 / 교육일지 / 점검표)</span>
+                                    <span className="text-[10px] text-slate-500">
+                                      ({(ncrItem.preventAttachments || []).length}건 첨부됨)
+                                    </span>
+                                  </div>
+                                  <label className="px-2.5 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors no-print">
+                                    <Upload className="w-3 h-3" />
+                                    <span>파일 첨부 (PDF / 이미지)</span>
+                                    <input
+                                      type="file"
+                                      accept="application/pdf,image/*"
+                                      multiple
+                                      onChange={(e) => handleCarFileUpload(ncrIdx, 'prevent', e.target.files)}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                </div>
+
+                                {(ncrItem.preventAttachments || []).length > 0 ? (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                                    {(ncrItem.preventAttachments || []).map((att) => (
+                                      <div key={att.id} className="bg-white border border-slate-200 rounded p-2 flex items-start gap-2 shadow-2xs group relative">
+                                        {att.fileType === 'image' && att.dataUrl ? (
+                                          <img src={att.dataUrl} alt={att.fileName} className="w-12 h-12 object-cover rounded border border-slate-200 shrink-0" />
+                                        ) : (
+                                          <div className="w-12 h-12 rounded bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-mono font-bold text-[11px] shrink-0">
+                                            PDF
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0 text-[11px]">
+                                          <span className="font-bold text-slate-900 block truncate" title={att.fileName}>{att.fileName}</span>
+                                          <span className="text-[10px] text-slate-500 block font-mono">{att.fileSize} · {att.uploadedAt}</span>
+                                          {att.dataUrl && (
+                                            <a
+                                              href={att.dataUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-[10px] text-indigo-700 font-semibold hover:underline inline-flex items-center gap-0.5 mt-0.5"
+                                            >
+                                              <ExternalLink className="w-2.5 h-2.5" />
+                                              <span>보기 / 다운로드</span>
+                                            </a>
+                                          )}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteCarAttachment(ncrIdx, 'prevent', att.id)}
+                                          className="p-1 rounded text-slate-300 hover:text-rose-600 no-print"
+                                          title="삭제"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-[11px] text-slate-500 italic py-1 text-center bg-white rounded border border-dashed border-slate-200">
+                                    첨부된 증빙 서류가 없습니다. (PDF 문서 또는 사진 첨부 가능)
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Row 14: 시정조치 완료 확인 */}
+                          <tr className="border-b border-slate-400 bg-slate-50">
+                            <th className="p-2 border-r border-slate-400 text-left font-bold">시정조치일자</th>
+                            <td className="p-2 border-r border-slate-400 font-mono">
+                              <input
+                                type="date"
+                                value={ncrItem.actionDate || '2026-09-25'}
+                                onChange={(e) => {
+                                  const next = [...ncrList];
+                                  next[ncrIdx].actionDate = e.target.value;
+                                  setNcrList(next);
+                                }}
+                                className="w-full font-mono bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-0.5 text-xs"
+                              />
+                            </td>
+                            <th className="p-2 border-r border-slate-400 text-left font-bold">인증고객 확인</th>
+                            <td className="p-2">
+                              {renderSignatureCell(`car_client_done_${ncrItem.id}`, '인증고객 확인 (서명)', '고객확인', scopeConfirmData.ceoName || company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                            </td>
+                          </tr>
+
+                          {/* Row 15~20: 심사원 작성 란 */}
+                          <tr className="bg-slate-200 border-b border-slate-400">
+                            <th colSpan={4} className="p-2 text-center font-black text-slate-900 text-xs">
+                              ◆ 아래 칸은 심사원 작성 란 입니다. ◆
+                            </th>
+                          </tr>
+
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">
+                              부적합 확인
+                            </th>
+                            <td className="p-2 border-r border-slate-400 space-x-3">
+                              <label className="inline-flex items-center gap-1 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`verif_type_${ncrItem.id}`}
+                                  checked={ncrItem.verificationType !== '현장확인'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].verificationType = '문서확인';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>문서확인</span>
+                              </label>
+                              <label className="inline-flex items-center gap-1 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`verif_type_${ncrItem.id}`}
+                                  checked={ncrItem.verificationType === '현장확인'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].verificationType = '현장확인';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>현장확인</span>
+                              </label>
+                            </td>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">
+                              차기 심사 확인
+                            </th>
+                            <td className="p-2">
+                              <span className="font-semibold text-slate-700">시정조치 효과성 확인 대상</span>
+                            </td>
+                          </tr>
+
+                          <tr className="border-b border-slate-400">
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">
+                              시정조치 적절성
+                            </th>
+                            <td className="p-2 border-r border-slate-400 space-x-4">
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer font-bold text-emerald-800">
+                                <input
+                                  type="radio"
+                                  name={`verif_res_${ncrItem.id}`}
+                                  checked={ncrItem.verificationResult === '적절함'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].verificationResult = '적절함';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>적절함</span>
+                              </label>
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer font-bold text-rose-800">
+                                <input
+                                  type="radio"
+                                  name={`verif_res_${ncrItem.id}`}
+                                  checked={ncrItem.verificationResult === '부적절함(보완 필요)'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].verificationResult = '부적절함(보완 필요)';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>부적절함 (보완 필요)</span>
+                              </label>
+                            </td>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">
+                              효과성 평가
+                            </th>
+                            <td className="p-2 space-x-4">
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer font-bold text-emerald-800">
+                                <input
+                                  type="radio"
+                                  name={`eff_res_${ncrItem.id}`}
+                                  checked={ncrItem.effectiveResult === '효과적'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].effectiveResult = '효과적';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>효과적</span>
+                              </label>
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer font-bold text-rose-800">
+                                <input
+                                  type="radio"
+                                  name={`eff_res_${ncrItem.id}`}
+                                  checked={ncrItem.effectiveResult === '효과적이지 않음'}
+                                  onChange={() => {
+                                    const next = [...ncrList];
+                                    next[ncrIdx].effectiveResult = '효과적이지 않음';
+                                    setNcrList(next);
+                                  }}
+                                />
+                                <span>효과적이지 않음</span>
+                              </label>
+                            </td>
+                          </tr>
+
+                          {/* 서명 슬롯 */}
+                          <tr className="border-b border-slate-400 bg-slate-50">
+                            <th colSpan={2} className="p-1.5 border-r border-slate-400 text-center font-bold">
+                              시정조치 적절성 확인
+                            </th>
+                            <th colSpan={2} className="p-1.5 text-center font-bold">
+                              시정조치 효과성 확인 (차기 심사)
+                            </th>
+                          </tr>
+                          <tr className="border-b border-slate-400">
+                            <td colSpan={2} className="p-2 border-r border-slate-400">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-semibold text-slate-700">심사원 확인 서명:</span>
+                                <div className="w-48">
+                                  {renderSignatureCell(`car_verif_auditor_${ncrItem.id}`, '확인 심사원 (서명)', '확인심사원', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                </div>
+                              </div>
+                            </td>
+                            <td colSpan={2} className="p-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-semibold text-slate-700">효과성 확인 서명:</span>
+                                <div className="w-48">
+                                  {renderSignatureCell(`car_eff_auditor_${ncrItem.id}`, '효과성 심사원 (서명)', '확인심사원', auditor?.name || '남경호', auditor?.grade || '선임심사원', auditor?.email)}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* 안내문 */}
+                          <tr>
+                            <td colSpan={4} className="p-2.5 text-[11px] text-slate-600 bg-slate-50/80 leading-relaxed space-y-1">
+                              <p>1. 시정조치 결과는 발행일로부터 1개월 이내에 인증원으로 제출되어야 합니다.</p>
+                              <p>2. 시정조치 조치 적절성 확인은 문서확인 또는 현장확인(중부적합인 경우)을 통해 이루어지며, 부적절할 경우 사안에 따라 재조치, 인증정지, 재심사 등이 이루어질 수 있습니다.</p>
                             </td>
                           </tr>
                         </tbody>
                       </table>
 
                       <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                        - {19 + ncrIdx} - [지엠에스씨에스㈜ 인증원]
+                        [지엠에스씨에스㈜ 인증원]
                       </div>
                     </div>
                   ))}
