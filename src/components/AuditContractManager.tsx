@@ -811,24 +811,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
           {/* 2. 심사 대상 고객사 DB 검색 및 선택 (모든 접수 구분 공통 지원) */}
           <div className="space-y-2.5 border-t border-slate-200 pt-3">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-slate-900 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-cyan-700" />
-                <span>2. 심사 대상 고객사 DB 검색 및 선택</span>
-              </label>
-              
-              <div className="flex items-center gap-2">
-                {onOpenCompanyAuditHistory && selectedCompany && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
-                    className="text-[11px] text-cyan-700 hover:underline font-bold cursor-pointer"
-                  >
-                    상세정보 ↗
-                  </button>
-                )}
-              </div>
-            </div>
+            <label className="font-bold text-slate-900 flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-cyan-700" />
+              <span>2. 심사 대상 고객사 DB 검색 및 선택</span>
+            </label>
 
             {/* 검색 및 드롭다운 */}
             <div className="space-y-1.5">
@@ -950,9 +936,21 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 <span className="text-slate-500">실무담당자:</span>
                 <span className="text-slate-900">{activeCompany.contactPerson || '정순호 이사'} ({activeCompany.contactPhone || '054-955-9197'})</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">IAF 코드:</span>
-                <span className="font-mono text-cyan-900 font-bold">IAF {activeCompany.iafCode || '17'}</span>
+              <div className="flex justify-between items-center pt-0.5 border-t border-slate-200/60">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500">IAF 코드:</span>
+                  <span className="font-mono text-cyan-900 font-bold">IAF {activeCompany.iafCode || '17'}</span>
+                </div>
+                {onOpenCompanyAuditHistory && selectedCompany && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
+                    className="text-[11px] text-cyan-700 hover:text-cyan-900 hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5"
+                    title="고객 상세 정보 및 전체 심사이력 조회"
+                  >
+                    상세정보 ↗
+                  </button>
+                )}
               </div>
             </div>
 
