@@ -280,6 +280,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     generatedPin: ''
   });
 
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
+
   // 1단계 심사 데이터 State (Page 1~6)
   const [stage1Data, setStage1Data] = useState(() => {
     const defaultData = {
@@ -908,8 +911,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     }));
   };
 
-  // 전체 저장 함수
+  // 전체 저장 & 동기화 함수
   const handleSaveAll = () => {
+    setIsSyncing(true);
     if (typeof window !== 'undefined') {
       localStorage.setItem(`${storageKey}_STAGE1`, JSON.stringify(stage1Data));
       localStorage.setItem(`${storageKey}_STAGE2`, JSON.stringify(stage2Data));
@@ -921,6 +925,15 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     if (onSave) {
       onSave({ stage1Data, stage2Data, signatures, ncrList, emailSigners });
     }
+
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    setTimeout(() => {
+      setIsSyncing(false);
+      setLastSyncedTime(timeStr);
+      alert(`[저장 & 동기화 완료 (${timeStr})]\n작성 중인 1·2단계 심사보고서, 현장 관찰기록, 시정조치 요구서(CAR) 및 서명 데이터가 안전하게 저장되었습니다.`);
+    }, 300);
   };
 
   // 보고서 제출 함수 (사무국 검토대기 상태 즉시 전환 및 전역 브로드캐스트)
@@ -1440,6 +1453,20 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {lastSyncedTime && (
+            <span className="text-[11px] text-emerald-400 font-mono hidden md:inline-block mr-1">
+              ✓ 저장됨 ({lastSyncedTime})
+            </span>
+          )}
+          <button
+            onClick={handleSaveAll}
+            disabled={isSyncing}
+            className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1.5 border border-emerald-600 shadow-xs transition-colors cursor-pointer"
+            title="현재 작성 중인 모든 심사 내용 및 서명 데이터 저장 & 동기화"
+          >
+            <RefreshCcw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>{isSyncing ? '동기화 중...' : '저장 & 동기화'}</span>
+          </button>
           <button
             onClick={() => window.print()}
             className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors cursor-pointer"
