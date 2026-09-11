@@ -819,7 +819,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         </div>
       </div>
       <div className="text-right">
-        <span className="text-[10.5px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+        <span className="text-[11px] font-mono font-medium text-slate-600">
           양식번호: {formNo}
         </span>
       </div>
@@ -2116,20 +2116,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {(activeDocTab === 'all' || activeDocTab === 'cert_confirm') && (
                 <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                   {renderReportPageHeader('F16-014(20231001)')}
-                  <div className="text-center py-2 border-b-2 border-slate-800 pb-2 flex justify-between items-end">
-                    <div className="text-left">
-                      <span className="text-xs font-mono text-teal-800 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                        Form GMSCS-F18-001 (Table 29)
-                      </span>
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
-                        인증서 기재사항 확인서 (인정범위 확인서)
-                      </h1>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[11px] text-slate-500 font-mono">최종확인: {scopeConfirmData.updatedAt}</span>
-                    </div>
+                  <div className="text-center py-2">
+                    <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
+                      인증서 기재사항 확인서 (인정범위 확인서)
+                    </h1>
                   </div>
 
                   <div className="bg-amber-50 border border-amber-300 p-2.5 rounded-lg text-xs text-amber-900 leading-relaxed flex items-center justify-between">
@@ -2273,9 +2263,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {(activeDocTab === 'all' || activeDocTab === 'plan_summary') && (
                 <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                   {renderReportPageHeader('F16-012(20251001)')}
-                  <div className="text-center py-2 border-b-2 border-slate-800 pb-2">
+                  <div className="text-center py-2">
                     <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
-                      3년 심사계획 요약서 (Table 30~32)
+                      3년 심사계획 요약서
                     </h1>
                   </div>
 
@@ -2328,18 +2318,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   {ncrList.map((ncrItem, ncrIdx) => (
                     <div key={ncrItem.id} className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                       {renderReportPageHeader('F16-016(20231001)')}
-                      <div className="flex justify-between items-center border-b-2 border-slate-800 pb-2">
+                      <div className="flex justify-between items-center py-2">
                         <div>
                           <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
                             시정조치 요구서 (Corrective Action Request)
                           </h1>
-                          <span className="text-xs font-mono text-slate-500">Form No: GMSCS-F18-002 (Rev.0)</span>
                         </div>
-                        <div className="text-right flex items-center gap-3">
-                          <span className="text-xs font-bold text-rose-800 bg-rose-50 px-2 py-1 rounded border border-rose-200">
-                            요구서 [{ncrIdx + 1} / {ncrList.length}]
-                          </span>
-                          {ncrList.length > 1 && (
+                        {ncrList.length > 1 && (
+                          <div className="text-right">
                             <button
                               type="button"
                               onClick={() => handleDeleteNcr(ncrItem.id)}
@@ -2349,8 +2335,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                               <Trash2 className="w-3.5 h-3.5" />
                               <span>삭제</span>
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
 
                       <table className="w-full border-collapse border border-slate-700 text-xs">
