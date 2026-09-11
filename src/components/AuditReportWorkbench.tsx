@@ -1146,7 +1146,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
           <div className="bg-slate-200/95 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between shrink-0 no-print print:hidden">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
               <span className="w-2.5 h-2.5 rounded-full bg-teal-700 inline-block"></span>
-              <span>종이 파일 철 공식 서식 시스템</span>
+              <span>2025 Audit Report Pack(251001)</span>
               <span className="text-slate-400 font-normal">|</span>
               <span className="text-slate-600 font-normal text-[11px]">
                 심사구분: <strong className="text-slate-900">{stage1Data.auditType} ({stage1Data.auditStandards})</strong>
