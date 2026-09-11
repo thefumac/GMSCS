@@ -12,22 +12,33 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { Auditor, AuditorAffiliation } from '../types';
+import { Auditor, AuditorAffiliation, AuditProject, CertContract, Company } from '../types';
+import { AuditorProfileModal } from './AuditorProfileModal';
 
 export interface AuditorManagementProps {
   auditors: Auditor[];
+  projects?: AuditProject[];
+  contracts?: CertContract[];
+  companies?: Company[];
   onToggleCommitteeMember?: (auditorId: string) => void;
   onUpdateAuditorAffiliation?: (auditorId: string, affiliation: AuditorAffiliation) => void;
   onSelectAuditor?: (auditor: Auditor) => void;
+  onSaveAuditor?: (updatedAuditor: Auditor) => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
 }
 
 const PAGE_SIZE = 20;
 
 export const AuditorManagement: React.FC<AuditorManagementProps> = ({
   auditors,
+  projects = [],
+  contracts = [],
+  companies = [],
   onToggleCommitteeMember,
   onUpdateAuditorAffiliation,
-  onSelectAuditor
+  onSelectAuditor,
+  onSaveAuditor,
+  onOpenPdfReport
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
@@ -298,13 +309,32 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
         {/* 테이블 푸터 */}
         <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
           <div>
-            * 심사원의 등록 코드, 자격 갱신일정, 보수교육 및 정기 세미나 참석 현황을 통합 관리합니다.
+            * 심사원의 등록 코드, 자격 갱신일정, 보수교육 및 정기 세미나 참석 현황을 통합 관리합니다. (심사원 클릭 시 상세 팝업 열람)
           </div>
           <div className="font-mono text-slate-600">
             총 {filteredAuditors.length}명 중 {Math.min(filteredAuditors.length, (safePage - 1) * PAGE_SIZE + 1)} ~ {Math.min(filteredAuditors.length, safePage * PAGE_SIZE)}명 표시
           </div>
         </div>
       </div>
+
+      {/* 심사원 상세정보 팝업 모달 (기본정보, 심사이력, 자격관리, 교육/세미나, 경력증명서 승인) */}
+      {detailAuditor && (
+        <AuditorProfileModal
+          isOpen={!!detailAuditor}
+          onClose={() => setDetailAuditor(null)}
+          auditor={detailAuditor}
+          projects={projects}
+          contracts={contracts}
+          companies={companies}
+          onSave={(updated) => {
+            if (onSaveAuditor) {
+              onSaveAuditor(updated);
+            }
+            setDetailAuditor(null);
+          }}
+          onOpenPdfReport={onOpenPdfReport}
+        />
+      )}
     </div>
   );
 };

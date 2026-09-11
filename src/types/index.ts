@@ -146,7 +146,9 @@ export interface Auditor {
 
   // 추가 프로필 상세 정보
   address?: string;
-  birthDate?: string;
+  residentialRegion?: string; // 거주지역 (예: 서울 강서구, 대구 달서구)
+  birthDate?: string; // 생년월일 (YYYY-MM-DD 또는 YYMMDD)
+  gender?: '남' | '여'; // 성별
   education?: string;
   major?: string;
   agency?: string;
@@ -154,6 +156,58 @@ export interface Auditor {
   telephone?: string;
   iafDetails?: { standard: string; code: string; date: string; basis: string }[];
   qualifications?: { standard: string; grade: string; agency: string; certNumber: string; expiryDate: string }[];
+
+  // 자격증, 교육, 세미나, 경력증명서 발급 신청 이력
+  certificates?: AuditorCertItem[];
+  trainingHistory?: AuditorTrainingItem[];
+  seminarHistory?: AuditorSeminarItem[];
+  careerCertRequests?: CareerCertRequestItem[];
+}
+
+export interface AuditorCertItem {
+  id: string;
+  name: string; // 예: KAB ISO 9001 선임심사원 자격증
+  standard: string;
+  grade: string;
+  certNumber: string;
+  issuer: string; // 예: 한국인정지원센터(KAB)
+  issueDate: string;
+  expiryDate?: string;
+  fileUrl?: string;
+  fileName?: string;
+}
+
+export interface AuditorTrainingItem {
+  id: string;
+  title: string; // 예: 2026년도 심사원 정기 보수교육 (CPD)
+  year: string;
+  hours: number;
+  completedDate: string;
+  institution: string;
+  status: '이수완료' | '미이수' | '심사중';
+  fileUrl?: string;
+}
+
+export interface AuditorSeminarItem {
+  id: string;
+  title: string; // 예: 2026 하반기 인증심사원 역량강화 직무세미나
+  date: string;
+  host: string;
+  hours: number;
+  location?: string;
+  note?: string;
+}
+
+export interface CareerCertRequestItem {
+  id: string;
+  requestedAt: string;
+  purpose: string; // 제출용도 (예: KAB 심사원 자격갱신 제출용, 기관제출용, 경력확인용)
+  submitTo: string; // 제출처 (예: 한국인정지원센터(KAB), 한국생산성본부인증원)
+  status: '신청대기' | '승인완료' | '반려';
+  approvedAt?: string;
+  approvedBy?: string; // 승인자 (사무국 관리자)
+  certDocNumber?: string; // 발급번호 (예: GMS-CERT-2026-042)
+  notes?: string;
 }
 
 export interface CertContract {

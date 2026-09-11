@@ -497,6 +497,12 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   const [selectedNotice, setSelectedNotice] = useState<AuditorNotice | null>(null);
   const [selectedSettlementDetail, setSelectedSettlementDetail] = useState<any | null>(null);
 
+  // 심사 경력 증명서 신청 및 인쇄 모달 상태
+  const [isCareerCertApplyOpen, setIsCareerCertApplyOpen] = useState<boolean>(false);
+  const [certPurpose, setCertPurpose] = useState<string>('KAB 공인 심사원 3개년 자격갱신 및 실적 증명용');
+  const [certSubmitTo, setCertSubmitTo] = useState<string>('한국인정지원센터(KAB)');
+  const [isCertPrintModalOpen, setIsCertPrintModalOpen] = useState<boolean>(false);
+
   // 1. 현재 로그인한 심사원에게 배정된 기업만 정확히 선별 (담당 심사원/팀장/팀원 및 직접 수행 프로젝트)
   const myCompanyIds = useMemo(() => {
     const ids = new Set<string>();
@@ -2101,23 +2107,86 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 shrink-0">
+            <div className="flex items-center space-x-2 shrink-0 flex-wrap gap-1">
               <button
                 type="button"
                 onClick={() => alert('모바일 심사원증이 고해상도 PDF로 다운로드됩니다.')}
                 className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>심사원증 발급/저장</span>
+                <span>심사원증 발급</span>
               </button>
               <button
                 type="button"
-                onClick={() => alert('심사원 자격증명서 및 이력카드가 출력됩니다.')}
+                onClick={() => {
+                  const req = (currentAuditor.careerCertRequests || [])[0];
+                  if (req && req.status === '승인완료') {
+                    setIsCertPrintModalOpen(true);
+                  } else {
+                    setIsCareerCertApplyOpen(true);
+                  }
+                }}
                 className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>자격증명서 인쇄</span>
+                <span>심사 경력 증명서 발급/인쇄</span>
               </button>
+            </div>
+          </div>
+
+          {/* 심사 경력 증명서 신청 및 사무국 안내 배너 */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900">■ 심사 경력 증명서 발급 현황</span>
+                {(currentAuditor.careerCertRequests && currentAuditor.careerCertRequests.length > 0) ? (
+                  currentAuditor.careerCertRequests[0].status === '승인완료' ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">
+                      사무국 승인완료 (출력 가능)
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[11px] animate-pulse">
+                      사무국 승인대기 중
+                    </span>
+                  )
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium text-[11px]">
+                    신청 이력 없음
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-600 text-[11.5px] leading-relaxed">
+                {(currentAuditor.careerCertRequests && currentAuditor.careerCertRequests.length > 0 && currentAuditor.careerCertRequests[0].status === '신청대기') ? (
+                  <strong className="text-amber-700">
+                    💡 심사 경력 증명서 발급 신청이 접수되었습니다. 빠른 처리를 원하시면 사무국으로 유선 연락 바랍니다. (사무국 승인 후 즉시 출력이 가능합니다.)
+                  </strong>
+                ) : (
+                  <span>
+                    개인포털에서 경력 증명서 발급을 신청하시면, 사무국에서 심사 실적을 확인 및 승인 후 즉시 공식 PDF 증명서 출력이 가능합니다.
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="shrink-0 flex items-center gap-2">
+              {(currentAuditor.careerCertRequests && currentAuditor.careerCertRequests.length > 0 && currentAuditor.careerCertRequests[0].status === '승인완료') ? (
+                <button
+                  type="button"
+                  onClick={() => setIsCertPrintModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>승인 증명서 즉시 인쇄</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsCareerCertApplyOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>신규 발급 신청</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -2827,6 +2896,275 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 설정 완료 및 닫기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. 심사 경력 증명서 발급 신청 모달                                        */}
+      {/* ========================================================================= */}
+      {isCareerCertApplyOpen && (
+        <div className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center space-x-2">
+                <Printer className="w-5 h-5 text-cyan-700" />
+                <h3 className="font-extrabold text-slate-900 text-sm">
+                  심사 경력 증명서 발급 신청
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCareerCertApplyOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-2xl space-y-1 text-xs text-amber-950">
+              <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>사무국 승인 안내</span>
+              </div>
+              <p className="text-[11.5px] leading-relaxed text-amber-800">
+                신청 접수 후 <strong>사무국에서 심사 실적을 최종 승인</strong>해야 개인포털에서 공식 PDF 증명서 출력이 가능합니다. 긴급 발급이 필요한 경우 사무국으로 유선 연락 바랍니다.
+              </p>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  신청 심사원 성명
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={`${currentAuditor.name} (${currentAuditor.grade || '선임심사원'})`}
+                  className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-slate-700 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  제출 용도 <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={certPurpose}
+                  onChange={(e) => setCertPurpose(e.target.value)}
+                  placeholder="예: KAB 공인 심사원 3개년 자격갱신 제출용"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  제출처 기관명 <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={certSubmitTo}
+                  onChange={(e) => setCertSubmitTo(e.target.value)}
+                  placeholder="예: 한국인정지원센터(KAB)"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-hidden focus:border-cyan-600"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsCareerCertApplyOpen(false)}
+                className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold hover:bg-slate-50 transition"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert(`[심사 경력 증명서 발급 신청 완료]\n\n• 신청자: ${currentAuditor.name}\n• 용도: ${certPurpose}\n• 제출처: ${certSubmitTo}\n\n사무국으로 발급 신청이 정상 접수되었습니다.\n빠른 승인을 원하시면 사무국으로 전화 연락 바랍니다.`);
+                  setIsCareerCertApplyOpen(false);
+                }}
+                className="px-5 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>발급 신청서 제출</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. 승인된 심사 경력 증명서 출력 모달                                      */}
+      {/* ========================================================================= */}
+      {isCertPrintModalOpen && (
+        <div className="fixed inset-0 z-60 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="bg-white max-w-3xl w-full rounded-3xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[92vh]">
+            
+            <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold">공식 심사 경력 증명서 (인쇄 및 출력)</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCertPrintModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-8 overflow-y-auto space-y-6 text-slate-900 bg-white font-sans text-xs">
+              
+              {/* Document Header */}
+              <div className="text-center space-y-2 border-b-2 border-slate-900 pb-5">
+                <div className="text-[11px] text-slate-500 font-mono tracking-widest">
+                  문서번호: GMS-EXP-2026-0089
+                </div>
+                <h1 className="text-2xl font-black tracking-wider text-slate-950">
+                  심 사 경 력 증 명 서
+                </h1>
+                <p className="text-xs text-slate-500 font-medium">
+                  CERTIFICATE OF AUDIT EXPERIENCE
+                </p>
+              </div>
+
+              {/* Applicant Identity Table */}
+              <table className="w-full border-collapse border border-slate-400 text-xs">
+                <tbody>
+                  <tr>
+                    <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left w-24 font-bold text-slate-700">
+                      성 명
+                    </th>
+                    <td className="py-2 px-3 border border-slate-300 font-bold text-slate-900">
+                      {currentAuditor.name}
+                    </td>
+                    <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left w-24 font-bold text-slate-700">
+                      생년월일
+                    </th>
+                    <td className="py-2 px-3 border border-slate-300 font-mono">
+                      {currentAuditor.birthDate || '1972-04-18'} ({currentAuditor.gender || '남'})
+                    </td>
+                  </tr>
+                  <tr>
+                    <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left font-bold text-slate-700">
+                      등록 번호
+                    </th>
+                    <td className="py-2 px-3 border border-slate-300 font-mono font-bold">
+                      {currentAuditor.gmsNumber || 'GMS25027'} (KAB 공인)
+                    </td>
+                    <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left font-bold text-slate-700">
+                      자격 등급
+                    </th>
+                    <td className="py-2 px-3 border border-slate-300 font-bold text-cyan-900">
+                      {currentAuditor.grade || '선임심사원'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left font-bold text-slate-700">
+                      주거 지역
+                    </th>
+                    <td className="py-2 px-3 border border-slate-300">
+                      {currentAuditor.residentialRegion || '서울 강서구'}
+                    </td>
+                    <th className="bg-slate-100 py-2 px-3 border border-slate-300 text-left font-bold text-slate-700">
+                      소속 기관
+                    </th>
+                    <td className="py-2 px-3 border border-slate-300">
+                      (주)지엠에스인증원 (GMSCS)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Audit Experience Summary */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-xs text-slate-900 flex items-center justify-between">
+                  <span>■ 심사 수행 실적 요약 (총 누적 49.0 MD)</span>
+                  <span className="text-[11px] text-slate-500 font-normal">기준일: 2026년 09월 12일</span>
+                </h4>
+                <table className="w-full border-collapse border border-slate-400 text-xs text-center">
+                  <thead className="bg-slate-100 font-bold">
+                    <tr>
+                      <th className="py-1.5 px-2 border border-slate-300">인증 규격</th>
+                      <th className="py-1.5 px-2 border border-slate-300">심사 건수</th>
+                      <th className="py-1.5 px-2 border border-slate-300">선임심사원(팀장)</th>
+                      <th className="py-1.5 px-2 border border-slate-300">심사팀원</th>
+                      <th className="py-1.5 px-2 border border-slate-300">누적 실적(MD)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-1.5 px-2 border border-slate-300 font-bold">ISO 9001 (품질)</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">14건</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">18.0 MD</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">6.5 MD</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono font-bold text-cyan-900">24.5 MD</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 px-2 border border-slate-300 font-bold">ISO 14001 (환경)</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">10건</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">12.0 MD</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">4.0 MD</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono font-bold text-cyan-900">16.0 MD</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 px-2 border border-slate-300 font-bold">ISO 45001 (안전)</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">6건</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">4.0 MD</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono">4.5 MD</td>
+                      <td className="py-1.5 px-2 border border-slate-300 font-mono font-bold text-cyan-900">8.5 MD</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Statement */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-center text-xs">
+                <p className="font-semibold text-slate-900 leading-relaxed">
+                  위 사람은 당 인증원(GMSCS)의 등록 심사원으로서<br />
+                  상기와 같이 ISO 국제표준 경영시스템 인증 심사를 성실히 수행하였음을 증명합니다.
+                </p>
+                <div className="text-[11px] text-slate-500 pt-1">
+                  제출 용도: KAB 심사원 3개년 자격갱신 실적 제출용 (제출처: 한국인정지원센터)
+                </div>
+              </div>
+
+              {/* Issue Signatures */}
+              <div className="pt-4 flex flex-col items-center justify-center space-y-3">
+                <div className="font-bold text-sm text-slate-900">
+                  2026년 09월 12일
+                </div>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-base font-black text-slate-950 tracking-wider">
+                    주식회사 지엠에스인증원 대표 남 경 호
+                  </span>
+                  <div className="w-12 h-12 rounded-full border-2 border-rose-600 text-rose-600 flex items-center justify-center text-[10px] font-black rotate-12">
+                    인증원인
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-100 border-t border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-slate-500">
+                * 사무국 승인이 완료되어 공식 효력이 부여된 증명서입니다.
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => alert('공식 심사 경력 증명서가 고해상도 PDF로 인쇄/다운로드됩니다.')}
+                  className="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>PDF 다운로드 및 인쇄</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

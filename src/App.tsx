@@ -1193,8 +1193,23 @@ export function App() {
         {activeTab === 'auditors' && (
           <AuditorManagement
             auditors={auditors}
+            projects={projects}
+            contracts={contracts}
+            companies={companies}
             onToggleCommitteeMember={handleToggleCommitteeMember}
             onUpdateAuditorAffiliation={handleUpdateAuditorAffiliation}
+            onSaveAuditor={handleUpdateAuditorProfile}
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                pdfUrl: info.pdfUrl,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate
+              });
+            }}
           />
         )}
 
@@ -1472,10 +1487,24 @@ export function App() {
           isOpen={isProfileModalOpen}
           onClose={() => setIsProfileModalOpen(false)}
           auditor={currentAuditorObj}
+          projects={projects}
+          contracts={contracts}
+          companies={companies}
           onSave={handleUpdateAuditorProfile}
           onNavigateToPortal={() => {
             setIsProfileModalOpen(false);
             navigateTo('portal', 'auditor-mgmt');
+          }}
+          onOpenPdfReport={(info) => {
+            setPdfModalState({
+              isOpen: true,
+              title: info.title,
+              pdfUrl: info.pdfUrl,
+              companyName: info.companyName,
+              standard: info.standard,
+              auditType: info.auditType,
+              auditDate: info.auditDate
+            });
           }}
         />
       )}
