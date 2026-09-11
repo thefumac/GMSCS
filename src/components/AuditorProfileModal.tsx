@@ -903,65 +903,59 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                   </p>
                 </div>
 
-                {/* 년도별 조회 선택 바 */}
+                {/* 년도별 조회 및 실적 요약 (단일 가로 행, 높이 일치, 테두리/회색배경/라벨 제거) */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-300">
-                    <Calendar className="w-3.5 h-3.5 text-slate-500 ml-1.5" />
-                    <span className="text-[11px] font-bold text-slate-600">조회 년도:</span>
-                    <select
-                      value={selectedHistoryYear}
-                      onChange={(e) => setSelectedHistoryYear(e.target.value)}
-                      className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-indigo-950 focus:outline-hidden focus:border-indigo-600 shadow-2xs cursor-pointer"
-                    >
-                      <option value={currentYearStr}>{currentYearStr}년 (접속년도)</option>
-                      {availableYears.filter(y => y !== currentYearStr).map(y => (
-                        <option key={y} value={y}>{y}년</option>
-                      ))}
-                      <option value="all">전체 연도 보기</option>
-                    </select>
-                  </div>
+                  <select
+                    value={selectedHistoryYear}
+                    onChange={(e) => setSelectedHistoryYear(e.target.value)}
+                    className="bg-white border border-slate-300 rounded-lg px-3 py-1 text-xs font-normal text-slate-800 focus:outline-hidden focus:border-slate-400 shadow-2xs cursor-pointer h-8"
+                  >
+                    <option value={currentYearStr}>{currentYearStr}년 (접속년도)</option>
+                    {availableYears.filter(y => y !== currentYearStr).map(y => (
+                      <option key={y} value={y}>{y}년</option>
+                    ))}
+                    <option value="all">전체 연도 보기</option>
+                  </select>
 
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-900 font-bold text-xs border border-indigo-200">
-                      {selectedHistoryYear === 'all' ? '전체 실적' : `${selectedHistoryYear}년 실적`}: {filteredAuditHistory.length}건 ({selectedYearMd.toFixed(1)} MD)
+                  <span className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs border border-slate-200 h-8 flex items-center font-normal">
+                    {selectedHistoryYear === 'all' ? '전체 실적' : `${selectedHistoryYear}년 실적`}: {filteredAuditHistory.length}건 ({selectedYearMd.toFixed(1)} MD)
+                  </span>
+                  {selectedHistoryYear !== 'all' && (
+                    <span className="px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs border border-slate-200 h-8 flex items-center font-normal">
+                      총 누적 {totalCumulativeMd.toFixed(1)} MD
                     </span>
-                    {selectedHistoryYear !== 'all' && (
-                      <span className="px-2 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-semibold text-[11px] border border-slate-200">
-                        총 누적 {totalCumulativeMd.toFixed(1)} MD
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
 
               {/* Audit History Table */}
               <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-2xs">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-medium">
                     <tr>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-10 text-center">No</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-28 whitespace-nowrap">심사일자</th>
-                      <th className="py-2.5 px-3.5 border-r border-slate-200 min-w-[150px]">심사 대상 기업명</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-24 text-center">심사구분</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 min-w-[130px]">적용 규격 (IAF)</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-28 text-center">수행 역할</th>
-                      <th className="py-2.5 px-2 border-r border-slate-200 w-16 text-center">투입MD</th>
-                      <th className="py-2.5 px-3 text-center w-28">심사기록 열람</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-10 text-center font-medium">No</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-28 whitespace-nowrap font-medium">심사일자</th>
+                      <th className="py-2.5 px-3.5 border-r border-slate-200 min-w-[150px] font-medium">심사 대상 기업명</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-24 text-center font-medium">심사구분</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 min-w-[130px] font-medium">적용 규격 (IAF)</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-28 text-center font-medium">수행 역할</th>
+                      <th className="py-2.5 px-2 border-r border-slate-200 w-16 text-center font-medium">투입MD</th>
+                      <th className="py-2.5 px-3 text-center w-28 font-medium">심사기록 열람</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 text-slate-900 bg-white">
+                  <tbody className="divide-y divide-slate-200 text-slate-800 bg-white">
                     {filteredAuditHistory.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="py-12 text-center text-slate-400">
                           <div className="space-y-2">
-                            <p className="font-semibold text-slate-600">
+                            <p className="text-slate-600">
                               {selectedHistoryYear === 'all' ? '등록된 심사 수행 이력이 없습니다.' : `${selectedHistoryYear}년도에 등록된 심사 수행 이력이 없습니다.`}
                             </p>
                             {selectedHistoryYear !== 'all' && (
                               <button
                                 type="button"
                                 onClick={() => setSelectedHistoryYear('all')}
-                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition cursor-pointer border border-slate-300"
+                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-lg transition cursor-pointer border border-slate-300"
                               >
                                 전체 연도 심사 이력 보기
                               </button>
@@ -972,42 +966,34 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     ) : (
                       filteredAuditHistory.map((rec, idx) => (
                         <tr key={rec.id} className="hover:bg-slate-50 transition">
-                          <td className="py-2 px-1 text-center font-mono text-slate-400 border-r border-slate-200">
+                          <td className="py-2.5 px-1 text-center font-mono text-slate-400 border-r border-slate-200">
                             {idx + 1}
                           </td>
-                          <td className="py-2 px-3 border-r border-slate-200 font-mono text-[11.5px] whitespace-nowrap">
+                          <td className="py-2.5 px-3 border-r border-slate-200 font-mono text-[11.5px] whitespace-nowrap text-slate-700">
                             {rec.auditDate || '-'}
                           </td>
-                          <td className="py-2 px-3.5 border-r border-slate-200">
-                            <div className="font-bold text-slate-900">{rec.companyName}</div>
+                          <td className="py-2.5 px-3.5 border-r border-slate-200">
+                            <div className="text-slate-900">{rec.companyName}</div>
                             {rec.industry && <div className="text-[10.5px] text-slate-500">{rec.industry}</div>}
                           </td>
-                          <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold text-[11px]">
-                              {rec.auditType}
-                            </span>
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap text-slate-700 text-[11.5px]">
+                            {rec.auditType}
                           </td>
-                          <td className="py-2 px-3 border-r border-slate-200 text-[11.5px]">
-                            <div className="font-semibold text-cyan-950">
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-[11.5px]">
+                            <div className="text-slate-800">
                               {rec.standards.map(s => s.replace('ISO ', '')).join(', ')}
                             </div>
                             {rec.iafCode && (
                               <div className="text-[10px] text-slate-400 font-mono">IAF Code {rec.iafCode}</div>
                             )}
                           </td>
-                          <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap">
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                              rec.isLead 
-                                ? 'bg-indigo-100 text-indigo-900 border border-indigo-200' 
-                                : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
-                            }`}>
-                              {rec.role}
-                            </span>
+                          <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap text-slate-800 text-[11.5px]">
+                            {rec.role}
                           </td>
-                          <td className="py-2 px-2 border-r border-slate-200 text-center font-mono font-bold text-cyan-800">
+                          <td className="py-2.5 px-2 border-r border-slate-200 text-center font-mono text-slate-700 text-[11.5px]">
                             {rec.appliedMd.toFixed(1)}
                           </td>
-                          <td className="py-2 px-3 text-center">
+                          <td className="py-2.5 px-3 text-center">
                             <button
                               type="button"
                               onClick={() => {
@@ -1019,10 +1005,10 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                                   auditDate: rec.auditDate
                                 });
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-bold text-[11px] border border-cyan-200 inline-flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                              className="text-cyan-700 hover:text-cyan-900 hover:underline text-[11.5px] inline-flex items-center gap-1 transition cursor-pointer"
                               title="공식 심사보고서 및 기록 열람"
                             >
-                              <FileText className="w-3 h-3 text-cyan-700" />
+                              <FileText className="w-3.5 h-3.5" />
                               <span>기록 열람</span>
                             </button>
                           </td>
@@ -1140,13 +1126,13 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
 
                 <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-2xs">
                   <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-medium">
                       <tr>
-                        <th className="py-2.5 px-3 text-center w-20 border-r border-slate-200">IAF 코드</th>
-                        <th className="py-2.5 px-3.5 border-r border-slate-200">산업 분야 및 기술 영역</th>
-                        <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200">심사 수행 건수</th>
-                        <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200">누적 심사 MD</th>
-                        <th className="py-2.5 px-3 text-center w-36">코드 충족 요건 판정</th>
+                        <th className="py-2.5 px-3 text-center w-20 border-r border-slate-200 font-medium">IAF 코드</th>
+                        <th className="py-2.5 px-3.5 border-r border-slate-200 font-medium">산업 분야 및 기술 영역</th>
+                        <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200 font-medium">심사 수행 건수</th>
+                        <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200 font-medium">누적 심사 MD</th>
+                        <th className="py-2.5 px-3 text-center w-36 font-medium">코드 충족 요건 판정</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
@@ -1162,27 +1148,26 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
 
                           return (
                             <tr key={iaf.code} className="hover:bg-slate-50 transition">
-                              <td className="py-2.5 px-3 text-center font-mono font-bold text-cyan-800 border-r border-slate-200">
+                              <td className="py-2.5 px-3 text-center font-mono text-slate-700 border-r border-slate-200 text-[11.5px]">
                                 {iaf.code}
                               </td>
-                              <td className="py-2.5 px-3.5 font-semibold text-slate-900 border-r border-slate-200">
+                              <td className="py-2.5 px-3.5 text-slate-800 border-r border-slate-200 text-[11.5px]">
                                 {iaf.name}
                               </td>
-                              <td className="py-2.5 px-3 text-center font-mono border-r border-slate-200">
+                              <td className="py-2.5 px-3 text-center font-mono text-slate-700 border-r border-slate-200 text-[11.5px]">
                                 {iaf.count}건
                               </td>
-                              <td className="py-2.5 px-3 text-center font-mono font-bold text-indigo-900 border-r border-slate-200">
+                              <td className="py-2.5 px-3 text-center font-mono text-slate-700 border-r border-slate-200 text-[11.5px]">
                                 {iaf.totalMd.toFixed(1)} MD
                               </td>
-                              <td className="py-2.5 px-3 text-center">
+                              <td className="py-2.5 px-3 text-center text-[11.5px]">
                                 {isCodeFulfilled ? (
-                                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px] inline-flex items-center gap-1">
-                                    <Check className="w-3 h-3 text-emerald-700" />
-                                    <span>충족 ({iaf.totalMd.toFixed(1)} MD)</span>
+                                  <span className="text-emerald-700">
+                                    ✓ 충족 ({iaf.totalMd.toFixed(1)} MD)
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium text-[11px] inline-flex items-center gap-1">
-                                    <span>미충족 ({iaf.totalMd.toFixed(1)}/5.0 MD)</span>
+                                  <span className="text-amber-700">
+                                    미충족 ({iaf.totalMd.toFixed(1)}/5.0 MD)
                                   </span>
                                 )}
                               </td>
@@ -1221,23 +1206,23 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     {certificates.map(cert => (
                       <div key={cert.id} className="bg-white border border-slate-200 p-3.5 rounded-xl space-y-2 shadow-2xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-slate-900">{cert.name}</span>
-                          <span className="px-2 py-0.5 rounded bg-cyan-700 text-white font-bold text-[10px]">
+                          <span className="text-xs text-slate-900">{cert.name}</span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10.5px]">
                             {cert.grade}
                           </span>
                         </div>
                         <div className="text-[11.5px] text-slate-600 space-y-1">
-                          <div>자격번호: <strong className="font-mono text-slate-900">{cert.certNumber || '-'}</strong></div>
-                          <div>발행기관: <strong>{cert.issuer || '-'}</strong></div>
-                          <div>최초등록일: <strong className="font-mono">{cert.issueDate || '-'}</strong> | 유효기간: <strong className="font-mono text-cyan-800">{cert.expiryDate || '-'}</strong></div>
+                          <div>자격번호: <span className="font-mono text-slate-900">{cert.certNumber || '-'}</span></div>
+                          <div>발행기관: <span className="text-slate-800">{cert.issuer || '-'}</span></div>
+                          <div>최초등록일: <span className="font-mono">{cert.issueDate || '-'}</span> | 유효기간: <span className="font-mono text-slate-800">{cert.expiryDate || '-'}</span></div>
                         </div>
                         <div className="pt-1 flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => alert(`[자격증 사본 조회]\n자격증: ${cert.name}\n등록번호: ${cert.certNumber || '-'}\n발행처: ${cert.issuer || '-'}`)}
-                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1"
+                            className="text-cyan-700 hover:underline text-[11.5px] transition cursor-pointer inline-flex items-center gap-1"
                           >
-                            <Eye className="w-3 h-3 text-slate-600" />
+                            <Eye className="w-3.5 h-3.5" />
                             <span>자격증 사본 확인</span>
                           </button>
                         </div>
@@ -1266,12 +1251,12 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     {trainingHistory.map(tr => (
                       <div key={tr.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                         <div>
-                          <div className="font-bold text-slate-900">{tr.title}</div>
+                          <div className="text-slate-900">{tr.title}</div>
                           <div className="text-[11px] text-slate-500 mt-0.5">
                             교육기관: {tr.institution} | 이수일자: {tr.completedDate} ({tr.hours}시간)
                           </div>
                         </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200 self-start sm:self-auto">
+                        <span className="text-emerald-700 text-[11.5px] self-start sm:self-auto">
                           ✓ {tr.status} ({tr.hours}h)
                         </span>
                       </div>
@@ -1299,12 +1284,12 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     {seminarHistory.map(sem => (
                       <div key={sem.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                         <div>
-                          <div className="font-bold text-slate-900">{sem.title}</div>
+                          <div className="text-slate-900">{sem.title}</div>
                           <div className="text-[11px] text-slate-500 mt-0.5">
                             일시: {sem.date} ({sem.hours}시간) | 주관: {sem.host} {sem.location ? `| 장소: ${sem.location}` : ''}
                           </div>
                         </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold text-[11px] border border-blue-200 self-start sm:self-auto">
+                        <span className="text-blue-700 text-[11.5px] self-start sm:self-auto">
                           참석 확인됨
                         </span>
                       </div>
@@ -1335,14 +1320,14 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
               {/* Career Cert Requests List */}
               <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-2xs">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-medium">
                     <tr>
-                      <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200">신청일시</th>
-                      <th className="py-2.5 px-3.5 border-r border-slate-200">신청 용도</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200">제출처</th>
-                      <th className="py-2.5 px-3 text-center w-24 border-r border-slate-200">진행 상태</th>
-                      <th className="py-2.5 px-3 text-center w-36 border-r border-slate-200">승인 정보</th>
-                      <th className="py-2.5 px-3 text-center w-36">사무국 관리</th>
+                      <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200 font-medium">신청일시</th>
+                      <th className="py-2.5 px-3.5 border-r border-slate-200 font-medium">신청 용도</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 font-medium">제출처</th>
+                      <th className="py-2.5 px-3 text-center w-24 border-r border-slate-200 font-medium">진행 상태</th>
+                      <th className="py-2.5 px-3 text-center w-36 border-r border-slate-200 font-medium">승인 정보</th>
+                      <th className="py-2.5 px-3 text-center w-36 font-medium">사무국 관리</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
@@ -1355,30 +1340,30 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     ) : (
                       careerCertRequests.map((req) => (
                         <tr key={req.id} className="hover:bg-slate-50 transition">
-                          <td className="py-2.5 px-3 text-center font-mono border-r border-slate-200 text-slate-600">
+                          <td className="py-2.5 px-3 text-center font-mono border-r border-slate-200 text-slate-600 text-[11.5px]">
                             {req.requestedAt}
                           </td>
-                          <td className="py-2.5 px-3.5 font-bold text-slate-900 border-r border-slate-200">
+                          <td className="py-2.5 px-3.5 text-slate-900 border-r border-slate-200 text-[11.5px]">
                             {req.purpose}
                           </td>
-                          <td className="py-2.5 px-3 text-slate-700 border-r border-slate-200">
+                          <td className="py-2.5 px-3 text-slate-700 border-r border-slate-200 text-[11.5px]">
                             {req.submitTo}
                           </td>
-                          <td className="py-2.5 px-3 text-center border-r border-slate-200">
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                          <td className="py-2.5 px-3 text-center border-r border-slate-200 text-[11.5px]">
+                            <span className={
                               req.status === '승인완료'
-                                ? 'bg-emerald-100 text-emerald-800'
+                                ? 'text-emerald-700'
                                 : req.status === '신청대기'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-rose-100 text-rose-800'
-                            }`}>
+                                ? 'text-amber-700'
+                                : 'text-rose-700'
+                            }>
                               {req.status}
                             </span>
                           </td>
                           <td className="py-2.5 px-3 text-center border-r border-slate-200 text-[11px]">
                             {req.status === '승인완료' ? (
                               <div>
-                                <span className="text-slate-800 font-semibold">{req.approvedBy}</span>
+                                <span className="text-slate-700">{req.approvedBy}</span>
                                 <div className="text-[10px] text-slate-400 font-mono">{req.certDocNumber}</div>
                               </div>
                             ) : (
@@ -1389,10 +1374,10 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setSelectedCertForPrint(req)}
-                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] rounded-lg border border-slate-300 transition cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                              className="text-indigo-700 hover:text-indigo-900 hover:underline text-[11.5px] transition cursor-pointer inline-flex items-center gap-1"
                               title="증명서 내용 확인 및 승인 처리"
                             >
-                              <Eye className="w-3 h-3 text-slate-700" />
+                              <Eye className="w-3.5 h-3.5" />
                               <span>증명서 이력 보기</span>
                             </button>
                           </td>
