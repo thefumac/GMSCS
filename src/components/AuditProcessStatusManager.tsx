@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   ExternalLink,
@@ -214,7 +214,32 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
     stage: '대기' | '접수' | '검토' | '승인';
     date: string;
     note?: string;
-  }>>({});
+  }>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('gmscs_report_custom_stages');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    const handleStageUpdate = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('gmscs_report_custom_stages');
+        if (saved) {
+          try { setReportCustomStages(JSON.parse(saved)); } catch (e) {}
+        }
+      }
+    };
+    window.addEventListener('gmscs-report-submitted', handleStageUpdate);
+    window.addEventListener('storage', handleStageUpdate);
+    return () => {
+      window.removeEventListener('gmscs-report-submitted', handleStageUpdate);
+      window.removeEventListener('storage', handleStageUpdate);
+    };
+  }, []);
 
   // 사무국 심사보고서 단계 편집 모달 상태
   const [editingReportRow, setEditingReportRow] = useState<{
@@ -309,7 +334,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         ? '승인'
         : (isReportReviewing ? '검토' : (isReportSubmitted ? '접수' : '대기'));
 
-      const customReport = reportCustomStages[p.id];
+      const customReport = reportCustomStages[p.id] || reportCustomStages[p.companyId] || (comp?.id ? reportCustomStages[comp.id] : undefined) || (comp?.companyName ? reportCustomStages[comp.companyName] : undefined);
       const stage: '대기' | '접수' | '검토' | '승인' = customReport ? customReport.stage : defaultStage;
 
       const receiptDate = (stage === '접수' || stage === '검토' || stage === '승인')
@@ -861,9 +886,9 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                       {/* 8. Post-AUDIT */}
                       <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap">
                         <div className="flex items-start justify-center gap-2 text-[11px]">
-                          {/* 보고서 접수 */}
+                          {/* 보고서 접수 / 검토 */}
                           <div className="text-center min-w-[55px]">
-                            {row.postAudit.receiptDate ? (
+                            {row.postAudit.receiptDate || row.postAudit.stage === '검토' || row.postAudit.stage === '접수' ? (
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -879,11 +904,11 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                                     });
                                   }
                                 }}
-                                className="text-blue-700 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                                title="심사원 보고서 접수 완료 (클릭하여 열람)"
+                                className={row.postAudit.stage === '검토' ? "text-amber-800 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer bg-amber-50 px-1.5 py-0.5 rounded border border-amber-300" : "text-blue-700 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"}
+                                title={row.postAudit.stage === '검토' ? "사무국 검토 대기/진행중 (클릭하여 열람/승인)" : "심사원 보고서 접수 완료 (클릭하여 열람)"}
                               >
-                                <span>보고서 접수</span>
-                                <ExternalLink className="w-2.5 h-2.5 text-blue-500 shrink-0" />
+                                <span>{row.postAudit.stage === '검토' ? '보고서 검토' : '보고서 접수'}</span>
+                                <ExternalLink className="w-2.5 h-2.5 text-current shrink-0" />
                               </button>
                             ) : (
                               <span className="text-slate-300">보고서 접수</span>
@@ -1177,14 +1202,25 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
               <button
                 type="button"
                 onClick={() => {
-                  setReportCustomStages(prev => ({
-                    ...prev,
+                  const compKey = editingReportRow.row.companyId || editingReportRow.row.companyName;
+                  const nextMap = {
+                    ...reportCustomStages,
                     [editingReportRow.row.projectId]: {
                       stage: editingReportRow.stage,
                       date: editingReportRow.date,
                       note: editingReportRow.note
+                    },
+                    [compKey]: {
+                      stage: editingReportRow.stage,
+                      date: editingReportRow.date,
+                      note: editingReportRow.note
                     }
-                  }));
+                  };
+                  setReportCustomStages(nextMap);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('gmscs_report_custom_stages', JSON.stringify(nextMap));
+                    window.dispatchEvent(new CustomEvent('gmscs-report-submitted', { detail: nextMap }));
+                  }
                   setEditingReportRow(null);
                 }}
                 className="px-4 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"

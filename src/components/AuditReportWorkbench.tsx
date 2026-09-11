@@ -690,6 +690,33 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     alert(`[전자서명 요청 메일 발송 완료]\n총 ${updatedSigners.length}명의 서명 대상자에게 전자서명 요청 메일이 성공적으로 발송되었습니다.\n\n${mailSummaries}\n\n* 대표메일 수신 건은 메일 제목 및 본문 상단에 수신 대상자 식별 정보(기업담당자/근로자대표)가 명확히 기재되어 전송되었습니다.`);
   };
 
+  // 심사팀원 동적 추가 핸들러
+  const handleAddTeamMember = () => {
+    const currentMembers = emailSigners.filter(s => s.roleType === '심사팀원');
+    const newIdx = currentMembers.length + 1;
+    const newMember: EmailSignerItem = {
+      id: `signer-member-${Date.now()}`,
+      roleType: '심사팀원',
+      name: `심사원${newIdx}`,
+      position: '심사원',
+      email: `auditor${newIdx + 1}@gmscs.co.kr`,
+      useCompanyEmail: false,
+      status: '대기'
+    };
+    const leadIdx = emailSigners.findIndex(s => s.roleType === '심사팀장');
+    const insertIdx = leadIdx !== -1 ? leadIdx + currentMembers.length + 1 : 1;
+    const next = [...emailSigners];
+    next.splice(insertIdx, 0, newMember);
+    setEmailSigners(next);
+  };
+
+  const handleRemoveTeamMember = (id: string) => {
+    if (emailSigners.filter(s => s.roleType === '심사팀원').length <= 1) {
+      if (!confirm('심사팀원을 삭제하시겠습니까? (단독 심사로 전환)')) return;
+    }
+    setEmailSigners(prev => prev.filter(s => s.id !== id));
+  };
+
   // 개별 서명 승인 / 서명 처리 핸들러 (원클릭 전자서명 및 실시간 도장 날인)
   const handleApproveSigner = (signerId: string) => {
     const signer = emailSigners.find(s => s.id === signerId);
@@ -709,7 +736,47 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     setEmailSigners(nextSigners);
     localStorage.setItem(`${storageKey}_SIGNERS`, JSON.stringify(nextSigners));
 
-    // 2. Automatically synchronize into signatures map for all relevant slots
+    // 2. Automatically update signer names & positions into stage1Data & stage2Data & scopeConfirmData!
+    if (signer.roleType === '심사팀장') {
+      setStage2Data((prev: any) => ({
+        ...prev,
+        auditorName: signer.name,
+        scheduleLeader: signer.name,
+        conflictLeader: signer.name,
+        findingsAuditor: signer.name,
+        prevObsAuditor: signer.name,
+        prevNcrAuditor: signer.name,
+        renewalHistory: (prev.renewalHistory || []).map((r: any) => ({ ...r, leader: signer.name }))
+      }));
+    } else if (signer.roleType === '심사팀원') {
+      setStage2Data((prev: any) => ({
+        ...prev,
+        scheduleMember: prev.scheduleMember ? `${prev.scheduleMember}, ${signer.name}` : signer.name,
+        conflictMember1: prev.conflictMember1 ? `${prev.conflictMember1}, ${signer.name}` : signer.name
+      }));
+    } else if (signer.roleType === '고객담당자') {
+      setStage2Data((prev: any) => ({
+        ...prev,
+        contactPerson: signer.name,
+        contactPosition: signer.position,
+        ceoName: prev.ceoName || signer.name
+      }));
+      setScopeConfirmData((prev: any) => ({
+        ...prev,
+        ceoName: prev.ceoName || signer.name
+      }));
+    } else if (signer.roleType === '근로자대표') {
+      setStage1Data((prev: any) => ({
+        ...prev,
+        safe1_workerRep: `${signer.name} (${signer.position})`
+      }));
+      setStage2Data((prev: any) => ({
+        ...prev,
+        safeEvaluator: `${signer.name} 근로자대표`
+      }));
+    }
+
+    // 3. Automatically synchronize into signatures map for all relevant slots
     const newSignRecord: EmailSignatureRecord = {
       slotId: signer.id,
       slotLabel: `${signer.roleType} 서명`,
@@ -723,21 +790,37 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       ipAddress: '211.234.' + Math.floor(Math.random() * 200 + 10) + '.' + Math.floor(Math.random() * 200 + 10)
     };
 
+    const teamMembers = emailSigners.filter(s => s.roleType === '심사팀원');
+    const memberIdx = teamMembers.findIndex(s => s.id === signer.id);
+
     setSignatures(prev => {
       const next = { ...prev };
       if (signer.roleType === '심사팀장') {
         next['s1_lead'] = { ...newSignRecord, slotId: 's1_lead', slotLabel: '심사 팀장 (서명)' };
+        next['s2_lead'] = { ...newSignRecord, slotId: 's2_lead', slotLabel: '심사팀장 (서명)' };
         next['s2_p9_lead'] = { ...newSignRecord, slotId: 's2_p9_lead', slotLabel: '심사팀장 서명' };
         next['s2_p15_lead'] = { ...newSignRecord, slotId: 's2_p15_lead', slotLabel: '심사팀장 서명' };
         next['s2_p17_lead'] = { ...newSignRecord, slotId: 's2_p17_lead', slotLabel: '심사팀장 서명' };
         next['ncr_auditor'] = { ...newSignRecord, slotId: 'ncr_auditor', slotLabel: '확인 심사원 서명' };
       } else if (signer.roleType === '심사팀원') {
-        next['s2_p9_member1'] = { ...newSignRecord, slotId: 's2_p9_member1', slotLabel: '심사팀원 서명' };
+        if (memberIdx === 0 || memberIdx === -1) {
+          next['s2_team1'] = { ...newSignRecord, slotId: 's2_team1', slotLabel: '심사팀원1 (서명)' };
+          next['s2_p9_member1'] = { ...newSignRecord, slotId: 's2_p9_member1', slotLabel: '심사팀원1 서명' };
+        } else if (memberIdx === 1) {
+          next['s2_team2'] = { ...newSignRecord, slotId: 's2_team2', slotLabel: '심사팀원2 (서명)' };
+          next['s2_p9_member2'] = { ...newSignRecord, slotId: 's2_p9_member2', slotLabel: '심사팀원2 서명' };
+        } else if (memberIdx === 2) {
+          next['s2_team3'] = { ...newSignRecord, slotId: 's2_team3', slotLabel: '심사팀원3 (서명)' };
+        } else if (memberIdx === 3) {
+          next['s2_team4'] = { ...newSignRecord, slotId: 's2_team4', slotLabel: '심사팀원4 (서명)' };
+        }
       } else if (signer.roleType === '고객담당자') {
         next['s1_cust'] = { ...newSignRecord, slotId: 's1_cust', slotLabel: '고객 확인 (서명)' };
+        next['s2_cust'] = { ...newSignRecord, slotId: 's2_cust', slotLabel: '고객 확인 (서명)' };
         next['s2_p17_client'] = { ...newSignRecord, slotId: 's2_p17_client', slotLabel: '고객확인 (대표자/담당자)' };
         next['ncr_client'] = { ...newSignRecord, slotId: 'ncr_client', slotLabel: '고객 확인 서명' };
       } else if (signer.roleType === '근로자대표') {
+        next['s2_work'] = { ...newSignRecord, slotId: 's2_work', slotLabel: '근로자대표 (서명)' };
         next['s2_worker_rep'] = { ...newSignRecord, slotId: 's2_worker_rep', slotLabel: '근로자 대표 서명' };
       }
       return next;
@@ -783,12 +866,68 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       localStorage.setItem(`${storageKey}_STAGE1`, JSON.stringify(stage1Data));
       localStorage.setItem(`${storageKey}_STAGE2`, JSON.stringify(stage2Data));
       localStorage.setItem(`${storageKey}_SIGS`, JSON.stringify(signatures));
+      localStorage.setItem(`${storageKey}_SIGNERS`, JSON.stringify(emailSigners));
       localStorage.setItem(`${storageKey}_NCRS`, JSON.stringify(ncrList));
+      localStorage.setItem(`${storageKey}_SCOPE_CONFIRM`, JSON.stringify(scopeConfirmData));
     }
     if (onSave) {
-      onSave({ stage1Data, stage2Data, signatures, ncrList });
+      onSave({ stage1Data, stage2Data, signatures, ncrList, emailSigners });
     }
-    alert('[심사보고서 전산 저장 완료]\n2025 Audit Report Pack(251001)의 모든 페이지(1p~20p+) 데이터와 전자 서명이 시스템에 안전하게 저장되었습니다.');
+  };
+
+  // 보고서 제출 함수 (사무국 검토대기 상태 즉시 전환 및 전역 브로드캐스트)
+  const handleSubmitReport = () => {
+    const unsigned = emailSigners.filter(s => s.status !== '서명완료');
+    if (unsigned.length > 0) {
+      if (!confirm(`[확인 필요] 아직 서명이 완료되지 않은 대상자가 있습니다:\n- ${unsigned.map(s => `${s.roleType} (${s.name})`).join('\n- ')}\n\n이대로 보고서를 사무국에 접수/제출하시겠습니까?`)) {
+        return;
+      }
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`${storageKey}_STAGE1`, JSON.stringify(stage1Data));
+      localStorage.setItem(`${storageKey}_STAGE2`, JSON.stringify(stage2Data));
+      localStorage.setItem(`${storageKey}_SIGS`, JSON.stringify(signatures));
+      localStorage.setItem(`${storageKey}_SIGNERS`, JSON.stringify(emailSigners));
+      localStorage.setItem(`${storageKey}_NCRS`, JSON.stringify(ncrList));
+      localStorage.setItem(`${storageKey}_SCOPE_CONFIRM`, JSON.stringify(scopeConfirmData));
+
+      // 사무국 심사관리 전역 단계 갱신
+      const savedStages = localStorage.getItem('gmscs_report_custom_stages');
+      const stageMap = savedStages ? JSON.parse(savedStages) : {};
+      const compId = company.id || company.companyName;
+      stageMap[compId] = { stage: '검토', date: today, note: '심사보고서 제출 접수 완료' };
+      stageMap[company.companyName] = { stage: '검토', date: today, note: '심사보고서 제출 접수 완료' };
+      localStorage.setItem('gmscs_report_custom_stages', JSON.stringify(stageMap));
+    }
+
+    if (onSave) {
+      onSave({
+        stage1Data,
+        stage2Data,
+        signatures,
+        ncrList,
+        emailSigners,
+        isSubmitted: true,
+        status: '사무국검토대기',
+        stage: '검토'
+      });
+    }
+
+    // 전역 이벤트 브로드캐스트
+    window.dispatchEvent(new CustomEvent('gmscs-report-submitted', {
+      detail: {
+        companyId: company.id,
+        companyName: company.companyName,
+        status: '사무국검토대기',
+        stage: '검토',
+        submittedAt: today
+      }
+    }));
+
+    alert(`[심사보고서 제출 완료]\n[${company.companyName}] 2025 Audit Report Pack(251001)이 사무국으로 성공적으로 접수/제출되었습니다.\n사무국 심사관리 프로세스(Post-AUDIT)가 '검토' 단계로 즉시 전환되었습니다.`);
   };
 
   // NCR 추가 함수
@@ -1170,19 +1309,13 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             <span>A4 인쇄 / PDF 출력</span>
           </button>
           <button
-            onClick={handleSaveAll}
+            onClick={handleSubmitReport}
             className="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>전산 저장</span>
+            <Send className="w-3.5 h-3.5" />
+            <span>보고서 제출</span>
           </button>
         </div>
-      </div>
-
-      {/* 안내 서브 헤더 띠 */}
-      <div className="bg-slate-800 text-slate-300 px-5 py-1.5 text-[11px] flex justify-between items-center border-b border-slate-700 shrink-0 no-print print:hidden">
-        <span>좌측 참고 패널의 가이드를 확인하며 우측 공식 서식(1·2단계, 인정확인서, 3년계획, 시정조치 요구서 등)을 작성하세요.</span>
-        <span className="text-teal-300 font-mono">1단계 / 2단계 / 인정범위확인(Table 29) / 3년계획(Table 30~32) / 시정조치요구서(F18-002)</span>
       </div>
 
       {/* 2. 메인 컨텐츠 영역 (좌측 참고 패널 2.8 : 우측 종이 바인더 7.2) */}
@@ -1269,10 +1402,21 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                 <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
                 <span>3. 전자 메일 서명 관리 & 발송</span>
               </span>
-              <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 flex items-center gap-1">
-                <Send className="w-3 h-3 text-teal-600" />
-                <span>서명 {emailSigners.filter(s => s.status === '서명완료').length}/{emailSigners.length}</span>
-              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleAddTeamMember}
+                  className="px-1.5 py-0.5 rounded bg-sky-50 border border-sky-300 text-sky-800 hover:bg-sky-100 font-bold text-[10px] flex items-center gap-0.5 transition cursor-pointer"
+                  title="심사계획 상의 심사팀원을 추가합니다."
+                >
+                  <Plus className="w-2.5 h-2.5" />
+                  <span>+ 팀원 추가</span>
+                </button>
+                <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 flex items-center gap-1">
+                  <Send className="w-3 h-3 text-teal-600" />
+                  <span>서명 {emailSigners.filter(s => s.status === '서명완료').length}/{emailSigners.length}</span>
+                </span>
+              </div>
             </div>
 
             <div className="text-[10.5px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 space-y-1">
@@ -1285,7 +1429,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               </p>
             </div>
 
-            {/* 4인 서명 대상자 편집 카드 목록 */}
+            {/* 서명 대상자 편집 카드 목록 */}
             <div className="space-y-2.5">
               {emailSigners.map((signer, sIdx) => {
                 const isSigned = signer.status === '서명완료';
@@ -1313,6 +1457,16 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           {sIdx + 1}. {signer.roleType}
                         </span>
                         <span className="font-bold text-slate-800 text-xs">{signer.name}</span>
+                        {signer.roleType === '심사팀원' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTeamMember(signer.id)}
+                            className="p-0.5 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                            title="해당 심사팀원 삭제"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -1595,33 +1749,6 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   요구서 보기
                 </button>
               </div>
-            </div>
-          </div>
-
-          {/* 5. 전자메일 서명 현황 카드 */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
-                <span>5. 전자메일 서명 현황</span>
-              </span>
-              <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
-                {Object.keys(signatures).length}건 완료
-              </span>
-            </div>
-
-            <div className="space-y-1.5 text-[11px]">
-              {Object.values(signatures).map(sig => (
-                <div key={sig.slotId} className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-1.5 rounded">
-                  <div>
-                    <span className="font-bold text-emerald-950">{sig.signerName}</span>
-                    <span className="text-[9.5px] text-emerald-700 block">({sig.signerPosition} / {sig.slotLabel})</span>
-                  </div>
-                  <span className="text-[9px] font-mono text-emerald-800 bg-emerald-100 px-1 py-0.5 rounded">
-                    {sig.signedAt.slice(5, 16)}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
 
