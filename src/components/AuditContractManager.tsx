@@ -113,14 +113,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [hasCertChange, setHasCertChange] = useState<boolean>(false);
 
   // [A] 기존/신규 고객사 선택 및 검색
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(() => {
-    return companies[0]?.id || '';
-  });
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [companySearchQuery, setCompanySearchQuery] = useState<string>('');
   const [isManualEditOpen, setIsManualEditOpen] = useState<boolean>(false);
   
   const selectedCompany = useMemo(() => {
-    return companies.find(c => c.id === selectedCompanyId) || companies[0];
+    return companies.find(c => c.id === selectedCompanyId) || null;
   }, [companies, selectedCompanyId]);
 
   // 필터된 기업 목록 (검색)
@@ -135,39 +133,39 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   }, [companies, companySearchQuery]);
 
   // [B] 규격 추가 모드 특화
-  const [addedStandards, setAddedStandards] = useState<StandardCode[]>(['ESG-MS:2023']);
+  const [addedStandards, setAddedStandards] = useState<StandardCode[]>([]);
 
   // [C] 신규 / 전환 기업 상세 편집 필드
-  const [newCompanyName, setNewCompanyName] = useState<string>('(주)케이원메탈2공장');
-  const [newCeoName, setNewCeoName] = useState<string>('박경원');
-  const [newBizNumber, setNewBizNumber] = useState<string>('513-85-18153');
-  const [newAddress, setNewAddress] = useState<string>('경북 고령군 다산면 다산산단2길 88');
-  const [newContactPerson, setNewContactPerson] = useState<string>('정순호');
-  const [newContactPhone, setNewContactPhone] = useState<string>('054-955-9197');
-  const [newContactEmail, setNewContactEmail] = useState<string>('quality@kwonmetal.co.kr');
-  const [newIndustry, setNewIndustry] = useState<string>('자동차 및 선박용 주조물 제조');
-  const [newIafCode, setNewIafCode] = useState<string>('17');
+  const [newCompanyName, setNewCompanyName] = useState<string>('');
+  const [newCeoName, setNewCeoName] = useState<string>('');
+  const [newBizNumber, setNewBizNumber] = useState<string>('');
+  const [newAddress, setNewAddress] = useState<string>('');
+  const [newContactPerson, setNewContactPerson] = useState<string>('');
+  const [newContactPhone, setNewContactPhone] = useState<string>('');
+  const [newContactEmail, setNewContactEmail] = useState<string>('');
+  const [newIndustry, setNewIndustry] = useState<string>('');
+  const [newIafCode, setNewIafCode] = useState<string>('');
   const [newScope, setNewScope] = useState<string>('');
   const [newRiskLevel] = useState<'High' | 'Medium' | 'Low'>('Medium');
-  const [newStandards, setNewStandards] = useState<StandardCode[]>(['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018']);
-  const [newAgency, setNewAgency] = useState<string>('아이비컨설팅');
+  const [newStandards, setNewStandards] = useState<StandardCode[]>([]);
+  const [newAgency, setNewAgency] = useState<string>('');
 
   // [C-2] 심사계획서 및 공문 사무국 작성 필드 State
-  const [planDate, setPlanDate] = useState<string>('2026-06-25');
+  const [planDate, setPlanDate] = useState<string>('');
   const [planDocSeq, setPlanDocSeq] = useState<string>('01');
-  const [planDept, setPlanDept] = useState<string>('품질보증부');
-  const [planContactPerson, setPlanContactPerson] = useState<string>('정순호');
-  const [planContactPosition, setPlanContactPosition] = useState<string>('부장');
+  const [planDept, setPlanDept] = useState<string>('');
+  const [planContactPerson, setPlanContactPerson] = useState<string>('');
+  const [planContactPosition, setPlanContactPosition] = useState<string>('');
   const [planFax, setPlanFax] = useState<string>('');
   const [planSubAddress, setPlanSubAddress] = useState<string>('');
-  const [planKsicCode, setPlanKsicCode] = useState<string>('C2431');
+  const [planKsicCode, setPlanKsicCode] = useState<string>('');
   const [planCustomerNumber, setPlanCustomerNumber] = useState<string>('');
 
   // [J] 심사 일정 및 심사원 배정 상태 선언
-  const [plannedStartDate, setPlannedStartDate] = useState<string>('2026-10-24');
-  const [plannedEndDate, setPlannedEndDate] = useState<string>('2026-10-25');
-  const [leadAuditorId, setLeadAuditorId] = useState<string>(auditors[0]?.id || '');
-  const [teamAuditorId, setTeamAuditorId] = useState<string>(auditors[1]?.id || '');
+  const [plannedStartDate, setPlannedStartDate] = useState<string>('');
+  const [plannedEndDate, setPlannedEndDate] = useState<string>('');
+  const [leadAuditorId, setLeadAuditorId] = useState<string>('');
+  const [teamAuditorId, setTeamAuditorId] = useState<string>('');
 
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -176,105 +174,146 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // 고객사 선택 시 해당 기업 정보로 자동 동기화 (단일 DB 연결)
   useEffect(() => {
-    if (selectedCompany) {
-      const cleanedCeo = cleanCeoName(selectedCompany.ceoName);
-      const parsedContact = splitPersonAndPosition(selectedCompany.contactPerson, selectedCompany.contactPosition || '담당자');
-
-      setNewCompanyName(selectedCompany.companyName);
-      setNewCeoName(cleanedCeo);
-      setNewBizNumber(selectedCompany.bizNumber || '');
-      setNewAddress(selectedCompany.address || '');
-      setNewContactPerson(parsedContact.name);
-      setNewContactPhone(selectedCompany.contactPhone || '');
-      setNewContactEmail(selectedCompany.contactEmail || '');
-      setNewIndustry(selectedCompany.industry || '');
-      setNewIafCode(selectedCompany.iafCode || '17');
-      setNewScope(selectedCompany.scope || '');
-      setNewAgency(selectedCompany.consultant || selectedCompany.agency || '아이비컨설팅');
-      setCurrentEmployeeCount(selectedCompany.totalEmployees || 48);
-
-      const compAny = selectedCompany as any;
-      setPlanDept(compAny.department || '품질보증부');
-      setPlanContactPerson(cleanPersonName(selectedCompany.contactPerson) || parsedContact.name || '정순호');
-      setPlanContactPosition(selectedCompany.contactPosition || parsedContact.position || '담당자');
-      setPlanFax(compAny.fax || compAny.contactFax || '');
-      
-      // 복수 추가사업장 주소 자동 연동 (1순위: additionalSites[0].address)
-      const subAddr = selectedCompany.additionalSites?.[0]?.address || compAny.subAddress || compAny.factoryAddress || '';
-      setPlanSubAddress(subAddr);
-      setPlanKsicCode(compAny.ksicCode || 'C2431');
-      setPlanCustomerNumber(compAny.customerNumber || compAny.certNo || (selectedCompany.bizNumber ? 'Q' + selectedCompany.bizNumber.replace(/[^0-9]/g, '').slice(-6) : ''));
-
-      // 심사원 자동 배정: 기업의 assignedAuditorName 또는 managingAuditorId 매칭
-      const assignedStr = selectedCompany.assignedAuditorName || compAny.assignedAuditor || '';
-      if (assignedStr) {
-        const auditorNames = assignedStr.split(/[,/]+/).map((s: string) => s.trim()).filter(Boolean);
-        if (auditorNames.length > 0) {
-          const matchedLead = auditors.find(a => a.name === auditorNames[0] || a.id === selectedCompany.managingAuditorId);
-          if (matchedLead) {
-            setLeadAuditorId(matchedLead.id);
-          }
-          if (auditorNames.length > 1) {
-            const matchedTeam = auditors.find(a => a.name === auditorNames[1]);
-            if (matchedTeam) {
-              setTeamAuditorId(matchedTeam.id);
-            } else {
-              setTeamAuditorId('');
-            }
-          } else {
-            setTeamAuditorId('');
-          }
-        }
-      } else if (selectedCompany.managingAuditorId) {
-        const matched = auditors.find(a => a.id === selectedCompany.managingAuditorId);
-        if (matched) {
-          setLeadAuditorId(matched.id);
-        }
-      }
-
-      // 이전 심사일 기준으로 심사일자 동기화
-      const targetMonth = selectedCompany.lastAuditDate ? selectedCompany.lastAuditDate.substring(5, 7) : '10';
-      setPlannedStartDate(`2026-${targetMonth}-24`);
-      setPlannedEndDate(`2026-${targetMonth}-25`);
-      setPlanDate(`2026-${targetMonth}-10`);
-
-      // 전환 기업 등록인 경우 전환심사로 자동 제안
-      if (selectedCompany.isTransfer) {
-        setReceptionType('전환심사');
-      }
-
-      // 등록된 규격 파싱 및 동기화 (기존 보유 인증규격 자동 추출)
-      const extractedStds: StandardCode[] = [];
-      const rawStds = compAny.standards || compAny.certifiedStandards || '';
-      if (Array.isArray(rawStds)) {
-        rawStds.forEach((s: string) => {
-          if (s.includes('9001') && !extractedStds.includes('ISO 9001:2015')) extractedStds.push('ISO 9001:2015');
-          if (s.includes('14001') && !extractedStds.includes('ISO 14001:2015')) extractedStds.push('ISO 14001:2015');
-          if (s.includes('45001') && !extractedStds.includes('ISO 45001:2018')) extractedStds.push('ISO 45001:2018');
-          if (s.includes('27001') && !extractedStds.includes('ISO 27001:2022')) extractedStds.push('ISO 27001:2022');
-          if (s.includes('13485') && !extractedStds.includes('ISO 13485:2016')) extractedStds.push('ISO 13485:2016');
-          if (s.includes('22000') && !extractedStds.includes('ISO 22000:2018')) extractedStds.push('ISO 22000:2018');
-          if (s.includes('50001') && !extractedStds.includes('ISO 50001:2018')) extractedStds.push('ISO 50001:2018');
-          if (s.includes('ESG') && !extractedStds.includes('ESG-MS:2023')) extractedStds.push('ESG-MS:2023');
-        });
-      } else if (typeof rawStds === 'string' && rawStds.trim().length > 0) {
-        if (rawStds.includes('9001') && !extractedStds.includes('ISO 9001:2015')) extractedStds.push('ISO 9001:2015');
-        if (rawStds.includes('14001') && !extractedStds.includes('ISO 14001:2015')) extractedStds.push('ISO 14001:2015');
-        if (rawStds.includes('45001') && !extractedStds.includes('ISO 45001:2018')) extractedStds.push('ISO 45001:2018');
-        if (rawStds.includes('27001') && !extractedStds.includes('ISO 27001:2022')) extractedStds.push('ISO 27001:2022');
-        if (rawStds.includes('13485') && !extractedStds.includes('ISO 13485:2016')) extractedStds.push('ISO 13485:2016');
-        if (rawStds.includes('22000') && !extractedStds.includes('ISO 22000:2018')) extractedStds.push('ISO 22000:2018');
-        if (rawStds.includes('50001') && !extractedStds.includes('ISO 50001:2018')) extractedStds.push('ISO 50001:2018');
-        if (rawStds.includes('ESG') && !extractedStds.includes('ESG-MS:2023')) extractedStds.push('ESG-MS:2023');
-      }
-      if (extractedStds.length === 0) {
-        extractedStds.push('ISO 9001:2015', 'ISO 14001:2015');
-      }
-      setNewStandards(extractedStds);
-      setAddedStandards(extractedStds);
+    if (!selectedCompany) {
+      setNewCompanyName('');
+      setNewCeoName('');
+      setNewBizNumber('');
+      setNewAddress('');
+      setNewContactPerson('');
+      setNewContactPhone('');
+      setNewContactEmail('');
+      setNewIndustry('');
+      setNewIafCode('');
+      setNewScope('');
+      setNewAgency('');
+      setCurrentEmployeeCount(0);
+      setPlanDept('');
+      setPlanContactPerson('');
+      setPlanContactPosition('');
+      setPlanFax('');
+      setPlanSubAddress('');
+      setPlanKsicCode('');
+      setPlanCustomerNumber('');
+      setPlannedStartDate('');
+      setPlannedEndDate('');
+      setPlanDate('');
+      setLeadAuditorId('');
+      setTeamAuditorId('');
+      setNewStandards([]);
+      setAddedStandards([]);
       setIsDirty(false);
+      return;
     }
-  }, [selectedCompanyId, selectedCompany, auditors]);
+
+    const cleanedCeo = cleanCeoName(selectedCompany.ceoName);
+    const parsedContact = splitPersonAndPosition(selectedCompany.contactPerson, selectedCompany.contactPosition || '담당자');
+
+    setNewCompanyName(selectedCompany.companyName);
+    setNewCeoName(cleanedCeo);
+    setNewBizNumber(selectedCompany.bizNumber || '');
+    setNewAddress(selectedCompany.address || '');
+    setNewContactPerson(parsedContact.name);
+    setNewContactPhone(selectedCompany.contactPhone || '');
+    setNewContactEmail(selectedCompany.contactEmail || '');
+    setNewIndustry(selectedCompany.industry || '');
+    setNewIafCode(selectedCompany.iafCode || '17');
+    setNewScope(selectedCompany.scope || '');
+    setNewAgency(selectedCompany.consultant || selectedCompany.agency || '사무국직영');
+    setCurrentEmployeeCount(selectedCompany.totalEmployees || 1);
+
+    const compAny = selectedCompany as any;
+    setPlanDept(compAny.department || '품질보증부');
+    setPlanContactPerson(cleanPersonName(selectedCompany.contactPerson) || parsedContact.name || '');
+    setPlanContactPosition(selectedCompany.contactPosition || parsedContact.position || '담당자');
+    setPlanFax(compAny.fax || compAny.contactFax || '');
+    
+    // 복수 추가사업장 주소 자동 연동 (1순위: additionalSites[0].address)
+    const subAddr = selectedCompany.additionalSites?.[0]?.address || compAny.subAddress || compAny.factoryAddress || '';
+    setPlanSubAddress(subAddr);
+    setPlanKsicCode(compAny.ksicCode || (selectedCompany.iafCode ? `IAF-${selectedCompany.iafCode}` : 'C2431'));
+    setPlanCustomerNumber(compAny.customerNumber || compAny.certNo || (selectedCompany.bizNumber ? 'Q' + selectedCompany.bizNumber.replace(/[^0-9]/g, '').slice(-6) : ''));
+
+    // 실제 프로젝트 일정 매칭 (projects에 등록된 실데이터가 있으면 해당 일자 및 심사원 호출)
+    const matchedProject = projects?.find(p => p.companyId === selectedCompany.id || p.companyName === selectedCompany.companyName);
+    if (matchedProject && matchedProject.startDate) {
+      setPlannedStartDate(matchedProject.startDate);
+      setPlannedEndDate(matchedProject.endDate || matchedProject.startDate);
+      setPlanDate(matchedProject.startDate);
+    } else if (selectedCompany.lastAuditDate) {
+      // 이전 심사일 기준으로 연도/월 산출 (평일 기본 제안)
+      const targetMonth = selectedCompany.lastAuditDate.substring(5, 7) || '10';
+      setPlannedStartDate(`2026-${targetMonth}-14`);
+      setPlannedEndDate(`2026-${targetMonth}-15`);
+      setPlanDate(`2026-${targetMonth}-01`);
+    } else {
+      setPlannedStartDate('');
+      setPlannedEndDate('');
+      setPlanDate('');
+    }
+
+    // 심사원 자동 배정: 기업의 assignedAuditorName 또는 managingAuditorId 매칭
+    const assignedStr = matchedProject?.leadAuditorName || selectedCompany.assignedAuditorName || compAny.assignedAuditor || '';
+    if (assignedStr) {
+      const auditorNames = assignedStr.split(/[,/]+/).map((s: string) => s.trim()).filter(Boolean);
+      if (auditorNames.length > 0) {
+        const matchedLead = auditors.find(a => a.name === auditorNames[0] || a.id === selectedCompany.managingAuditorId);
+        if (matchedLead) {
+          setLeadAuditorId(matchedLead.id);
+        } else {
+          setLeadAuditorId('');
+        }
+        if (auditorNames.length > 1) {
+          const matchedTeam = auditors.find(a => a.name === auditorNames[1]);
+          setTeamAuditorId(matchedTeam ? matchedTeam.id : '');
+        } else {
+          setTeamAuditorId('');
+        }
+      }
+    } else if (selectedCompany.managingAuditorId) {
+      const matched = auditors.find(a => a.id === selectedCompany.managingAuditorId);
+      setLeadAuditorId(matched ? matched.id : '');
+      setTeamAuditorId('');
+    } else {
+      setLeadAuditorId('');
+      setTeamAuditorId('');
+    }
+
+    // 전환 기업 등록인 경우 전환심사로 자동 제안
+    if (selectedCompany.isTransfer) {
+      setReceptionType('전환심사');
+    }
+
+    // 등록된 규격 파싱 및 동기화 (기존 보유 인증규격 자동 추출)
+    const extractedStds: StandardCode[] = [];
+    const rawStds = compAny.standards || compAny.certifiedStandards || '';
+    if (Array.isArray(rawStds)) {
+      rawStds.forEach((s: string) => {
+        if (s.includes('9001') && !extractedStds.includes('ISO 9001:2015')) extractedStds.push('ISO 9001:2015');
+        if (s.includes('14001') && !extractedStds.includes('ISO 14001:2015')) extractedStds.push('ISO 14001:2015');
+        if (s.includes('45001') && !extractedStds.includes('ISO 45001:2018')) extractedStds.push('ISO 45001:2018');
+        if (s.includes('27001') && !extractedStds.includes('ISO 27001:2022')) extractedStds.push('ISO 27001:2022');
+        if (s.includes('13485') && !extractedStds.includes('ISO 13485:2016')) extractedStds.push('ISO 13485:2016');
+        if (s.includes('22000') && !extractedStds.includes('ISO 22000:2018')) extractedStds.push('ISO 22000:2018');
+        if (s.includes('50001') && !extractedStds.includes('ISO 50001:2018')) extractedStds.push('ISO 50001:2018');
+        if (s.includes('ESG') && !extractedStds.includes('ESG-MS:2023')) extractedStds.push('ESG-MS:2023');
+      });
+    } else if (typeof rawStds === 'string' && rawStds.trim().length > 0) {
+      if (rawStds.includes('9001') && !extractedStds.includes('ISO 9001:2015')) extractedStds.push('ISO 9001:2015');
+      if (rawStds.includes('14001') && !extractedStds.includes('ISO 14001:2015')) extractedStds.push('ISO 14001:2015');
+      if (rawStds.includes('45001') && !extractedStds.includes('ISO 45001:2018')) extractedStds.push('ISO 45001:2018');
+      if (rawStds.includes('27001') && !extractedStds.includes('ISO 27001:2022')) extractedStds.push('ISO 27001:2022');
+      if (rawStds.includes('13485') && !extractedStds.includes('ISO 13485:2016')) extractedStds.push('ISO 13485:2016');
+      if (rawStds.includes('22000') && !extractedStds.includes('ISO 22000:2018')) extractedStds.push('ISO 22000:2018');
+      if (rawStds.includes('50001') && !extractedStds.includes('ISO 50001:2018')) extractedStds.push('ISO 50001:2018');
+      if (rawStds.includes('ESG') && !extractedStds.includes('ESG-MS:2023')) extractedStds.push('ESG-MS:2023');
+    }
+    if (extractedStds.length === 0) {
+      extractedStds.push('ISO 9001:2015');
+    }
+    setNewStandards(extractedStds);
+    setAddedStandards(extractedStds);
+    setIsDirty(false);
+  }, [selectedCompanyId, selectedCompany, auditors, projects]);
 
   // 변경 감지 (미저장 이탈 방지용)
   useEffect(() => {
@@ -292,31 +331,34 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // 심사계획서 문서번호 산출 로직: GMS-인증-년월일8자리일련번호2자리 (예: GMS-인증- 2026062501)
   const planDocNumber = useMemo(() => {
-    const cleanDate = (planDate || '2026-06-25').replace(/[^0-9]/g, '').slice(0, 8);
+    if (!planDate) return 'GMS-인증-';
+    const cleanDate = planDate.replace(/[^0-9]/g, '').slice(0, 8);
     const seq = (planDocSeq || '01').padStart(2, '0');
     return `GMS-인증- ${cleanDate}${seq}`;
   }, [planDate, planDocSeq]);
 
+  // [D] 인원수 변동 검증 State 선언 (activeCompany 이전 선언)
+  const [currentEmployeeCount, setCurrentEmployeeCount] = useState<number>(0);
 
   // 활성 회사 정보
   const activeCompany: Company = useMemo(() => {
     if (!selectedCompany) {
       return {
-        id: 'new-comp-01',
-        companyName: newCompanyName,
-        ceoName: newCeoName,
-        bizNumber: newBizNumber,
-        address: newAddress,
-        contactPerson: newContactPerson,
-        contactPhone: newContactPhone,
-        contactEmail: newContactEmail,
-        industry: newIndustry,
-        iafCode: newIafCode,
-        totalEmployees: 35,
+        id: '',
+        companyName: newCompanyName || '',
+        ceoName: newCeoName || '',
+        bizNumber: newBizNumber || '',
+        address: newAddress || '',
+        contactPerson: newContactPerson || '',
+        contactPhone: newContactPhone || '',
+        contactEmail: newContactEmail || '',
+        industry: newIndustry || '',
+        iafCode: newIafCode || '',
+        totalEmployees: currentEmployeeCount || 0,
         scope: newScope || '',
         clientType: '직영',
         riskLevel: 'Medium',
-        createdAt: '2026-09-11'
+        createdAt: ''
       };
     }
 
@@ -337,21 +379,19 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     }
 
     return selectedCompany;
-  }, [selectedCompany, isManualEditOpen, newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope]);
+  }, [selectedCompany, isManualEditOpen, newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope, currentEmployeeCount]);
 
-  // [D] 인원수 변동 검증 State
-  const defaultEmpCount = selectedCompany?.totalEmployees || 48;
-  const [currentEmployeeCount, setCurrentEmployeeCount] = useState<number>(defaultEmpCount);
-  const previousEmployeeCount = selectedCompany?.totalEmployees || 48;
-  const isEmployeeChanged = receptionType !== '신규인증' && currentEmployeeCount !== previousEmployeeCount;
+  const previousEmployeeCount = selectedCompany?.totalEmployees || 0;
+  const isEmployeeChanged = !!selectedCompany && receptionType !== '신규인증' && currentEmployeeCount !== previousEmployeeCount;
   const employeeDiff = currentEmployeeCount - previousEmployeeCount;
 
   // [E] 심사 성격 자동 판정 및 이전 심사내역 조회
   const previousContract = useMemo(() => {
-    return contracts.find(c => c.companyId === selectedCompany?.id);
+    return selectedCompany ? contracts.find(c => c.companyId === selectedCompany.id) : undefined;
   }, [contracts, selectedCompany]);
 
   const calculatedAuditStageText = useMemo(() => {
+    if (!selectedCompany) return '고객사 미선택';
     if (receptionType === '신규인증') return '최초 인증심사 (1단계/2단계)';
     if (receptionType === '전환심사') return '전환 심사 (타인증원 이관)';
     if (receptionType === '규격추가') return '규격추가 심사 (신규 규격 추가)';
@@ -365,24 +405,38 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
       if (previousContract.contractType.includes('2차')) return '갱신심사 (재인증)';
     }
     return '2차 사후관리심사';
-  }, [receptionType, previousContract]);
+  }, [selectedCompany, receptionType, previousContract]);
 
   // [F] 심사 표준 (규격)
   const activeStandards: StandardCode[] = useMemo(() => {
+    if (!selectedCompany && newStandards.length === 0 && addedStandards.length === 0) {
+      return [];
+    }
     if (receptionType === '신규인증' || receptionType === '전환심사') {
       return newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode];
     }
     if (receptionType === '규격추가') {
       return addedStandards.length > 0 ? addedStandards : newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode];
     }
-    return newStandards.length > 0 ? newStandards : ['ISO 9001:2015' as StandardCode, 'ISO 14001:2015' as StandardCode, 'ISO 45001:2018' as StandardCode];
-  }, [receptionType, newStandards, addedStandards]);
+    return newStandards.length > 0 ? newStandards : (selectedCompany ? ['ISO 9001:2015' as StandardCode] : []);
+  }, [selectedCompany, receptionType, newStandards, addedStandards]);
 
   // [G] KAB 공식 표준 MD 산출
   const kabCalculationResult = useMemo(() => {
+    if (!selectedCompany && currentEmployeeCount === 0) {
+      return {
+        baseMd: 0,
+        multiStandardDiscount: 0,
+        riskFactor: 1,
+        auditTypeRatio: 1,
+        calculatedMd: 0,
+        standardFee: 0,
+        breakdown: ['고객사 선택 후 MD가 산출됩니다.']
+      };
+    }
     return calculateKabMd({
-      standards: activeStandards,
-      employeeCount: currentEmployeeCount,
+      standards: activeStandards.length > 0 ? activeStandards : ['ISO 9001:2015'],
+      employeeCount: currentEmployeeCount || 1,
       riskLevel: receptionType === '신규인증' ? newRiskLevel : (selectedCompany?.riskLevel || 'Medium'),
       auditType: (receptionType === '신규인증' ? '최초 2단계' : receptionType === '갱신심사' ? '갱신심사' : '사후관리 1차') as any
     });
@@ -399,12 +453,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // [I] 5대 공식 세부 비용 항목
   const docAuditMd = appliedMd >= 2.0 ? 0.5 : 0.0;
-  const onsiteAuditMd = appliedMd - docAuditMd;
+  const onsiteAuditMd = Math.max(0, appliedMd - docAuditMd);
 
   const docAuditFee = Math.round(docAuditMd * ratePerMd);
   const onsiteAuditFee = Math.round(onsiteAuditMd * ratePerMd);
 
-  const [travelExpense, setTravelExpense] = useState<number>(120000); // 영남/호남권 기본
+  const [travelExpense, setTravelExpense] = useState<number>(120000);
   const [travelRegion, setTravelRegion] = useState<string>('영남권(고령/대구)');
   const [lodgingOption, setLodgingOption] = useState<'업체직접제공' | '턴키포함'>('업체직접제공');
   const [lodgingExpense, setLodgingExpense] = useState<number>(0);
@@ -412,7 +466,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     receptionType === '신규인증' || receptionType === '전환심사' || receptionType === '규격추가' || receptionType === '인증변경' ? 200000 : 0
   );
 
-  const finalFee = docAuditFee + onsiteAuditFee + travelExpense + lodgingExpense + applicationFee;
+  const finalFee = selectedCompany ? (docAuditFee + onsiteAuditFee + travelExpense + lodgingExpense + applicationFee) : 0;
   const vat = Math.round(finalFee * 0.1);
   const totalWithVat = finalFee + vat;
 
@@ -442,7 +496,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   }, [plannedStartDate, plannedEndDate]);
 
   const selectedLeadAuditor = useMemo(() => {
-    return auditors.find(a => a.id === leadAuditorId) || auditors[0];
+    return auditors.find(a => a.id === leadAuditorId) || ({ id: '', name: '', phone: '', email: '', affiliation: '' } as unknown as Auditor);
   }, [auditors, leadAuditorId]);
 
   const selectedTeamAuditor = useMemo(() => {
@@ -459,8 +513,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // 협력 기관 확인 및 이해충돌 판정
   const activeAgencyName = useMemo(() => {
-    if (receptionType === '신규인증' || receptionType === '전환심사') return newAgency;
-    return selectedCompany?.consultant || selectedCompany?.agency || '아이비컨설팅';
+    if (!selectedCompany) return '';
+    if (receptionType === '신규인증' || receptionType === '전환심사') return newAgency || '사무국직영';
+    return selectedCompany.consultant || selectedCompany.agency || '사무국직영';
   }, [receptionType, newAgency, selectedCompany]);
 
   const hasPartnerAgency = activeAgencyName && activeAgencyName !== '사무국직영' && activeAgencyName !== '직영';
@@ -468,44 +523,44 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // HQ 심사 + 협력기관 존재 시 사전 협의 확정 State
   const needAgencyAgreement = isHqOrStaffLead && hasPartnerAgency && !isConflict;
-  const [agencyAgreementStatus, setAgencyAgreementStatus] = useState<'협의완료' | '협의대기' | '협의불필요'>('협의완료');
-  const [agencyAgreementNote, setAgencyAgreementNote] = useState<string>('심사일정(10/24~25) 및 심사팀 구성 사전 유선 협의 완료, 협력기관 수수료 기준 정상 승인');
-  const [agencyAgreementDate, setAgencyAgreementDate] = useState<string>('2026-09-10');
+  const [agencyAgreementStatus, setAgencyAgreementStatus] = useState<'협의완료' | '협의대기' | '협의불필요'>('협의불필요');
+  const [agencyAgreementNote, setAgencyAgreementNote] = useState<string>('');
+  const [agencyAgreementDate, setAgencyAgreementDate] = useState<string>('');
 
-  // [K] 공식 서식 연동 State (케이원메탈 실물 양식 기준)
+  // [K] 공식 서식 연동 State
   const [certChangeData, setCertChangeData] = useState<CertChangeApplicationData>({
-    appliedDate: '2026-09-09',
-    companyName: activeCompany.companyName,
-    certNumber: 'QE240207 / OH240235',
-    dept: '품질경영팀',
-    contactPerson: activeCompany.contactPerson || '정순호 이사',
-    tel: activeCompany.contactPhone || '054-955-9197',
-    fax: '054-955-9198',
-    currentScope: activeCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작',
+    appliedDate: '',
+    companyName: '',
+    certNumber: '',
+    dept: '',
+    contactPerson: '',
+    tel: '',
+    fax: '',
+    currentScope: '',
     changeCategories: ['상호', '주소'],
-    newCompanyNameKo: '(주)케이원메탈 2공장',
-    newCompanyNameEn: 'K-WON METAL CO., LTD. (Plant 2)',
-    newCeoName: activeCompany.ceoName,
-    newAddressHeadKo: activeCompany.address,
+    newCompanyNameKo: '',
+    newCompanyNameEn: '',
+    newCeoName: '',
+    newAddressHeadKo: '',
     attachedDocuments: ['사업자등록증 사본', '공장등록증명서'],
     verifyMethod: '서류확인',
-    auditorChargeName: '김홍덕 선임심사원',
+    auditorChargeName: '',
     reviewerName: '사무국 검토원',
     approverName: '남경호 대표이사'
   });
 
   const [weekendData, setWeekendData] = useState<WeekendAuditReasonData>({
-    auditDates: `${plannedStartDate} ~ ${plannedEndDate}`,
-    isWeekendOrHoliday: true,
+    auditDates: '',
+    isWeekendOrHoliday: false,
     reasonCategory: '전기요금절감',
-    detailedReason: '전기 요금 절감을 위하여 휴일인 토, 일요일에 근무하고 평일에 휴무하는 근로방식을 6월부터 8월까지 시행하는 방침에 따라 휴일인 해당 일자에 근무하여 현장 심사를 수행함.',
-    auditorSigned: true,
-    auditorSignedAt: '2026-09-09',
-    clientVerified: true,
-    clientVerifiedAt: '2026-09-09 14:10',
+    detailedReason: '',
+    auditorSigned: false,
+    auditorSignedAt: '',
+    clientVerified: false,
+    clientVerifiedAt: '',
     clientVerificationMethod: '이메일확인',
-    clientEmail: activeCompany.contactEmail || 'quality@kwonmetal.co.kr',
-    clientName: `${activeCompany.contactPerson || '정순호'} 이사`
+    clientEmail: '',
+    clientName: ''
   });
 
   // 주말/법정공휴일/대체공휴일/임시공휴일 심사 포함 여부 자동 산출
@@ -630,6 +685,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // 전산 저장 & 동기화 핸들러
   const handleSave = () => {
+    if (!selectedCompany && !activeCompany.companyName) {
+      alert('심사 대상 고객사를 먼저 선택해 주십시오.');
+      return;
+    }
     setIsSyncing(true);
     onSaveContract(currentContractRecord);
     const now = new Date();
@@ -645,11 +704,15 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   // 3자 일괄 발송 핸들러
   const handleDispatchAll = () => {
+    if (!selectedCompany && !activeCompany.companyName) {
+      alert('심사 대상 고객사를 먼저 선택해 주십시오.');
+      return;
+    }
     setDispatchStatus('발송완료');
     if (onDispatchPlanAndInvoice) {
       onDispatchPlanAndInvoice(currentContractRecord.id, 'all');
     }
-    alert(`[3자 일괄 공문 발송 완료]\n1. 피심사기업: ${activeCompany.companyName} (${activeCompany.contactEmail || 'qa@client.co.kr'})\n2. 담당심사원: ${selectedLeadAuditor.name} (${selectedLeadAuditor.email || 'auditor@gmscs.co.kr'})\n3. 협력기관: ${activeAgencyName}\n\n심사계획서 및 심사청구서가 3자에게 성공적으로 송부되었습니다.`);
+    alert(`[3자 일괄 공문 발송 완료]\n1. 피심사기업: ${activeCompany.companyName} (${activeCompany.contactEmail || 'qa@client.co.kr'})\n2. 담당심사원: ${selectedLeadAuditor.name || '미배정'} (${selectedLeadAuditor.email || 'auditor@gmscs.co.kr'})\n3. 협력기관: ${activeAgencyName || '사무국직영'}\n\n심사계획서 및 심사청구서가 3자에게 성공적으로 송부되었습니다.`);
   };
 
   // 회신 시뮬레이션 핸들러
@@ -690,10 +753,14 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
             <h1 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <span>GMSCS 심사계약·계획 관리</span>
               <span className="text-slate-400 font-normal">|</span>
-              <span className="text-cyan-900 font-semibold">{activeCompany.companyName}</span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                {calculatedAuditStageText}
+              <span className="text-cyan-900 font-semibold">
+                {activeCompany.companyName || '심사 대상 고객사 미선택'}
               </span>
+              {selectedCompany && (
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                  {calculatedAuditStageText}
+                </span>
+              )}
             </h1>
             <p className="text-[11px] text-slate-500">
               좌측 입력란에 값을 지정하면 우측 공식 서식(계약서·계획서·청구서)에 실시간으로 100% 자동 채워집니다.
@@ -841,12 +908,15 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   setSelectedCompanyId(targetId);
                   const target = companies.find(c => c.id === targetId);
                   if (target) {
-                    setCurrentEmployeeCount(target.totalEmployees || 48);
+                    setCurrentEmployeeCount(target.totalEmployees || 1);
+                  } else {
+                    setCurrentEmployeeCount(0);
                   }
                   setIsDirty(false);
                 }}
                 className="w-full bg-slate-50 border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-500"
               >
+                <option value="">-- 심사 대상 고객사를 선택하세요 --</option>
                 {filteredCompanyList.map(comp => (
                   <option key={comp.id} value={comp.id}>
                     {comp.companyName} (대표: {comp.ceoName} · IAF {comp.iafCode || '14'} {comp.isTransfer ? '· 전환고객' : ''})
@@ -920,55 +990,67 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
             {/* DB 호출된 기업 정보 요약 (플랫 테두리) */}
             <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700">
-              <div className="flex justify-between">
-                <span className="text-slate-500">사업자번호:</span>
-                <span className="font-mono text-slate-900 font-semibold">{activeCompany.bizNumber || '513-85-18153'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">대표자:</span>
-                <span className="text-slate-900 font-medium">{activeCompany.ceoName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">소재지:</span>
-                <span className="truncate max-w-[200px] text-slate-900">{activeCompany.address}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">실무담당자:</span>
-                <span className="text-slate-900">{activeCompany.contactPerson || '정순호 이사'} ({activeCompany.contactPhone || '054-955-9197'})</span>
-              </div>
-              <div className="flex justify-between items-center pt-0.5 border-t border-slate-200/60">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500">IAF 코드:</span>
-                  <span className="font-mono text-cyan-900 font-bold">IAF {activeCompany.iafCode || '17'}</span>
+              {selectedCompany ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">사업자번호:</span>
+                    <span className="font-mono text-slate-900 font-semibold">{activeCompany.bizNumber || '--'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">대표자:</span>
+                    <span className="text-slate-900 font-medium">{activeCompany.ceoName || '--'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">소재지:</span>
+                    <span className="truncate max-w-[200px] text-slate-900">{activeCompany.address || '--'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">실무담당자:</span>
+                    <span className="text-slate-900">
+                      {activeCompany.contactPerson ? `${activeCompany.contactPerson} (${activeCompany.contactPhone || '--'})` : '--'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-0.5 border-t border-slate-200/60">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-500">IAF 코드:</span>
+                      <span className="font-mono text-cyan-900 font-bold">IAF {activeCompany.iafCode || '--'}</span>
+                    </div>
+                    {onOpenCompanyAuditHistory && selectedCompany && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
+                        className="text-[11px] text-cyan-700 hover:text-cyan-900 hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5"
+                        title="고객 상세 정보 및 전체 심사이력 조회"
+                      >
+                        상세정보 ↗
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="py-2 text-center text-slate-400 text-[11px]">
+                  고객사를 선택하면 기본 정보(사업자번호, 대표자, 소재지 등)가 자동 호출됩니다.
                 </div>
-                {onOpenCompanyAuditHistory && selectedCompany && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
-                    className="text-[11px] text-cyan-700 hover:text-cyan-900 hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5"
-                    title="고객 상세 정보 및 전체 심사이력 조회"
-                  >
-                    상세정보 ↗
-                  </button>
-                )}
-              </div>
+              )}
             </div>
 
             {/* DB 호출된 인증범위 요약 박스 */}
             <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700">
               <div className="flex justify-between items-center pb-0.5 border-b border-slate-200/80">
                 <span className="text-slate-500 font-bold">인증범위 (국문/영문):</span>
-                <button
-                  type="button"
-                  onClick={() => setIsManualEditOpen(!isManualEditOpen)}
-                  className="text-[10px] text-cyan-700 hover:text-cyan-900 font-bold flex items-center gap-0.5 cursor-pointer"
-                >
-                  <Edit3 className="w-2.5 h-2.5" />
-                  <span>{isManualEditOpen ? '수정 접기 ▲' : '정보 직접 수정 ▼'}</span>
-                </button>
+                {selectedCompany && (
+                  <button
+                    type="button"
+                    onClick={() => setIsManualEditOpen(!isManualEditOpen)}
+                    className="text-[10px] text-cyan-700 hover:text-cyan-900 font-bold flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <Edit3 className="w-2.5 h-2.5" />
+                    <span>{isManualEditOpen ? '수정 접기 ▲' : '정보 직접 수정 ▼'}</span>
+                  </button>
+                )}
               </div>
               <div className="text-slate-900 font-medium leading-relaxed break-keep pt-0.5">
-                {activeCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작 (현장 확인 확정)'}
+                {activeCompany.scope || (selectedCompany ? '인증범위 정보 없음' : '고객사를 선택하면 인증범위가 자동으로 연동됩니다.')}
               </div>
             </div>
 
@@ -1181,6 +1263,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     onChange={(e) => setLeadAuditorId(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px] font-bold text-slate-800"
                   >
+                    <option value="">-- 심사팀장 선택 --</option>
                     {auditors.map(aud => (
                       <option key={aud.id} value={aud.id}>
                         {aud.name} ({aud.affiliation || '비상근'})
