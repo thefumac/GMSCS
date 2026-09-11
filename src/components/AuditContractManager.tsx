@@ -42,7 +42,6 @@ import {
 import { calculateKabMd } from '../services/kabMdEngine';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { checkAuditPeriodForHolidays } from '../utils/koreanHolidays';
-import { NewCompanyModal } from './NewCompanyModal';
 import { cleanCeoName, cleanPersonName, splitPersonAndPosition, formatCeoDisplay } from '../utils/personUtils';
 
 interface AuditContractManagerProps {
@@ -118,7 +117,6 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     return companies[0]?.id || '';
   });
   const [companySearchQuery, setCompanySearchQuery] = useState<string>('');
-  const [isNewCompanyModalOpen, setIsNewCompanyModalOpen] = useState<boolean>(false);
   const [isManualEditOpen, setIsManualEditOpen] = useState<boolean>(false);
   
   const selectedCompany = useMemo(() => {
@@ -158,6 +156,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [planDate, setPlanDate] = useState<string>('2026-06-25');
   const [planDocSeq, setPlanDocSeq] = useState<string>('01');
   const [planDept, setPlanDept] = useState<string>('품질보증부');
+  const [planContactPerson, setPlanContactPerson] = useState<string>('정순호');
   const [planContactPosition, setPlanContactPosition] = useState<string>('부장');
   const [planFax, setPlanFax] = useState<string>('');
   const [planSubAddress, setPlanSubAddress] = useState<string>('');
@@ -196,6 +195,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
       const compAny = selectedCompany as any;
       setPlanDept(compAny.department || '품질보증부');
+      setPlanContactPerson(cleanPersonName(selectedCompany.contactPerson) || parsedContact.name || '정순호');
       setPlanContactPosition(selectedCompany.contactPosition || parsedContact.position || '담당자');
       setPlanFax(compAny.fax || compAny.contactFax || '');
       
@@ -271,21 +271,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   }, [
     receptionType, hasCertChange, addedStandards,
     newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope, newAgency,
-    planDate, planDocSeq, planDept, planContactPosition, planFax, planSubAddress, planKsicCode, planCustomerNumber,
+    planDate, planDocSeq, planDept, planContactPerson, planContactPosition, planFax, planSubAddress, planKsicCode, planCustomerNumber,
     plannedStartDate, plannedEndDate, leadAuditorId, teamAuditorId
   ]);
-
-  // 페이지 이탈 시 경고
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
 
   // 심사계획서 문서번호 산출 로직: GMS-인증-년월일8자리일련번호2자리 (예: GMS-인증- 2026062501)
   const planDocNumber = useMemo(() => {
@@ -809,22 +797,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               </label>
               
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsNewCompanyModalOpen(true)}
-                  className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-cyan-700 to-sky-700 hover:from-cyan-800 hover:to-sky-800 text-white rounded text-[11px] font-medium shadow-2xs transition cursor-pointer"
-                  title="신규 고객 및 타기관 전환 고객 등록 모달"
-                >
-                  <Plus className="w-3 h-3" />
-                  <span>신규 등록</span>
-                </button>
                 {onOpenCompanyAuditHistory && selectedCompany && (
                   <button
                     type="button"
                     onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
                     className="text-[11px] text-cyan-700 hover:underline font-bold cursor-pointer"
                   >
-                    이력 팝업 ↗
+                    상세정보 ↗
                   </button>
                 )}
               </div>
@@ -848,7 +827,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 onChange={(e) => {
                   const targetId = e.target.value;
                   if (isDirty) {
-                    if (!window.confirm('저장 & 동기화되지 않은 변경사항이 있습니다.\n저장하지 않고 다른 고객사로 이동하시겠습니까?')) {
+                    if (!window.confirm('[저장 & 동기화 확인]\n입력 중인 심사계획 및 계약 정보가 아직 [저장 & 동기화]되지 않았습니다.\n\n저장하지 않고 다른 고객사로 이동하시겠습니까?')) {
                       return;
                     }
                   }
@@ -1394,6 +1373,16 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
               <div className="grid grid-cols-2 gap-1.5">
                 <div>
+                  <span className="text-[10px] text-slate-500 block font-semibold text-slate-700">담당자 성명</span>
+                  <input
+                    type="text"
+                    value={planContactPerson}
+                    onChange={(e) => setPlanContactPerson(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold text-slate-900"
+                    placeholder="담당자 성명"
+                  />
+                </div>
+                <div>
                   <span className="text-[10px] text-slate-500 block">담당자 직책</span>
                   <input
                     type="text"
@@ -1401,6 +1390,19 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     onChange={(e) => setPlanContactPosition(e.target.value)}
                     className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs"
                     placeholder="부장"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5">
+                <div>
+                  <span className="text-[10px] text-slate-500 block">KSIC (산업분류코드)</span>
+                  <input
+                    type="text"
+                    value={planKsicCode}
+                    onChange={(e) => setPlanKsicCode(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold"
+                    placeholder="C2431"
                   />
                 </div>
                 <div>
@@ -1415,27 +1417,16 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block">사업장1 (추가사업장)</span>
-                  <input
-                    type="text"
-                    value={planSubAddress}
-                    onChange={(e) => setPlanSubAddress(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs"
-                    placeholder="사업장1 주소 (있을시)"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 block">KSIC (산업분류코드)</span>
-                  <input
-                    type="text"
-                    value={planKsicCode}
-                    onChange={(e) => setPlanKsicCode(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold"
-                    placeholder="C2431"
-                  />
-                </div>
+              {/* 추가사업장 주소 (1행 전체 너비) */}
+              <div>
+                <span className="text-[10px] text-slate-500 block font-medium">추가사업장 주소 (사업장1 주소)</span>
+                <input
+                  type="text"
+                  value={planSubAddress}
+                  onChange={(e) => setPlanSubAddress(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded px-2.5 py-1 text-xs"
+                  placeholder="추가사업장 주소 (있을 시 자동 연동 및 직접 수정)"
+                />
               </div>
             </div>
           </div>
@@ -2079,7 +2070,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                             담당자/직책
                           </th>
                           <td className="p-2 print:p-1 text-slate-950 text-center font-semibold" colSpan={2}>
-                            {cleanPersonName(activeCompany.contactPerson)}
+                            {cleanPersonName(planContactPerson || activeCompany.contactPerson)}
                           </td>
                           <td className="p-2 print:p-1 text-slate-950 text-center font-semibold">
                             {planContactPosition}
@@ -3104,23 +3095,6 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         </div>
 
       </div>
-
-      {/* 신규 고객 등록 모달 (신규/전환) */}
-      <NewCompanyModal
-        isOpen={isNewCompanyModalOpen}
-        onClose={() => setIsNewCompanyModalOpen(false)}
-        onSave={(newCompany) => {
-          onAddCompany?.(newCompany);
-          setSelectedCompanyId(newCompany.id);
-          setIsNewCompanyModalOpen(false);
-          if (newCompany.isTransfer) {
-            setReceptionType('전환심사');
-          } else {
-            setReceptionType('신규인증');
-          }
-        }}
-        auditors={auditors}
-      />
     </div>
   );
 };

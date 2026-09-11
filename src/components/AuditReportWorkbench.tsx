@@ -272,21 +272,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   const [isDirty, setIsDirty] = useState(false);
   const isInitialMount = React.useRef(true);
 
-  // 브라우저 닫기/새로고침 시 미저장 이탈 경고
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
-
   const handleCloseWithGuard = () => {
     if (isDirty) {
-      if (!window.confirm('저장 & 동기화되지 않은 심사보고서 작성 내용이 있습니다.\n저장하지 않고 심사보고서 작성을 종료하시겠습니까?')) {
+      if (!window.confirm('[저장 & 동기화 확인]\n작성 중인 심사보고서 및 서명 내용이 아직 [저장 & 동기화]되지 않았습니다.\n\n저장하지 않고 심사보고서 작성을 종료하시겠습니까?')) {
         return;
       }
     }
