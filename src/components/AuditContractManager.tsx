@@ -476,7 +476,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     <div className="w-full space-y-3 animate-in fade-in text-slate-800">
       
       {/* 최상단 헤더 요약 바 (깔끔한 플랫 디자인) */}
-      <div className="bg-white border border-slate-300 rounded-lg p-3 px-5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+      <div className="bg-white border border-slate-300 rounded-lg p-3 px-5 flex flex-wrap items-center justify-between gap-3 shadow-2xs no-print print:hidden">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded-lg bg-cyan-800 text-white flex items-center justify-center font-bold text-sm">
             F16
@@ -522,12 +522,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
       {/* ========================================================================= */}
       {/* 2.5 : 7.5 혹은 3 : 7 분할 작업 화면 (Left Input Workbench & Right Paper Binder) */}
       {/* ========================================================================= */}
-      <div className="w-full flex flex-col lg:flex-row gap-4 items-start pb-10">
+      <div className="w-full flex flex-col lg:flex-row gap-4 items-start pb-10 print:block print:w-full print:p-0 print:m-0 print:pb-0">
 
         {/* ------------------------------------------------------------- */}
-        {/* LEFT PANEL: 28~30% 입력 메뉴 영역 (과도한 3D 디자인 자제, 정갈한 폼) */}
+        {/* LEFT PANEL: 28~30% 입력 메뉴 영역 (인쇄 시 완전 숨김) */}
         {/* ------------------------------------------------------------- */}
-        <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 bg-white border border-slate-300 rounded-lg p-4 space-y-4 text-xs shadow-2xs">
+        <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 bg-white border border-slate-300 rounded-lg p-4 space-y-4 text-xs shadow-2xs no-print print:hidden">
           
           {/* 1. 심사 구분 선택 */}
           <div className="space-y-1.5">
@@ -1094,13 +1094,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         {/* ------------------------------------------------------------- */}
         {/* RIGHT PANEL: 70~72% 종이 파일 철 인덱스 탭 & A4 실물 서식 영역 */}
         {/* ------------------------------------------------------------- */}
-        <div className="flex-1 w-full bg-slate-200/70 border border-slate-300 rounded-lg overflow-hidden flex flex-col min-h-[920px]">
+        <div className="flex-1 w-full bg-slate-200/70 border border-slate-300 rounded-lg overflow-hidden flex flex-col min-h-[920px] print:border-none print:bg-transparent print:min-h-0 print:overflow-visible print:w-full print:m-0 print:p-0">
           
           {/* 상단 서식철 유틸리티 바 */}
-          <div className="bg-slate-200/95 border-b border-slate-300 px-4 py-2 flex items-center justify-between no-print">
+          <div className="bg-slate-200/95 border-b border-slate-300 px-4 py-2 flex items-center justify-between no-print print:hidden">
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-cyan-700 animate-pulse"></span>
-              <span className="font-bold text-slate-800 text-xs">종이 파일 철 공식 서식 시스템</span>
+              <span className="font-bold text-slate-800 text-xs">2025 Audit Report Pack(251001)</span>
               <span className="text-slate-400 text-xs">|</span>
               <span className="text-[11px] text-slate-600">
                 심사구분: <strong className="text-slate-900">{receptionType}</strong> ({calculatedAuditStageText})
@@ -1117,7 +1117,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
           </div>
 
           {/* 종이 파일 인덱스 탭 바 (좌우 빈칸 전혀 없이 100% 가로폭 균등 밀착 디자인) */}
-          <div className="w-full bg-slate-300/80 border-b border-slate-400 p-0 m-0 no-print flex items-stretch">
+          <div className="w-full bg-slate-300/80 border-b border-slate-400 p-0 m-0 no-print print:hidden flex items-stretch">
             {[
               {
                 id: 'contract' as DocTabKey,
@@ -1216,8 +1216,8 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
           </div>
 
           {/* 실물 A4 종이 캔버스 영역 (스크롤 가능, 백색 종이 시트 렌더링) */}
-          <div className="flex-1 p-6 md:p-8 overflow-y-auto flex justify-center bg-slate-200/60">
-            <div className="w-full max-w-[850px] bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px]">
+          <div className="flex-1 p-6 md:p-8 overflow-y-auto flex justify-center bg-slate-200/60 print:p-0 print:m-0 print:bg-transparent print:overflow-visible print:block">
+            <div className="w-full max-w-[850px] bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-sheet a4-page a4-single-page print:shadow-none print:border-none print:p-3 print:max-w-none print:w-full print:min-h-0">
               
               {/* ================================================================= */}
               {/* 1. 심사계약서 (F16-004) 종이 서식 */}
@@ -1581,9 +1581,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               {/* 2. 심사계획서 공식 공문 양식 (Remark 샘플 PDF 형태 완벽 준용) */}
               {/* ================================================================= */}
               {activeDocTab === 'plan' && (
-                <div className="space-y-4 text-xs leading-normal font-sans text-slate-900">
+                <div className="space-y-4 print:space-y-1.5 text-xs print:text-[10px] leading-normal print:leading-tight font-sans text-slate-900">
                   {/* 상단 인증원 헤더 정보 */}
-                  <div className="border-b-2 border-slate-900 pb-2 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-700">
+                  <div className="border-b-2 border-slate-900 pb-2 print:pb-1 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] print:text-[9.5px] text-slate-700">
                     <div>
                       <p className="font-semibold text-slate-900">서울특별시 강서구 강서로 406, 905호 (등촌동, 동광빌딩)</p>
                       <p className="text-slate-600">http://www.gmscs.co.kr &nbsp;|&nbsp; esggnf@naver.com</p>
@@ -1595,56 +1595,56 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   </div>
 
                   {/* 공문 제목 */}
-                  <div className="text-center py-2">
-                    <h1 className="text-2xl md:text-3xl font-black text-slate-950 tracking-[0.6em] indent-[0.6em]">
+                  <div className="text-center py-2 print:py-1">
+                    <h1 className="text-2xl md:text-3xl print:text-xl font-black text-slate-950 tracking-[0.6em] indent-[0.6em]">
                       심사계획서
                     </h1>
                   </div>
 
                   {/* 상단 기본 인적/문서 정보 표 (샘플 원본 구조) */}
-                  <table className="w-full border-collapse border border-slate-700 text-xs">
+                  <table className="w-full border-collapse border border-slate-700 text-xs print:text-[9.5px]">
                     <tbody>
                       <tr className="border-b border-slate-400">
-                        <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">문서번호</th>
-                        <td className="p-2 border-r border-slate-400 font-mono text-slate-900 font-bold">
+                        <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">문서번호</th>
+                        <td className="p-2 print:p-1 border-r border-slate-400 font-mono text-slate-900 font-bold">
                           GMS-인증- {currentContractRecord.contractNumber.replace(/[^0-9]/g, '').slice(-8) || '2026052001'}
                         </td>
-                        <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">담당부서</th>
-                        <td className="p-2 text-slate-900">-</td>
+                        <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">담당부서</th>
+                        <td className="p-2 print:p-1 text-slate-900">-</td>
                       </tr>
                       <tr className="border-b border-slate-400">
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">수 신 처</th>
-                        <td className="p-2 border-r border-slate-400 font-bold text-slate-900">
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">수 신 처</th>
+                        <td className="p-2 print:p-1 border-r border-slate-400 font-bold text-slate-900">
                           {activeCompany.companyName} 대표이사 귀하
                         </td>
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">담당자/직책</th>
-                        <td className="p-2 text-slate-900 font-semibold">
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">담당자/직책</th>
+                        <td className="p-2 print:p-1 text-slate-900 font-semibold">
                           {activeCompany.contactPerson || '박광영'} 부장
                         </td>
                       </tr>
                       <tr className="border-b border-slate-400">
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
-                        <td className="p-2 border-r border-slate-400 font-mono text-slate-900">
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
+                        <td className="p-2 print:p-1 border-r border-slate-400 font-mono text-slate-900">
                           {currentContractRecord.contractDate || '2026-05-20'}
                         </td>
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">전    화</th>
-                        <td className="p-2 font-mono text-slate-900">
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">전    화</th>
+                        <td className="p-2 print:p-1 font-mono text-slate-900">
                           {activeCompany.contactPhone || '054-956-9197'}
                         </td>
                       </tr>
                       <tr className="border-b border-slate-400">
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">대 표 자</th>
-                        <td className="p-2 border-r border-slate-400 font-bold text-slate-900">
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">대 표 자</th>
+                        <td className="p-2 print:p-1 border-r border-slate-400 font-bold text-slate-900">
                           {activeCompany.ceoName}
                         </td>
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">팩    스</th>
-                        <td className="p-2 font-mono text-slate-900">
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">팩    스</th>
+                        <td className="p-2 print:p-1 font-mono text-slate-900">
                           {(activeCompany as any).fax || '054-700-9397'}
                         </td>
                       </tr>
                       <tr>
-                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">고객번호</th>
-                        <td className="p-2 font-mono text-slate-900" colSpan={3}>
+                        <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">고객번호</th>
+                        <td className="p-2 print:p-1 font-mono text-slate-900" colSpan={3}>
                           {(activeCompany as any).customerNumber || (activeCompany.bizNumber ? 'QE240206 / OH240234' : 'QE240206')}
                         </td>
                       </tr>
@@ -1652,48 +1652,48 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   </table>
 
                   {/* 안내 인사말 */}
-                  <div className="space-y-1 text-[11.5px] text-slate-800 py-1 leading-relaxed font-medium">
+                  <div className="space-y-1 print:space-y-0.5 text-[11.5px] print:text-[9.5px] text-slate-800 py-1 print:py-0.5 leading-relaxed print:leading-tight font-medium">
                     <p>1. 귀사의 발전과 지속적 개선을 기원합니다.</p>
                     <p>2. 아래와 같이 ISO 국제표준에 따른 심사계획서 및 청구내역서를 송부하오니 확인하여 주시기 바랍니다.</p>
                     <p>3. 심사비용은 심사 수행 4일전까지 입금하여 주시기 바랍니다.</p>
                   </div>
 
                   {/* Ⅰ. 인증현황 */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <div className="space-y-1 print:space-y-0.5">
+                    <h3 className="font-bold text-slate-900 text-xs print:text-[10px] flex items-center gap-1.5">
                       <span className="font-black text-cyan-950">Ⅰ.</span>
                       <span>인증현황</span>
                     </h3>
-                    <table className="w-full border-collapse border border-slate-700 text-xs">
+                    <table className="w-full border-collapse border border-slate-700 text-xs print:text-[9.5px]">
                       <tbody>
                         <tr className="border-b border-slate-400">
-                          <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">고 객 명</th>
-                          <td className="p-2 border-r border-slate-400 font-bold text-slate-900">{activeCompany.companyName}</td>
-                          <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사종류</th>
-                          <td className="p-2 font-bold text-slate-900">{calculatedAuditStageText}</td>
+                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">고 객 명</th>
+                          <td className="p-2 print:p-1 border-r border-slate-400 font-bold text-slate-900">{activeCompany.companyName}</td>
+                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">심사종류</th>
+                          <td className="p-2 print:p-1 font-bold text-slate-900">{calculatedAuditStageText}</td>
                         </tr>
                         <tr className="border-b border-slate-400">
-                          <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800" rowSpan={2}>사업장 주소</th>
-                          <td className="p-2 border-r border-slate-400" colSpan={3}>
+                          <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800" rowSpan={2}>사업장 주소</th>
+                          <td className="p-2 print:p-1 border-r border-slate-400" colSpan={3}>
                             <span className="font-semibold text-slate-700 mr-2">주사업장:</span>
                             <span className="text-slate-900">{activeCompany.address}</span>
                           </td>
                         </tr>
                         <tr className="border-b border-slate-400">
-                          <td className="p-2 border-r border-slate-400 text-slate-600" colSpan={3}>
+                          <td className="p-2 print:p-1 border-r border-slate-400 text-slate-600" colSpan={3}>
                             <span className="font-semibold text-slate-700 mr-2">사업장1:</span>
                             <span>-</span>
                           </td>
                         </tr>
                         <tr className="border-b border-slate-400">
-                          <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">인 증 대 상</th>
-                          <td className="p-2" colSpan={3}>
+                          <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">인 증 대 상</th>
+                          <td className="p-2 print:p-1" colSpan={3}>
                             KSIC (산업분류코드) / <span className="font-bold text-slate-900">인증코드 {activeCompany.iafCode || '17'}</span>
                           </td>
                         </tr>
                         <tr>
-                          <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">인 증 범 위</th>
-                          <td className="p-2 leading-relaxed text-slate-900" colSpan={3}>
+                          <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">인 증 범 위</th>
+                          <td className="p-2 print:p-1 leading-relaxed text-slate-900" colSpan={3}>
                             {activeCompany.scope ? (
                               <span>{activeCompany.scope}</span>
                             ) : (
@@ -1708,45 +1708,43 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   </div>
 
                   {/* Ⅱ. 심사기준 */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <div className="space-y-1 print:space-y-0.5">
+                    <h3 className="font-bold text-slate-900 text-xs print:text-[10px] flex items-center gap-1.5">
                       <span className="font-black text-cyan-950">Ⅱ.</span>
                       <span>심사기준</span>
                     </h3>
-                    <div className="p-2.5 border border-slate-700 bg-slate-50/60 text-xs font-semibold text-slate-900">
+                    <div className="p-2.5 print:p-1 border border-slate-700 bg-slate-50/60 text-xs print:text-[9.5px] font-semibold text-slate-900">
                       {activeStandards.join(' & ')} &amp; 관련법규, 고객요구사항, 고객기준문서
                     </div>
                   </div>
 
                   {/* Ⅲ. 심사의 목적 */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <div className="space-y-1 print:space-y-0.5">
+                    <h3 className="font-bold text-slate-900 text-xs print:text-[10px] flex items-center gap-1.5">
                       <span className="font-black text-cyan-950">Ⅲ.</span>
                       <span>심사의 목적</span>
                     </h3>
-                    <div className="p-2.5 border border-slate-700 text-xs space-y-1 text-slate-800 leading-normal bg-white">
-                      <p>1. 조직의 경영시스템에 대한 심사기준의 적합성을 평가</p>
-                      <p>2. 조직의 경영시스템의 효과성 평가 및 잠재적 개선분야 확인</p>
-                      <p>3. 법규/규제/계약요구사항 충족/보장을 위한 조직경영시스템의 능력을 평가</p>
-                      <p>4. 인증유지 효과성을 결정</p>
+                    <div className="p-2.5 print:p-1 border border-slate-700 text-xs print:text-[9px] space-y-1 print:space-y-0 text-slate-800 leading-normal print:leading-tight bg-white">
+                      <p>1. 조직의 경영시스템에 대한 심사기준의 적합성을 평가 &nbsp;|&nbsp; 2. 조직의 경영시스템의 효과성 평가 및 잠재적 개선분야 확인</p>
+                      <p>3. 법규/규제/계약요구사항 충족/보장을 위한 조직경영시스템의 능력을 평가 &nbsp;|&nbsp; 4. 인증유지 효과성을 결정</p>
                     </div>
                   </div>
 
                   {/* Ⅳ. 심사일정 및 심사팀 편성 */}
-                  <div className="space-y-2">
-                    <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <div className="space-y-2 print:space-y-1">
+                    <h3 className="font-bold text-slate-900 text-xs print:text-[10px] flex items-center gap-1.5">
                       <span className="font-black text-cyan-950">Ⅳ.</span>
                       <span>심사일정 및 심사팀</span>
                     </h3>
-                    <table className="w-full border-collapse border border-slate-700 text-xs">
+                    <table className="w-full border-collapse border border-slate-700 text-xs print:text-[9.5px]">
                       <tbody>
                         <tr className="border-b border-slate-400">
-                          <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사일자</th>
-                          <td className="p-2 border-r border-slate-400 font-bold font-mono text-slate-900">
+                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">심사일자</th>
+                          <td className="p-2 print:p-1 border-r border-slate-400 font-bold font-mono text-slate-900">
                             {plannedStartDate} ~ {plannedEndDate} ({appliedMd}일간, {appliedMd} M/D)
                           </td>
-                          <th className="w-32 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">차기심사종류/일수</th>
-                          <td className="p-2 font-bold text-slate-900">
+                          <th className="w-32 bg-slate-100 p-2 print:p-1 border-r border-slate-400 text-center font-bold text-slate-800">차기심사종류/일수</th>
+                          <td className="p-2 print:p-1 font-bold text-slate-900">
                             {receptionType === '신규인증' ? '사후1차' : receptionType === '정기사후' ? '사후2차' : '갱신'} / 추후통보 M/D
                           </td>
                         </tr>
@@ -1754,79 +1752,71 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     </table>
 
                     {/* 심사팀 편성 테이블 */}
-                    <table className="w-full border-collapse border border-slate-700 text-xs text-center">
+                    <table className="w-full border-collapse border border-slate-700 text-xs print:text-[9.5px] text-center">
                       <thead className="bg-slate-100 border-b border-slate-400 font-bold text-slate-800">
                         <tr>
-                          <th className="p-1.5 border-r border-slate-400 w-24">역할</th>
-                          <th className="p-1.5 border-r border-slate-400 w-24">소속</th>
-                          <th className="p-1.5 border-r border-slate-400 w-28">성명</th>
-                          <th className="p-1.5">연락처 / 이메일</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-400 w-24">역할</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-400 w-24">소속</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-400 w-28">성명</th>
+                          <th className="p-1.5 print:p-0.5">연락처 / 이메일</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-300 text-slate-900">
                         <tr>
-                          <td className="p-1.5 border-r border-slate-400 font-bold">심사팀장</td>
-                          <td className="p-1.5 border-r border-slate-400 font-medium">GMS{isHqOrStaffLead ? ' (HQ)' : ''}</td>
-                          <td className="p-1.5 border-r border-slate-400 font-bold">{selectedLeadAuditor?.name}</td>
-                          <td className="p-1.5 font-mono text-[11px]">
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">심사팀장</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-medium">GMS{isHqOrStaffLead ? ' (HQ)' : ''}</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">{selectedLeadAuditor?.name}</td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">
                             {selectedLeadAuditor?.mobile || '010-3797-1563'} / {selectedLeadAuditor?.email || 'esggnf@naver.com'}
                           </td>
                         </tr>
                         {selectedTeamAuditor && (
                           <tr>
-                            <td className="p-1.5 border-r border-slate-400 font-bold">심사원</td>
-                            <td className="p-1.5 border-r border-slate-400">{activeAgencyName || 'GMS'}</td>
-                            <td className="p-1.5 border-r border-slate-400 font-bold">{selectedTeamAuditor.name}</td>
-                            <td className="p-1.5 font-mono text-[11px]">
+                            <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">심사원</td>
+                            <td className="p-1.5 print:p-0.5 border-r border-slate-400">{activeAgencyName || 'GMS'}</td>
+                            <td className="p-1.5 print:p-0.5 border-r border-slate-400 font-bold">{selectedTeamAuditor.name}</td>
+                            <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">
                               {selectedTeamAuditor.mobile || '010-4205-2304'} / {selectedTeamAuditor.email || 'esggnf@naver.com'}
                             </td>
                           </tr>
                         )}
                         <tr className="text-slate-500 bg-slate-50/50">
-                          <td className="p-1.5 border-r border-slate-400">검증심사원</td>
-                          <td className="p-1.5 border-r border-slate-400">-</td>
-                          <td className="p-1.5 border-r border-slate-400">-</td>
-                          <td className="p-1.5 font-mono text-[11px]">-</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400">검증심사원</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400">-</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400">-</td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">-</td>
                         </tr>
                         <tr className="text-slate-500 bg-slate-50/50">
-                          <td className="p-1.5 border-r border-slate-400">심사원보 / 훈련 / 코드확장</td>
-                          <td className="p-1.5 border-r border-slate-400">-</td>
-                          <td className="p-1.5 border-r border-slate-400">-</td>
-                          <td className="p-1.5 font-mono text-[11px]">-</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400">심사원보 / 훈련 / 코드확장</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400">-</td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-400">-</td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">-</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
 
                   {/* 하단 이의신청 및 공식 고객안내 (결재란 없음 - 공문) */}
-                  <div className="border border-slate-700 p-3 space-y-2 text-[11px] text-slate-800 leading-normal bg-white mt-3">
-                    <div className="border-b border-slate-300 pb-2 space-y-1">
+                  <div className="border border-slate-700 p-3 print:p-1.5 space-y-2 print:space-y-1 text-[11px] print:text-[9px] leading-normal print:leading-tight bg-white mt-3 print:mt-1">
+                    <div className="border-b border-slate-300 pb-2 print:pb-1 space-y-1 print:space-y-0.5">
                       <p className="font-bold text-slate-900">
                         ▶ 상기 계획과 관련하여 이의가 있을 경우 사유를 기록하여 (FAX 070-8270-2141) 송부 바라며, 접수 후 2일 이내에 연락이 없으실 경우 본 일정으로 확정하겠습니다.
                       </p>
-                      <div className="pt-1">
-                        <span className="font-semibold text-slate-700">이의 사유: </span>
-                        <span className="text-slate-400">__________________________________________________________________________________________</span>
-                      </div>
-                      <div className="flex flex-wrap justify-end gap-6 text-slate-700 pt-1">
-                        <span>작성자 : 직위 : ____________</span>
+                      <div className="flex flex-wrap justify-end gap-6 text-slate-700 pt-1 print:pt-0.5">
+                        <span>작성자 직위 : ____________</span>
                         <span>성명 : ____________</span>
                         <span>서명: ____________</span>
                       </div>
                     </div>
 
-                    <div className="space-y-1 text-slate-600 text-[10.5px]">
-                      <p>※ IAF Guide 와 KAB 적용기준에 근거한 인증원 규정 [GSI-03 인증심사일수와 비용기준]에 따라 심사일수가 산정됩니다.</p>
-                      <p>※ 귀사는 인증심사전 "인증기준 및 인증등록 조직의 권리와 의무사항" 에 대한 내용을 반드시 숙지하시기 바랍니다.</p>
-                      <p className="pl-3">- 위 내용은 인증원 홈페이지 자료실 &lt;인증절차안내서&gt; 로 게재되어 있습니다.</p>
-                      <p>※ 심사팀에는 심사원 양성을 위한 심사훈련자 또는 심사팀의 심사수행 검증을 위한 검증심사원이 참석할 수 있으며, 관련비용은 기업에서 부담하지 않습니다.</p>
-                      <p>※ ICT를 활용한 원격심사는 전체 심사시간대비 ( &nbsp;&nbsp;&nbsp; )%로 진행됩니다. (해당 시)</p>
+                    <div className="space-y-1 print:space-y-0 text-slate-600 text-[10.5px] print:text-[8.5px]">
+                      <p>※ IAF Guide 와 KAB 적용기준 [GSI-03 심사일수기준]에 따라 산정되며 홈페이지 자료실 &lt;인증절차안내서&gt;를 숙지하시기 바랍니다.</p>
+                      <p>※ 심사팀에는 심사훈련자 또는 검증심사원이 참석할 수 있으며, 기업 부담 비용은 없습니다. ICT 원격심사는 ( &nbsp; )% 진행됩니다.</p>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-300 text-[11px] text-slate-800">
+                    <div className="pt-2 print:pt-1 border-t border-slate-300 text-[11px] print:text-[9px] text-slate-800">
                       <p className="font-semibold">
-                        ▶ 당인증원은 귀사의 시스템 향상을 위하여 최선을 다하고 있습니다. 심사진행과 관련하여 궁금한 사항이 있으시면 언제라도 귀사의 전담심사원 또는 
-                        인증운영담당 ( <strong className="text-slate-900">남효린 주임</strong> ) ( <span className="font-mono">☎ 02-6929-1702</span>, E-mail <span className="font-mono">esggnf@naver.com</span> ) 에게 전화주시면 고객 감동의 정신으로 상세하게 안내하여 드리겠습니다.
+                        ▶ 문의사항: 인증운영담당 ( <strong className="text-slate-900">남효린 주임</strong> ☎ 02-6929-1702 / esggnf@naver.com )
                       </p>
                     </div>
                   </div>
@@ -1837,7 +1827,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               {/* 3. 심사비 청구내역서 공식 공문 서식 (Remark 샘플 PDF 형태 완벽 준용) */}
               {/* ================================================================= */}
               {activeDocTab === 'invoice' && (
-                <div className="space-y-4 text-xs leading-normal font-sans text-slate-900">
+                <div className="space-y-4 print:space-y-1.5 text-xs print:text-[10px] leading-normal print:leading-tight font-sans text-slate-900">
                   {/* 상단 인증원 헤더 정보 */}
                   <div className="border-b-2 border-slate-900 pb-2 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-700">
                     <div>
