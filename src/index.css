@@ -58,24 +58,111 @@
   background: rgba(148, 163, 184, 1);
 }
 
-/* Print Styles for A4 Audit Report */
+/* Print Styles for A4 Audit Report & System-wide Documents */
 @media print {
-  body {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  html, body {
     background: white !important;
     color: black !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 11px !important;
   }
-  .no-print {
+
+  /* Hide app navigation, sidebars, buttons, tools */
+  .no-print,
+  .print\:hidden,
+  nav,
+  aside,
+  header,
+  button,
+  .sidebar,
+  .app-sidebar {
     display: none !important;
   }
-  .print-page {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0 auto;
-    padding: 15mm;
+
+  /* Allow full container expansion */
+  .overflow-hidden,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .fixed,
+  .absolute {
+    overflow: visible !important;
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Exact A4 Page Box Model */
+  .print-page,
+  .a4-page,
+  .a4-sheet {
+    width: 100% !important;
+    max-width: 194mm !important;
+    min-height: 275mm !important;
+    margin: 0 auto 0 auto !important;
+    padding: 6mm 6mm 6mm 6mm !important;
     background: white !important;
     color: black !important;
     box-shadow: none !important;
     border: none !important;
-    page-break-after: always;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-page:last-child,
+  .a4-page:last-child,
+  .a4-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* Table borders & padding for crisp printing */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border-color: #334155 !important;
+  }
+
+  /* Inputs and Textareas */
+  input[type="text"],
+  input[type="date"],
+  textarea,
+  select {
+    border: 1px solid #94a3b8 !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    resize: none !important;
+  }
+
+  /* Force checkbox & radio visibility */
+  input[type="checkbox"],
+  input[type="radio"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    accent-color: #0f172a !important;
   }
 }
+

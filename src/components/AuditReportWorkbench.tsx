@@ -808,7 +808,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     <div className="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-xs flex flex-col overflow-hidden text-slate-900">
       
       {/* 1. 최상단 헤더 바 */}
-      <div className="bg-slate-900 text-white px-5 py-2.5 flex items-center justify-between border-b border-slate-700 shrink-0">
+      <div className="bg-slate-900 text-white px-5 py-2.5 flex items-center justify-between border-b border-slate-700 shrink-0 no-print print:hidden">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
@@ -851,18 +851,18 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       </div>
 
       {/* 안내 서브 헤더 띠 */}
-      <div className="bg-slate-800 text-slate-300 px-5 py-1.5 text-[11px] flex justify-between items-center border-b border-slate-700 shrink-0">
+      <div className="bg-slate-800 text-slate-300 px-5 py-1.5 text-[11px] flex justify-between items-center border-b border-slate-700 shrink-0 no-print print:hidden">
         <span>좌측 참고 패널의 가이드를 확인하며 우측 공식 서식(1·2단계, 인정확인서, 3년계획, 시정조치 요구서 등)을 작성하세요.</span>
         <span className="text-teal-300 font-mono">1단계 / 2단계 / 인정범위확인(Table 29) / 3년계획(Table 30~32) / 시정조치요구서(F18-002)</span>
       </div>
 
       {/* 2. 메인 컨텐츠 영역 (좌측 참고 패널 2.8 : 우측 종이 바인더 7.2) */}
-      <div className="flex-1 flex overflow-hidden bg-slate-200/80">
+      <div className="flex-1 flex overflow-hidden bg-slate-200/80 print:bg-white print:overflow-visible print:block">
         
         {/* ======================================================== */}
         {/* 좌측 참고 패널 (Left Reference & Guide Sidebar) */}
         {/* ======================================================== */}
-        <div className="w-80 lg:w-96 bg-slate-50 border-r border-slate-300 p-4 space-y-4 overflow-y-auto shrink-0 text-xs">
+        <div className="w-80 lg:w-96 bg-slate-50 border-r border-slate-300 p-4 space-y-4 overflow-y-auto shrink-0 text-xs no-print print:hidden">
           
           <div className="bg-slate-800 text-white px-3 py-2 rounded-xl flex items-center justify-between shadow-2xs">
             <span className="font-bold text-xs flex items-center gap-1.5">
@@ -1118,10 +1118,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         {/* ======================================================== */}
         {/* 우측 종이 파일 철 공식 서식 시스템 (Right Paper Binder) */}
         {/* ======================================================== */}
-        <div className="flex-1 flex flex-col min-w-0 bg-slate-300/60 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 bg-slate-300/60 overflow-hidden print:bg-white print:overflow-visible print:w-full">
           
           {/* 종이 파일 철 인덱스 탭 헤더 바 - 좌우 여백 없이(px-0) 슬림한 높이 */}
-          <div className="bg-slate-200/95 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between shrink-0">
+          <div className="bg-slate-200/95 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between shrink-0 no-print print:hidden">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
               <span className="w-2.5 h-2.5 rounded-full bg-teal-700 inline-block"></span>
               <span>종이 파일 철 공식 서식 시스템</span>
@@ -1141,7 +1141,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
           </div>
 
           {/* 실물 종이 파일 철 인덱스 탭 목록 (좌우 여백 0, 슬림 높이, 단일 행) */}
-          <div className="flex border-b border-slate-300 bg-slate-200 w-full overflow-x-auto shrink-0 px-0 gap-0">
+          <div className="flex border-b border-slate-300 bg-slate-200 w-full overflow-x-auto shrink-0 px-0 gap-0 no-print print:hidden">
             {tabConfigs.map(tab => {
               const isActive = activeDocTab === tab.id;
               return (
@@ -1163,8 +1163,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
           </div>
 
           {/* 실물 A4 종이 캔버스 영역 (스크롤 가능, 백색 종이 시트 렌더링) */}
-          <div className="flex-1 p-6 md:p-8 overflow-y-auto flex justify-center bg-slate-200/60">
-            <div className="w-full max-w-[850px] space-y-12">
+          <div className="flex-1 p-6 md:p-8 overflow-y-auto flex justify-center bg-slate-200/60 print:bg-white print:p-0 print:overflow-visible print:block">
+            <div className="w-full max-w-[850px] space-y-12 print:max-w-none print:w-full print:space-y-0">
 
               {/* ================================================================= */}
               {/* 1단계 심사보고서 (1p ~ 6p 실물 PDF 완벽 일치 - 사후/갱신 미작성 시 팩에서 제외) */}
@@ -1172,7 +1172,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {(activeDocTab === 'stage1' || (activeDocTab === 'all' && includeStage1InPack)) && (
                 <div className="space-y-10">
                   {/* --- [1단계 1 PAGE : 표지] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="flex justify-between items-start border-b-2 border-slate-800 pb-2">
                       <span className="text-base font-black tracking-wider text-slate-800 font-serif">ESG with GMSCS</span>
                       <span className="text-base font-black tracking-wider text-slate-800 font-serif">ISO Audit Report</span>
@@ -1277,7 +1277,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [1단계 2 PAGE : I.고객현황 & Ⅱ.심사표준 & Ⅲ.공통심사내역 상반부] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-1.5">
                       <h3 className="font-bold text-slate-950 text-xs">I. 고객 현황</h3>
                       <p className="text-[11px] text-slate-600">
@@ -1391,7 +1391,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [1단계 3 PAGE : Ⅲ.규격별 심사내역 (ISO 14001, 45001, ESG)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-3">
                       <h3 className="font-bold text-slate-950 text-xs">◆ 규격별 심사 내역 (ISO 14001 & ISO 45001 & ESG-MS)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
@@ -1455,7 +1455,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [1단계 4 PAGE : Ⅳ.통합정도 & Ⅴ.조직참석자 & Ⅵ.심사팀참석자] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-1.5">
                       <h3 className="font-bold text-slate-950 text-xs">Ⅳ. 통합경영시스템일 경우 통합 정도 파악</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
@@ -1519,7 +1519,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [1단계 5 PAGE : Ⅶ.문서화된 정보 확인 (심사원 상세 기록)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center">
                         <h3 className="font-bold text-slate-950 text-xs">Ⅶ. 문서화된 정보 확인 (요구사항별 심사원 상세 기록)</h3>
@@ -1593,7 +1593,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [1단계 6 PAGE : Ⅷ.1단계 심사 결과 및 결론] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-4">
                       <h3 className="font-bold text-slate-950 text-xs">Ⅷ. 1단계 심사 결과</h3>
                       
@@ -1672,7 +1672,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {(activeDocTab === 'all' || activeDocTab === 'stage2') && (
                 <div className="space-y-10">
                   {/* --- [2단계 7 PAGE : 표지] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="flex justify-between items-start border-b-2 border-slate-800 pb-2">
                       <span className="text-base font-black tracking-wider text-slate-800 font-serif">ESG with GMSCS</span>
                       <span className="text-base font-black tracking-wider text-slate-800 font-serif">ISO Audit Report</span>
@@ -1765,7 +1765,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [2단계 8 PAGE : 회의록(Table 16) & 이해관계서(Table 17)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-4">
                       <h3 className="font-bold text-slate-950 text-xs">시작/종결회의 안건 (Table 16)</h3>
                       <div className="grid grid-cols-2 gap-4 text-xs">
@@ -1812,7 +1812,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [2단계 9 PAGE : ◆ 고객현황 (Table 18)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-3">
                       <h3 className="font-bold text-slate-950 text-xs">◆ 고객현황 (Table 18)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
@@ -1861,7 +1861,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [2단계 10 PAGE & 11 PAGE : 1.2단계심사 공통내역 (Table 19)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-2">
                       <h3 className="font-bold text-slate-950 text-xs">1. 2단계심사 적합성 평가 - 공통 심사 내역 (Table 19)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
@@ -1900,7 +1900,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [2단계 12 PAGE & 13 PAGE & 14 PAGE : PROCESS Audit NOTE (Table 20~23) - 동적 확장] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center border-b border-slate-700 pb-1">
                         <h3 className="text-base font-black tracking-tight text-slate-950 font-serif">
@@ -1973,7 +1973,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [2단계 15 PAGE : 2.심사결론 (Table 24) & 3.참석자 & 4.심사팀] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-4">
                       <h3 className="font-bold text-slate-950 text-xs">2. 심사결론 (Table 24)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
@@ -2029,7 +2029,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   {/* --- [2단계 16 PAGE : 5.차기심사 안내(Table 27) & 6.갱신심사 시 작성(Table 28)] --- */}
-                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                  <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                     <div className="space-y-4">
                       <h3 className="font-bold text-slate-950 text-xs">5. 차기심사 안내 (Table 27)</h3>
                       <table className="w-full border-collapse border border-slate-700 text-xs">
@@ -2095,7 +2095,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {/* 인정범위 확인서 (인증서 기재사항 확인서 - Table 29) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'cert_confirm') && (
-                <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                   <div className="text-center py-2 border-b-2 border-slate-800 pb-2 flex justify-between items-end">
                     <div className="text-left">
                       <span className="text-xs font-mono text-teal-800 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
@@ -2251,7 +2251,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {/* 3년 심사계획 요약서 (Table 30~32) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'plan_summary') && (
-                <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                   <div className="text-center py-2 border-b-2 border-slate-800 pb-2">
                     <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
                       3년 심사계획 요약서 (Table 30~32)
@@ -2305,7 +2305,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {(activeDocTab === 'all' || activeDocTab === 'ncr') && (
                 <div className="space-y-10">
                   {ncrList.map((ncrItem, ncrIdx) => (
-                    <div key={ncrItem.id} className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
+                    <div key={ncrItem.id} className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-6 relative">
                       <div className="flex justify-between items-center border-b-2 border-slate-800 pb-2">
                         <div>
                           <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
@@ -2904,7 +2904,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               {/* 심사 증빙 서류 */}
               {/* ================================================================= */}
               {activeDocTab === 'proof_upload' && (
-                <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-4">
+                <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans a4-page min-h-[1100px] space-y-4">
                   <div className="border-b-2 border-slate-800 pb-2">
                     <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
                       심사 증빙 서류 첨부 관리 (6종)
