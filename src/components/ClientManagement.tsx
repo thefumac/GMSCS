@@ -3,10 +3,12 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Plus
 } from 'lucide-react';
 import { Company, Auditor, CertContract, AuditProject, AuditContractRecord } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { NewCompanyModal } from './NewCompanyModal';
 import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
 
@@ -18,6 +20,7 @@ export interface ClientManagementProps {
   projects?: AuditProject[];
   onOpenReport?: (reportId: string) => void;
   onOpenEmailModal?: (recipientName?: string, recipientEmail?: string, templateType?: string) => void;
+  onAddCompany?: (company: Company) => void;
 }
 
 const PAGE_SIZE = 20;
@@ -81,7 +84,8 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   auditors,
   contracts = [],
   projects = [],
-  onOpenReport
+  onOpenReport,
+  onAddCompany
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
@@ -90,6 +94,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   const [selectedAgency, setSelectedAgency] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [isNewCompanyModalOpen, setIsNewCompanyModalOpen] = useState<boolean>(false);
 
   // Auditor map
   const auditorMap = useMemo(() => {
@@ -332,8 +337,8 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
           </select>
         </div>
 
-        {/* 우측 카운터 및 페이지네이션 (볼드 제거) */}
-        <div className="flex items-center gap-3 text-xs text-slate-600 font-mono font-normal">
+        {/* 우측 카운터, 페이지네이션 및 신규 등록 버튼 */}
+        <div className="flex items-center gap-2.5 text-xs text-slate-600 font-mono font-normal">
           <div>
             총 <span className="text-cyan-700 font-normal">{filteredCompanies.length}</span>개사
             <span className="text-slate-400 ml-1 font-normal">({safePage}/{totalPages}p)</span>
@@ -359,6 +364,17 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          {/* 신규 고객 등록 버튼 */}
+          <button
+            type="button"
+            onClick={() => setIsNewCompanyModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-cyan-700 to-sky-700 hover:from-cyan-800 hover:to-sky-800 text-white rounded font-sans font-medium text-xs shadow-2xs hover:shadow-xs transition cursor-pointer ml-1"
+            title="신규 고객사 및 타기관 전환 기업 등록"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>신규 고객 등록</span>
+          </button>
         </div>
       </div>
 
@@ -537,6 +553,18 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         projects={projects}
         allAuditors={auditors}
         onOpenReport={onOpenReport}
+      />
+
+      {/* 신규 고객 등록 모달 (신규/전환) */}
+      <NewCompanyModal
+        isOpen={isNewCompanyModalOpen}
+        onClose={() => setIsNewCompanyModalOpen(false)}
+        onSave={(newCompany) => {
+          onAddCompany?.(newCompany);
+          setIsNewCompanyModalOpen(false);
+          setSelectedCompany(newCompany);
+        }}
+        auditors={auditors}
       />
     </div>
   );

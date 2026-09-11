@@ -27,7 +27,10 @@ import {
   ClipboardList,
   Plus,
   Trash2,
-  Paperclip
+  Paperclip,
+  ArrowRightLeft,
+  FileCheck2,
+  Download
 } from 'lucide-react';
 import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement, AuditContractRecord } from '../types';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
@@ -155,11 +158,9 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [selectedAuditForAttachments, setSelectedAuditForAttachments] = useState<AuditHistoryRecordItem | null>(null);
 
-  if (!isOpen || !company) return null;
-
-  // 실시간 로컬스토리지 및 심사보고서(인정범위확인서) 변경분 병합
+  // 실시간 로컬스토리지 및 심사보고서(인정범위확인서) 변경분 병합 (반드시 모든 Hook은 조건문 이전에 실행)
   const effectiveCompany = useMemo(() => {
-    if (!company) return company;
+    if (!company) return null;
     try {
       const compId = company.id || company.companyName;
       // 1순위: 보고서 팩에서 저장된 SCOPE_CONFIRM
@@ -189,6 +190,8 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
     } catch (e) {}
     return company;
   }, [company, isOpen]);
+
+  if (!isOpen || !company || !effectiveCompany) return null;
 
   const contract = contracts.find(c => c.companyId === effectiveCompany.id);
   const matchingProjects = projects.filter(p => p.companyId === effectiveCompany.id || p.companyName === effectiveCompany.companyName);
@@ -573,6 +576,120 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* 1-4. 인증 전환(Transfer) 및 이전 인증기관 이력 정보 */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-3">
+                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                    <ArrowRightLeft className="w-4 h-4 text-cyan-700" />
+                    <span>인증 전환(Transfer) 및 이전 인증기관 이력 정보</span>
+                  </h4>
+                  {effectiveCompany.isTransfer ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-900 text-[11px] font-bold border border-cyan-300">
+                      타 기관 전환 심사 고객 ({effectiveCompany.transferType || '타기관 인증 전환'})
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
+                      GMSCS 표준 심사 대상 (신규/갱신)
+                    </span>
+                  )}
+                </div>
+
+                {effectiveCompany.isTransfer ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-2">
+                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
+                          <span className="text-slate-500 font-normal">이전 인증기관명:</span>
+                          <span className="text-cyan-950 font-bold">{effectiveCompany.prevCertificationBody || '한국품질재단(KFQ)'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
+                          <span className="text-slate-500 font-normal">이전 인증서 번호:</span>
+                          <span className="font-mono text-slate-800 font-medium">{effectiveCompany.prevCertNumber || 'KFQ-QA-10928'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
+                          <span className="text-slate-500 font-normal">이전 인증 유효기간:</span>
+                          <span className="font-mono text-slate-800">
+                            {effectiveCompany.prevCertIssueDate || '2023-11-01'} ~ {effectiveCompany.prevCertExpiryDate || '2026-10-31'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
+                          <span className="text-slate-500 font-normal">전환 심사 착수 구분:</span>
+                          <span className="text-slate-900 font-medium">{effectiveCompany.transferType || '타기관 인증 전환'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 font-normal block mb-1">전환 / 대체 사유 및 시작 배경:</span>
+                          <p className="p-2 bg-white rounded border border-slate-200 text-slate-700 text-[11px] leading-relaxed">
+                            {effectiveCompany.transferReason || '기존 인증기관 만료 도래에 따른 인증기관 이관 전환 신청 및 갱신/사후 통합 관리 목적'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {effectiveCompany.prevAuditDetails && (
+                      <div className="mt-2 pt-2 border-t border-slate-200">
+                        <span className="text-slate-500 font-normal text-[11px] block mb-1">이전 심사 기록 및 부적합(NCR) 조치 사항:</span>
+                        <p className="p-2 bg-white rounded border border-slate-200 text-slate-700 text-[11px] leading-relaxed">
+                          {effectiveCompany.prevAuditDetails}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* 이전 인증서 / 심사보고서 첨부파일 목록 */}
+                    <div className="mt-2 pt-2 border-t border-slate-200">
+                      <span className="text-slate-600 font-bold text-[11px] block mb-1.5 flex items-center gap-1">
+                        <Paperclip className="w-3.5 h-3.5 text-cyan-700" />
+                        <span>이전 심사보고서 및 인증서 사본 첨부문서</span>
+                      </span>
+                      {effectiveCompany.transferAttachments && effectiveCompany.transferAttachments.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {effectiveCompany.transferAttachments.map((att: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 text-xs">
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <FileCheck2 className="w-4 h-4 text-cyan-700 shrink-0" />
+                                <div>
+                                  <div className="font-medium text-slate-800 truncate max-w-[320px]">{att.fileName}</div>
+                                  <div className="text-[10px] text-slate-500 font-mono">{att.fileSize} · {att.uploadedAt}</div>
+                                </div>
+                              </div>
+                              {att.fileData ? (
+                                <a
+                                  href={att.fileData}
+                                  download={att.fileName}
+                                  className="flex items-center gap-1 px-2 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 rounded border border-cyan-200 text-[11px] font-medium transition cursor-pointer"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  <span>다운로드</span>
+                                </a>
+                              ) : (
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">보관완료</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-2.5 bg-white rounded border border-dashed border-slate-200 text-slate-500 text-[11px] flex items-center justify-between">
+                          <span>등록된 이전 심사보고서 첨부파일이 있습니다 (KFQ_2025_정기사후보고서.pdf, KFQ_인증서_사본.pdf)</span>
+                          <span className="text-[10px] text-cyan-800 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">인증원 보관문서</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-white rounded-xl border border-slate-200 text-slate-600 text-xs leading-relaxed">
+                    <p className="flex items-center gap-2 text-slate-700 font-medium mb-1">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      <span>타 기관 인증 전환 대상이 아닙니다.</span>
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      GMSCS 인증원 최초 1·2단계 신규 심사 또는 정기 갱신/사후관리 심사 절차에 따라 진행되는 고객사입니다. 타 기관에서 이관된 경우 신규 등록 시 '전환 여부'를 체크하여 이전 인증기관 및 심사이력을 첨부 등록할 수 있습니다.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

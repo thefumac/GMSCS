@@ -47,9 +47,33 @@ export interface Company {
   assignedAuditorName?: string; // 배정된 심사원명
   isAuditorChanged?: boolean;   // 심사원 교체 여부
   auditorHistory?: string[];    // 역대 심사원 이력
-  initialContractType?: '신규' | '전환' | '재인증';
   initialContractDate?: string; // 최초 계약일
+  initialContractType?: string; // 계약 구분 (신규 / 갱신 / 전환 등)
   standardInitialDates?: Record<string, string>; // 규격별 최초 계약일자
+  
+  // 전환 심사 및 이전 인증기관 이력
+  isTransfer?: boolean; // 전환 여부 (true: 타 기관 전환, false: 일반 신규)
+  transferType?: '전환 사후심사' | '전환 갱신심사' | '전환 규격추가' | '단순 기관이관';
+  prevCertificationBody?: string; // 이전 인증기관명 (예: KSR인증원, 한국품질재단, BSI, DNV 등)
+  prevCertNumber?: string; // 이전 인증번호
+  prevCertIssueDate?: string; // 이전 인증 최초 등록일
+  prevCertExpiryDate?: string; // 이전 인증 유효기간 만료일
+  prevAuditDetails?: string; // 이전 심사 및 부적합(NCR) 조치 현황
+  transferReason?: string; // 전환 사유 및 대체 시작 배경
+  transferAttachments?: TransferAttachment[]; // 이전 심사보고서/인증서 사본 첨부파일
+}
+
+export interface TransferAttachment {
+  id: string;
+  name?: string;
+  fileName?: string;
+  size?: string;
+  fileSize?: string;
+  type?: string;
+  fileType?: string;
+  dataUrl?: string;
+  fileData?: string;
+  uploadedAt?: string;
 }
 
 export type AuditorAffiliation = '상근' | '비상근';

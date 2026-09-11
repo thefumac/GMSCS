@@ -89,7 +89,35 @@ export function App() {
     }
     return base;
   });
-  const [companies, setCompanies] = useState<Company[]>(() => getMergedCompanies());
+  const [companies, setCompanies] = useState<Company[]>(() => {
+    const base = getMergedCompanies();
+    if (typeof window !== 'undefined') {
+      try {
+        const savedNew = localStorage.getItem('gmscs_custom_new_companies');
+        if (savedNew) {
+          const parsedNew: Company[] = JSON.parse(savedNew);
+          return [...parsedNew, ...base];
+        }
+      } catch (e) {
+        console.error('Failed to load custom companies from localStorage', e);
+      }
+    }
+    return base;
+  });
+
+  const handleAddCompany = (newCompany: Company) => {
+    setCompanies(prev => {
+      const updated = [newCompany, ...prev];
+      try {
+        const customOnly = updated.filter(c => c.id?.startsWith('COMP-NEW-') || (c as any).isTransfer || (c as any).isCustom);
+        localStorage.setItem('gmscs_custom_new_companies', JSON.stringify(customOnly));
+      } catch (e) {
+        console.error('Failed to save custom companies to localStorage', e);
+      }
+      return updated;
+    });
+  };
+
   const [contracts, setContracts] = useState<CertContract[]>(() => getMergedContracts());
   const [projects, setProjects] = useState<AuditProject[]>(() => getMergedProjects());
   const [reports, setReports] = useState<Record<string, AuditReport>>(mockReports);
@@ -1155,6 +1183,7 @@ export function App() {
             onOpenEmailModal={(companyName, contactEmail, templateType) => {
               handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');
             }}
+            onAddCompany={handleAddCompany}
           />
         )}
 
