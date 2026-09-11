@@ -285,14 +285,14 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
       const certNo = compAny?.certNo || compAny?.certNumber || contract?.certNumber || (contract as any)?.contractNumber || '';
       const kabMd = p.appliedMd || p.kabStandardMd || 2.5;
 
-      // 1. Pre-AUDIT 하위 항목 날짜
-      const hasPlanApproved = ['심사진행중', '보고서작성', '서명대기', '서명완료', '사무국검토대기', '보완요청', '심의대기', '심의진행', '인증발행'].includes(p.status as any);
-      const isPlanSent = p.status === '계획서발송' || Boolean(p.planSentDate) || hasPlanApproved;
+      // 1. Pre-AUDIT 하위 항목 날짜 (추산 루틴 완전 제거: 실제 DB 및 저장된 일자만 바인딩)
+      const isPlanSent = Boolean(p.planSentDate);
+      const hasPlanApproved = Boolean((p as any).planApprovedDate);
       
-      const contractDate = comp?.createdAt ? comp.createdAt.slice(0, 10) : (p.startDate ? new Date(new Date(p.startDate).getTime() - 25 * 86400000).toISOString().slice(0, 10) : '2026-08-10');
-      const scheduleDate = p.startDate ? new Date(new Date(p.startDate).getTime() - 14 * 86400000).toISOString().slice(0, 10) : '';
-      const planApprovalDate = hasPlanApproved ? (p.startDate ? new Date(new Date(p.startDate).getTime() - 8 * 86400000).toISOString().slice(0, 10) : '') : '';
-      const planDispatchDate = isPlanSent ? (p.planSentDate ? p.planSentDate.slice(0, 10) : (p.startDate ? new Date(new Date(p.startDate).getTime() - 7 * 86400000).toISOString().slice(0, 10) : '')) : '';
+      const contractDate = (contract as any)?.contractDate || (contract as any)?.createdAt?.slice(0, 10) || comp?.createdAt?.slice(0, 10) || '';
+      const scheduleDate = (p as any).scheduleDate || (p as any).scheduleConfirmedDate || '';
+      const planApprovalDate = (p as any).planApprovedDate || '';
+      const planDispatchDate = p.planSentDate ? p.planSentDate.slice(0, 10) : '';
 
       const preAudit = {
         contractDate,
@@ -305,8 +305,8 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
       // 2. AUDIT 심사기간
       const schedule = {
-        startDate: p.startDate || '2026-09-15',
-        endDate: p.endDate || '2026-09-16',
+        startDate: p.startDate || '',
+        endDate: p.endDate || '',
         md: kabMd
       };
 
@@ -327,7 +327,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         teamAuditor: teamMember
       };
 
-      // 4. Post-AUDIT: 보고서 접수 및 승인
+      // 4. Post-AUDIT: 보고서 접수 및 승인 (추산 루틴 완전 제거: 실제 제출/승인 일자만 표시)
       const isReportApproved = ['심의대기', '심의진행', '인증발행'].includes(p.status as any);
       const isReportReviewing = ['사무국검토대기', '보완요청'].includes(p.status as any);
       const isReportSubmitted = ['보고서작성', '서명완료'].includes(p.status as any);
@@ -339,12 +339,8 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
       const customReport = reportCustomStages[p.id] || reportCustomStages[p.companyId] || (comp?.id ? reportCustomStages[comp.id] : undefined) || (comp?.companyName ? reportCustomStages[comp.companyName] : undefined);
       const stage: '대기' | '접수' | '검토' | '승인' = customReport ? customReport.stage : defaultStage;
 
-      const receiptDate = (stage === '접수' || stage === '검토' || stage === '승인')
-        ? (p.endDate ? new Date(new Date(p.endDate).getTime() + 2 * 86400000).toISOString().slice(0, 10) : '2026-09-18')
-        : '';
-      const approvalDate = (stage === '승인')
-        ? (p.endDate ? new Date(new Date(p.endDate).getTime() + 4 * 86400000).toISOString().slice(0, 10) : '2026-09-20')
-        : '';
+      const receiptDate = customReport?.date || (rep as any)?.submittedAt?.slice(0, 10) || (p as any).reportReceiptDate || '';
+      const approvalDate = (customReport as any)?.approvalDate || (p as any).reportApprovalDate || (stage === '승인' && (rep as any)?.approvedAt ? (rep as any).approvedAt.slice(0, 10) : '');
 
       const postAudit = {
         receiptDate,
@@ -354,25 +350,21 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         note: customReport?.note
       };
 
-      // 5. 심의의결 (보고서 승인 시 다음 심의위원회 개최일 예정일로 자동 연동)
+      // 5. 심의의결 (실제 심의 결정일 또는 확정 상태만 바인딩)
       const isCommitteeDone = p.committeeStatus === '등록승인' || p.status === '인증발행';
-      const isCommitteePending = p.committeeStatus === '심의진행' || p.committeeStatus === '심의상정' || p.status === '심의대기' || p.status === '심의진행' || stage === '승인';
+      const isCommitteePending = p.committeeStatus === '심의진행' || p.committeeStatus === '심의상정' || p.status === '심의대기' || p.status === '심의진행';
       
-      let committeeMeetingDate = '';
-      if (stage === '승인' || isCommitteePending || isCommitteeDone) {
-        const nextMeeting = findNextCommitteeMeetingDate(approvalDate || p.endDate, committeeSchedules);
-        committeeMeetingDate = nextMeeting || (p.endDate ? new Date(new Date(p.endDate).getTime() + 7 * 86400000).toISOString().slice(0, 10) : '2026-09-24');
-      }
+      const committeeMeetingDate = p.committeeDecisionDate || (p as any).committeeDate || '';
 
       let committeeStatus: 'completed' | 'in_progress' | 'pending' = 'pending';
       let displayText = '-';
 
       if (isCommitteeDone) {
         committeeStatus = 'completed';
-        displayText = `${committeeMeetingDate || '2026-09-17'} (승인)`;
-      } else if (stage === '승인' || isCommitteePending) {
+        displayText = committeeMeetingDate ? `${committeeMeetingDate} (승인)` : '승인완료';
+      } else if (isCommitteePending || stage === '승인') {
         committeeStatus = 'in_progress';
-        displayText = `${committeeMeetingDate || '2026-09-24'} (예정)`;
+        displayText = committeeMeetingDate ? `${committeeMeetingDate} (진행)` : '심의진행';
       }
 
       const committee = {
