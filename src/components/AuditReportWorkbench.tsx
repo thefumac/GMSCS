@@ -365,12 +365,16 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
       ],
       // 6p: Ⅷ. 1단계 심사 결과
       findingsTable: [
-        { no: 1, type: '관찰사항', details: '계측기 점검주기 라벨 일부 마모되어 재부착 필요', dueDate: '2026-10-15' }
+        { no: 1, type: '', details: '', dueDate: '' },
+        { no: 2, type: '', details: '', dueDate: '' },
+        { no: 3, type: '', details: '', dueDate: '' },
+        { no: 4, type: '', details: '', dueDate: '' },
+        { no: 5, type: '', details: '', dueDate: '' },
       ],
       summaryMajor: '0',
       summaryMinor: '0',
-      summaryObs: '1',
-      overallSummary: '본 조직은 ISO 9001:2015 및 ISO 14001:2015 요구사항에 부합하는 경영시스템 문서를 충실히 수립하고 실행하고 있으며, 최고경영자의 확고한 실천 의지와 전부서의 참여도가 높음. 2단계 현장 심사 진행에 결격사유 없음.',
+      summaryObs: '0',
+      overallSummary: '',
       conclusion: 'pass' as 'pass' | 'corrective' | 'fail'
     };
 
@@ -3250,26 +3254,114 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                             </tr>
                           </thead>
                           <tbody>
-                            {[
-                              { no: 1, type: '권고사항', details: '계측기 점검주기 라벨 일부 마모되어 재부착 필요', dueDate: '2026-10-15' },
+                            {(stage1Data.findingsTable || [
+                              { no: 1, type: '', details: '', dueDate: '' },
                               { no: 2, type: '', details: '', dueDate: '' },
                               { no: 3, type: '', details: '', dueDate: '' },
                               { no: 4, type: '', details: '', dueDate: '' },
                               { no: 5, type: '', details: '', dueDate: '' },
-                            ].map((row) => (
-                              <tr key={row.no} className="border-b border-slate-400">
-                                <td className="p-1.5 text-center font-bold border-r border-slate-400 bg-slate-50">{row.no}</td>
-                                <td className="p-1.5 text-center border-r border-slate-400 font-bold text-amber-800">{row.type}</td>
-                                <td className="p-1.5 border-r border-slate-400">{row.details}</td>
-                                <td className="p-1.5 text-center font-mono">{row.dueDate}</td>
+                            ]).map((row: any, rIdx: number) => (
+                              <tr key={row.no || rIdx + 1} className="border-b border-slate-400">
+                                <td className="p-1.5 text-center font-bold border-r border-slate-400 bg-slate-50">{row.no || rIdx + 1}</td>
+                                <td className="p-1 border-r border-slate-400">
+                                  <select
+                                    value={row.type || ''}
+                                    onChange={(e) => {
+                                      const currentList = stage1Data.findingsTable || [
+                                        { no: 1, type: '', details: '', dueDate: '' },
+                                        { no: 2, type: '', details: '', dueDate: '' },
+                                        { no: 3, type: '', details: '', dueDate: '' },
+                                        { no: 4, type: '', details: '', dueDate: '' },
+                                        { no: 5, type: '', details: '', dueDate: '' },
+                                      ];
+                                      const next = [...currentList];
+                                      next[rIdx] = { ...next[rIdx], no: rIdx + 1, type: e.target.value };
+                                      setStage1Data({ ...stage1Data, findingsTable: next });
+                                    }}
+                                    className="w-full bg-transparent border-0 text-center font-bold text-xs focus:ring-1 focus:ring-cyan-500 cursor-pointer text-slate-800"
+                                  >
+                                    <option value="">- 선택 -</option>
+                                    <option value="권고사항">권고사항</option>
+                                    <option value="관찰사항">관찰사항</option>
+                                    <option value="경부적합">경부적합</option>
+                                    <option value="중부적합">중부적합</option>
+                                  </select>
+                                </td>
+                                <td className="p-1 border-r border-slate-400">
+                                  <input
+                                    type="text"
+                                    value={row.details || ''}
+                                    placeholder="관찰사항 또는 부적합 세부 내용 입력"
+                                    onChange={(e) => {
+                                      const currentList = stage1Data.findingsTable || [
+                                        { no: 1, type: '', details: '', dueDate: '' },
+                                        { no: 2, type: '', details: '', dueDate: '' },
+                                        { no: 3, type: '', details: '', dueDate: '' },
+                                        { no: 4, type: '', details: '', dueDate: '' },
+                                        { no: 5, type: '', details: '', dueDate: '' },
+                                      ];
+                                      const next = [...currentList];
+                                      next[rIdx] = { ...next[rIdx], no: rIdx + 1, details: e.target.value };
+                                      setStage1Data({ ...stage1Data, findingsTable: next });
+                                    }}
+                                    className="w-full bg-transparent border-0 px-1.5 py-0.5 text-xs text-slate-900 focus:ring-1 focus:ring-cyan-500"
+                                  />
+                                </td>
+                                <td className="p-1 text-center font-mono">
+                                  <input
+                                    type="text"
+                                    value={row.dueDate || ''}
+                                    placeholder="YYYY-MM-DD"
+                                    onChange={(e) => {
+                                      const currentList = stage1Data.findingsTable || [
+                                        { no: 1, type: '', details: '', dueDate: '' },
+                                        { no: 2, type: '', details: '', dueDate: '' },
+                                        { no: 3, type: '', details: '', dueDate: '' },
+                                        { no: 4, type: '', details: '', dueDate: '' },
+                                        { no: 5, type: '', details: '', dueDate: '' },
+                                      ];
+                                      const next = [...currentList];
+                                      next[rIdx] = { ...next[rIdx], no: rIdx + 1, dueDate: e.target.value };
+                                      setStage1Data({ ...stage1Data, findingsTable: next });
+                                    }}
+                                    className="w-full bg-transparent border-0 text-center text-xs font-mono text-slate-900 focus:ring-1 focus:ring-cyan-500"
+                                  />
+                                </td>
                               </tr>
                             ))}
                             <tr className="bg-slate-50 border-b border-slate-700">
                               <th className="p-2 border-r border-slate-400 text-center font-bold">심 사 결 과</th>
                               <td colSpan={3} className="p-2 space-x-6 text-xs font-bold text-slate-900">
-                                <span>중부적합: 0 건</span>
-                                <span>경부적합: 0 건</span>
-                                <span>관찰사항: 1 건</span>
+                                <label className="inline-flex items-center gap-1">
+                                  <span>중부적합:</span>
+                                  <input
+                                    type="text"
+                                    value={stage1Data.summaryMajor ?? '0'}
+                                    onChange={(e) => setStage1Data({ ...stage1Data, summaryMajor: e.target.value })}
+                                    className="w-8 border-b border-slate-400 text-center font-bold bg-transparent focus:outline-none"
+                                  />
+                                  <span>건</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <span>경부적합:</span>
+                                  <input
+                                    type="text"
+                                    value={stage1Data.summaryMinor ?? '0'}
+                                    onChange={(e) => setStage1Data({ ...stage1Data, summaryMinor: e.target.value })}
+                                    className="w-8 border-b border-slate-400 text-center font-bold bg-transparent focus:outline-none"
+                                  />
+                                  <span>건</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <span>관찰사항:</span>
+                                  <input
+                                    type="text"
+                                    value={stage1Data.summaryObs ?? '0'}
+                                    onChange={(e) => setStage1Data({ ...stage1Data, summaryObs: e.target.value })}
+                                    className="w-8 border-b border-slate-400 text-center font-bold bg-transparent focus:outline-none"
+                                  />
+                                  <span>건</span>
+                                </label>
                               </td>
                             </tr>
                             <tr>
