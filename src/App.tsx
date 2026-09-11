@@ -23,6 +23,7 @@ import { ClientManagement } from './components/ClientManagement';
 import { AuditorManagement } from './components/AuditorManagement';
 import { CertificationManagement } from './components/CertificationManagement';
 import { CompanyAuditHistoryModal } from './components/CompanyAuditHistoryModal';
+import { AuditReportWorkbench } from './components/AuditReportWorkbench';
 import { CommitteeScheduleItem, loadSavedCommitteeSchedules } from './utils/committeeSchedule';
 
 import { 
@@ -144,6 +145,9 @@ export function App() {
 
   // 기업 심사이력 및 경과 통합 모달 상태
   const [historyModalCompany, setHistoryModalCompany] = useState<Company | null>(null);
+
+  // 심사보고서 워크벤치 모달 상태 (신규/1단계/2단계/특약/증빙서류 통합)
+  const [workbenchCompany, setWorkbenchCompany] = useState<Company | null>(null);
 
   // 심사원 마이페이지 / 개인정보 및 지급방식 관리 모달 상태
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
@@ -618,6 +622,14 @@ export function App() {
     handleOpenReportDetail(reportId);
   };
 
+  // 심사보고서 워크벤치 열기 (브라우저 새 탭으로 전용 작업대 오픈)
+  const handleOpenReportWorkbench = (companyOrId: Company | string) => {
+    const targetId = typeof companyOrId === 'string' ? companyOrId : companyOrId.id;
+    if (typeof window !== 'undefined') {
+      window.open(`#workbench/${encodeURIComponent(targetId)}`, '_blank');
+    }
+  };
+
   // 심사보고서 목록으로 돌아가기
   const handleBackToReportList = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -958,6 +970,37 @@ export function App() {
     setIsEmailModalOpen(true);
   };
 
+  // 브라우저 새 탭에서 #workbench/xxx 로 직접 열린 경우 (100% 전체화면 전용 작업대 모드)
+  const isStandaloneWorkbench = typeof window !== 'undefined' && window.location.hash.startsWith('#workbench');
+  if (isStandaloneWorkbench) {
+    const rawTarget = window.location.hash.replace(/^#workbench\/?/, '').split('?')[0];
+    const targetComp = (rawTarget ? companies.find(c => c.id === rawTarget || c.companyName === decodeURIComponent(rawTarget)) : null) || companies[0];
+    
+    if (targetComp) {
+      return (
+        <div className="w-screen h-screen bg-slate-900 flex flex-col overflow-hidden">
+          <AuditReportWorkbench
+            company={targetComp}
+            contract={auditContracts.find(c => c.companyId === targetComp.id || c.companyName === targetComp.companyName)}
+            report={Object.values(reports).find(r => r.companyName === targetComp.companyName)}
+            auditor={currentAuditorObj}
+            auditors={auditors}
+            onClose={() => {
+              if (window.opener) {
+                window.close();
+              } else {
+                window.location.hash = '#reports';
+              }
+            }}
+            onSave={(_data) => {
+              alert(`[${targetComp.companyName}] 심사보고서 및 증빙 서류가 임시저장/보관되었습니다.`);
+            }}
+          />
+        </div>
+      );
+    }
+  }
+
   if (!isAuthenticated) {
     return <LoginPage auditors={auditors} onLogin={handleLogin} auditorNotices={auditorNotices} />;
   }
@@ -1284,6 +1327,7 @@ export function App() {
             }}
             onRequestReassignment={handleRequestReassignment}
             onOpenEmailModal={handleOpenEmailModalWithPreset}
+            onOpenReportWorkbench={handleOpenReportWorkbench}
           />
         )}
 
@@ -1399,6 +1443,7 @@ export function App() {
         settlements={settlements}
         allAuditors={auditors}
         onOpenReport={handleOpenReport}
+        onOpenReportWorkbench={handleOpenReportWorkbench}
         onOpenPdfReport={(info) => {
           setPdfModalState({
             isOpen: true,
@@ -1411,6 +1456,25 @@ export function App() {
           });
         }}
       />
+
+      {/* 심사보고서 워크벤치 (2.5:7.5 분할 + 4대 탭 + 증빙서류 업로드 + EHS) */}
+      {workbenchCompany && (
+        <div className="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+          <div className="w-full max-w-[1780px] h-[96vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-700">
+            <AuditReportWorkbench
+              company={workbenchCompany}
+              contract={auditContracts.find(c => c.companyId === workbenchCompany.id || c.companyName === workbenchCompany.companyName)}
+              report={Object.values(reports).find(r => r.companyName === workbenchCompany.companyName)}
+              auditor={currentAuditorObj}
+              auditors={auditors}
+              onClose={() => setWorkbenchCompany(null)}
+              onSave={(_data) => {
+                alert(`[${workbenchCompany.companyName}] 심사보고서 및 증빙 서류가 임시저장/보관되었습니다.`);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Footer (okesg.com 사업자 및 플랫폼 정보 인용, 이용약관/개인정보처리방침 제외) */}
       <footer className="bg-slate-50 border-t border-slate-200 py-6 text-xs text-slate-500 no-print">

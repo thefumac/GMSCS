@@ -20,7 +20,8 @@ import {
   UserCheck,
   ClipboardList,
   HelpCircle,
-  RefreshCw
+  RefreshCw,
+  Database
 } from 'lucide-react';
 import { 
   Company, 
@@ -34,6 +35,7 @@ import {
 } from '../types';
 import { calculateKabMd } from '../services/kabMdEngine';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
+import { checkAuditPeriodForHolidays } from '../utils/koreanHolidays';
 
 interface AuditContractManagerProps {
   companies: Company[];
@@ -99,6 +101,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   // [1] 접수 구분 (4대 모드: 정기사후/갱신 vs 규격추가 vs 신규인증 vs 전환심사)
   // -------------------------------------------------------------
   const [receptionType, setReceptionType] = useState<AuditContractType>('정기사후');
+  const [hasCertChange, setHasCertChange] = useState<boolean>(false);
 
   // [A] 기존 고객사 선택 및 검색
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>(() => {
@@ -134,6 +137,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [newContactEmail, setNewContactEmail] = useState<string>('quality@kwonmetal.co.kr');
   const [newIndustry, setNewIndustry] = useState<string>('자동차 및 선박용 주조물 제조');
   const [newIafCode, setNewIafCode] = useState<string>('17');
+  const [newScope, setNewScope] = useState<string>('');
   const [newRiskLevel] = useState<'High' | 'Medium' | 'Low'>('Medium');
   const [newStandards, setNewStandards] = useState<StandardCode[]>(['ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018']);
   const [newAgency, setNewAgency] = useState<string>('아이비컨설팅');
@@ -153,11 +157,11 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
         industry: newIndustry,
         iafCode: newIafCode,
         totalEmployees: 35,
-        scope: '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'
+        scope: newScope || ''
       } as Company;
     }
     return selectedCompany;
-  }, [receptionType, newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, selectedCompany]);
+  }, [receptionType, newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope, selectedCompany]);
 
   // [D] 인원수 변동 검증 State
   const defaultEmpCount = receptionType === '신규인증' || receptionType === '전환심사' ? 35 : (selectedCompany?.totalEmployees || 48);
@@ -176,6 +180,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     if (receptionType === '전환심사') return '전환 심사 (타인증원 이관)';
     if (receptionType === '규격추가') return '규격추가 심사 (신규 규격 최초 단계 적용)';
     if (receptionType === '인증변경') return '인증변경 심사 (상호/소재지/인원/범위 변경)';
+    if (receptionType === '재심사') return '재심사 (부적합 시정 후 재심사)';
     if (receptionType === '갱신심사') return '갱신심사 (재인증)';
     if (previousContract) {
       if (previousContract.contractType.includes('최초')) return '1차 사후관리심사';
@@ -307,22 +312,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     clientName: `${activeCompany.contactPerson || '정순호'} 이사`
   });
 
-  // 주말/휴일 심사 포함 여부 자동 산출 (시작일~종료일 중 토/일 포함 여부)
-  const isWeekendAudit = useMemo(() => {
-    if (!plannedStartDate || !plannedEndDate) return false;
-    try {
-      const start = new Date(plannedStartDate);
-      const end = new Date(plannedEndDate);
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) return false;
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const day = d.getDay();
-        if (day === 0 || day === 6) return true;
-      }
-    } catch {
-      return false;
-    }
-    return false;
+  // 주말/법정공휴일/대체공휴일/임시공휴일 심사 포함 여부 자동 산출
+  const holidayCheck = useMemo(() => {
+    return checkAuditPeriodForHolidays(plannedStartDate, plannedEndDate);
   }, [plannedStartDate, plannedEndDate]);
+
+  const isWeekendAudit = holidayCheck.hasWeekendOrHoliday;
 
   // [탭별 작성 가능/활성화 여부 조건]
   // 1. 심사계약서: 갱신, 최초(신규), 전환, 재인증 활성화 (1,2차 사후관리는 제외)
@@ -331,12 +326,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const isPlanAllowed = true;
   // 3. 심사비 청구서: 전 심사 공통 활성화
   const isInvoiceAllowed = true;
-  // 4. 심사설문서: 신규, 갱신, 전환, 재인, 규격추가, 인증변경 활성화 (1,2차 사후관리 제외)
-  const isSurveyAllowed = receptionType === '신규인증' || receptionType === '갱신심사' || receptionType === '전환심사' || (receptionType as string) === '재인증' || receptionType === '규격추가' || receptionType === '인증변경';
+  // 4. 심사설문서: 신규, 갱신, 전환, 재인, 규격추가, 인증변경, 재심사 활성화 (1,2차 사후관리 제외)
+  const isSurveyAllowed = receptionType === '신규인증' || receptionType === '갱신심사' || receptionType === '전환심사' || (receptionType as string) === '재인증' || receptionType === '규격추가' || receptionType === '인증변경' || receptionType === '재심사';
   // 5. 갱신심사추가설문서: 갱신심사 전용 (갱신심사일 때만 활성화)
   const isRenewalSurveyAllowed = receptionType === '갱신심사';
-  // 6. 인증변경신청서: 규격추가 또는 인증변경 또는 인원/상호 등 변경 시에만 활성화
-  const isCertChangeAllowed = receptionType === '규격추가' || receptionType === '인증변경' || isEmployeeChanged;
+  // 6. 인증변경신청서: 인증변경사항 유무 토글이 [유]이거나 규격추가/인증변경일 때 활성화
+  const isCertChangeAllowed = hasCertChange || receptionType === '규격추가' || receptionType === '인증변경' || isEmployeeChanged;
   // 7. 휴일근무확인서: 심사일정에 주말(토/일)이 포함된 경우에만 활성화
   const isWeekendAllowed = isWeekendAudit;
 
@@ -488,7 +483,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
           </div>
           <div>
             <h1 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <span>GMSCS 심사관리 워크벤치</span>
+              <span>GMSCS 심사계약·계획 관리</span>
               <span className="text-slate-400 font-normal">|</span>
               <span className="text-cyan-900 font-semibold">{activeCompany.companyName}</span>
               <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
@@ -541,7 +536,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               <span className="text-[11px] text-cyan-800 font-medium">[{receptionType}]</span>
             </label>
             <div className="grid grid-cols-3 gap-1.5">
-              {(['신규인증', '갱신심사', '정기사후', '전환심사', '규격추가', '인증변경'] as AuditContractType[]).map(type => (
+              {(['신규인증', '갱신심사', '정기사후', '전환심사', '규격추가', '재심사'] as AuditContractType[]).map(type => (
                 <button
                   key={type}
                   type="button"
@@ -555,36 +550,48 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   {type === '정기사후' ? '사후관리 (1·2차)' :
                    type === '갱신심사' ? '갱신심사 (재인)' :
                    type === '신규인증' ? '최초 (신규)' :
-                   type === '인증변경' ? '인증변경' : type}
+                   type === '재심사' ? '재심사' : type}
                 </button>
               ))}
             </div>
             
-            {/* 서식 작성 규칙 안내 바 */}
-            <div className="bg-slate-50 border border-slate-200 rounded p-2 text-[10.5px] text-slate-600 leading-tight">
-              {receptionType === '정기사후' && (
-                <p>💡 <strong>1·2차 사후관리</strong>: 계획서 및 청구서 중심 작성 (표준계약서 및 설문서 탭 작성제외)</p>
-              )}
-              {receptionType === '갱신심사' && (
-                <p className="text-indigo-900">💡 <strong>갱신심사</strong>: 표준계약서(F16-004), 계획서, 청구서, 설문서 및 <strong>갱신추가설문서</strong> 전체 활성화</p>
-              )}
-              {receptionType === '신규인증' && (
-                <p className="text-cyan-900">💡 <strong>신규(최초)인증</strong>: 표준계약서(F16-004), 심사계획서, 청구서, 심사설문서 작성</p>
-              )}
-              {receptionType === '전환심사' && (
-                <p className="text-cyan-900">💡 <strong>전환심사</strong>: 표준계약서(F16-004), 심사계획서, 청구서, 심사설문서 작성</p>
-              )}
-              {receptionType === '규격추가' && (
-                <p className="text-purple-900">💡 <strong>규격추가</strong>: 심사계획서, 청구서, 심사설문서 및 <strong>인증변경신청서(F19-002)</strong> 활성화</p>
-              )}
-              {receptionType === '인증변경' && (
-                <p className="text-purple-900">💡 <strong>인증변경</strong>: 심사계획서, 청구서, 심사설문서 및 <strong>인증변경신청서(F19-002)</strong> 활성화</p>
+            {/* 인증변경사항 유무 라디오 단추 (가운데 정렬) */}
+            <div className="flex flex-wrap items-center justify-center gap-3 text-[12px] pt-2 pb-1">
+              <span className="font-bold text-slate-700">인증변경사항 유무:</span>
+              <div className="flex items-center gap-3">
+                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-800 font-semibold hover:text-purple-700">
+                  <input
+                    type="radio"
+                    name="hasCertChange"
+                    value="yes"
+                    checked={hasCertChange === true}
+                    onChange={() => setHasCertChange(true)}
+                    className="w-3.5 h-3.5 text-purple-600 accent-purple-600 cursor-pointer"
+                  />
+                  <span>유</span>
+                </label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-800 font-semibold hover:text-slate-900">
+                  <input
+                    type="radio"
+                    name="hasCertChange"
+                    value="no"
+                    checked={hasCertChange === false}
+                    onChange={() => setHasCertChange(false)}
+                    className="w-3.5 h-3.5 text-slate-600 accent-slate-600 cursor-pointer"
+                  />
+                  <span>무</span>
+                </label>
+              </div>
+              {hasCertChange && (
+                <span className="text-[11px] text-purple-700 font-bold">
+                  (인증변경신청서 F19-002 활성화)
+                </span>
               )}
             </div>
           </div>
 
           {/* 2. 고객사 DB 호출 또는 신규 입력 */}
-          {receptionType === '정기사후' || receptionType === '규격추가' || receptionType === '갱신심사' || receptionType === '인증변경' ? (
+          {receptionType === '정기사후' || receptionType === '규격추가' || receptionType === '갱신심사' || receptionType === '인증변경' || receptionType === '재심사' ? (
             <div className="space-y-2 border-t border-slate-200 pt-3">
               <div className="flex items-center justify-between">
                 <label className="font-bold text-slate-900">2. 고객사 DB 호출</label>
@@ -676,6 +683,17 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   <span className="font-mono text-slate-900 font-semibold">QE240207 / OH240235</span>
                 </div>
               </div>
+
+              {/* DB 호출된 인증범위 요약 박스 (동일 디자인) */}
+              <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1 text-[11px] text-slate-700 mt-1.5">
+                <div className="flex justify-between items-center pb-0.5 border-b border-slate-200/80">
+                  <span className="text-slate-500 font-bold">인증범위:</span>
+                  <span className="text-[10px] text-cyan-800 font-semibold">IAF {selectedCompany.iafCode || '17'}</span>
+                </div>
+                <div className="text-slate-900 font-medium leading-relaxed break-keep pt-0.5">
+                  {selectedCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
+                </div>
+              </div>
             </div>
           ) : (
             /* 신규/전환 기업 직접 입력란 */
@@ -728,6 +746,19 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs"
                   />
                 </div>
+                <div>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[11px] font-bold text-slate-700">인증범위 (국문/영문):</span>
+                    <span className="text-[10px] text-slate-400">선택사항 (미입력 가능)</span>
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="인증범위 입력 (미입력 시 계획서·청구서에 현장심사 시 확정 안내문이 자동 기재됩니다)"
+                    value={newScope}
+                    onChange={(e) => setNewScope(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs resize-none placeholder:text-slate-400 focus:bg-white focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -761,6 +792,41 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   value={currentEmployeeCount}
                   onChange={(e) => setCurrentEmployeeCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
                   className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-slate-500 text-center"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 심사코드 (IAF / EA / KSIC) */}
+          <div className="space-y-1.5 border-t border-slate-200 pt-3">
+            <label className="font-bold text-slate-900 flex items-center gap-1">
+              <Database className="w-3.5 h-3.5 text-slate-600" />
+              <span>심사코드 (IAF / EA / KSIC)</span>
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              <div>
+                <span className="text-[10px] text-slate-500 block">IAF 코드</span>
+                <input
+                  type="text"
+                  value={activeCompany.iafCode || '17'}
+                  readOnly={receptionType !== '신규인증' && receptionType !== '전환심사'}
+                  className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-900"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block">EA 코드</span>
+                <input
+                  type="text"
+                  defaultValue="17"
+                  className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-900"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block">KSIC</span>
+                <input
+                  type="text"
+                  defaultValue="C2431"
+                  className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-900"
                 />
               </div>
             </div>
@@ -812,15 +878,22 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 </div>
               </div>
 
-              {/* 주말/휴일 심사 감지 안내 */}
+              {/* 주말/공휴일/임시공휴일 심사 감지 안내 */}
               {isWeekendAudit ? (
-                <div className="text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>주말(토/일) 포함 일정 ➔ <strong>[휴일근무확인서]</strong> 탭 활성화됨</span>
+                <div className="text-[10.5px] font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded p-1.5 flex items-start gap-1.5 shadow-2xs">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="leading-tight">
+                    <div>
+                      <span className="text-amber-700 font-extrabold">[휴일 감지: {holidayCheck.summaryText}]</span>
+                    </div>
+                    <div className="text-[10px] text-amber-800 font-medium mt-0.5">
+                      ➔ <strong>[휴일근무확인서(F19-003)]</strong> 탭이 자동 활성화되었습니다.
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-[10px] text-slate-500 pl-1">
-                  평일 심사 일정 (주말 미포함 시 휴일근무확인서 작성 제외)
+                  평일 심사 일정 (주말/공휴일 미포함 시 휴일근무확인서 작성 제외)
                 </div>
               )}
 
@@ -1621,7 +1694,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr>
                           <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">인 증 범 위</th>
                           <td className="p-2 leading-relaxed text-slate-900" colSpan={3}>
-                            {activeCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
+                            {activeCompany.scope ? (
+                              <span>{activeCompany.scope}</span>
+                            ) : (
+                              <span className="text-amber-800 font-bold bg-amber-50 px-2.5 py-1 rounded border border-amber-300 inline-block text-[11px]">
+                                ※ 심사시 인증범위를 반드시 기록하십시오 (신규 심사)
+                              </span>
+                            )}
                           </td>
                         </tr>
                       </tbody>
@@ -2087,7 +2166,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr className="border-b border-slate-300">
                           <th className="w-32 bg-slate-100 p-2 border-r border-slate-300 font-bold text-left">인 증 범 위</th>
                           <td className="p-2 font-medium text-slate-900">
-                            {activeCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
+                            {activeCompany.scope ? (
+                              <span>{activeCompany.scope}</span>
+                            ) : (
+                              <span className="text-teal-800 font-bold bg-teal-50 px-2.5 py-1 rounded border border-teal-300 inline-block text-[11px]">
+                                ※ 심사시 심사원에게 인증범위를 알려 주십시오 (신규 심사)
+                              </span>
+                            )}
                           </td>
                         </tr>
                         <tr className="border-b border-slate-300">

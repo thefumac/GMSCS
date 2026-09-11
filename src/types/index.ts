@@ -125,7 +125,7 @@ export interface CertContract {
   status: '유효' | '만료임박' | '만료' | '정지';
 }
 
-export type AuditContractType = '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경';
+export type AuditContractType = '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경' | '재심사';
 
 export interface CertChangeApplicationData {
   appliedDate: string;
@@ -195,7 +195,7 @@ export interface AuditContractRecord {
   companyId: string;
   companyName: string;
   contractType: AuditContractType;
-  receptionType?: '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경';
+  receptionType?: '신규인증' | '전환심사' | '정기사후' | '갱신심사' | '규격추가' | '인증변경' | '재심사';
   standards: StandardCode[];
   addedStandards?: StandardCode[]; // 규격추가 시
   changeDetails?: string; // 인증변경 시 사유/내용
@@ -597,3 +597,60 @@ export interface PreviousAuditNcCheck {
   verifiedAt: string;
 }
 export type { CommitteeScheduleItem } from '../utils/committeeSchedule';
+
+// ============================================================
+// OKESG 연동 대비 환경·안전 규제 DB 모델
+// ============================================================
+export interface CompanyEhsCompliance {
+  companyId: string;
+  // 안전관리자
+  safetyManager: {
+    appointed: boolean;
+    name?: string;
+    certType?: string; // 자격 종류 (산업안전기사, 산업안전산업기사 등)
+    certNumber?: string;
+    phone?: string;
+  };
+  // 대기배출시설
+  airEmissionGrade: '해당없음' | '1종' | '2종' | '3종' | '4종' | '5종';
+  airEmissionSubstances?: string; // 주요 배출물질
+  // 수질배출시설
+  waterEmissionGrade: '해당없음' | '1종' | '2종' | '3종' | '4종' | '5종';
+  waterDailyVolume?: string; // 일일 배출량
+  // 소방안전관리자
+  fireSafetyGrade: '해당없음' | '특급' | '1급' | '2급' | '3급';
+  fireSafetyManagerName?: string;
+  // 유해화학물질
+  toxicChemicalHandling: boolean;
+  toxicChemicalDetails?: string;
+  // 폐기물 배출자 신고
+  wasteDischargeType: '해당없음' | '일반폐기물' | '지정폐기물';
+  wasteDischargeDetails?: string;
+  // 기타 인허가 사항
+  otherPermits?: string;
+  // 메타
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+// 최초심사 증빙 서류 업로드 모델
+export interface ProofDocument {
+  docType: string; // '사업자등록증' | '공정도' | '조직도' | '국민연금가입자명부' | '환경인허가증' | '기타'
+  fileName?: string;
+  fileUrl?: string;
+  uploaded: boolean;
+  uploadedAt?: string;
+  fileSize?: number;
+  verified?: boolean;
+  verifiedBy?: string;
+  notes?: string;
+}
+
+export interface InitialAuditProofDocuments {
+  companyId: string;
+  contractId: string;
+  documents: ProofDocument[];
+  totalRequired: number;
+  totalUploaded: number;
+  allVerified: boolean;
+}

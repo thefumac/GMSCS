@@ -38,8 +38,10 @@ import { Auditor, Company, AuditProject, CertContract, AuditorSettlement, AuditR
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 
 export type AuditLifecycleState =
-  | '심사 중'
-  | '심사준비'
+  | '일정·계획'
+  | '보고서작성'
+  | '심의중'
+  | '비용정산중'
   | '인증유지';
 
 export type SettlementLifecycleState =
@@ -145,6 +147,7 @@ interface AuditorPortalProps {
   onNavigateToReports?: () => void;
   onRequestReassignment?: (projectId: string, log: any) => void;
   onOpenEmailModal: (recipientName?: string, recipientEmail?: string, templateType?: any) => void;
+  onOpenReportWorkbench?: (companyId: string) => void;
 }
 
 // 심사 단계 판별
@@ -234,41 +237,41 @@ export const DEFAULT_AUDIT_PREP_CONFIG: AuditPrepThresholdConfig = {
   defaultPrepDays: 90,
 };
 
-// 3단계 생애주기 판별 (심사 중 > 심사준비 > 인증유지)
+// 실무 중심 생애주기 판별 (보고서작성 > 일정·계획 > 심의중 > 비용정산중 > 인증유지)
 function computeAuditState(
   ddayDays: number,
-  stageText: string,
+  _stageText: string,
   project?: AuditProject,
-  prepConfig: AuditPrepThresholdConfig = DEFAULT_AUDIT_PREP_CONFIG,
+  settlement?: AuditorSettlement,
   compName: string = ''
 ): AuditLifecycleState {
-  // 송이실업은 이번 주 갱신심사 완료 -> 인증유지
+  // 송이실업은 갱신심사 및 정산 완료 -> 인증유지
   if (compName.includes('송이실업')) {
     return '인증유지';
   }
 
   if (project) {
     const pStatus = project.status;
-    if (['심사진행중', '보고서작성', '보고서제출', '위원회심의'].includes(pStatus)) {
-      // 인증발행된 프로젝트는 이미 완료된 상태
-      if (pStatus === '인증발행') return '인증유지';
-      return '심사 중';
+    if (['심사진행중', '보고서작성'].includes(pStatus)) {
+      return '보고서작성';
+    }
+    if (['보고서제출', '위원회심의'].includes(pStatus)) {
+      return '심의중';
     }
     if (['계획수립', '계획서발송'].includes(pStatus)) {
-      return '심사준비';
+      return '일정·계획';
+    }
+    if (['인증발행', '심의완료'].includes(pStatus)) {
+      if (settlement && (settlement.payoutStatus === '정산대기' || settlement.payoutStatus === '보류')) {
+        return '비용정산중';
+      }
+      return '인증유지';
     }
   }
 
-  const thresholdDays = stageText === '갱신'
-    ? prepConfig.after2ndSurveillanceDays
-    : prepConfig.defaultPrepDays;
-
-  if (ddayDays < 0) {
-    return '심사준비';
-  }
-
-  if (ddayDays <= thresholdDays) {
-    return '심사준비';
+  // 심사 예정일 D-30일 이내에 진입한 경우 일정·계획 단계로 표시
+  if (ddayDays >= 0 && ddayDays <= 30) {
+    return '일정·계획';
   }
 
   return '인증유지';
@@ -430,6 +433,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   onOpenReport,
   onOpenPdfReport,
   onOpenEmailModal,
+  onOpenReportWorkbench,
 }) => {
   // 5대 탭 메뉴:
   // 1. ledger: 나의 심사 업체 대장
@@ -574,7 +578,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
         }
 
         const dday = calculateDDay(dueDate);
-        const auditState = computeAuditState(dday.days, stageText, project, prepConfig, company.companyName);
+        const auditState = computeAuditState(dday.days, stageText, project, settlement, company.companyName);
 
         const prepDays = stageText === '갱신' ? prepConfig.after2ndSurveillanceDays : prepConfig.defaultPrepDays;
         const dueObj = new Date(dueDate);
@@ -613,6 +617,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       const compName = company.companyName;
       const contract = contracts.find(ct => ct.companyId === company.id);
       const project = projects.find(p => p.companyId === company.id);
+      const settlement = settlements.find(s => s.projectId === project?.id);
       const compStatus = allCompanyItems.find(item => item.company.id === company.id)!;
 
       const auditorRole = getAuditorRole(company);
@@ -625,7 +630,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       if (schedules && schedules.length > 0) {
         schedules.forEach((sch, sIdx) => {
           const dday = calculateDDay(sch.dueDate);
-          const auditState = computeAuditState(dday.days, sch.stageText, project, prepConfig, compName);
+          const auditState = computeAuditState(dday.days, sch.stageText, project, settlement, compName);
           const isIntegrated = sch.standards.length > 1;
 
           // 규격명 정제 및 구버전 감지
@@ -688,7 +693,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
         const stageText = getAuditStageText(company, contract, project);
         const dueDate = contract?.surveillanceDueDate || contract?.validUntil || '2027-06-20';
         const dday = calculateDDay(dueDate);
-        const auditState = computeAuditState(dday.days, stageText, project, prepConfig, compName);
+        const auditState = computeAuditState(dday.days, stageText, project, settlement, compName);
 
         const rawStdStr = (company as any).standards || 'ISO 9001:2015';
         const standardsList = rawStdStr.split(/[/,;]+/).map((s: string) => cleanStandardName(s)).filter(Boolean);
@@ -774,10 +779,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     return counts;
   }, [auditScheduleRows]);
 
-  // 5. 상단 실시간 심사 진행 알림 (테이블 상태와 100% 일치: 심사준비 또는 심사 중인 건만 정확히 노출)
+  // 5. 상단 실시간 심사 진행 알림 (진행 중인 심사 및 일정/정산 대상)
   const activeAlertItems = useMemo(() => {
     return auditScheduleRows
-      .filter(r => ['심사준비', '심사 중'].includes(r.auditState))
+      .filter(r => r.auditState !== '인증유지')
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   }, [auditScheduleRows]);
 
@@ -803,15 +808,17 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     });
   }, [auditScheduleRows, searchTerm, selectedStandard, selectedStateFilter]);
 
-  // 7. 정렬 (초기 기본: 심사 중 -> 심사준비 -> 인증유지)
+  // 7. 정렬 (초기 기본: 보고서작성 -> 일정·계획 -> 심의중 -> 비용정산중 -> 인증유지)
   const sortedRows = useMemo(() => {
     return [...filteredRows].sort((a, b) => {
       switch (sortField) {
         case 'auditState': {
           const statePriority: Record<AuditLifecycleState, number> = {
-            '심사 중': 1,
-            '심사준비': 2,
-            '인증유지': 3,
+            '보고서작성': 1,
+            '일정·계획': 2,
+            '심의중': 3,
+            '비용정산중': 4,
+            '인증유지': 5,
           };
           const pA = statePriority[a.auditState] || 99;
           const pB = statePriority[b.auditState] || 99;
@@ -990,7 +997,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               id: `${row.rowId}-due`,
               title: row.companyName,
               stage: row.stageText,
-              type: row.auditState === '심사준비' ? 'prep' : 'scheduled',
+              type: row.auditState === '일정·계획' ? 'prep' : 'scheduled',
               extraNote: `예정 (${row.auditorRole})`,
               compStatus: row.companyWithStatus
             });
@@ -1202,17 +1209,41 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     };
   }, [calcEmpCount, calcStandards, calcStage]);
 
-  // 스타일 헬퍼
+  // 진행상태 텍스트 클릭 시 스마트 라우팅 (계획서, 심사보고서 작성 새탭, 기업정보 팝업, 정산 등)
+  const handleStatusBadgeClick = (row: AuditScheduleRow) => {
+    const state = row.auditState;
+    if (state === '일정·계획') {
+      // 일정·계획 단계: 심사계획서 및 청구내역서 모달 열기
+      setPlanInvoiceModalCompany(row.companyWithStatus);
+    } else if (state === '보고서작성') {
+      // 보고서작성 단계: 심사보고서 작성 전용 새 탭 오픈
+      if (typeof window !== 'undefined') {
+        window.open(`#workbench/${encodeURIComponent(row.companyId)}`, '_blank');
+      }
+      onOpenReportWorkbench?.(row.companyId);
+    } else if (state === '비용정산중') {
+      // 비용정산 단계: 비용정산 탭으로 전환
+      setActiveTab('settlement');
+    } else {
+      // 심의중 / 인증유지 / 기타: 기업 정보 및 전체 심사이력 팝업 직접 오픈
+      setHistoryModalCompany(row.companyWithStatus);
+    }
+  };
+
+  // 스타일 헬퍼 (버튼 디자인 없는 단정하고 세련된 텍스트 링크 스타일)
   const getAuditStateTextClass = (state: AuditLifecycleState) => {
     switch (state) {
-      case '심사 중':
-        return 'text-rose-700 font-black';
-      case '심사준비':
-        return 'text-amber-700 font-extrabold';
+      case '보고서작성':
+        return 'text-rose-700 font-bold hover:underline';
+      case '일정·계획':
+        return 'text-cyan-800 font-bold hover:underline';
+      case '심의중':
+        return 'text-purple-700 font-semibold hover:underline';
+      case '비용정산중':
+        return 'text-amber-700 font-semibold hover:underline';
       case '인증유지':
-        return 'text-emerald-700 font-bold';
       default:
-        return 'text-slate-700 font-semibold';
+        return 'text-emerald-700 font-medium hover:underline';
     }
   };
 
@@ -1448,8 +1479,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 className="py-1.5 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 font-medium focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
               >
                 <option value="all">진행상태 (전체)</option>
-                <option value="심사 중">심사 중</option>
-                <option value="심사준비">심사준비</option>
+                <option value="보고서작성">보고서작성</option>
+                <option value="일정·계획">일정·계획</option>
+                <option value="심의중">심의중</option>
+                <option value="비용정산중">비용정산중</option>
                 <option value="인증유지">인증유지</option>
               </select>
 
@@ -1566,13 +1599,43 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     </td>
                   </tr>
                 ) : (
-                  sortedRows.map((row, idx) => (
-                    <tr key={row.rowId} className="hover:bg-slate-50/80 transition">
-                      {/* 1. 진행상태 (해당 심사일정의 실제 상태 표시) */}
+                  sortedRows.map((row, idx) => {
+                    const isTodayAudit = row.auditState === '보고서작성' || row.dueDate === '2026-09-10' || row.recentAuditDate.includes('2026-09-10');
+                    return (
+                    <tr 
+                      key={row.rowId} 
+                      className={`transition ${
+                        isTodayAudit 
+                          ? 'bg-amber-50/60 hover:bg-amber-100/70 border-l-4 border-l-amber-500' 
+                          : 'hover:bg-slate-50/80'
+                      }`}
+                    >
+                      {/* 1. 진행상태 (버튼 디자인 없는 단정하고 세련된 텍스트 링크) */}
                       <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
-                        <span className={`text-[11.5px] font-medium ${getAuditStateTextClass(row.auditState)}`}>
-                          {row.auditState}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleStatusBadgeClick(row)}
+                          className={`inline-flex items-center gap-1.5 text-[11.5px] cursor-pointer transition ${getAuditStateTextClass(row.auditState)}`}
+                          title={
+                            row.auditState === '보고서작성'
+                              ? '심사보고서 작성 (새 탭에서 열기)'
+                              : row.auditState === '일정·계획'
+                              ? '심사계획서 및 청구내역서 확인'
+                              : row.auditState === '비용정산중'
+                              ? '비용정산 내역 확인'
+                              : '기업 정보 및 심사 이력 팝업 열기'
+                          }
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            row.auditState === '보고서작성' ? 'bg-rose-600 animate-pulse' :
+                            row.auditState === '일정·계획' ? 'bg-cyan-600' :
+                            row.auditState === '심의중' ? 'bg-purple-600' :
+                            row.auditState === '비용정산중' ? 'bg-amber-600' :
+                            'bg-emerald-600'
+                          }`} />
+                          <span>{row.auditState}</span>
+                          {row.auditState === '보고서작성' && <ExternalLink className="w-2.5 h-2.5 opacity-80 shrink-0" />}
+                        </button>
                       </td>
 
                       {/* 2. No */}
@@ -1693,7 +1756,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
