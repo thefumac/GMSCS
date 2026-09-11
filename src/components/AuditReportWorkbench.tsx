@@ -3489,10 +3489,16 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         ◆ 고객현황 ◆
                       </div>
 
-                      <table className="w-full border-collapse border border-slate-800 text-xs">
+                      <table className="w-full border-collapse border border-slate-800 text-xs table-fixed">
+                        <colgroup>
+                          <col className="w-[15%]" />
+                          <col className="w-[35%]" />
+                          <col className="w-[14%]" />
+                          <col className="w-[36%]" />
+                        </colgroup>
                         <tbody>
                           <tr className="border-b border-slate-400">
-                            <th className="w-28 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고 객 명</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">고 객 명</th>
                             <td className="p-1.5 border-r border-slate-400 font-bold">
                               <input
                                 type="text"
@@ -3501,7 +3507,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 className="w-full bg-transparent px-1 py-0.5 text-xs font-bold"
                               />
                             </td>
-                            <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">대표자</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">대표자</th>
                             <td className="p-1.5">
                               <input
                                 type="text"
@@ -3561,7 +3567,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 className="w-full bg-transparent px-1 py-0.5 text-xs"
                               />
                             </td>
-                            <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">FAX</th>
+                            <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold">FAX</th>
                             <td className="p-1.5">
                               <input
                                 type="text"
@@ -3670,7 +3676,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 <input type="text" value={stage2Data.auditDateEnd} onChange={(e) => setStage2Data({...stage2Data, auditDateEnd: e.target.value})} className="w-24 border-b border-slate-400 text-center bg-transparent font-mono" />
                               </div>
                             </td>
-                            <td className="w-24 p-1.5 text-center font-bold">
+                            <td className="p-1.5 text-center font-bold">
                               <input type="text" value={stage2Data.auditMd} onChange={(e) => setStage2Data({...stage2Data, auditMd: e.target.value})} className="w-10 border-b border-slate-400 text-center font-bold bg-transparent" /> M/D
                             </td>
                           </tr>
@@ -3684,7 +3690,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                                 className="w-full bg-transparent p-1 text-xs leading-relaxed focus:outline-none resize-none"
                               />
                             </td>
-                            <td className="w-28 p-1.5 bg-slate-50/50">
+                            <td className="p-1.5 bg-slate-50/50">
                               <div className="font-bold text-center border-b border-slate-300 pb-1 mb-1">인증코드</div>
                               <input
                                 type="text"
