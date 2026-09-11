@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Building2, 
   X, 
@@ -157,37 +157,70 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
 
   if (!isOpen || !company) return null;
 
-  const contract = contracts.find(c => c.companyId === company.id);
-  const matchingProjects = projects.filter(p => p.companyId === company.id || p.companyName === company.companyName);
+  // 실시간 로컬스토리지 및 심사보고서(인정범위확인서) 변경분 병합
+  const effectiveCompany = useMemo(() => {
+    if (!company) return company;
+    try {
+      const compId = company.id || company.companyName;
+      // 1순위: 보고서 팩에서 저장된 SCOPE_CONFIRM
+      const packScope = localStorage.getItem(`GMSCS_PACK_FULL_${compId}_SCOPE_CONFIRM`);
+      let scopeData: any = {};
+      if (packScope) {
+        const parsed = JSON.parse(packScope);
+        scopeData = {
+          scope: parsed.scopeKor,
+          scopeEng: parsed.scopeEng,
+          companyNameEng: parsed.companyNameEng,
+          addressEng: parsed.addressEng,
+          scopeUpdatedAt: parsed.updatedAt
+        };
+      }
+
+      // 2순위: gmscs_company_overrides
+      const saved = localStorage.getItem('gmscs_company_overrides');
+      const overrides = saved ? JSON.parse(saved) : {};
+      const compOverride = overrides[compId] || {};
+
+      return {
+        ...company,
+        ...compOverride,
+        ...scopeData
+      };
+    } catch (e) {}
+    return company;
+  }, [company, isOpen]);
+
+  const contract = contracts.find(c => c.companyId === effectiveCompany.id);
+  const matchingProjects = projects.filter(p => p.companyId === effectiveCompany.id || p.companyName === effectiveCompany.companyName);
   const latestProject = matchingProjects[0];
-  const matchingAuditContract = auditContracts.find(c => c.companyId === company.id || c.companyName === company.companyName);
+  const matchingAuditContract = auditContracts.find(c => c.companyId === effectiveCompany.id || c.companyName === effectiveCompany.companyName);
   
-  const stageText = getAuditStage(company, contract, latestProject);
-  const stdAndCerts = getStandardsWithCertNo(company, contract);
+  const stageText = getAuditStage(effectiveCompany, contract, latestProject);
+  const stdAndCerts = getStandardsWithCertNo(effectiveCompany, contract);
   const dueDate = contract?.surveillanceDueDate || contract?.validUntil || latestProject?.endDate || '2026-10-31';
   const dday = calculateDDay(dueDate);
 
   // 배정 심사원
-  const managingAuditor = allAuditors.find(a => a.id === company.managingAuditorId || a.id === latestProject?.leadAuditorId) 
+  const managingAuditor = allAuditors.find(a => a.id === effectiveCompany.managingAuditorId || a.id === latestProject?.leadAuditorId) 
     || allAuditors.find(a => a.name === latestProject?.leadAuditorName)
-    || { name: company.managingAuditorId || '김홍덕', grade: '선임심사원', mobile: '010-3797-1563', email: 'auditor@gmscs.co.kr' };
+    || { name: effectiveCompany.managingAuditorId || '김홍덕', grade: '선임심사원', mobile: '010-3797-1563', email: 'auditor@gmscs.co.kr' };
 
   // Effective AuditContractRecord for document display
   const effectiveContractRecord: AuditContractRecord = matchingAuditContract || {
-    id: `CTR-${company.id}`,
-    contractNumber: `CTR-${company.bizNumber ? company.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : '202601'}`,
-    companyId: company.id,
-    companyName: company.companyName,
+    id: `CTR-${effectiveCompany.id}`,
+    contractNumber: `CTR-${effectiveCompany.bizNumber ? effectiveCompany.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : '202601'}`,
+    companyId: effectiveCompany.id,
+    companyName: effectiveCompany.companyName,
     contractType: (stageText.includes('최초') ? '신규인증' : stageText.includes('갱신') ? '갱신심사' : '정기사후') as any,
     standards: stdAndCerts.map(s => s.std as any),
-    employeeCount: company.totalEmployees || 48,
+    employeeCount: effectiveCompany.totalEmployees || 48,
     riskLevel: 'Medium',
     contractDate: contract?.initialCertDate || '2026-09-10',
     plannedAuditStartDate: latestProject?.startDate || '2026-10-24',
     contractStatus: (latestProject?.status === '계획수립' ? '진행중' : '계약체결') as any,
     leadAuditorId: (managingAuditor as any).id || 'AUD-001',
     leadAuditorName: managingAuditor.name || '김홍덕',
-    agency: company.consultant || company.agency || '직영',
+    agency: effectiveCompany.consultant || effectiveCompany.agency || '직영',
     kabStandardMd: 2.0,
     appliedMd: 2.0,
     standardRatePerMd: 800000,
@@ -418,38 +451,38 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                   <div className="space-y-2">
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">회사명:</span>
-                      <span className="text-slate-900 font-medium">{company.companyName}</span>
+                      <span className="text-slate-900 font-medium">{effectiveCompany.companyName}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">대표자명:</span>
-                      <span className="text-slate-900 font-normal">{company.ceoName}</span>
+                      <span className="text-slate-900 font-normal">{effectiveCompany.ceoName}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">사업자등록번호:</span>
-                      <span className="font-mono text-slate-800 font-normal">{company.bizNumber || '214-88-92810'}</span>
+                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.bizNumber || '214-88-92810'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">업종 / 주요생산품:</span>
-                      <span className="text-slate-800 font-normal">{company.industry || '자동차 및 선박용 주조물 제조'}</span>
+                      <span className="text-slate-800 font-normal">{effectiveCompany.industry || '자동차 및 선박용 주조물 제조'}</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">실무 담당자:</span>
-                      <span className="text-slate-900 font-medium">{company.contactPerson || '정순호 이사'}</span>
+                      <span className="text-slate-900 font-medium">{effectiveCompany.contactPerson || '정순호 이사'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">담당자 연락처:</span>
-                      <span className="font-mono text-slate-800 font-normal">{company.contactPhone || '054-955-9197'}</span>
+                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.contactPhone || '054-955-9197'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">담당자 이메일:</span>
-                      <span className="font-mono text-cyan-800 font-normal">{company.contactEmail || 'quality@kwonmetal.co.kr'}</span>
+                      <span className="font-mono text-cyan-800 font-normal">{effectiveCompany.contactEmail || 'quality@kwonmetal.co.kr'}</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">소재지 주소:</span>
-                      <span className="text-slate-800 font-normal truncate max-w-[240px]">{company.address}</span>
+                      <span className="text-slate-800 font-normal truncate max-w-[240px]">{effectiveCompany.address}</span>
                     </div>
                   </div>
                 </div>
@@ -458,25 +491,32 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
               {/* 1-2. 인증범위 요약 박스 (국문 & 영문) */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-indigo-700" />
-                    <span>공식 인증범위 (Certification Scope)</span>
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-indigo-700" />
+                      <span>공식 인증범위 (Certification Scope)</span>
+                    </h4>
+                    {(effectiveCompany as any).scopeUpdatedAt && (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded border border-emerald-300">
+                        인정범위 확인서 최종 반영됨 ({(effectiveCompany as any).scopeUpdatedAt})
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[11px] text-indigo-900 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                    IAF Code: {company.iafCode || '17'}
+                    IAF Code: {effectiveCompany.iafCode || '17'}
                   </span>
                 </div>
                 <div className="space-y-2">
                   <div>
                     <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[국문 인증범위]</span>
-                    <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-800 font-normal leading-relaxed">
-                      {company.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
+                    <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-800 font-medium leading-relaxed">
+                      {effectiveCompany.scope || '자동차 및 선박기계, 공작기계, 건설기계, 일반산업기계용 주조물 제작'}
                     </p>
                   </div>
                   <div>
                     <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[영문 인증범위 (English Scope)]</span>
                     <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 font-mono text-[11px] font-normal leading-relaxed">
-                      Manufacture of Castings for Automobile, Marine, Machine Tools, Construction Machinery and General Industrial Machinery.
+                      {(effectiveCompany as any).scopeEng || 'Manufacture of Castings for Automobile, Marine, Machine Tools, Construction Machinery and General Industrial Machinery.'}
                     </p>
                   </div>
                 </div>

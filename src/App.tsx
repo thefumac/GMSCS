@@ -158,14 +158,31 @@ export function App() {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('gmscs_auditor_overrides');
-        const overrides: Record<string, Partial<Auditor>> = saved ? JSON.parse(saved) : {};
+        const overrides = saved ? JSON.parse(saved) : {};
         overrides[updatedAuditor.id] = updatedAuditor;
         localStorage.setItem('gmscs_auditor_overrides', JSON.stringify(overrides));
       } catch (e) {
-        console.error('Failed to persist auditor override', e);
+        console.error('Failed to save auditor profile override', e);
       }
     }
   };
+
+  // 기업 정보 (인증범위 등) 실시간 업데이트 핸들러
+  const handleUpdateCompany = (updated: Company) => {
+    setCompanies(prev => prev.map(c => (c.id === updated.id || c.companyName === updated.companyName) ? { ...c, ...updated } : c));
+    setHistoryModalCompany(prev => (prev && (prev.id === updated.id || prev.companyName === updated.companyName)) ? { ...prev, ...updated } : prev);
+  };
+
+  React.useEffect(() => {
+    const handleCompEvent = (e: any) => {
+      if (e.detail) {
+        handleUpdateCompany(e.detail);
+      }
+    };
+    window.addEventListener('gmscs_company_updated', handleCompEvent);
+    return () => window.removeEventListener('gmscs_company_updated', handleCompEvent);
+  }, []);
+
 
   // 현재 로그인한 심사원 객체 및 권한 체계
   const currentAuditorObj: Auditor = auditors.find(a => a.id === currentUserRole) 
@@ -995,6 +1012,7 @@ export function App() {
             onSave={(_data) => {
               alert(`[${targetComp.companyName}] 심사보고서 및 증빙 서류가 임시저장/보관되었습니다.`);
             }}
+            onUpdateCompany={handleUpdateCompany}
           />
         </div>
       );
@@ -1471,6 +1489,7 @@ export function App() {
               onSave={(_data) => {
                 alert(`[${workbenchCompany.companyName}] 심사보고서 및 증빙 서류가 임시저장/보관되었습니다.`);
               }}
+              onUpdateCompany={handleUpdateCompany}
             />
           </div>
         </div>

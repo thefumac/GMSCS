@@ -50,6 +50,7 @@ interface AuditReportWorkbenchProps {
   auditors?: Auditor[];
   onClose: () => void;
   onSave?: (data: any) => void;
+  onUpdateCompany?: (updated: Company) => void;
 }
 
 export interface EmailSignatureRecord {
@@ -105,9 +106,10 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
   auditor,
   auditors = [],
   onClose,
-  onSave
+  onSave,
+  onUpdateCompany
 }) => {
-  const [activeDocTab, setActiveDocTab] = useState<DocTabKey>('stage1');
+  const [activeDocTab, setActiveDocTab] = useState<DocTabKey>('all');
   const [proofDocs, setProofDocs] = useState<ProofDocument[]>(initialProofDocs);
 
   // 로컬 스토리지 키
@@ -566,56 +568,133 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
     );
   };
 
-  // 탭 목록 정의 (PDF 페이지 매핑)
+  // 17p 인정범위 확인서 (인증서 기재사항 확인서) 편집 데이터 State
+  const [scopeConfirmData, setScopeConfirmData] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`${storageKey}_SCOPE_CONFIRM`);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    const compAny = company as any;
+    return {
+      certNo: (contract as any)?.certNumber || contract?.contractNumber || compAny.certNo || 'GMS-2609-08',
+      companyNameKor: company.companyName,
+      companyNameEng: compAny.companyNameEng || compAny.engName || 'WOOJIN TECH CO., LTD.',
+      ceoName: company.ceoName || '박진용',
+      addressKor: company.address || '경기 군포시 공단로140번길 46, 206호',
+      addressEng: compAny.addressEng || compAny.engAddress || '#206, 46, Gongdan-ro 140beon-gil, Gunpo-si, Gyeonggi-do, Korea',
+      factoryAddressKor: compAny.factoryAddress || '',
+      factoryAddressEng: compAny.factoryAddressEng || '',
+      scopeKor: compAny.scope || company.industry || '금속 절삭가공 제품의 제조(AL가공, SUS가공, 광학부품, 산업용 카메라부품)',
+      scopeEng: compAny.scopeEng || 'Manufacture of metal machining parts (AL machining, SUS machining, optical parts, camera parts)',
+      iafCode: compAny.iafCode || '17',
+      standards: contract?.standards?.join(', ') || compAny.standards || 'ISO 9001:2015, ISO 14001:2015',
+      identityConfirmed: '1단계 심사 시 확인된 내용과 동일함 (확인 완료)',
+      updatedAt: '2026-09-11'
+    };
+  });
+
+  // 17p 인정범위 변경 시 전역 저장 및 기업 데이터 실시간 전파 동기화
+  const handleUpdateScopeConfirmField = (field: string, value: string) => {
+    const next = { ...scopeConfirmData, [field]: value, updatedAt: new Date().toISOString().slice(0, 10) };
+    setScopeConfirmData(next);
+    localStorage.setItem(`${storageKey}_SCOPE_CONFIRM`, JSON.stringify(next));
+
+    // 全 앱 및 기업 DB 동기화: localStorage overrides + 커스텀 이벤트 + 부모 콜백
+    try {
+      const savedOverrides = localStorage.getItem('gmscs_company_overrides');
+      const overrides = savedOverrides ? JSON.parse(savedOverrides) : {};
+      
+      const compId = company.id || company.companyName;
+      const updatedFields: Partial<Company> = {
+        scope: next.scopeKor,
+        companyName: next.companyNameKor,
+        ceoName: next.ceoName,
+        address: next.addressKor,
+        ...({
+          scopeEng: next.scopeEng,
+          companyNameEng: next.companyNameEng,
+          addressEng: next.addressEng,
+          factoryAddress: next.factoryAddressKor,
+          factoryAddressEng: next.factoryAddressEng,
+          iafCode: next.iafCode,
+          standards: next.standards,
+          scopeUpdatedAt: next.updatedAt
+        } as any)
+      };
+
+      overrides[compId] = { ...(overrides[compId] || {}), ...updatedFields };
+      localStorage.setItem('gmscs_company_overrides', JSON.stringify(overrides));
+
+      const mergedCompany: Company = { ...company, ...updatedFields };
+      if (onUpdateCompany) {
+        onUpdateCompany(mergedCompany);
+      }
+      window.dispatchEvent(new CustomEvent('gmscs_company_updated', { detail: mergedCompany }));
+    } catch (e) {
+      console.error('Failed to sync company scope updates', e);
+    }
+  };
+
+  // 1단계 작성 여부 판단 (사후 1,2차, 갱신 심사 등에서 1단계가 비어있으면 팩에서 자동 제외)
+  const isStage1Empty = useMemo(() => {
+    const findings = stage1Data.clauseFindings || {};
+    const hasFindings = Object.values(findings).some((v: any) => typeof v === 'string' && v.trim().length > 0);
+    const hasDiff = stage1Data.diffFromApp === '있다' && (stage1Data.diffDetails || '').trim().length > 0;
+    const hasCustomConclusion = (stage1Data.conclusionText || '').trim().length > 0 && !stage1Data.conclusionText.includes('시스템이 적합하게 수립');
+    return !hasFindings && !hasDiff && !hasCustomConclusion;
+  }, [stage1Data]);
+
+  // 사후/갱신 심사 시 1단계 보고서 팩 포함 여부 토글 (최초/전환은 기본 포함, 사후/갱신은 미작성 시 기본 제외)
+  const [includeStage1InPack, setIncludeStage1InPack] = useState<boolean>(() => {
+    if (auditTypeCategory === '최초' || auditTypeCategory === '전환' || auditTypeCategory === '규격추가') return true;
+    return false; // 사후/갱신 기본 제외
+  });
+
+  // 탭 목록 정의 (페이지 번호 제거, 간결하고 슬림한 탭)
   const tabConfigs = [
     {
       id: 'all' as DocTabKey,
       label: '전체 보고서 Pack',
-      sub: '(1p~20p+ 전체)',
       icon: BookOpen,
-      activeColor: 'bg-white border-t-slate-900 text-slate-950'
+      activeColor: 'bg-white border-t-2 border-t-slate-900 text-slate-950'
     },
     {
       id: 'stage1' as DocTabKey,
       label: '1단계 심사보고서',
-      sub: '(1p~6p)',
       icon: FileText,
-      activeColor: 'bg-white border-t-teal-700 text-teal-950'
+      activeColor: 'bg-white border-t-2 border-t-teal-700 text-teal-950'
     },
     {
       id: 'stage2' as DocTabKey,
       label: '2단계 심사보고서',
-      sub: '(7p~16p Note동적확장)',
       icon: ClipboardList,
-      activeColor: 'bg-white border-t-teal-700 text-teal-950'
+      activeColor: 'bg-white border-t-2 border-t-teal-700 text-teal-950'
     },
     {
       id: 'cert_confirm' as DocTabKey,
       label: '인정범위 확인서',
-      sub: '(17p Table 29)',
       icon: Award,
-      activeColor: 'bg-white border-t-cyan-700 text-cyan-950'
+      activeColor: 'bg-white border-t-2 border-t-cyan-700 text-cyan-950'
     },
     {
       id: 'plan_summary' as DocTabKey,
       label: '3년 심사계획 요약서',
-      sub: '(18p Table 30~32)',
       icon: Calendar,
-      activeColor: 'bg-white border-t-indigo-700 text-indigo-950'
+      activeColor: 'bg-white border-t-2 border-t-indigo-700 text-indigo-950'
     },
     {
       id: 'ncr' as DocTabKey,
       label: `부적합보고서 (${ncrList.length}건)`,
-      sub: '(19p~ 부적합수 동적)',
       icon: AlertTriangle,
-      activeColor: 'bg-white border-t-rose-700 text-rose-950'
+      activeColor: 'bg-white border-t-2 border-t-rose-700 text-rose-950'
     },
     {
       id: 'proof_upload' as DocTabKey,
       label: '심사 증빙 서류',
-      sub: '(첨부 6종)',
       icon: Upload,
-      activeColor: 'bg-white border-t-blue-700 text-blue-950'
+      activeColor: 'bg-white border-t-2 border-t-blue-700 text-blue-950'
     }
   ];
 
@@ -671,154 +750,123 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         <span className="text-teal-300 font-mono">1단계(1~6p) / 2단계(7~16p) / 인정확인(17p) / 계획(18p) / NCR(19p~)</span>
       </div>
 
-      {/* 2. 메인 컨텐츠 영역 (좌측 2.8 : 우측 7.2 심사관리 완벽 동일 구조) */}
+      {/* 2. 메인 컨텐츠 영역 (좌측 참고 패널 2.8 : 우측 종이 바인더 7.2) */}
       <div className="flex-1 flex overflow-hidden bg-slate-200/80">
         
         {/* ======================================================== */}
-        {/* 좌측 입력 패널 (Left Sidebar) */}
+        {/* 좌측 참고 패널 (Left Reference & Guide Sidebar) */}
         {/* ======================================================== */}
         <div className="w-80 lg:w-96 bg-slate-50 border-r border-slate-300 p-4 space-y-4 overflow-y-auto shrink-0 text-xs">
           
-          {/* 1. 심사 구분 및 접수 성격 */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
-                <span>1. 심사 구분 및 성격</span>
-              </span>
-              <span className="text-[10.5px] font-bold text-teal-800">[{auditTypeCategory}]</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-1.5">
-              {(['최초', '갱신', '사후', '전환', '규격추가', '재심사'] as const).map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setAuditTypeCategory(cat)}
-                  className={`py-1.5 px-1 text-center font-bold rounded-lg border text-xs transition-colors ${
-                    auditTypeCategory === cat
-                      ? 'bg-teal-800 text-white border-teal-800 shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                  }`}
-                >
-                  {cat === '최초' ? '최초 (신규)' : cat === '갱신' ? '갱신 (재인)' : cat === '사후' ? '사후 (1·2차)' : cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
-              <span className="font-semibold text-slate-700">인증변경사항 유무:</span>
-              <div className="space-x-3">
-                <label className="inline-flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="cert_change_toggle_sidebar"
-                    checked={hasCertChange}
-                    onChange={() => setHasCertChange(true)}
-                    className="text-teal-700"
-                  />
-                  <span>유</span>
-                </label>
-                <label className="inline-flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="cert_change_toggle_sidebar"
-                    checked={!hasCertChange}
-                    onChange={() => setHasCertChange(false)}
-                    className="text-teal-700"
-                  />
-                  <span>무</span>
-                </label>
-              </div>
-            </div>
+          <div className="bg-slate-800 text-white px-3 py-2 rounded-xl flex items-center justify-between shadow-2xs">
+            <span className="font-bold text-xs flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-teal-400" />
+              <span>심사 작성 참고 정보 (Guide)</span>
+            </span>
+            <span className="text-[10px] text-teal-300 font-mono">Reference Panel</span>
           </div>
 
-          {/* 2. 고객사 DB 정보 */}
+          {/* 1. 심사 기본 정보 (참고용) */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
-                <span>2. 고객사 DB 정보</span>
+                <span>1. 기업 및 심사 개요</span>
               </span>
-              <span className="text-[10px] font-mono text-cyan-800 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
-                IAF 17
+              <span className="text-[10.5px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                {auditTypeCategory}심사
               </span>
             </div>
 
             <div className="space-y-1.5 text-[11px] text-slate-600">
               <div>
-                <strong className="text-slate-800">업체명:</strong> <span className="font-bold text-slate-950">{company.companyName}</span> (대표: {company.ceoName || '박진용'})
+                <strong className="text-slate-800">업체명:</strong> <span className="font-bold text-slate-950">{scopeConfirmData.companyNameKor}</span> (대표: {scopeConfirmData.ceoName})
               </div>
               <div>
                 <strong className="text-slate-800">사업자번호:</strong> <span className="font-mono">{company.bizNumber || '107-88-30351'}</span>
               </div>
               <div>
-                <strong className="text-slate-800">소재지:</strong> {company.address || '경기 군포시 공단로140번길 46, 206호'}
+                <strong className="text-slate-800">소재지:</strong> {scopeConfirmData.addressKor}
               </div>
               <div>
                 <strong className="text-slate-800">담당자:</strong> {company.contactPerson || '박진웅 부장'} ({company.contactPhone || '031-360-7078'})
               </div>
               <div>
-                <strong className="text-slate-800">인증범위:</strong> <span className="text-slate-800 font-medium">{company.scope || company.industry || '금속 절삭가공 제품의 제조'}</span>
+                <strong className="text-slate-800">심사표준:</strong> <span className="font-semibold text-slate-900">{stage1Data.auditStandards}</span>
+              </div>
+              <div>
+                <strong className="text-slate-800">심사일정:</strong> <span className="font-mono text-slate-900">{stage2Data.auditDateStart} ~ {stage2Data.auditDateEnd}</span>
               </div>
             </div>
           </div>
 
-          {/* 3. 심사 배정 & 심사팀 */}
+          {/* 2. 1단계 심사보고서 팩 포함/제외 제어 */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
-                <span>3. 심사 배정 & 심사팀</span>
+                <span>2. 1단계 보고서 팩 포함 설정</span>
               </span>
-              <span className="text-[10.5px] font-bold text-slate-600">2.0 M/D</span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${includeStage1InPack ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-600'}`}>
+                {includeStage1InPack ? '팩 포함' : '팩 제외 (2단계 중심)'}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">심사팀장</label>
-                <input
-                  type="text"
-                  value={auditor?.name || '남경호'}
-                  readOnly
-                  className="w-full border border-slate-300 rounded p-1.5 bg-slate-50 font-bold"
-                />
-              </div>
-              <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">심사팀원</label>
-                <input
-                  type="text"
-                  defaultValue="신현섭 심사원"
-                  className="w-full border border-slate-300 rounded p-1.5 bg-white font-medium"
-                />
-              </div>
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              사후(1·2차) 및 갱신심사는 1단계 미작성 시 전체 팩에서 자동으로 제외됩니다.
+            </p>
+
+            <label className="flex items-center gap-2 p-2 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 cursor-pointer transition-colors">
+              <input
+                type="checkbox"
+                checked={includeStage1InPack}
+                onChange={(e) => setIncludeStage1InPack(e.target.checked)}
+                className="rounded text-teal-700 focus:ring-0 cursor-pointer"
+              />
+              <span className="font-bold text-slate-800 text-xs">전체 보고서 팩에 1단계 포함</span>
+            </label>
+          </div>
+
+          {/* 3. 규격별 심사 핵심 착안점 가이드 (Reference Tips) */}
+          <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <span className="w-1.5 h-3 bg-indigo-700 inline-block rounded-xs"></span>
+                <span>3. 규격별 심사 착안점 가이드</span>
+              </span>
+              <span className="text-[10px] text-indigo-800 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                Checkpoints
+              </span>
             </div>
 
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">심사 일정</label>
-              <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-                <input
-                  type="text"
-                  value={stage2Data.auditDateStart}
-                  onChange={(e) => setStage2Data({ ...stage2Data, auditDateStart: e.target.value })}
-                  className="border border-slate-300 rounded p-1 text-center"
-                />
-                <input
-                  type="text"
-                  value={stage2Data.auditDateEnd}
-                  onChange={(e) => setStage2Data({ ...stage2Data, auditDateEnd: e.target.value })}
-                  className="border border-slate-300 rounded p-1 text-center"
-                />
+            <div className="space-y-2 text-[11px] text-slate-600">
+              <div className="p-2 bg-slate-50 rounded border border-slate-200 space-y-1">
+                <strong className="text-slate-900 font-bold block text-[11.5px]">ISO 9001 (품질)</strong>
+                <p>• 4.4 프로세스 접근법 및 리스크 기반 사고 적용 여부</p>
+                <p>• 8.5 생산 및 서비스 제공의 공정 관리 상태</p>
+                <p>• 9.2 내부심사 및 9.3 경영검토 이행 실적</p>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border border-slate-200 space-y-1">
+                <strong className="text-slate-900 font-bold block text-[11.5px]">ISO 14001 (환경)</strong>
+                <p>• 6.1.2 환경측면 및 중대한 환경영향 평가</p>
+                <p>• 6.1.3 준수의무사항(인허가, 배출기준) 평가</p>
+                <p>• 8.2 비상사태 대비 및 대응 훈련</p>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border border-slate-200 space-y-1">
+                <strong className="text-slate-900 font-bold block text-[11.5px]">ISO 45001 (안전보건)</strong>
+                <p>• 5.4 근로자의 협의 및 참여 (산업안전보건위원회)</p>
+                <p>• 6.1.2 위험성평가(위험요인 파악 및 통제)</p>
+                <p>• 8.1.4 도급/외주업체 안전보건 관리</p>
               </div>
             </div>
           </div>
 
-          {/* 4. 부적합 보고서(NCR) 관리 및 추가 */}
+          {/* 4. 부적합(NCR) 및 프로세스 노트 바로가기 도구 */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-rose-700 inline-block rounded-xs"></span>
-                <span>4. 부적합(NCR) 동적 관리</span>
+                <span>4. 동적 페이지 관리 도구</span>
               </span>
               <button
                 type="button"
@@ -831,33 +879,36 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             </div>
 
             <div className="space-y-1.5 text-[11px]">
-              {ncrList.map((ncr, idx) => (
-                <div key={ncr.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded">
-                  <div>
-                    <span className="font-bold text-slate-900">{ncr.ncrNo}</span>
-                    <span className="text-[10px] text-rose-700 font-semibold block">{ncr.clause} ({ncr.grade})</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setActiveDocTab('ncr')}
-                      className="px-2 py-0.5 rounded bg-white border border-slate-300 text-[10px] font-bold text-slate-700 hover:bg-slate-100"
-                    >
-                      편집
-                    </button>
-                    {ncrList.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteNcr(ncr.id)}
-                        className="p-1 rounded text-slate-400 hover:text-rose-600"
-                        title="삭제"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+              <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
+                <span>프로세스 노트: <strong>{stage2Data.auditNotes.length}개 조항</strong></span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newNote = {
+                      clause: `추가 프로세스 (${stage2Data.auditNotes.length + 1})`,
+                      content: '[확인 내용]: \n[객관적 증거]: '
+                    };
+                    setStage2Data((prev: any) => ({
+                      ...prev,
+                      auditNotes: [...prev.auditNotes, newNote]
+                    }));
+                    setActiveDocTab('stage2');
+                  }}
+                  className="px-2 py-0.5 rounded bg-teal-50 border border-teal-300 text-teal-800 font-bold text-[10px] hover:bg-teal-100 cursor-pointer"
+                >
+                  + 노트 추가
+                </button>
+              </div>
+              <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
+                <span>부적합 보고서(NCR): <strong>{ncrList.length}건</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setActiveDocTab('ncr')}
+                  className="px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 font-bold text-[10px] hover:bg-slate-100 cursor-pointer"
+                >
+                  NCR 보기
+                </button>
+              </div>
             </div>
           </div>
 
@@ -866,9 +917,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-teal-700 inline-block rounded-xs"></span>
-                <span>5. 전자메일 서명 상태</span>
+                <span>5. 전자메일 서명 현황</span>
               </span>
-              <span className="text-[10px] font-bold text-teal-800">
+              <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
                 {Object.keys(signatures).length}건 완료
               </span>
             </div>
@@ -895,8 +946,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
         {/* ======================================================== */}
         <div className="flex-1 flex flex-col min-w-0 bg-slate-300/60 overflow-hidden">
           
-          {/* 종이 파일 철 인덱스 탭 헤더 바 */}
-          <div className="bg-slate-200/90 px-4 pt-3 border-b border-slate-300 flex items-center justify-between shrink-0">
+          {/* 종이 파일 철 인덱스 탭 헤더 바 - 좌우 여백 없이(px-0) 슬림한 높이 */}
+          <div className="bg-slate-200/95 px-3 py-1.5 border-b border-slate-300 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
               <span className="w-2.5 h-2.5 rounded-full bg-teal-700 inline-block"></span>
               <span>종이 파일 철 공식 서식 시스템</span>
@@ -915,8 +966,8 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             </button>
           </div>
 
-          {/* 실물 종이 파일 철 인덱스 탭 목록 */}
-          <div className="flex border-b border-slate-300 bg-slate-200/90 overflow-x-auto shrink-0 px-2 pt-1 gap-1">
+          {/* 실물 종이 파일 철 인덱스 탭 목록 (좌우 여백 0, 슬림 높이, 단일 행) */}
+          <div className="flex border-b border-slate-300 bg-slate-200 w-full overflow-x-auto shrink-0 px-0 gap-0">
             {tabConfigs.map(tab => {
               const isActive = activeDocTab === tab.id;
               return (
@@ -924,19 +975,14 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveDocTab(tab.id)}
-                  className={`flex-1 min-w-[125px] py-2 px-2 text-center flex flex-col items-center justify-center rounded-t-lg border-t-2 border-r border-l transition-all select-none relative ${
+                  className={`flex-1 min-w-[110px] h-9 px-2 text-center flex items-center justify-center gap-1.5 border-r border-slate-300 transition-all select-none relative ${
                     isActive
-                      ? `${tab.activeColor} border-slate-400 font-bold shadow-xs -bottom-[1px] z-10`
-                      : 'bg-slate-100 hover:bg-white/80 text-slate-700 border-t-transparent border-slate-300 cursor-pointer'
+                      ? `${tab.activeColor} font-bold shadow-xs z-10 border-b-2 border-b-white bg-white`
+                      : 'bg-slate-200/80 hover:bg-slate-100 text-slate-700 hover:text-slate-950 cursor-pointer border-t-2 border-t-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 truncate max-w-full justify-center">
-                    <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-teal-700' : 'text-slate-500'}`} />
-                    <span className="truncate text-xs tracking-tight">{tab.label}</span>
-                  </div>
-                  <span className={`text-[10px] truncate max-w-full font-normal ${isActive ? 'opacity-90' : 'opacity-60'}`}>
-                    {tab.sub}
-                  </span>
+                  <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-teal-700' : 'text-slate-500'}`} />
+                  <span className="truncate text-xs tracking-tight">{tab.label}</span>
                 </button>
               );
             })}
@@ -947,9 +993,9 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             <div className="w-full max-w-[850px] space-y-12">
 
               {/* ================================================================= */}
-              {/* 1단계 심사보고서 (1p ~ 6p 실물 PDF 완벽 일치) */}
+              {/* 1단계 심사보고서 (1p ~ 6p 실물 PDF 완벽 일치 - 사후/갱신 미작성 시 팩에서 제외) */}
               {/* ================================================================= */}
-              {(activeDocTab === 'all' || activeDocTab === 'stage1') && (
+              {(activeDocTab === 'stage1' || (activeDocTab === 'all' && includeStage1InPack)) && (
                 <div className="space-y-10">
                   {/* --- [1단계 1 PAGE : 표지] --- */}
                   <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
@@ -1872,54 +1918,135 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
               )}
 
               {/* ================================================================= */}
-              {/* 17 PAGE : 인정범위 확인서 (Table 29) */}
+              {/* 인정범위 확인서 (인증서 기재사항 확인서 - Table 29) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'cert_confirm') && (
                 <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
-                  <div className="text-center py-2 border-b-2 border-slate-800 pb-2">
-                    <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
-                      인증서 기재사항 확인서 (Table 29)
-                    </h1>
-                    <span className="text-xs text-slate-500">[17 PAGE]</span>
+                  <div className="text-center py-2 border-b-2 border-slate-800 pb-2 flex justify-between items-end">
+                    <div className="text-left">
+                      <span className="text-xs font-mono text-teal-800 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                        Form GMSCS-F18-001 (Table 29)
+                      </span>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
+                        인증서 기재사항 확인서 (인정범위 확인서)
+                      </h1>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] text-slate-500 font-mono">최종확인: {scopeConfirmData.updatedAt}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-300 p-2.5 rounded-lg text-xs text-amber-900 leading-relaxed flex items-center justify-between">
+                    <span>💡 <strong>인증범위 실시간 동기화:</strong> 아래 상호, 대표자, 사업장 주소, 국문/영문 인증범위를 수정하면 기업 관리 대장 및 팝업 카드 등 전 시스템에 즉시 반영됩니다.</span>
                   </div>
 
                   <table className="w-full border-collapse border border-slate-700 text-xs">
                     <tbody>
                       <tr className="border-b border-slate-400">
                         <th className="w-28 bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">인증번호</th>
-                        <td colSpan={2} className="p-2 font-mono">GMS-2609-08</td>
+                        <td colSpan={2} className="p-1.5 font-mono">
+                          <input
+                            type="text"
+                            value={scopeConfirmData.certNo}
+                            onChange={(e) => handleUpdateScopeConfirmField('certNo', e.target.value)}
+                            className="w-full font-mono bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-1 text-xs"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold" rowSpan={2}>고 객 명</th>
                         <td className="w-16 bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">KOR</td>
-                        <td className="p-1.5 font-bold text-slate-900">{company.companyName}</td>
+                        <td className="p-1.5 font-bold text-slate-900">
+                          <input
+                            type="text"
+                            value={scopeConfirmData.companyNameKor}
+                            onChange={(e) => handleUpdateScopeConfirmField('companyNameKor', e.target.value)}
+                            className="w-full font-bold text-slate-900 bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-1 text-xs"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <td className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">ENG</td>
-                        <td className="p-1.5 font-sans">WOOJIN TECH CO., LTD.</td>
+                        <td className="p-1.5 font-sans">
+                          <input
+                            type="text"
+                            value={scopeConfirmData.companyNameEng}
+                            onChange={(e) => handleUpdateScopeConfirmField('companyNameEng', e.target.value)}
+                            className="w-full font-sans bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-1 text-xs"
+                            placeholder="e.g. WOOJIN TECH CO., LTD."
+                          />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-400">
+                        <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">대표자명</th>
+                        <td className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">KOR</td>
+                        <td className="p-1.5">
+                          <input
+                            type="text"
+                            value={scopeConfirmData.ceoName}
+                            onChange={(e) => handleUpdateScopeConfirmField('ceoName', e.target.value)}
+                            className="w-full bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-1 text-xs"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold" rowSpan={2}>사업장 주소</th>
                         <td className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">KOR</td>
-                        <td className="p-1.5">{company.address || '경기 군포시 공단로140번길 46, 206호'}</td>
+                        <td className="p-1.5">
+                          <input
+                            type="text"
+                            value={scopeConfirmData.addressKor}
+                            onChange={(e) => handleUpdateScopeConfirmField('addressKor', e.target.value)}
+                            className="w-full bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-1 text-xs"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <td className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">ENG</td>
-                        <td className="p-1.5 font-sans">#206, 46, Gongdan-ro 140beon-gil, Gunpo-si, Gyeonggi-do, Korea</td>
+                        <td className="p-1.5 font-sans">
+                          <input
+                            type="text"
+                            value={scopeConfirmData.addressEng}
+                            onChange={(e) => handleUpdateScopeConfirmField('addressEng', e.target.value)}
+                            className="w-full font-sans bg-transparent border-b border-transparent focus:border-cyan-600 focus:bg-cyan-50/50 p-1 text-xs"
+                            placeholder="English Address"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold" rowSpan={2}>인증범위</th>
                         <td className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">KOR</td>
-                        <td className="p-1.5 font-bold">{company.scope || company.industry || '금속 절삭가공 제품의 제조(AL가공, SUS가공, 광학부품, 산업용 카메라부품)'}</td>
+                        <td className="p-1.5 font-bold">
+                          <textarea
+                            rows={2}
+                            value={scopeConfirmData.scopeKor}
+                            onChange={(e) => handleUpdateScopeConfirmField('scopeKor', e.target.value)}
+                            className="w-full font-bold bg-transparent border border-slate-300 rounded focus:border-cyan-600 focus:bg-cyan-50/50 p-1.5 text-xs leading-relaxed"
+                            placeholder="국문 인증범위 입력 (전 시스템 실시간 동기화)"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <td className="bg-slate-50 p-1.5 border-r border-slate-400 text-center font-bold">ENG</td>
-                        <td className="p-1.5 font-sans">Manufacture of metal machining parts (AL machining, SUS machining, optical parts, camera parts)</td>
+                        <td className="p-1.5 font-sans">
+                          <textarea
+                            rows={2}
+                            value={scopeConfirmData.scopeEng}
+                            onChange={(e) => handleUpdateScopeConfirmField('scopeEng', e.target.value)}
+                            className="w-full font-sans bg-transparent border border-slate-300 rounded focus:border-cyan-600 focus:bg-cyan-50/50 p-1.5 text-xs leading-relaxed"
+                            placeholder="Enter English Certification Scope"
+                          />
+                        </td>
                       </tr>
                       <tr className="border-b border-slate-400">
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-left font-bold">동일성 확인</th>
                         <td colSpan={2} className="p-2 font-bold text-teal-950">
-                          1단계 심사 시 확인된 내용과 동일함 (확인 완료)
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-teal-700 shrink-0" />
+                            <span>1단계 심사 시 확인된 내용과 동일함 (신청서 및 현장 실태 확인 완료)</span>
+                          </div>
                         </td>
                       </tr>
                       <tr>
@@ -1928,7 +2055,7 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                           <div className="grid grid-cols-2 gap-4">
                             <div className="border border-slate-300 p-2 rounded">
                               <span className="font-bold text-slate-700 block mb-1">고객 확인 (대표자)</span>
-                              {renderSignatureCell('cert_cust_p17', '고객 확인 (서명)', '고객확인', company.ceoName || '박진용', '대표이사', company.contactEmail)}
+                              {renderSignatureCell('cert_cust_p17', '고객 확인 (서명)', '고객확인', scopeConfirmData.ceoName || company.ceoName || '박진용', '대표이사', company.contactEmail)}
                             </div>
                             <div className="border border-slate-300 p-2 rounded">
                               <span className="font-bold text-slate-700 block mb-1">심사 팀장</span>
@@ -1941,13 +2068,13 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </table>
 
                   <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                    - 17 - [지엠에스씨에스㈜ 인증원]
+                    [지엠에스씨에스㈜ 인증원]
                   </div>
                 </div>
               )}
 
               {/* ================================================================= */}
-              {/* 18 PAGE : 3년 심사계획 요약서 (Table 30~32) */}
+              {/* 3년 심사계획 요약서 (Table 30~32) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'plan_summary') && (
                 <div className="w-full bg-white border border-slate-300 shadow-md p-8 md:p-12 text-slate-900 font-sans print:shadow-none print:border-none print:p-0 min-h-[1100px] space-y-6 relative">
@@ -1955,7 +2082,6 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                     <h1 className="text-2xl font-black tracking-tight text-slate-950 font-serif">
                       3년 심사계획 요약서 (Table 30~32)
                     </h1>
-                    <span className="text-xs text-slate-500">[18 PAGE]</span>
                   </div>
 
                   {/* Table 32: 3년 심사계획 매트릭스 */}
@@ -1994,13 +2120,13 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                   </div>
 
                   <div className="pt-4 text-center text-[10px] text-slate-400 font-serif">
-                    - 18 - [지엠에스씨에스㈜ 인증원]
+                    [지엠에스씨에스㈜ 인증원]
                   </div>
                 </div>
               )}
 
               {/* ================================================================= */}
-              {/* 19 PAGE~ (마지막) : 부적합 보고서 (NCR - Table 33 동적 확장) */}
+              {/* 부적합 보고서 (NCR - Table 33 동적 확장) */}
               {/* ================================================================= */}
               {(activeDocTab === 'all' || activeDocTab === 'ncr') && (
                 <div className="space-y-10">
@@ -2015,7 +2141,6 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="text-xs font-bold text-rose-800 block">부적합 [{ncrIdx + 1} / {ncrList.length}]</span>
-                          <span className="text-[10px] text-slate-400 font-mono">[{19 + ncrIdx} PAGE]</span>
                         </div>
                       </div>
 
