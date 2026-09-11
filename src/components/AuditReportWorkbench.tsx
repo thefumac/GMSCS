@@ -1765,12 +1765,63 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
             </button>
           </div>
 
-          {/* 4. 보고서 작성 인증원 공지사항 (Certification Body Notice) */}
+          {/* 4. 시정조치 요구서(CAR) 및 동적 페이지 관리 도구 */}
+          <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <span className="w-1.5 h-3 bg-rose-700 inline-block rounded-xs"></span>
+                <span>4. 시정조치 요구서(CAR) 관리</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleAddNcr}
+                className="px-2 py-0.5 rounded bg-rose-50 border border-rose-300 hover:bg-rose-100 text-rose-800 font-bold text-[10.5px] flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                <span>+ 요구서 추가</span>
+              </button>
+            </div>
+
+            <div className="space-y-1.5 text-[11px]">
+              <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
+                <span>프로세스 노트: <strong>{stage2Data.auditNotes.length}개 조항</strong></span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newNote = {
+                      clause: `추가 프로세스 (${stage2Data.auditNotes.length + 1})`,
+                      content: '[확인 내용]: \n[객관적 증거]: '
+                    };
+                    setStage2Data((prev: any) => ({
+                      ...prev,
+                      auditNotes: [...prev.auditNotes, newNote]
+                    }));
+                    setActiveDocTab('stage2');
+                  }}
+                  className="px-2 py-0.5 rounded bg-teal-50 border border-teal-300 text-teal-800 font-bold text-[10px] hover:bg-teal-100 cursor-pointer"
+                >
+                  + 노트 추가
+                </button>
+              </div>
+              <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
+                <span>시정조치 요구서(CAR): <strong>{ncrList.length}건</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setActiveDocTab('ncr')}
+                  className="px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 font-bold text-[10px] hover:bg-slate-100 cursor-pointer"
+                >
+                  요구서 보기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. 보고서 작성 인증원 공지사항 (Certification Body Notice) */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                 <span className="w-1.5 h-3 bg-indigo-700 inline-block rounded-xs"></span>
-                <span>4. 보고서 작성 인증원 공지사항</span>
+                <span>5. 보고서 작성 인증원 공지사항</span>
               </span>
               <span className="text-[10px] text-indigo-800 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
                 <Bell className="w-3 h-3 text-indigo-600" />
@@ -1864,57 +1915,6 @@ export const AuditReportWorkbench: React.FC<AuditReportWorkbenchProps> = ({
 
             <div className="p-2 bg-indigo-50/60 rounded border border-indigo-100 text-[10.5px] text-indigo-900 leading-tight">
               💡 <strong>안내:</strong> 본 공지사항은 <strong>[사무국 인증관리 &gt; 심사보고서 작성 공지]</strong>에서 규격별/공통으로 등록 및 수정되며 본 화면에 실시간 연동됩니다.
-            </div>
-          </div>
-
-          {/* 4. 시정조치 요구서(CAR) 및 동적 페이지 관리 도구 */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-300 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                <span className="w-1.5 h-3 bg-rose-700 inline-block rounded-xs"></span>
-                <span>4. 시정조치 요구서(CAR) 관리</span>
-              </span>
-              <button
-                type="button"
-                onClick={handleAddNcr}
-                className="px-2 py-0.5 rounded bg-rose-50 border border-rose-300 hover:bg-rose-100 text-rose-800 font-bold text-[10.5px] flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                <Plus className="w-3 h-3" />
-                <span>+ 요구서 추가</span>
-              </button>
-            </div>
-
-            <div className="space-y-1.5 text-[11px]">
-              <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
-                <span>프로세스 노트: <strong>{stage2Data.auditNotes.length}개 조항</strong></span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newNote = {
-                      clause: `추가 프로세스 (${stage2Data.auditNotes.length + 1})`,
-                      content: '[확인 내용]: \n[객관적 증거]: '
-                    };
-                    setStage2Data((prev: any) => ({
-                      ...prev,
-                      auditNotes: [...prev.auditNotes, newNote]
-                    }));
-                    setActiveDocTab('stage2');
-                  }}
-                  className="px-2 py-0.5 rounded bg-teal-50 border border-teal-300 text-teal-800 font-bold text-[10px] hover:bg-teal-100 cursor-pointer"
-                >
-                  + 노트 추가
-                </button>
-              </div>
-              <div className="flex items-center justify-between text-slate-700 p-1.5 bg-slate-50 rounded border border-slate-200">
-                <span>시정조치 요구서(CAR): <strong>{ncrList.length}건</strong></span>
-                <button
-                  type="button"
-                  onClick={() => setActiveDocTab('ncr')}
-                  className="px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 font-bold text-[10px] hover:bg-slate-100 cursor-pointer"
-                >
-                  요구서 보기
-                </button>
-              </div>
             </div>
           </div>
 
