@@ -312,13 +312,15 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
       // 3. TEAM 심사팀 (팀장 볼드 + 팀원 나열)
       const rep = p.reportId ? reports[p.reportId] : undefined;
-      const teamLead = p.leadAuditorName || '김홍덕';
+      const teamLead = p.leadAuditorName || '남경호';
       let teamMember = '단독심사';
       if (rep && rep.auditTeam && rep.auditTeam.length > 0) {
-        teamMember = rep.auditTeam.filter(m => !m.includes(teamLead))[0] || rep.auditTeam[0] || '이혜화';
-      } else if (auditors.length > 2) {
-        const otherAud = auditors[(idx * 2 + 1) % auditors.length];
-        teamMember = otherAud.name !== teamLead ? otherAud.name : '이혜화';
+        const otherMembers = rep.auditTeam.filter(m => !m.includes(teamLead));
+        teamMember = otherMembers.length > 0 ? otherMembers.join(', ') : '단독심사';
+      } else if (p.teamAuditorNames && p.teamAuditorNames.length > 0) {
+        teamMember = p.teamAuditorNames.filter(name => name !== teamLead).join(', ') || '단독심사';
+      } else {
+        teamMember = '단독심사';
       }
       const team = {
         leadAuditor: teamLead,
