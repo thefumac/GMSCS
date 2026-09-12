@@ -25,7 +25,7 @@ for (const doc of (rawMigratedDocs as any[])) {
     companyDocsMap[compName] = [];
   }
 
-  const storagePath = doc.storagePath || `audit_files/gmscs/${compName}/${doc.simplifiedFileName}`;
+  const storagePath = doc.storagePath || `audit_files/${compName}/${doc.simplifiedFileName}`;
   // Firebase Storage 공개 URL (브라우저 열람 지원)
   const encodedPath = encodeURIComponent(storagePath);
   const pdfUrl = `https://firebasestorage.googleapis.com/v0/b/gmscs-a9925.firebasestorage.app/o/${encodedPath}?alt=media`;

@@ -880,7 +880,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                     </span>
                   </div>
                   <span className="text-[11px] text-slate-500">
-                    기업별 디렉토리: <code className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">audit_files/gmscs/{effectiveCompany.companyName}/</code>
+                    기업별 디렉토리: <code className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">audit_files/{effectiveCompany.companyName}/</code>
                   </span>
                 </div>
 

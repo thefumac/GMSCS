@@ -133,7 +133,7 @@ export async function getCompanyAuditDocuments(companyName: string): Promise<Aud
         year: item.year || 2026,
         month: item.month || 1,
         auditorName: item.auditorName || '사무국',
-        storagePath: item.storagePath || `audit_files/gmscs/${item.companyName}/${item.simplifiedFileName}`,
+        storagePath: item.storagePath || `audit_files/${item.companyName}/${item.simplifiedFileName}`,
         fileSizeBytes: item.fileSizeBytes || 800000,
         originalFileName: item.originalFileName || '',
         simplifiedFileName: item.simplifiedFileName || `${item.year || 2026}_심사문서.pdf`,

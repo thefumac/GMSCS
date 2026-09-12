@@ -7,17 +7,22 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    // 테넌트별 심사 파일 경로: audit_files/{tenantId}/{companyId}/{fileName}
-    match /audit_files/{tenantId}/{companyId}/{fileName} {
-      // 인증된 사용자이며 해당 테넌트 소속일 때 접근 허용
-      allow read: if isAuthenticated() && request.auth.token.tenantId == tenantId;
-      allow write: if isAuthenticated() && request.auth.token.tenantId == tenantId;
+    // 기업별 심사 파일 경로: audit_files/{companyId}/{fileName}
+    match /audit_files/{companyId}/{fileName} {
+      allow read: if true; // 브라우저 PDF 리더 및 다운로드 지원
+      allow write: if isAuthenticated();
     }
 
     // 공용 문서 템플릿: public_templates/{allPaths=**}
     match /public_templates/{allPaths=**} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    // 전체 하위 경로 보안 규칙 (폴백)
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
   }
 }
