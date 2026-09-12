@@ -1490,6 +1490,7 @@ export function App() {
           projects={projects}
           contracts={contracts}
           companies={companies}
+          mode="portal"
           onSave={handleUpdateAuditorProfile}
           onNavigateToPortal={() => {
             setIsProfileModalOpen(false);

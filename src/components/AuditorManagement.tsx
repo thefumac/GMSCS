@@ -317,7 +317,7 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
         </div>
       </div>
 
-      {/* 심사원 상세정보 팝업 모달 (기본정보, 심사이력, 자격관리, 교육/세미나, 경력증명서 승인) */}
+      {/* 심사원 상세정보 팝업 모달 (기본정보, 심사이력, 자격관리, 교육/세미나, 경력 증명) */}
       {detailAuditor && (
         <AuditorProfileModal
           isOpen={!!detailAuditor}
@@ -326,6 +326,7 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
           projects={projects}
           contracts={contracts}
           companies={companies}
+          mode="office"
           onSave={(updated) => {
             if (onSaveAuditor) {
               onSaveAuditor(updated);
