@@ -102,6 +102,7 @@ export type AuditorPayoutMethod = '세금계산서' | '원천징수';
 
 export interface Auditor {
   id: string;
+  tenantId?: string;
   gmsNumber?: string; // GMS 심사원 등록번호 (예: GMS23001)
   name: string;
   mobile: string;
@@ -110,7 +111,11 @@ export interface Auditor {
   status: '활동' | '휴식' | '자격만료임박';
   originType?: '상근' | '비상근'; // 원본 DB 구분: '상근' | '비상근'
   affiliation: AuditorAffiliation; // 상근 / 비상근 구분 (4인만 상근)
-  isSystemAdmin?: boolean; // 시스템 총괄 관리자 여부 (대표님 등)
+  region?: string; // 소속 지역 (광역자치단체: 서울, 경기, 대구, 부산, 충남 등)
+  isSystemAdmin?: boolean; // 시스템 총괄/사무국 관리자 여부 (사무국 화면 접근 권한)
+  isAdmin?: boolean;
+  initialPassword?: string; // 기본 초기 비밀번호 (gms9001)
+  password?: string;
   iafCodes: string[];
   registeredStandards: StandardCode[];
   contractExpiryDate: string;

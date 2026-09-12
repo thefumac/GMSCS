@@ -34,13 +34,12 @@ import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState } from
 
 export type SortColumn = 
   | 'no' 
+  | 'status'
   | 'company' 
   | 'standard' 
   | 'auditType' 
-  | 'preAudit' 
   | 'schedule' 
   | 'team' 
-  | 'postAudit' 
   | 'committee';
 
 export interface AuditProcessStatusManagerProps {
@@ -539,6 +538,10 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
       switch (sortColumn) {
         case 'no':
           return sortOrder === 'asc' ? a.projectId.localeCompare(b.projectId) : b.projectId.localeCompare(a.projectId);
+        case 'status':
+          valA = a.auditState;
+          valB = b.auditState;
+          break;
         case 'company':
           valA = a.companyName;
           valB = b.companyName;
@@ -551,10 +554,6 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
           valA = a.auditType;
           valB = b.auditType;
           break;
-        case 'preAudit':
-          valA = a.preAudit.scheduleDate || a.preAudit.contractDate;
-          valB = b.preAudit.scheduleDate || b.preAudit.contractDate;
-          break;
         case 'schedule':
           valA = a.schedule.startDate;
           valB = b.schedule.startDate;
@@ -562,10 +561,6 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         case 'team':
           valA = a.team.leadAuditor;
           valB = b.team.leadAuditor;
-          break;
-        case 'postAudit':
-          valA = a.postAudit.approvalDate || a.postAudit.receiptDate;
-          valB = b.postAudit.approvalDate || b.postAudit.receiptDate;
           break;
         case 'committee':
           valA = a.committee.date;
@@ -672,11 +667,11 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse border border-slate-300">
             <thead>
-              <tr className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-300 select-none text-[12px]">
+              <tr className="bg-slate-100 text-slate-700 border-b border-slate-300 select-none text-[12px]">
                 {/* 1. No */}
                 <th 
                   onClick={() => handleSort('no')}
-                  className="py-2.5 px-2 text-center w-12 text-slate-600 font-semibold whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-2 text-center w-12 text-slate-600 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
                   title="번호 순 정렬"
                 >
                   <div className="flex items-center justify-center">
@@ -685,10 +680,22 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   </div>
                 </th>
 
-                {/* 2. 기업명 (대표자) */}
+                {/* 2. 진행상태 (No와 회사명 사이) */}
+                <th 
+                  onClick={() => handleSort('status')}
+                  className="py-2.5 px-2 text-center min-w-[105px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
+                  title="심사진행 상태 순 정렬"
+                >
+                  <div className="flex items-center justify-center">
+                    <span>진행상태</span>
+                    {renderSortIcon('status')}
+                  </div>
+                </th>
+
+                {/* 3. 기업명 (대표자) */}
                 <th 
                   onClick={() => handleSort('company')}
-                  className="py-2.5 px-3 min-w-[160px] whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-3 min-w-[170px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
                   title="기업명 순 정렬"
                 >
                   <div className="flex items-center">
@@ -697,10 +704,10 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   </div>
                 </th>
 
-                {/* 3. 인증규격 (인증번호) */}
+                {/* 4. 인증규격 (인증번호) */}
                 <th 
                   onClick={() => handleSort('standard')}
-                  className="py-2.5 px-3 min-w-[185px] whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-3 min-w-[175px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
                   title="인증규격 순 정렬"
                 >
                   <div className="flex items-center">
@@ -709,10 +716,10 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   </div>
                 </th>
 
-                {/* 4. 심사구분 */}
+                {/* 5. 심사구분 */}
                 <th 
                   onClick={() => handleSort('auditType')}
-                  className="py-2.5 px-2 text-center min-w-[85px] whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-2 text-center min-w-[85px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
                   title="심사구분 순 정렬"
                 >
                   <div className="flex items-center justify-center">
@@ -721,68 +728,51 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   </div>
                 </th>
 
-                {/* 5. Pre-AUDIT (3개 항목 및 하단 일자) */}
-                <th 
-                  onClick={() => handleSort('preAudit')}
-                  className="py-2.5 px-3 text-center min-w-[210px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
-                  title="Pre-AUDIT 진행일 순 정렬"
-                >
-                  <div className="flex items-center justify-center">
-                    <span>Pre-AUDIT (일정·계획)</span>
-                    {renderSortIcon('preAudit')}
-                  </div>
-                </th>
-
-                {/* 6. AUDIT (심사기간) - 너비 확장하여 2줄로 여유 있게 충당 */}
+                {/* 6. 심사일정 (MD) */}
                 <th 
                   onClick={() => handleSort('schedule')}
-                  className="py-2.5 px-3 text-center min-w-[160px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-3 text-center min-w-[155px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
                   title="심사일정 순 정렬"
                 >
                   <div className="flex items-center justify-center">
-                    <span>AUDIT (심사기간)</span>
+                    <span>심사일정 (MD)</span>
                     {renderSortIcon('schedule')}
                   </div>
                 </th>
 
-                {/* 7. TEAM (심사팀 - 팀장 볼드) */}
+                {/* 7. 심사팀 */}
                 <th 
                   onClick={() => handleSort('team')}
-                  className="py-2.5 px-3 text-center min-w-[125px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
-                  title="심사팀장 순 정렬"
+                  className="py-2.5 px-3 text-center min-w-[130px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300 hover:bg-slate-200/80 cursor-pointer"
+                  title="심사팀 순 정렬"
                 >
                   <div className="flex items-center justify-center">
-                    <span>TEAM (심사팀)</span>
+                    <span>심사팀</span>
                     {renderSortIcon('team')}
                   </div>
                 </th>
 
-                {/* 8. Post-AUDIT (보고서 접수/승인 및 하단 일자) */}
-                <th 
-                  onClick={() => handleSort('postAudit')}
-                  className="py-2.5 px-3 text-center min-w-[185px] whitespace-nowrap border-r border-slate-300 bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
-                  title="보고서 일자 순 정렬"
-                >
+                {/* 8. 문서 열람 (보고서, 계획서, 인증서) */}
+                <th className="py-2.5 px-3 min-w-[170px] text-slate-700 font-normal whitespace-nowrap border-r border-slate-300">
                   <div className="flex items-center justify-center">
-                    <span>Post-AUDIT (보고서 접수·승인)</span>
-                    {renderSortIcon('postAudit')}
+                    <span>문서 열람</span>
                   </div>
                 </th>
 
-                {/* 9. 심의의결 (날짜(예정) / 날짜(승인)) */}
+                {/* 9. 심의의결 */}
                 <th 
                   onClick={() => handleSort('committee')}
-                  className="py-2.5 px-2 text-center min-w-[100px] whitespace-nowrap bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-2 text-center min-w-[105px] text-slate-700 font-normal whitespace-nowrap hover:bg-slate-200/80 cursor-pointer"
                   title="심의의결 순 정렬"
                 >
                   <div className="flex items-center justify-center">
-                    <span>심의의결</span>
+                    <span>심의/인증</span>
                     {renderSortIcon('committee')}
                   </div>
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            <tbody className="divide-y divide-slate-200 text-slate-700 font-normal">
               {paginatedRows.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-400 font-normal">
@@ -791,9 +781,6 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                 </tr>
               ) : (
                 paginatedRows.map((row, idx) => {
-                  const hasPreAudit = Boolean(row.preAudit.scheduleDate || row.preAudit.planApprovalDate || row.preAudit.planDispatchDate || row.preAudit.contractDate);
-                  const hasPlanDispatched = Boolean(row.preAudit.planDispatchDate || row.preAudit.isPlanSent);
-                  const hasReportReceived = Boolean(row.postAudit.receiptDate || row.postAudit.stage === '접수' || row.postAudit.stage === '검토' || row.postAudit.stage === '승인');
                   const auditState = getCompanyAuditState(row.rawCompany, undefined, row.rawProject);
 
                   return (
@@ -804,203 +791,130 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                           setSelectedCompany(row.rawCompany);
                         }
                       }}
-                      className="hover:bg-slate-50 transition cursor-pointer"
+                      className="hover:bg-slate-50 transition cursor-pointer font-normal"
                       title="해당 업체의 기업 기본정보 및 전체 심사이력 서류철 팝업을 엽니다."
                     >
                       {/* 1. No */}
-                      <td className="py-2.5 px-2 text-center font-mono text-slate-400 text-xs align-middle border-r border-slate-200">
+                      <td className="py-2.5 px-2 text-center font-mono text-slate-400 text-xs align-middle border-r border-slate-200 font-normal">
                         {(safeCurrentPage - 1) * PAGE_SIZE + idx + 1}
                       </td>
 
-                      {/* 2. 기업명 (대표자) - 진행상태 배지 포함 */}
-                      <td className="py-2.5 px-3 align-middle border-r border-slate-200">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            row.rawCompany && setSelectedCompany(row.rawCompany);
-                          }}
-                          className="text-left group cursor-pointer"
-                        >
-                          <div className="text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5 flex-wrap">
-                            <span className={`px-1.5 py-0.5 text-[10px] rounded border ${getAuditStateBadgeClass(auditState)} shrink-0`}>
-                              [{auditState}]
-                            </span>
-                            <span className="font-bold underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
-                              {row.companyName}
-                            </span>
-                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
-                          </div>
-                          <div className="text-[11px] text-slate-500 font-normal mt-0.5 whitespace-nowrap">
-                            {row.ceoName} 대표 {row.bizNumber ? `(${row.bizNumber})` : ''}
-                          </div>
-                        </button>
+                      {/* 2. 진행상태 (No와 회사명 사이: 순수 텍스트 배지) */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal">
+                        <span className={`px-2 py-0.5 text-[11px] rounded border font-normal ${getAuditStateBadgeClass(auditState)}`}>
+                          {auditState}
+                        </span>
                       </td>
 
-                      {/* 3. 인증규격 (인증번호) */}
-                      <td className="py-2.5 px-3 leading-snug align-middle border-r border-slate-200 whitespace-nowrap">
-                        <div className="text-slate-800 font-normal whitespace-nowrap">
+                      {/* 3. 기업명 (대표자) - 회사명만 볼드 */}
+                      <td className="py-2.5 px-3 align-middle border-r border-slate-200">
+                        <div className="text-slate-900 flex items-center gap-1 font-bold">
+                          <span className="font-bold">{row.companyName}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-normal mt-0.5 whitespace-nowrap">
+                          {row.ceoName} 대표 {row.bizNumber ? `(${row.bizNumber})` : ''}
+                        </div>
+                      </td>
+
+                      {/* 4. 인증규격 (인증번호) - 인증번호만 볼드 */}
+                      <td className="py-2.5 px-3 leading-snug align-middle border-r border-slate-200 whitespace-nowrap font-normal">
+                        <div className="text-slate-700 font-normal whitespace-nowrap">
                           {row.standardsText}
                         </div>
-                        <div className="text-slate-950 font-mono text-[13.5px] font-bold mt-0.5 whitespace-nowrap tracking-tight">
+                        <div className="text-slate-950 font-mono text-[12.5px] font-bold mt-0.5 whitespace-nowrap tracking-tight">
                           ({row.certNo})
                         </div>
                       </td>
 
-                      {/* 4. 심사구분 */}
-                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-slate-800 text-[12px] font-normal">
+                      {/* 5. 심사구분 */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-slate-700 text-[12px] font-normal">
                         {row.auditType}
                       </td>
 
-                      {/* 5. Pre-AUDIT */}
-                      <td className="py-2.5 px-3 align-middle border-r border-slate-200">
-                        <div className="flex items-start justify-center gap-2 text-[11px] whitespace-nowrap">
-                          {/* 1. 일정협의 */}
-                          <div className="text-center min-w-[48px]">
-                            <div className={row.preAudit.scheduleDate ? "text-slate-900 font-normal" : "text-slate-300"} title="일정협의 완료">
-                              일정협의
-                            </div>
-                            <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
-                              {row.preAudit.scheduleDate || ''}
-                            </div>
-                          </div>
-
-                          <span className="text-slate-300 mt-0.5">-</span>
-
-                          {/* 2. 계획승인 */}
-                          <div className="text-center min-w-[48px]">
-                            <div className={row.preAudit.planApprovalDate ? "text-slate-900 font-normal" : "text-slate-300"} title="심사계획 승인">
-                              계획승인
-                            </div>
-                            <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
-                              {row.preAudit.planApprovalDate || ''}
-                            </div>
-                          </div>
-
-                          <span className="text-slate-300 mt-0.5">-</span>
-
-                          {/* 3. 계획서발송 */}
-                          <div className="text-center min-w-[56px]">
-                            {row.preAudit.planDispatchDate ? (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setPreviewDoc({ isOpen: true, type: 'plan', row });
-                                }}
-                                className="text-cyan-800 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                                title="계획서 발송 완료 (문서 확인)"
-                              >
-                                <span>계획서발송</span>
-                                <ExternalLink className="w-2.5 h-2.5 text-cyan-600 shrink-0" />
-                              </button>
-                            ) : (
-                              <span className="text-slate-300" title="계획서 발송 대기">
-                                계획서발송
-                              </span>
-                            )}
-                            <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
-                              {row.preAudit.planDispatchDate || ''}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* 6. AUDIT (심사기간) */}
-                      <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap">
-                        <div className="font-mono text-slate-900 text-xs leading-snug font-normal">
+                      {/* 6. 심사일정 (MD) */}
+                      <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap font-normal">
+                        <div className="font-mono text-slate-800 text-xs leading-snug font-normal">
                           <div>{row.schedule.startDate} ~ {row.schedule.endDate}</div>
                           <div className="text-slate-500 font-normal text-[11px] mt-0.5">
-                            ({row.schedule.md.toFixed(1)}MD)
+                            ({row.schedule.md.toFixed(1)} MD)
                           </div>
                         </div>
                       </td>
 
-                      {/* 7. TEAM (심사팀) */}
-                      <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap">
-                        <div className="leading-snug text-[11.5px]">
-                          <span className="font-bold text-slate-900">{row.team.leadAuditor}</span>
+                      {/* 7. 심사팀 (순수 텍스트) */}
+                      <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap font-normal">
+                        <div className="leading-snug text-[11.5px] text-slate-800 font-normal">
+                          <span>{row.team.leadAuditor} (팀장)</span>
                           {row.team.teamAuditor && row.team.teamAuditor !== '단독심사' && (
-                            <span className="text-slate-600 font-normal">, {row.team.teamAuditor}</span>
+                            <span className="text-slate-500 font-normal">, {row.team.teamAuditor}</span>
                           )}
                         </div>
                       </td>
 
-                      {/* 8. Post-AUDIT (보고서 접수 클릭 시 워크벤치 작성/열람 페이지로 오픈) */}
-                      <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap">
-                        <div className="flex items-start justify-center gap-2 text-[11px]">
-                          {/* 보고서 접수 / 검토 */}
-                          <div className="text-center min-w-[55px]">
-                            {row.postAudit.receiptDate || row.postAudit.stage === '검토' || row.postAudit.stage === '접수' ? (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // 심사원이 보고한 보고서 작성 페이지(워크벤치)로 직접 오픈
-                                  if (typeof window !== 'undefined') {
-                                    window.open(`#workbench/${encodeURIComponent(row.companyId)}`, '_blank');
-                                  }
-                                  if (row.rawProject.reportId && onOpenReport) {
-                                    onOpenReport(row.rawProject.reportId);
-                                  }
-                                }}
-                                className={row.postAudit.stage === '검토' ? "text-amber-800 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer" : "text-blue-700 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer"}
-                                title="심사원이 보고한 심사보고서 작성/열람 페이지(워크벤치)를 새 창으로 엽니다."
-                              >
-                                <span>{row.postAudit.stage === '검토' ? '보고서 검토' : '보고서 접수'}</span>
-                                <ExternalLink className="w-2.5 h-2.5 text-current shrink-0" />
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (typeof window !== 'undefined') {
-                                    window.open(`#workbench/${encodeURIComponent(row.companyId)}`, '_blank');
-                                  }
-                                }}
-                                className="text-slate-400 hover:text-cyan-700 hover:underline inline-flex items-center gap-0.5 cursor-pointer text-[10.5px]"
-                                title="심사보고서 작성 페이지(워크벤치) 열기"
-                              >
-                                <span>보고서 작성</span>
-                              </button>
-                            )}
-                            <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
-                              {row.postAudit.receiptDate || ''}
-                            </div>
-                          </div>
+                      {/* 8. 문서 열람 (보고서, 계획서, 인증서 텍스트 링크) */}
+                      <td className="py-2.5 px-3 align-middle border-r border-slate-200 whitespace-nowrap font-normal">
+                        <div className="flex items-center justify-center gap-2.5 text-[11.5px] font-normal">
+                          {/* 보고서 링크 */}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenPdfReport?.({
+                                title: `[심사보고서] ${row.companyName} (${row.auditType})`,
+                                companyName: row.companyName,
+                                standard: row.standardsText.split(',')[0]?.trim() || 'ISO 9001:2015',
+                                auditType: row.auditType,
+                                auditDate: row.schedule.startDate,
+                                auditorName: row.team.leadAuditor
+                              });
+                            }}
+                            className="text-cyan-800 hover:text-cyan-950 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                            title="심사보고서 열람"
+                          >
+                            <span>보고서</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-cyan-600 shrink-0" />
+                          </span>
 
-                          <span className="text-slate-300 mt-0.5">-</span>
+                          <span className="text-slate-300 font-normal select-none">|</span>
 
-                          {/* 보고서 승인 */}
-                          <div className="text-center min-w-[55px]">
-                            {row.postAudit.approvalDate ? (
-                              <span className="text-emerald-700 font-normal" title={`사무국 승인 완료 (${row.postAudit.approvalDate})`}>
-                                보고서 승인
-                              </span>
-                            ) : (
-                              <span className="text-slate-300">보고서 승인</span>
-                            )}
-                            <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
-                              {row.postAudit.approvalDate || ''}
-                            </div>
-                          </div>
+                          {/* 계획서 링크 */}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewDoc({ isOpen: true, type: 'plan', row });
+                            }}
+                            className="text-slate-700 hover:text-slate-900 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                            title="심사계획서 열람"
+                          >
+                            <span>계획서</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                          </span>
+
+                          <span className="text-slate-300 font-normal select-none">|</span>
+
+                          {/* 인증서 링크 */}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenPdfReport?.({
+                                title: `[인증서] ${row.companyName} 공식 인증서`,
+                                companyName: row.companyName,
+                                standard: row.standardsText.split(',')[0]?.trim() || 'ISO 9001:2015',
+                                auditType: '인증서 발급본',
+                                auditDate: row.schedule.startDate
+                              });
+                            }}
+                            className="text-indigo-800 hover:text-indigo-950 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                            title="인증서 열람"
+                          >
+                            <span>인증서</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-indigo-600 shrink-0" />
+                          </span>
                         </div>
                       </td>
 
-                      {/* 9. 심의의결 */}
-                      <td className="py-2.5 px-3 text-center align-middle whitespace-nowrap">
-                        {row.committee.status === 'completed' ? (
-                          <div className="leading-snug text-emerald-700 font-normal text-[11.5px]">
-                            {row.committee.displayText}
-                          </div>
-                        ) : row.committee.status === 'in_progress' ? (
-                          <div className="leading-snug text-blue-700 font-normal text-[11.5px]">
-                            {row.committee.displayText}
-                          </div>
-                        ) : (
-                          <span className="text-slate-300 text-[11px]">-</span>
-                        )}
+                      {/* 9. 심의/인증 */}
+                      <td className="py-2.5 px-2 text-center align-middle whitespace-nowrap text-[11.5px] font-normal text-slate-700">
+                        <span>{row.committee.displayText}</span>
                       </td>
                     </tr>
                   );
