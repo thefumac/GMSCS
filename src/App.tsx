@@ -58,20 +58,10 @@ import {
 } from './types';
 
 export function App() {
-  // Session & Role Management
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('gmscs_auth') === 'true';
-    }
-    return false;
-  });
+  // Session & Role Management - 접속 시 항상 랜딩(로그인) 페이지가 먼저 표시되도록 초기화
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('gmscs_role') || 'admin';
-    }
-    return 'admin';
-  });
+  const [currentUserRole, setCurrentUserRole] = useState<string>('admin');
 
   // Core Data States (36 Legacy Auditors & 572 Legacy Companies)
   const [auditors, setAuditors] = useState<Auditor[]>(() => {
@@ -165,6 +155,7 @@ export function App() {
     standard?: string;
     auditType?: string;
     auditDate?: string;
+    auditorName?: string;
   }>({
     isOpen: false,
     title: '',
@@ -212,11 +203,20 @@ export function App() {
   }, []);
 
 
-  // 현재 로그인한 심사원 객체 및 권한 체계
+  // 현재 로그인한 심사원 객체 및 권한 체계 (상근 4인: 남경호, 정현일, 남효린, 이혜원 + 현 시점 김홍덕)
   const currentAuditorObj: Auditor = auditors.find(a => a.id === currentUserRole) 
     || (currentUserRole === 'admin' ? auditors.find(a => a.isSystemAdmin) || auditors[0] : auditors[0]);
 
-  const isStaff = currentAuditorObj?.isSystemAdmin || currentAuditorObj?.affiliation === '상근' || currentUserRole === 'admin';
+  const STAFF_NAMES = ['남경호', '정현일', '남효린', '이혜원', '이예원', '김홍덕'];
+  const STAFF_EMAILS = ['nam2304@empas.com', 'himix1993@gmail.com', 'kgms2304@gmail.com', 'yewon6798@gmail.com', 'fumac@naver.com'];
+
+  const isStaff = 
+    currentAuditorObj?.isSystemAdmin || 
+    currentAuditorObj?.affiliation === '상근' || 
+    STAFF_NAMES.some(name => currentAuditorObj?.name?.includes(name)) ||
+    (currentAuditorObj?.email && STAFF_EMAILS.includes(currentAuditorObj.email.toLowerCase().trim())) ||
+    currentUserRole === 'admin';
+
   const isRegularAuditor = !isStaff;
   const isNonPermanent = isRegularAuditor; // 일반 심사원 전용 보안 격리
 
@@ -360,20 +360,38 @@ export function App() {
       localStorage.setItem('gmscs_auth', 'true');
       localStorage.setItem('gmscs_role', roleId);
     }
-    // 최초 로그인 시 심사일정이 표시된 달력화면이 보이도록 설정
-    navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
+
+    const aud = auditors.find(a => a.id === roleId);
+    const staffNames = ['남경호', '정현일', '남효린', '이혜원', '이예원', '김홍덕'];
+    const staffEmails = ['nam2304@empas.com', 'himix1993@gmail.com', 'kgms2304@gmail.com', 'yewon6798@gmail.com', 'fumac@naver.com'];
+    const isLoginStaff = 
+      roleId === 'admin' || 
+      aud?.isSystemAdmin || 
+      aud?.affiliation === '상근' || 
+      staffNames.some(name => aud?.name?.includes(name)) ||
+      (aud?.email && staffEmails.includes(aud.email.toLowerCase().trim()));
+
+    if (isLoginStaff) {
+      // 상근 직원 및 사무국 권한자는 사무국 대시보드(월간 심사일정 달력)로 진입
+      navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
+    } else {
+      // 일반 비상근 심사원은 개인포털로 진입
+      navigateTo('portal', 'auditor-mgmt', { isEditingReport: false, replace: true });
+    }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('gmscs_auth');
+      localStorage.removeItem('gmscs_role');
+      window.location.hash = '';
     }
   };
 
   // 일반 심사원일 경우 데이터 격리 필터링 (본인 담당 기업 및 본인 배정 보고서/정산만)
   const visibleProjects = isRegularAuditor 
-    ? projects.filter(p => p.leadAuditorId === currentAuditorObj.id || p.leadAuditorName?.includes(currentAuditorObj.name))
+    ? projects.filter(p => p.leadAuditorId === currentAuditorObj.id || p.leadAuditorName?.includes(currentAuditorObj.name) || p.teamAuditorNames?.some(t => t.includes(currentAuditorObj.name)))
     : projects;
 
   const visibleReports = isRegularAuditor
@@ -392,8 +410,19 @@ export function App() {
     : settlements;
 
   const visibleCompanies = isRegularAuditor
-    ? companies.filter(c => c.managingAuditorId === currentAuditorObj.id)
+    ? companies.filter(c => 
+        c.managingAuditorId === currentAuditorObj.id || 
+        (c as any).assignedAuditorName?.includes(currentAuditorObj.name) || 
+        (c as any).assignedAuditor?.includes(currentAuditorObj.name) || 
+        (c as any).consultant?.includes(currentAuditorObj.name) ||
+        visibleProjects.some(p => p.companyId === c.id || p.companyName === c.companyName)
+      )
     : companies;
+
+  // 일반 비상근 심사원은 본인 및 상근 사무국 직원 외에 다른 비상근 심사원의 신상/자격 정보를 볼 수 없음
+  const visibleAuditors = isRegularAuditor
+    ? auditors.filter(a => a.id === currentAuditorObj.id || a.affiliation === '상근')
+    : auditors;
 
   // 일반 심사원의 비인가 탭 접근 방지 및 자동 리디렉션
   React.useEffect(() => {
@@ -1048,8 +1077,60 @@ export function App() {
     }
   }
 
+  // 브라우저 새 탭에서 #pdf-report/xxx 또는 #pdf-cert/xxx 로 열린 경우 (100% 독립창 PDF 뷰어)
+  const isStandalonePdf = typeof window !== 'undefined' && (window.location.hash.startsWith('#pdf-report') || window.location.hash.startsWith('#pdf-cert'));
+  if (isStandalonePdf) {
+    const isCert = window.location.hash.startsWith('#pdf-cert');
+    const hashWithoutPrefix = window.location.hash.replace(/^#(pdf-report|pdf-cert)\/?/, '');
+    const [rawPath, rawQuery] = hashWithoutPrefix.split('?');
+    const compNameDecoded = decodeURIComponent(rawPath || '');
+    
+    // URLSearchParams 파싱
+    const params = new URLSearchParams(rawQuery || '');
+    const stdParam = params.get('standard') || 'ISO 9001:2015';
+    const auditTypeParam = params.get('auditType') || (isCert ? '인증서 발급본' : '정기 사후관리 심사');
+    const auditDateParam = params.get('auditDate') || '2025-10-15';
+    const titleParam = params.get('title') || (isCert ? `[인증서] ${compNameDecoded} 공식 인증서 (${stdParam})` : `[공식 심사보고서] ${compNameDecoded} - ${stdParam}`);
+
+    const targetComp = (compNameDecoded ? companies.find(c => c.companyName === compNameDecoded || c.id === compNameDecoded) : null) || {
+      id: 'temp',
+      companyName: compNameDecoded || '고객사',
+      ceoName: '',
+      bizNumber: '',
+      address: '',
+      iafCode: '17',
+      industry: '제조업',
+      totalEmployees: 25,
+      scope: '품질경영시스템 인증 범위',
+      status: '인증유지'
+    } as unknown as Company;
+
+    const auditorNameParam = params.get('auditorName') || targetComp.assignedAuditorName || (targetComp as any).assignedAuditor || '남경호';
+
+    return (
+      <div className="w-screen h-screen bg-slate-950 flex flex-col overflow-hidden">
+        <PdfViewerModal
+          isOpen={true}
+          onClose={() => {
+            if (window.opener) {
+              window.close();
+            } else {
+              window.location.hash = '';
+            }
+          }}
+          title={titleParam}
+          companyName={targetComp.companyName}
+          standard={stdParam}
+          auditType={auditTypeParam}
+          auditDate={auditDateParam}
+          auditorName={auditorNameParam}
+        />
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <LoginPage auditors={auditors} onLogin={handleLogin} auditorNotices={auditorNotices} />;
+    return <LoginPage auditors={auditors} onLogin={handleLogin} />;
   }
 
   return (
@@ -1347,6 +1428,17 @@ export function App() {
             onNavigateToSettlement={() => {
               navigateTo('finance', 'general-admin', { financeSubTab: 'settlements' });
             }}
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate,
+                pdfUrl: info.pdfUrl
+              });
+            }}
           />
         )}
 
@@ -1360,13 +1452,25 @@ export function App() {
         {activeTab === 'portal' && currentAuditorObj && (
           <AuditorPortal
             currentAuditor={currentAuditorObj}
-            allAuditors={auditors}
-            companies={companies}
-            projects={projects}
+            allAuditors={visibleAuditors}
+            companies={visibleCompanies}
+            projects={visibleProjects}
             contracts={contracts}
-            settlements={settlements}
+            settlements={visibleSettlements}
             notices={auditorNotices}
             onOpenReport={handleOpenReport}
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate,
+                auditorName: (info as any).auditorName,
+                pdfUrl: info.pdfUrl
+              });
+            }}
             onNavigateToReports={() => {
               navigateTo('reports', 'audit', { isEditingReport: false });
             }}
@@ -1376,6 +1480,7 @@ export function App() {
             onRequestReassignment={handleRequestReassignment}
             onOpenEmailModal={handleOpenEmailModalWithPreset}
             onOpenReportWorkbench={handleOpenReportWorkbench}
+            onOpenProfileModal={() => setIsProfileModalOpen(true)}
           />
         )}
 
@@ -1463,6 +1568,7 @@ export function App() {
         standard={pdfModalState.standard}
         auditType={pdfModalState.auditType}
         auditDate={pdfModalState.auditDate}
+        auditorName={pdfModalState.auditorName}
       />
 
       {/* 심사원 마이페이지 / 개인정보 및 심사비 지급방식 설정 모달 */}
@@ -1515,6 +1621,7 @@ export function App() {
             standard: info.standard,
             auditType: info.auditType,
             auditDate: info.auditDate,
+            auditorName: (info as any).auditorName,
             pdfUrl: info.pdfUrl
           });
         }}

@@ -6,7 +6,7 @@ import { cleanCeoName, splitPersonAndPosition } from '../utils/personUtils';
 
 // Map legacy auditors to Auditor[]
 export function getMergedAuditors(): Auditor[] {
-  return legacyAuditorsRaw.map((la: any, idx) => {
+  const auditors: Auditor[] = legacyAuditorsRaw.map((la: any, idx) => {
     // 4인 상근 (남경호, 정현일, 이혜원, 남효린) vs 그 외 비상근
     const isStaff4 = la.name.includes('남경호') || la.name.includes('정현일') || la.name.includes('이혜원') || la.name.includes('이예원') || la.name.includes('남효린');
     const affiliation: AuditorAffiliation = isStaff4 ? '상근' : (la.type === '상근' ? '상근' : '비상근');
@@ -85,11 +85,14 @@ export function getMergedAuditors(): Auditor[] {
     const seminarList = Array.isArray(la.seminarHistory) ? la.seminarHistory : [];
     const certRequests = Array.isArray(la.careerCertRequests) ? la.careerCertRequests : [];
 
+    // 성명 정규화 (이예원 -> 이혜원)
+    const normalizedName = la.name.includes('이예원') ? '이혜원' : la.name;
+
     return {
       id,
       gmsNumber: la.gmsNumber || '',
       originType,
-      name: la.name,
+      name: normalizedName,
       mobile,
       telephone: la.telephone || '',
       email,
@@ -122,6 +125,46 @@ export function getMergedAuditors(): Auditor[] {
       payoutRatePerMd: 450000,
     };
   });
+
+  // 상근 4인 중 남효린 주임 명시적 추가 (기존 목록에 없을 경우)
+  if (!auditors.some(a => a.name.includes('남효린'))) {
+    auditors.push({
+      id: 'aud-staff-nhr',
+      gmsNumber: 'GMS24022',
+      originType: '상근',
+      name: '남효린',
+      mobile: '010-8482-1702',
+      telephone: '02-6929-1702',
+      email: 'kgms2304@gmail.com',
+      address: '서울특별시 금천구 가산디지털1로 181 (가산동, W-MALL 12층)',
+      residentialRegion: '서울 금천구',
+      birthDate: '1995-04-12',
+      gender: '여',
+      education: '경영학과',
+      major: '경영학',
+      agency: 'GMS',
+      regDate: '2024-03-01',
+      grade: '정심사원',
+      status: '활동',
+      affiliation: '상근',
+      isSystemAdmin: true,
+      iafCodes: ['35'],
+      iafDetails: [],
+      qualifications: [],
+      certificates: [],
+      trainingHistory: [],
+      seminarHistory: [],
+      careerCertRequests: [],
+      registeredStandards: ['ISO 9001:2015', 'ISO 14001:2015'],
+      contractExpiryDate: '2028-12-31',
+      activeClientCount: 25,
+      isCommitteeMember: false,
+      bankAccount: undefined,
+      payoutRatePerMd: 450000,
+    });
+  }
+
+  return auditors;
 }
 
 export interface LegacyCompanyExtended extends Company {
@@ -159,30 +202,32 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
     '주식회사 썬즈'
   ]);
 
-  const auditors = getMergedAuditors();
+    const auditors = getMergedAuditors();
+    const adminAuditor = auditors.find(a => a.id === 'admin' || a.name.includes('남경호')) || auditors[0];
 
-  return legacyCompaniesRaw.map((lc, idx) => {
-    const isDrive = driveCompanies.has(lc.name) || Array.from(driveCompanies).some(dc => lc.name.includes(dc));
-    
-    // 실제 원본 DB의 배정 심사원(lc.assignedAuditor 또는 consultant)을 최우선으로 매핑!
-    const rawAssigned = ((lc as any).assignedAuditor || '').trim();
-    const rawConsultant = ((lc as any).consultant || '').trim();
-    
-    let assignedAuditor = auditors[idx % auditors.length]; // 기본 fallback
+    return legacyCompaniesRaw.map((lc, idx) => {
+      const isDrive = driveCompanies.has(lc.name) || Array.from(driveCompanies).some(dc => lc.name.includes(dc));
+      
+      // 실제 원본 DB의 배정 심사원(lc.assignedAuditor 또는 consultant)을 엄격하게 매핑!
+      // 임의의 비상근 심사원 자동 배정(idx % auditors.length)을 완전히 제거하여 정보 노출 및 오매칭 방지
+      const rawAssigned = ((lc as any).assignedAuditor || '').trim();
+      const rawConsultant = ((lc as any).consultant || '').trim();
+      
+      let assignedAuditor = adminAuditor; // 기본값: 사무국 / 남경호 원장
 
-    if (rawAssigned) {
-      // 1순위: assignedAuditor 문자열에서 일치하는 심사원 객체 검색 (김홍덕 등 등록 심사원 우선)
-      const matched = auditors.find(a => rawAssigned.includes(a.name));
-      if (matched) {
-        assignedAuditor = matched;
+      if (rawAssigned && rawAssigned !== '미지정') {
+        // 1순위: assignedAuditor 문자열에서 일치하는 심사원 객체 검색 (김홍덕, 이동훈, 이기영 등)
+        const matched = auditors.find(a => rawAssigned.includes(a.name));
+        if (matched) {
+          assignedAuditor = matched;
+        }
+      } else if (rawConsultant && rawConsultant !== 'HQ' && rawConsultant !== '사무국직접') {
+        // 2순위: consultant(유치 심사원) 기준 검색
+        const matched = auditors.find(a => rawConsultant.includes(a.name));
+        if (matched) {
+          assignedAuditor = matched;
+        }
       }
-    } else if (rawConsultant && rawConsultant !== 'HQ' && rawConsultant !== '사무국직접') {
-      // 2순위: consultant(유치 심사원) 기준 검색
-      const matched = auditors.find(a => rawConsultant.includes(a.name));
-      if (matched) {
-        assignedAuditor = matched;
-      }
-    }
 
     // 대표자명 및 담당자 성명/직책 정제
     const cleanedCeo = cleanCeoName(lc.ceoName || (lc.contactPerson?.includes('대표') ? lc.contactPerson : '대표이사'));
@@ -351,15 +396,21 @@ export function getMergedProjects(): AuditProject[] {
   const rawList = realAuditProjectsRaw as unknown as AuditProject[];
   const map = new Map<string, AuditProject>();
 
+  const auditors = getMergedAuditors();
+  const auditorNameMap = new Map<string, string>();
+  auditors.forEach(a => auditorNameMap.set(a.name.trim(), a.id));
+
   rawList.forEach(p => {
     // 키: 회사명 + 시작일 + 종료일 + 심사유형
     const key = [p.companyName.trim(), p.startDate, p.endDate, p.auditType].join('__');
     const cleanMd = normalizeMd(p.appliedMd);
     const cleanKabMd = normalizeMd(p.kabStandardMd || p.appliedMd);
+    const canonicalLeadId = auditorNameMap.get(p.leadAuditorName?.trim() || '') || p.leadAuditorId || 'admin';
 
     if (!map.has(key)) {
       map.set(key, {
         ...p,
+        leadAuditorId: canonicalLeadId,
         appliedMd: cleanMd,
         kabStandardMd: cleanKabMd,
         standards: [...(p.standards || [])],
@@ -367,6 +418,7 @@ export function getMergedProjects(): AuditProject[] {
       });
     } else {
       const existing = map.get(key)!;
+      if (canonicalLeadId) existing.leadAuditorId = canonicalLeadId;
       // 규격 합집합 병합
       (p.standards || []).forEach(s => {
         if (!existing.standards.includes(s)) existing.standards.push(s);

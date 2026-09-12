@@ -51,7 +51,7 @@ export interface CompanyAuditHistoryModalProps {
   onOpenReport?: (reportId: string) => void;
   onOpenReportWorkbench?: (company: Company) => void;
   onOpenPlanInvoiceModal?: (company: Company) => void;
-  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; auditorName?: string; pdfUrl?: string }) => void;
 }
 
 // 심사 성격 계산
@@ -766,37 +766,49 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                               <button
                                 type="button"
                                 onClick={() => {
+                                  const std = stdAndCerts[0]?.std || 'ISO 9001:2015';
+                                  const leadAuditor = rec.leadAuditor || managingAuditor.name || '남경호';
+                                  const title = `[심사보고서] ${rec.auditType} (${rec.auditDate}) - 심사팀장: ${leadAuditor}`;
+                                  if (typeof window !== 'undefined') {
+                                    window.open(`#pdf-report/${encodeURIComponent(company.companyName)}?standard=${encodeURIComponent(std)}&auditType=${encodeURIComponent(rec.auditType)}&auditDate=${encodeURIComponent(rec.auditDate)}&auditorName=${encodeURIComponent(leadAuditor)}`, '_blank');
+                                  }
                                   onOpenPdfReport?.({
-                                    title: `[심사보고서] ${rec.auditType} (${rec.auditDate})`,
+                                    title,
                                     companyName: company.companyName,
-                                    standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
+                                    standard: std,
                                     auditType: rec.auditType,
-                                    auditDate: rec.auditDate
+                                    auditDate: rec.auditDate,
+                                    auditorName: leadAuditor
                                   });
                                 }}
                                 className="text-cyan-800 hover:text-cyan-950 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer group"
-                                title="공식 심사보고서 PDF 열람"
+                                title="공식 심사보고서 PDF 새 창 열람"
                               >
                                 <FileText className="w-3.5 h-3.5 text-cyan-800 group-hover:scale-110 transition-transform" />
-                                <span>심사보고서</span>
+                                <span>심사보고서 (이전 보고서 열람)</span>
                               </button>
 
                               {/* 인증서 링크 */}
                               <button
                                 type="button"
                                 onClick={() => {
+                                  const std = stdAndCerts[0]?.std || 'ISO 9001:2015';
+                                  const title = `[인증서] ${company.companyName} 공식 인증서 (${std})`;
+                                  if (typeof window !== 'undefined') {
+                                    window.open(`#pdf-cert/${encodeURIComponent(company.companyName)}?standard=${encodeURIComponent(std)}&auditDate=${encodeURIComponent(rec.auditDate)}`, '_blank');
+                                  }
                                   if (onOpenPdfReport) {
                                     onOpenPdfReport({
-                                      title: `[인증서] ${company.companyName} 공식 인증서 (${stdAndCerts[0]?.std})`,
+                                      title,
                                       companyName: company.companyName,
-                                      standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
+                                      standard: std,
                                       auditType: '인증서 발급본',
                                       auditDate: rec.auditDate
                                     });
                                   }
                                 }}
                                 className="text-indigo-800 hover:text-indigo-950 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer group"
-                                title="공식 인증서 PDF 열람"
+                                title="공식 인증서 PDF 새 창 열람"
                               >
                                 <Award className="w-3.5 h-3.5 text-indigo-800 group-hover:scale-110 transition-transform" />
                                 <span>인증서(국/영문)</span>

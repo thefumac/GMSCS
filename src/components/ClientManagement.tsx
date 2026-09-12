@@ -11,6 +11,7 @@ import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 import { NewCompanyModal } from './NewCompanyModal';
 import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
+import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState } from '../utils/auditStateUtils';
 
 export interface ClientManagementProps {
   companies: Company[];
@@ -89,6 +90,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
+  const [selectedAuditState, setSelectedAuditState] = useState<string>('all');
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedAuditor, setSelectedAuditor] = useState<string>('all');
   const [selectedAgency, setSelectedAgency] = useState<string>('all');
@@ -102,6 +104,17 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     auditors.forEach(a => map.set(a.id, a));
     return map;
   }, [auditors]);
+
+  // Project map by companyId
+  const projectMap = useMemo(() => {
+    const map = new Map<string, AuditProject>();
+    projects.forEach(p => {
+      if (!map.has(p.companyId)) {
+        map.set(p.companyId, p);
+      }
+    });
+    return map;
+  }, [projects]);
 
   // Contract map by companyId
   const contractMap = useMemo(() => {
@@ -236,9 +249,13 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       // 5. 협력기관 매칭
       const matchesAgency = selectedAgency === 'all' || agencyDisplay === selectedAgency;
 
-      return matchesSearch && matchesStandard && matchesRegion && matchesAuditor && matchesAgency;
+      // 6. 인증상태 매칭 (최근 2년 미시행 자격정지 및 진행단계)
+      const auditState = getCompanyAuditState(c, contractMap.get(c.id), projectMap.get(c.id));
+      const matchesAuditState = selectedAuditState === 'all' || auditState === selectedAuditState;
+
+      return matchesSearch && matchesStandard && matchesRegion && matchesAuditor && matchesAgency && matchesAuditState;
     });
-  }, [companies, searchTerm, selectedStandard, selectedRegion, selectedAuditor, selectedAgency, auditorMap]);
+  }, [companies, searchTerm, selectedStandard, selectedRegion, selectedAuditor, selectedAgency, selectedAuditState, auditorMap, contractMap, projectMap]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / PAGE_SIZE));
@@ -250,7 +267,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
   return (
     <div className="space-y-3 animate-in fade-in">
-      {/* 1. 상단 단일 조회바 (인증규격 전체 메뉴 + 지역 + 담당심사원 + 협력기관 검색창) */}
+      {/* 1. 상단 단일 조회바 (인증규격 전체 메뉴 + 인증상태 + 지역 + 담당심사원 + 협력기관 검색창) */}
       <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           {/* 검색창 */}
@@ -267,6 +284,23 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
               className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-cyan-500 focus:bg-white"
             />
           </div>
+
+          {/* 인증상태 필터 (전체, 인증유지, 일정·계획, 보고서작성, 심의중, 자격정지) */}
+          <select
+            value={selectedAuditState}
+            onChange={(e) => {
+              setSelectedAuditState(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="py-1 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-700 font-semibold focus:outline-hidden cursor-pointer"
+          >
+            <option value="all">전체 인증상태</option>
+            <option value="인증유지">인증유지</option>
+            <option value="일정·계획">일정·계획</option>
+            <option value="보고서작성">보고서작성</option>
+            <option value="심의중">심의중</option>
+            <option value="자격정지">자격정지 (2년 미시행)</option>
+          </select>
 
           {/* 인증규격 필터 (GMS_AVAILABLE_STANDARDS 변수에서 동적 생성) */}
           <select
@@ -411,15 +445,18 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                 <th className="py-2.5 px-2 text-center min-w-[80px] font-normal border-r border-slate-300">
                   담당 심사원
                 </th>
-                <th className="py-2.5 px-2 text-center min-w-[85px] font-normal">
+                <th className="py-2.5 px-2 text-center min-w-[85px] font-normal border-r border-slate-300">
                   협력기관
+                </th>
+                <th className="py-2.5 px-2 text-center min-w-[80px] font-normal">
+                  인증상태
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-700 font-normal">
               {paginatedCompanies.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400 font-normal">
+                  <td colSpan={11} className="py-12 text-center text-slate-400 font-normal">
                     검색 조건에 일치하는 고객사 내역이 없습니다.
                   </td>
                 </tr>
@@ -437,6 +474,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                   const scope = comp.scope || compAny.scope || comp.industry || '제품 및 서비스의 개발, 제조 및 부가서비스';
                   const region = getRegionDisplay(comp);
                   const agencyDisplay = getAgencyDisplayName(comp.consultant || compAny.consultant, managingAuditor.name);
+                  const auditState = getCompanyAuditState(comp, fallbackContract, projectMap.get(comp.id));
 
                   return (
                     <tr
@@ -518,12 +556,19 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                       </td>
 
                       {/* 협력기관 (독립 컬럼, 이해충돌 방지 적용) */}
-                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs font-normal text-slate-700">
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700">
                         {agencyDisplay === '—' ? (
                           <span className="text-slate-400 font-mono" title="이해충돌 방지 (담당심사원과 동일)">—</span>
                         ) : (
                           <span>{agencyDisplay}</span>
                         )}
+                      </td>
+
+                      {/* 인증상태 (진행상태 및 최근 2년 미시행 자격정지 배지) */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs">
+                        <span className={`px-2 py-0.5 text-[11px] rounded border ${getAuditStateBadgeClass(auditState)}`}>
+                          {auditState}
+                        </span>
                       </td>
                     </tr>
                   );

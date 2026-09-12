@@ -28,10 +28,14 @@ import {
   ExternalLink,
   Award,
   RefreshCcw,
-  CheckSquare
+  CheckSquare,
+  FolderOpen,
+  FileCode,
+  HardDrive
 } from 'lucide-react';
 import { initialFullReportData, FullAuditReportPackData, ProcessAuditNoteItem } from '../data/mockFullRemarkPack';
 import { remarkMeetingAgendas } from '../data/mockRemarkData';
+import { getDriveReportsForCompany, DriveReportFileItem } from '../data/driveReportFiles';
 
 interface PdfViewerModalProps {
   isOpen: boolean;
@@ -99,9 +103,46 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   auditorName = '',
   auditorEmail = ''
 }) => {
+  // 모드 전환: 'pdf_reader' (구글 드라이브 원본 PDF 리더) | 'digital_pack' (GMSCS 신규 전자 서식 팩)
+  const [viewMode, setViewMode] = useState<'pdf_reader' | 'digital_pack'>('pdf_reader');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [activeTab, setActiveTab] = useState<ReportSectionTab>('all');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // 구글 드라이브 표준화 보관 파일 목록 조회
+  const driveFiles = useMemo(() => {
+    return getDriveReportsForCompany(companyName);
+  }, [companyName]);
+
+  const [selectedDriveIndex, setSelectedDriveIndex] = useState<number>(0);
+
+  // 활성 구글 드라이브 파일 계산
+  const activeDriveFile: DriveReportFileItem = useMemo(() => {
+    if (driveFiles.length > 0 && driveFiles[selectedDriveIndex]) {
+      return driveFiles[selectedDriveIndex];
+    }
+    return {
+      fileName: `[GMSCS-REP]_${auditDate.slice(0, 7)}_${auditType}_심사_${auditorName || '담당'}_심사보고서팩(${companyName}).pdf`,
+      originalName: `[GMSCS-REP]_${companyName}_심사보고서.pdf`,
+      docType: '심사보고서',
+      fileSize: '1.4 MB',
+      sizeBytes: 1468000,
+      auditor: auditorName || '사무국',
+      pdfUrl: pdfUrl || '/docs/2025_Audit_Report_Pack.pdf'
+    };
+  }, [driveFiles, selectedDriveIndex, companyName, auditDate, auditType, auditorName, pdfUrl]);
+
+  // 브라우저 인쇄 / PDF 저장 시 파일명에 심사팀장 성명이 자동 포함되도록 document.title 동적 설정
+  useEffect(() => {
+    if (isOpen) {
+      const originalTitle = document.title;
+      const leadAuditor = auditorName || activeDriveFile.auditor || '남경호';
+      document.title = `[심사보고서] ${companyName}_${standard}_${auditType}_(심사팀장 ${leadAuditor})`;
+      return () => {
+        document.title = originalTitle;
+      };
+    }
+  }, [isOpen, companyName, standard, auditType, auditorName, activeDriveFile]);
 
   // 저장된 전자메일 서명 목록 (LocalStorage 연동)
   const storageKey = useMemo(() => `GMSCS_PDF_SIGNATURES_${companyName}_${auditDate}`, [companyName, auditDate]);
@@ -117,8 +158,6 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     }
     return {};
   });
-
-  // 1단계 요구사항별 심사 기록 (Table 9: 4~10장)
   const [stage1Clauses, setStage1Clauses] = useState<Stage1ClauseItem[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`GMSCS_STAGE1_CLAUSES_${companyName}`);
@@ -372,57 +411,121 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         <div className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
-              <FileText className="w-5 h-5 text-cyan-400" />
+              {viewMode === 'pdf_reader' ? (
+                <HardDrive className="w-5 h-5 text-cyan-400" />
+              ) : (
+                <FileText className="w-5 h-5 text-cyan-400" />
+              )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-white font-bold text-base truncate">
-                  [공식 심사보고서] {companyName} - {standard}
+                  {viewMode === 'pdf_reader' ? `[구글 드라이브 PDF 열람] ${companyName}` : `[GMSCS 전자서식팩] ${companyName} - ${standard}`}
                 </h3>
-                <span className="bg-cyan-900/80 text-cyan-300 text-xs px-2 py-0.5 rounded-full border border-cyan-700 font-medium shrink-0">
-                  2025 Audit Report Pack 원본 실물 규격
+                <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold shrink-0 ${
+                  viewMode === 'pdf_reader' 
+                    ? 'bg-amber-950/80 text-amber-300 border-amber-700' 
+                    : 'bg-cyan-900/80 text-cyan-300 border-cyan-700'
+                }`}>
+                  {viewMode === 'pdf_reader' ? '📂 구글 드라이브 원본 실물 PDF' : '🖥️ 신규 디지털 보고서 팩'}
                 </span>
               </div>
               <p className="text-slate-400 text-xs truncate mt-0.5">
-                심사구분: <span className="text-slate-200 font-medium">{auditType}</span> | 심사일자: <span className="text-slate-200 font-mono">{auditDate}</span> | 인증원: <span className="text-slate-200">GMSCS (지엠에스씨에스)</span>
+                심사구분: <span className="text-slate-200 font-medium">{auditType}</span> | 심사일자: <span className="text-slate-200 font-mono">{auditDate}</span> | 심사팀장: <span className="text-cyan-300 font-bold">{auditorName || activeDriveFile.auditor || '남경호'}</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* 서명 상태 배지 */}
-            <div className="hidden lg:flex items-center gap-2 bg-slate-950/80 border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-slate-300">
-              <Shield className="w-4 h-4 text-emerald-400" />
-              <span>전자메일 서명:</span>
-              <strong className="text-emerald-400 font-mono font-bold">{verifiedCount}</strong> / {totalSignatureSlots}건 완료
+            {/* 뷰 모드 전환 토글 탭 */}
+            <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-700 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('pdf_reader')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  viewMode === 'pdf_reader'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="구글 드라이브에 저장된 실제 과거 PDF 파일을 PDF 리더로 열람합니다."
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+                <span>구글 드라이브 PDF 리더</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('digital_pack')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  viewMode === 'digital_pack'
+                    ? 'bg-cyan-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="GMSCS 신규 시스템에서 작성된 10대 디지털 서식 팩으로 열람합니다."
+              >
+                <FileCode className="w-3.5 h-3.5" />
+                <span>GMSCS 전자 서식 팩</span>
+              </button>
             </div>
 
-            {/* 확대/축소 */}
-            <div className="hidden sm:flex items-center bg-slate-700/80 rounded-lg p-0.5 border border-slate-600 text-slate-300 text-xs">
-              <button 
-                onClick={() => setZoomLevel(prev => Math.max(70, prev - 10))}
-                className="p-1 hover:text-white hover:bg-slate-600 rounded cursor-pointer"
-                title="축소"
-              >
-                <ZoomOut className="w-3.5 h-3.5" />
-              </button>
-              <span className="px-2 font-mono font-bold">{zoomLevel}%</span>
-              <button 
-                onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
-                className="p-1 hover:text-white hover:bg-slate-600 rounded cursor-pointer"
-                title="확대"
-              >
-                <ZoomIn className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {/* 디지털 팩 모드일 때만 서명 카운터 & 줌 표시 */}
+            {viewMode === 'digital_pack' && (
+              <>
+                <div className="hidden lg:flex items-center gap-2 bg-slate-950/80 border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-slate-300">
+                  <Shield className="w-4 h-4 text-emerald-400" />
+                  <span>전자메일 서명:</span>
+                  <strong className="text-emerald-400 font-mono font-bold">{verifiedCount}</strong> / {totalSignatureSlots}건 완료
+                </div>
+
+                <div className="hidden sm:flex items-center bg-slate-700/80 rounded-lg p-0.5 border border-slate-600 text-slate-300 text-xs">
+                  <button 
+                    onClick={() => setZoomLevel(prev => Math.max(70, prev - 10))}
+                    className="p-1 hover:text-white hover:bg-slate-600 rounded cursor-pointer"
+                    title="축소"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="px-2 font-mono font-bold">{zoomLevel}%</span>
+                  <button 
+                    onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
+                    className="p-1 hover:text-white hover:bg-slate-600 rounded cursor-pointer"
+                    title="확대"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* 원본 파일 다운로드 */}
+            <a
+              href={activeDriveFile.pdfUrl}
+              download={activeDriveFile.fileName}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold rounded-lg transition-colors border border-slate-600 cursor-pointer shadow-xs"
+              title="원본 PDF 파일 다운로드"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">다운로드</span>
+            </a>
+
+            {/* 새 창에서 열기 */}
+            <button
+              onClick={() => window.open(activeDriveFile.pdfUrl, '_blank')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold rounded-lg transition-colors border border-slate-600 cursor-pointer shadow-xs"
+              title="브라우저 새 창에서 PDF 원본 열기"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">새 창 열기</span>
+            </button>
 
             {/* 인쇄 */}
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold rounded-lg transition-colors border border-slate-600 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-semibold rounded-lg transition-colors border border-cyan-600 cursor-pointer shadow-xs"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>인쇄 / PDF 저장</span>
+              <span>인쇄</span>
             </button>
 
             {/* 전체화면 전환 */}
@@ -446,49 +549,109 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         </div>
 
         {/* ========================================================= */}
-        {/* 서브 섹션 탭 네비게이션 */}
+        {/* VIEW 1: [구글 드라이브 원본 PDF 리더 모드] (기본 원칙)   */}
         {/* ========================================================= */}
-        <div className="bg-slate-800/60 border-b border-slate-700 px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-xs shrink-0 no-scrollbar">
-          {[
-            { key: 'all', label: '전체 보고서 (연속 열람)' },
-            { key: 'cover_agenda', label: '1. 표지 및 회의안건' },
-            { key: 'schedule_coi', label: '2. 심사일정 & 이해관계확인' },
-            { key: 'stage1', label: '3. 1단계 문서심사' },
-            { key: 'stage2', label: '4. 2단계 현장심사' },
-            { key: 'audit_note', label: '5. PROCESS Audit Note' },
-            { key: 'findings_summary', label: '6. 심사발견사항 & 총평' },
-            { key: 'three_year_plan', label: '7. 3개년 심사계획' },
-            { key: 'ncr_report', label: '8. 시정조치요구서 (NCR)' },
-            { key: 'cert_preview', label: '9. 인증서 표기확인' },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as ReportSectionTab)}
-              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === tab.key
-                  ? 'bg-cyan-600 text-white font-bold shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {viewMode === 'pdf_reader' && (
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
+            {/* 구글 드라이브 보관 파일 탭바 */}
+            <div className="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 overflow-x-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 flex items-center gap-1.5 font-medium shrink-0">
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+                  <span>구글 드라이브 보관 파일 ({driveFiles.length}개):</span>
+                </span>
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                  {driveFiles.length > 0 ? (
+                    driveFiles.map((df, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedDriveIndex(idx)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                          selectedDriveIndex === idx
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+                        }`}
+                      >
+                        <FileText className="w-3 h-3 text-amber-400" />
+                        <span className="max-w-[200px] truncate">{df.originalName.replace(/\.pdf - .*$/, '').replace('[GMSCS-REP]_', '')}</span>
+                        <span className="text-[10px] bg-slate-950/60 px-1 py-0.2 rounded text-slate-400 font-mono">{df.fileSize}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-1 rounded-lg text-xs bg-slate-800 text-amber-300 border border-amber-800/40 flex items-center gap-1.5">
+                      <FileText className="w-3 h-3" />
+                      <span>{companyName}_심사보고서_원본.pdf (표준 PDF 리더 연결)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 현재 활성 파일 메타데이터 */}
+              <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 shrink-0">
+                <span className="text-slate-500">파일명:</span>
+                <span className="font-mono text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 max-w-[320px] truncate" title={activeDriveFile.fileName}>
+                  {activeDriveFile.fileName}
+                </span>
+              </div>
+            </div>
+
+            {/* 실제 내장 브라우저 PDF 리더 iframe */}
+            <div className="flex-1 w-full h-full relative bg-slate-900 min-h-0">
+              <iframe
+                src={`${activeDriveFile.pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                className="w-full h-full border-0 bg-slate-900"
+                title={activeDriveFile.fileName}
+              />
+            </div>
+          </div>
+        )}
 
         {/* ========================================================= */}
-        {/* 메인 A4 PDF 문서 열람 뷰어 영역 (배경 회색 + A4 시트) */}
+        {/* VIEW 2: [GMSCS 신규 전자 서식 팩 모드]                    */}
         {/* ========================================================= */}
-        <div className="flex-1 bg-slate-950 p-3 sm:p-6 overflow-y-auto flex flex-col items-center">
-          <div 
-            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-            className="w-full max-w-[1100px] transition-transform duration-150 space-y-8 print:w-full print:max-w-none print:transform-none"
-          >
-            
-            {/* ========================================================================= */}
-            {/* SECTION 1: [표지 & 기본정보 & 시작/종결 회의 안건]                         */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'cover_agenda') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
+        {viewMode === 'digital_pack' && (
+          <>
+            {/* 서브 섹션 탭 네비게이션 */}
+            <div className="bg-slate-800/60 border-b border-slate-700 px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-xs shrink-0 no-scrollbar">
+              {[
+                { key: 'all', label: '전체 보고서 (연속 열람)' },
+                { key: 'cover_agenda', label: '1. 표지 및 회의안건' },
+                { key: 'schedule_coi', label: '2. 심사일정 & 이해관계확인' },
+                { key: 'stage1', label: '3. 1단계 문서심사' },
+                { key: 'stage2', label: '4. 2단계 현장심사' },
+                { key: 'audit_note', label: '5. PROCESS Audit Note' },
+                { key: 'findings_summary', label: '6. 심사발견사항 & 총평' },
+                { key: 'three_year_plan', label: '7. 3개년 심사계획' },
+                { key: 'ncr_report', label: '8. 시정조치요구서 (NCR)' },
+                { key: 'cert_preview', label: '9. 인증서 표기확인' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as ReportSectionTab)}
+                  className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all cursor-pointer ${
+                    activeTab === tab.key
+                      ? 'bg-cyan-600 text-white font-bold shadow-xs'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 메인 A4 PDF 문서 열람 뷰어 영역 (배경 회색 + A4 시트) */}
+            <div className="flex-1 bg-slate-950 p-3 sm:p-6 overflow-y-auto flex flex-col items-center">
+              <div 
+                style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+                className="w-full max-w-[1100px] transition-transform duration-150 space-y-8 print:w-full print:max-w-none print:transform-none"
+              >
+                
+                {/* ========================================================================= */}
+                {/* SECTION 1: [표지 & 기본정보 & 시작/종결 회의 안건]                         */}
+                {/* ========================================================================= */}
+                {(activeTab === 'all' || activeTab === 'cover_agenda') && (
+                  <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
                 
                 {/* 1.1 공식 문서 헤더 */}
                 <div className="border-b-2 border-slate-900 pb-4 flex items-center justify-between">
@@ -1425,6 +1588,8 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
           </div>
         </div>
+        </>
+        )}
 
         {/* ========================================================= */}
         {/* 하단 통합 상태바 */}

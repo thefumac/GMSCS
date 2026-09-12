@@ -148,6 +148,7 @@ interface AuditorPortalProps {
   onRequestReassignment?: (projectId: string, log: any) => void;
   onOpenEmailModal: (recipientName?: string, recipientEmail?: string, templateType?: any) => void;
   onOpenReportWorkbench?: (companyId: string) => void;
+  onOpenProfileModal?: () => void;
 }
 
 // 심사 단계 판별
@@ -434,6 +435,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   onOpenPdfReport,
   onOpenEmailModal,
   onOpenReportWorkbench,
+  onOpenProfileModal,
 }) => {
   // 5대 탭 메뉴:
   // 1. ledger: 나의 심사 업체 대장
@@ -1450,6 +1452,18 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             <Calculator className="w-3.5 h-3.5" />
             <span>심사MD</span>
           </button>
+
+          {onOpenProfileModal && (
+            <button
+              type="button"
+              onClick={onOpenProfileModal}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-cyan-800 bg-cyan-50 hover:bg-cyan-100 hover:text-cyan-900 border border-cyan-200/80 transition flex items-center gap-1.5 cursor-pointer shadow-2xs ml-1"
+              title="개인정보 확인 및 비밀번호 변경"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-cyan-700" />
+              <span>내 정보 / 비번변경</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -27,7 +27,9 @@ import {
   BookOpen,
   Send,
   Eye,
-  Briefcase
+  Briefcase,
+  KeyRound,
+  Lock
 } from 'lucide-react';
 import { 
   Auditor, 
@@ -43,6 +45,7 @@ import {
   CareerCertRequestItem 
 } from '../types';
 import { cleanCeoName } from '../utils/personUtils';
+import { saveAuditorPassword, getAuditorPassword } from '../utils/authUtils';
 
 interface AuditorProfileModalProps {
   isOpen: boolean;
@@ -237,6 +240,41 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
   // Year filter for Audit History Tab (접속년도 기본 선택)
   const currentYearStr = new Date().getFullYear().toString(); // e.g. "2026"
   const [selectedHistoryYear, setSelectedHistoryYear] = useState<string>(currentYearStr);
+
+  // 계정 비밀번호 변경 상태 (개인포털에서만 수정 가능)
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [showPasswordChangeFields, setShowPasswordChangeFields] = useState(false);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+
+  const handleApplyPasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+
+    if (!newPasswordInput || newPasswordInput.trim().length < 6) {
+      setPasswordChangeError('새 비밀번호는 6자리 이상으로 입력해 주십시오.');
+      return;
+    }
+
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordChangeError('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+
+    const ok = saveAuditorPassword(auditor.id, email || auditor.email, newPasswordInput.trim());
+    if (ok) {
+      setPasswordChangeSuccess('비밀번호가 성공적으로 변경되었습니다. 다음 로그인부터 새 비밀번호로 접속해 주십시오.');
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      setTimeout(() => {
+        setShowPasswordChangeFields(false);
+      }, 3500);
+    } else {
+      setPasswordChangeError('비밀번호 변경 저장에 실패했습니다. 다시 시도해 주십시오.');
+    }
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1222,6 +1260,117 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* 3. 계정 보안 및 비밀번호 관리 (개인포털에서만 수정 가능) */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3.5">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <KeyRound className="w-4 h-4 text-cyan-700" />
+                    <span>계정 보안 및 로그인 비밀번호</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    ID: {email || auditor.email}
+                  </span>
+                </div>
+
+                {mode === 'portal' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200">
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">로그인 비밀번호 변경</span>
+                        <span className="text-[11px] text-slate-500">초기 기본 비밀번호는 <code className="bg-slate-100 text-cyan-800 px-1 py-0.5 rounded font-mono">gms9001</code>입니다.</span>
+                      </div>
+                      {!showPasswordChangeFields && (
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordChangeFields(true)}
+                          className="px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 font-bold text-xs transition cursor-pointer"
+                        >
+                          비밀번호 변경
+                        </button>
+                      )}
+                    </div>
+
+                    {showPasswordChangeFields && (
+                      <form onSubmit={handleApplyPasswordChange} className="bg-white p-4 rounded-xl border border-cyan-200/80 space-y-3 shadow-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                              새 비밀번호 (6자리 이상) <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                              <input
+                                type="password"
+                                value={newPasswordInput}
+                                onChange={(e) => setNewPasswordInput(e.target.value)}
+                                className="w-full bg-slate-50 focus:bg-white border border-slate-300 focus:border-cyan-600 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-hidden"
+                                placeholder="새 비밀번호 입력"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                              새 비밀번호 확인 <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                              <input
+                                type="password"
+                                value={confirmPasswordInput}
+                                onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                                className="w-full bg-slate-50 focus:bg-white border border-slate-300 focus:border-cyan-600 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-hidden"
+                                placeholder="비밀번호 재입력"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {passwordChangeError && (
+                          <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                            <span>{passwordChangeError}</span>
+                          </div>
+                        )}
+
+                        {passwordChangeSuccess && (
+                          <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{passwordChangeSuccess}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPasswordChangeFields(false);
+                              setPasswordChangeError('');
+                            }}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-semibold"
+                          >
+                            닫기
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-4 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold shadow-xs cursor-pointer"
+                          >
+                            새 비밀번호 저장
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>개인정보 보호 정책에 따라 비밀번호 변경은 심사원 본인이 <strong className="text-slate-700">개인포털</strong>에서 직접 진행할 수 있습니다.</span>
+                  </div>
+                )}
               </div>
 
               {/* 기본정보 탭 전용 저장 및 취소 액션 바 (개인포털 진입 시에만 표시) */}

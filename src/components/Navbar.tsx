@@ -68,7 +68,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout
 }) => {
   const currentAuditorObj = allAuditors.find(a => a.id === currentUserRole) || allAuditors[0];
-  const isStaff = currentAuditorObj?.isSystemAdmin || currentAuditorObj?.affiliation === '상근' || currentUserRole === 'admin';
+  const STAFF_NAMES = ['남경호', '정현일', '남효린', '이혜원', '이예원', '김홍덕'];
+  const STAFF_EMAILS = ['nam2304@empas.com', 'himix1993@gmail.com', 'kgms2304@gmail.com', 'yewon6798@gmail.com', 'fumac@naver.com'];
+
+  const isStaff = 
+    currentAuditorObj?.isSystemAdmin || 
+    currentAuditorObj?.affiliation === '상근' || 
+    STAFF_NAMES.some(name => currentAuditorObj?.name?.includes(name)) ||
+    (currentAuditorObj?.email && STAFF_EMAILS.includes(currentAuditorObj.email.toLowerCase().trim())) ||
+    currentUserRole === 'admin';
   const isRegularAuditor = !isStaff;
 
   // 사용자 메뉴 드롭다운 상태

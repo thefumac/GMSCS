@@ -30,6 +30,7 @@ import {
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 import { cleanStandardName } from './AuditorPortal';
 import { findNextCommitteeMeetingDate } from '../utils/committeeSchedule';
+import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState } from '../utils/auditStateUtils';
 
 export type SortColumn = 
   | 'no' 
@@ -54,6 +55,7 @@ export interface AuditProcessStatusManagerProps {
   onOpenReport?: (reportId: string) => void;
   onSendPlan?: (companyName?: string, contactEmail?: string, templateType?: string) => void;
   onNavigateToSettlement?: () => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; auditorName?: string; pdfUrl?: string }) => void;
 }
 
 export interface ProcessRowData {
@@ -69,6 +71,7 @@ export interface ProcessRowData {
   standardsText: string;
   certNo: string;
   auditType: string;
+  auditState: CompanyAuditState;
   
   // 1. Pre-AUDIT (4개 항목 및 각각의 수집 일자)
   preAudit: {
@@ -134,7 +137,8 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
   committeeSchedules = [],
   onOpenReport,
   onSendPlan: _onSendPlan,
-  onNavigateToSettlement: _onNavigateToSettlement
+  onNavigateToSettlement: _onNavigateToSettlement,
+  onOpenPdfReport
 }) => {
   // 검색 및 필터
   const [searchTerm, setSearchTerm] = useState('');
@@ -268,6 +272,8 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
     return projects.map((p, idx) => {
       const comp = companyMap.get(p.companyId) || companies.find(c => c.id === p.companyId || c.companyName === p.companyName);
       const contract = contractMap.get(p.companyId) || (contracts ? contracts.find(c => c.companyId === p.companyId || c.companyName === p.companyName) : undefined);
+      const curSettlement = settlements.find(s => s.projectId === p.id || s.companyName === p.companyName);
+      const auditState = getCompanyAuditState(comp, contract, p, curSettlement);
 
       const compAny = comp as any;
       const ceoName = comp?.ceoName || '';
@@ -421,6 +427,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         standardsText,
         certNo,
         auditType: p.auditType || '1차 사후',
+        auditState,
         preAudit,
         schedule,
         team,
@@ -436,7 +443,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
         rawCompany: comp
       };
     });
-  }, [projects, companyMap, contractMap, reports, auditors, reportCustomStages, committeeSchedules]);
+  }, [projects, companyMap, contractMap, reports, auditors, reportCustomStages, committeeSchedules, settlements]);
 
   // 필터링 (월별 필터 + 검색어 + 규격 + 진행단계)
   const filteredRows = useMemo(() => {
@@ -470,25 +477,61 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
       // 4. 진행단계 필터
       let matchesStep = true;
       if (selectedFilterStep === 'preAudit') {
-        matchesStep = !row.preAudit.hasPlanApproved;
+        // 1. Pre-AUDIT 진행 중: 심사 전 사전 준비/일정/계획 단계만 표시 (보고서작성, 심의중, 비용정산중, 인증유지, 자격정지는 완전 제외)
+        matchesStep = row.auditState === '일정·계획' || (
+          row.auditState !== '보고서작성' &&
+          row.auditState !== '심의중' &&
+          row.auditState !== '비용정산중' &&
+          row.auditState !== '인증유지' &&
+          row.auditState !== '자격정지' &&
+          row.postAudit.stage === '대기' &&
+          !['심사진행중', '보고서작성', '보고서제출', '위원회심의', '심사의결', '인증발행', '심의완료', '종결'].includes(row.rawProject.status)
+        );
       } else if (selectedFilterStep === 'onsite') {
-        matchesStep = row.preAudit.hasPlanApproved && row.postAudit.stage === '대기';
+        // 2. 현장심사 진행 중: 현장 심사 당일 또는 심사 진행 상태
+        matchesStep = row.rawProject.status === '심사진행중' || (
+          row.schedule.startDate <= '2026-09-12' && 
+          row.schedule.endDate >= '2026-09-12' && 
+          row.postAudit.stage === '대기'
+        );
       } else if (selectedFilterStep === 'report') {
-        matchesStep = row.postAudit.stage === '접수' || row.postAudit.stage === '검토';
+        // 3. 보고서 검토 중: 심사 완료 후 보고서 작성/접수/검토 진행 중
+        matchesStep = row.auditState === '보고서작성' || row.postAudit.stage === '접수' || row.postAudit.stage === '검토' || ['사무국검토대기', '보완요청', '보고서작성', '서명완료'].includes(row.rawProject.status);
       } else if (selectedFilterStep === 'committee') {
-        matchesStep = row.committee.status === 'in_progress';
+        // 4. 심의의결 예정: 위원회 심의 대기/진행 중
+        matchesStep = row.auditState === '심의중' || row.committee.status === 'in_progress' || ['심의대기', '심의진행', '위원회심의', '심사의결'].includes(row.rawProject.status);
       } else if (selectedFilterStep === 'approved') {
-        matchesStep = row.committee.status === 'completed';
+        // 5. 최종 승인 완료 / 인증유지: 심의 완료 및 인증서 발행/유지
+        matchesStep = row.auditState === '인증유지' || row.committee.status === 'completed' || ['인증발행', '심의완료', '종결'].includes(row.rawProject.status);
       }
 
       return matchesSearch && matchesStd && matchesStep;
     });
   }, [processRows, searchTerm, selectedFilterStep, selectedStandard, selectedYear, selectedMonth]);
 
+  // 상태별 정렬 우선순위 (진행중 업무 최우선 > 완료/유지 및 정지는 최후순위)
+  const STATE_PRIORITY: Record<CompanyAuditState, number> = {
+    '보고서작성': 1,
+    '일정·계획': 2,
+    '심의중': 3,
+    '비용정산중': 4,
+    '인증유지': 5,
+    '자격정지': 6,
+  };
+
   // 테이블 제목행 정렬 처리
   const sortedRows = useMemo(() => {
     const list = [...filteredRows];
     list.sort((a, b) => {
+      // 1. 상태 우선순위: 진행 중인 심사(보고서작성 > 일정·계획 > 심의중 > 비용정산중)가 먼저 나오고, 완료된 '인증유지' 및 '자격정지'는 가장 후순위로 배치
+      const prioA = STATE_PRIORITY[a.auditState] || 99;
+      const prioB = STATE_PRIORITY[b.auditState] || 99;
+      
+      if (prioA !== prioB) {
+        return prioA - prioB;
+      }
+
+      // 2. 동일 우선순위 그룹 내에서 컬럼별 정렬 수행
       let valA = '';
       let valB = '';
       switch (sortColumn) {
@@ -727,7 +770,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                 {/* 9. 심의의결 (날짜(예정) / 날짜(승인)) */}
                 <th 
                   onClick={() => handleSort('committee')}
-                  className="py-2.5 px-3 text-center min-w-[140px] whitespace-nowrap bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
+                  className="py-2.5 px-2 text-center min-w-[100px] whitespace-nowrap bg-slate-50/70 hover:bg-slate-200/80 cursor-pointer"
                   title="심의의결 순 정렬"
                 >
                   <div className="flex items-center justify-center">
@@ -749,6 +792,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                   const hasPreAudit = Boolean(row.preAudit.scheduleDate || row.preAudit.planApprovalDate || row.preAudit.planDispatchDate || row.preAudit.contractDate);
                   const hasPlanDispatched = Boolean(row.preAudit.planDispatchDate || row.preAudit.isPlanSent);
                   const hasReportReceived = Boolean(row.postAudit.receiptDate || row.postAudit.stage === '접수' || row.postAudit.stage === '검토' || row.postAudit.stage === '승인');
+                  const auditState = getCompanyAuditState(row.rawCompany, undefined, row.rawProject);
 
                   return (
                     <tr
@@ -766,7 +810,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                         {(safeCurrentPage - 1) * PAGE_SIZE + idx + 1}
                       </td>
 
-                      {/* 2. 기업명 (대표자) */}
+                      {/* 2. 기업명 (대표자) - 진행상태 배지 포함 */}
                       <td className="py-2.5 px-3 align-middle border-r border-slate-200">
                         <button
                           type="button"
@@ -776,7 +820,10 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                           }}
                           className="text-left group cursor-pointer"
                         >
-                          <div className="text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1">
+                          <div className="text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5 flex-wrap">
+                            <span className={`px-1.5 py-0.5 text-[10px] rounded border ${getAuditStateBadgeClass(auditState)} shrink-0`}>
+                              [{auditState}]
+                            </span>
                             <span className="font-bold underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
                               {row.companyName}
                             </span>
@@ -877,7 +924,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                         </div>
                       </td>
 
-                      {/* 8. Post-AUDIT */}
+                      {/* 8. Post-AUDIT (보고서 접수 클릭 시 워크벤치 작성/열람 페이지로 오픈) */}
                       <td className="py-2.5 px-3 text-center align-middle border-r border-slate-200 whitespace-nowrap">
                         <div className="flex items-start justify-center gap-2 text-[11px]">
                           {/* 보고서 접수 / 검토 */}
@@ -887,25 +934,34 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  // 심사원이 보고한 보고서 작성 페이지(워크벤치)로 직접 오픈
+                                  if (typeof window !== 'undefined') {
+                                    window.open(`#workbench/${encodeURIComponent(row.companyId)}`, '_blank');
+                                  }
                                   if (row.rawProject.reportId && onOpenReport) {
                                     onOpenReport(row.rawProject.reportId);
-                                  } else {
-                                    setEditingReportRow({
-                                      row,
-                                      stage: row.postAudit.stage,
-                                      date: row.postAudit.receiptDate || '',
-                                      note: row.postAudit.note || ''
-                                    });
                                   }
                                 }}
-                                className={row.postAudit.stage === '검토' ? "text-amber-800 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer bg-amber-50 px-1.5 py-0.5 rounded border border-amber-300" : "text-blue-700 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"}
-                                title={row.postAudit.stage === '검토' ? "사무국 검토 대기/진행중 (클릭하여 열람/승인)" : "심사원 보고서 접수 완료 (클릭하여 열람)"}
+                                className={row.postAudit.stage === '검토' ? "text-amber-800 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer" : "text-blue-700 font-bold hover:underline inline-flex items-center gap-0.5 cursor-pointer"}
+                                title="심사원이 보고한 심사보고서 작성/열람 페이지(워크벤치)를 새 창으로 엽니다."
                               >
                                 <span>{row.postAudit.stage === '검토' ? '보고서 검토' : '보고서 접수'}</span>
                                 <ExternalLink className="w-2.5 h-2.5 text-current shrink-0" />
                               </button>
                             ) : (
-                              <span className="text-slate-300">보고서 접수</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (typeof window !== 'undefined') {
+                                    window.open(`#workbench/${encodeURIComponent(row.companyId)}`, '_blank');
+                                  }
+                                }}
+                                className="text-slate-400 hover:text-cyan-700 hover:underline inline-flex items-center gap-0.5 cursor-pointer text-[10.5px]"
+                                title="심사보고서 작성 페이지(워크벤치) 열기"
+                              >
+                                <span>보고서 작성</span>
+                              </button>
                             )}
                             <div className="text-[10px] text-slate-500 font-mono min-h-[14px] mt-0.5">
                               {row.postAudit.receiptDate || ''}
@@ -1234,6 +1290,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
           company={selectedCompany}
           allAuditors={auditors}
           projects={projects}
+          onOpenPdfReport={onOpenPdfReport}
         />
       )}
     </div>

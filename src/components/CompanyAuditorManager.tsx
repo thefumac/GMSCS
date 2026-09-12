@@ -254,10 +254,10 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
 
   // Get companies assigned/managed by a specific auditor
   const getCompaniesForAuditor = (aud: Auditor) => {
-    return companies.filter((c: any, idx: number) => {
+    return companies.filter((c: any) => {
       if (c.managingAuditorId === aud.id) return true;
-      const audIndex = auditors.findIndex(a => a.id === aud.id);
-      if (audIndex >= 0 && idx % auditors.length === audIndex) return true;
+      if (c.assignedAuditorName?.includes(aud.name) || c.assignedAuditor?.includes(aud.name)) return true;
+      if (c.consultant?.includes(aud.name)) return true;
       return false;
     });
   };
