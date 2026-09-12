@@ -943,14 +943,13 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                       <th className="py-2.5 px-3 border-r border-slate-200 w-24 text-center font-medium">심사구분</th>
                       <th className="py-2.5 px-3 border-r border-slate-200 min-w-[130px] font-medium">적용 규격 (IAF)</th>
                       <th className="py-2.5 px-3 border-r border-slate-200 w-28 text-center font-medium">수행 역할</th>
-                      <th className="py-2.5 px-2 border-r border-slate-200 w-16 text-center font-medium">투입MD</th>
-                      <th className="py-2.5 px-3 text-center w-28 font-medium">심사기록 열람</th>
+                      <th className="py-2.5 px-3 text-center w-20 font-medium">투입MD</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-800 bg-white">
                     {filteredAuditHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="py-12 text-center text-slate-400">
+                        <td colSpan={7} className="py-12 text-center text-slate-400">
                           <div className="space-y-2">
                             <p className="text-slate-600">
                               {selectedHistoryYear === 'all' ? '등록된 심사 수행 이력이 없습니다.' : `${selectedHistoryYear}년도에 등록된 심사 수행 이력이 없습니다.`}
@@ -994,27 +993,8 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                           <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap text-slate-800 text-[11.5px]">
                             {rec.role}
                           </td>
-                          <td className="py-2.5 px-2 border-r border-slate-200 text-center font-mono text-slate-700 text-[11.5px]">
+                          <td className="py-2.5 px-3 text-center font-mono text-slate-700 text-[11.5px]">
                             {rec.appliedMd.toFixed(1)}
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onOpenPdfReport?.({
-                                  title: `[심사보고서] ${rec.companyName} (${rec.auditType})`,
-                                  companyName: rec.companyName,
-                                  standard: rec.standards[0] || 'ISO 9001:2015',
-                                  auditType: rec.auditType,
-                                  auditDate: rec.auditDate
-                                });
-                              }}
-                              className="text-cyan-700 hover:text-cyan-900 hover:underline text-[11.5px] inline-flex items-center gap-1 transition cursor-pointer"
-                              title="공식 심사보고서 및 기록 열람"
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              <span>기록 열람</span>
-                            </button>
                           </td>
                         </tr>
                       ))

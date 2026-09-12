@@ -274,7 +274,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               const Icon = tabItem.icon;
               const isActive = activeTab === tabItem.id || 
                 (tabItem.id === 'clients' && activeTab === 'companies') || 
-                (tabItem.id === 'contracts' && (activeTab === 'contracts' || activeTab === 'surveillance')) ||
+                (tabItem.id === 'contracts' && (activeTab === 'contracts' || activeTab === 'surveillance' || activeTab === 'reports')) ||
                 (tabItem.id === 'certification' && (activeTab === 'kab' || activeTab === 'finance' || activeTab === 'data'));
 
               return (
