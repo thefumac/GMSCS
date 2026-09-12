@@ -513,11 +513,13 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
   const STATE_PRIORITY: Record<CompanyAuditState, number> = {
     '보고서작성': 1,
     '일정·계획': 2,
-    '심의중': 3,
-    '비용정산중': 4,
-    '인증유지': 5,
-    '자격정지': 6,
+    '사무국검토': 3,
+    '심의중': 4,
+    '비용정산중': 5,
+    '인증유지': 6,
+    '자격정지': 7,
   };
+
 
   // 테이블 제목행 정렬 처리
   const sortedRows = useMemo(() => {

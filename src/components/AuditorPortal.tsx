@@ -36,13 +36,15 @@ import {
 } from 'lucide-react';
 import { Auditor, Company, AuditProject, CertContract, AuditorSettlement, AuditReport, AuditorNotice } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { 
+  getCompanyAuditState, 
+  getStandardAuditStage, 
+  getAuditStateBadgeClass, 
+  CompanyAuditState 
+} from '../utils/auditStateUtils';
 
-export type AuditLifecycleState =
-  | '일정·계획'
-  | '보고서작성'
-  | '심의중'
-  | '비용정산중'
-  | '인증유지';
+export type AuditLifecycleState = CompanyAuditState;
+
 
 export type SettlementLifecycleState =
   | '입금확인중'
@@ -151,52 +153,11 @@ interface AuditorPortalProps {
   onOpenProfileModal?: () => void;
 }
 
-// 심사 단계 판별
+// 심사 단계 판별 (표준 공통 엔진 위임)
 function getAuditStageText(company: Company, contract?: CertContract, project?: AuditProject): '1차 사후' | '2차 사후' | '갱신' {
-  const compName = company.companyName;
-
-  // 송이실업: 2026년 9월 갱신심사 완료 -> 차기 1차 사후
-  if (compName.includes('송이실업')) {
-    return '1차 사후';
-  }
-
-  // 2026년 완료된 기업들 -> 차기 갱신심사
-  if (compName.includes('디아이엔바이로') || compName.includes('디아이앤바이로') ||
-      compName.includes('두성토건') || compName.includes('케이원메탈') ||
-      compName.includes('케이엠텍') || compName.includes('한창종합물류')) {
-    return '갱신';
-  }
-
-  // 올해 심사 예정인 기업들 -> 2차 사후 또는 1차 사후
-  if (compName.includes('정인') || compName.includes('디와이메탈')) {
-    return '2차 사후';
-  }
-  if (compName.includes('동원시스템즈')) {
-    return '1차 사후';
-  }
-
-  if (project && project.status === '인증발행') {
-    if (project.auditType.includes('2차')) return '갱신';
-    if (project.auditType.includes('1차')) return '2차 사후';
-    if (project.auditType.includes('갱신')) return '1차 사후';
-    if (project.auditType.includes('최초')) return '1차 사후';
-  }
-
-  if (project?.auditType) {
-    if (project.auditType.includes('갱신') || project.auditType.includes('3차')) return '갱신';
-    if (project.auditType.includes('2차')) return '2차 사후';
-    return '1차 사후';
-  }
-
-  if (contract?.initialCertDate) {
-    const certYear = parseInt(contract.initialCertDate.substring(0, 4), 10);
-    const currentYear = 2026;
-    const diff = currentYear - certYear;
-    if (diff <= 0) return '1차 사후';
-    if (diff % 3 === 1) return '1차 사후';
-    if (diff % 3 === 2) return '2차 사후';
-    return '갱신';
-  }
+  const stage = getStandardAuditStage(company, contract, project);
+  if (stage === '2차 사후') return '2차 사후';
+  if (stage === '갱신') return '갱신';
   return '1차 사후';
 }
 
@@ -238,45 +199,19 @@ export const DEFAULT_AUDIT_PREP_CONFIG: AuditPrepThresholdConfig = {
   defaultPrepDays: 90,
 };
 
-// 실무 중심 생애주기 판별 (보고서작성 > 일정·계획 > 심의중 > 비용정산중 > 인증유지)
+// 실무 중심 생애주기 판별 (표준 공통 엔진 위임)
 function computeAuditState(
-  ddayDays: number,
+  _ddayDays: number,
   _stageText: string,
   project?: AuditProject,
   settlement?: AuditorSettlement,
-  compName: string = ''
+  _compName: string = '',
+  company?: Company,
+  contract?: CertContract
 ): AuditLifecycleState {
-  // 송이실업은 갱신심사 및 정산 완료 -> 인증유지
-  if (compName.includes('송이실업')) {
-    return '인증유지';
-  }
-
-  if (project) {
-    const pStatus = project.status;
-    if (['심사진행중', '보고서작성'].includes(pStatus)) {
-      return '보고서작성';
-    }
-    if (['보고서제출', '위원회심의'].includes(pStatus)) {
-      return '심의중';
-    }
-    if (['계획수립', '계획서발송'].includes(pStatus)) {
-      return '일정·계획';
-    }
-    if (['인증발행', '심의완료'].includes(pStatus)) {
-      if (settlement && (settlement.payoutStatus === '정산대기' || settlement.payoutStatus === '보류')) {
-        return '비용정산중';
-      }
-      return '인증유지';
-    }
-  }
-
-  // 심사 예정일 D-30일 이내에 진입한 경우 일정·계획 단계로 표시
-  if (ddayDays >= 0 && ddayDays <= 30) {
-    return '일정·계획';
-  }
-
-  return '인증유지';
+  return getCompanyAuditState(company, contract, project, settlement);
 }
+
 
 // 규격명 표준화 함수
 export function normalizeStandardKey(raw: string): string {
@@ -837,10 +772,13 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           const statePriority: Record<AuditLifecycleState, number> = {
             '보고서작성': 1,
             '일정·계획': 2,
-            '심의중': 3,
-            '비용정산중': 4,
-            '인증유지': 5,
+            '사무국검토': 3,
+            '심의중': 4,
+            '비용정산중': 5,
+            '인증유지': 6,
+            '자격정지': 7,
           };
+
           const pA = statePriority[a.auditState] || 99;
           const pB = statePriority[b.auditState] || 99;
           if (pA !== pB) return sortAsc ? pA - pB : pB - pA;
