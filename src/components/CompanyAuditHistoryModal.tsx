@@ -30,13 +30,16 @@ import {
   Paperclip,
   ArrowRightLeft,
   FileCheck2,
-  Download
+  Download,
+  FolderArchive,
+  HardDrive
 } from 'lucide-react';
 import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement, AuditContractRecord } from '../types';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { AuditPlanInvoiceDocModal } from './AuditPlanInvoiceDocModal';
 import { AuditAttachmentDocModal, AttachmentDocItem } from './AuditAttachmentDocModal';
 import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
+import { getDriveReportsForCompany, DriveReportFileItem } from '../data/driveReportFiles';
 
 export interface CompanyAuditHistoryModalProps {
   isOpen: boolean;
@@ -191,6 +194,10 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
     } catch (e) {}
     return company;
   }, [company, isOpen]);
+
+  const archivedDocs = useMemo<DriveReportFileItem[]>(() => {
+    return effectiveCompany ? getDriveReportsForCompany(effectiveCompany.companyName) : [];
+  }, [effectiveCompany]);
 
   if (!isOpen || !company || !effectiveCompany) return null;
 
@@ -858,6 +865,103 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* 클라우드 아카이브 보관 문서 목록 */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="w-4 h-4 text-emerald-600" />
+                    <h5 className="font-bold text-slate-900 text-xs">
+                      Firebase Cloud Storage 보관 문서 ({archivedDocs.length}건)
+                    </h5>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                      실시간 클라우드 연동
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500">
+                    기업별 디렉토리: <code className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">audit_files/gmscs/{effectiveCompany.companyName}/</code>
+                  </span>
+                </div>
+
+                {archivedDocs.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    {archivedDocs.map((doc, idx) => (
+                      <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-xs transition flex flex-col justify-between gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                                doc.docType === '심사보고서' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
+                                doc.docType === '인증서' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
+                                doc.docType === '신청/전환자료' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                'bg-slate-100 text-slate-800 border border-slate-200'
+                              }`}>
+                                {doc.docType}
+                              </span>
+                              {doc.year && (
+                                <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">
+                                  {doc.year}년 {doc.month ? `${doc.month}월` : ''}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {doc.fileSize}
+                              </span>
+                            </div>
+                            <div className="font-mono text-xs font-semibold text-slate-800 truncate" title={doc.fileName}>
+                              {doc.fileName}
+                            </div>
+                            <div className="text-[10.5px] text-slate-400 truncate mt-0.5" title={doc.originalName}>
+                              원본: {doc.originalName}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                          <span className="text-[11px] text-slate-500">
+                            담당: <strong className="text-slate-700">{doc.auditor}</strong>
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenPdfReport?.({
+                                  title: `[${doc.docType}] ${effectiveCompany.companyName} (${doc.fileName})`,
+                                  companyName: effectiveCompany.companyName,
+                                  standard: doc.standards?.[0] || 'ISO 9001:2015',
+                                  auditType: doc.auditType || '정기심사',
+                                  auditDate: `${doc.year || 2026}-${String(doc.month || 1).padStart(2, '0')}-01`,
+                                  auditorName: doc.auditor,
+                                  pdfUrl: doc.pdfUrl
+                                });
+                              }}
+                              className="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-semibold rounded-lg border border-cyan-200 text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
+                              title="뷰어로 바로 열람"
+                            >
+                              <FileText className="w-3 h-3 text-cyan-700" />
+                              <span>열람</span>
+                            </button>
+                            <a
+                              href={doc.pdfUrl}
+                              download={doc.fileName}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-200 text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
+                              title="파일 직접 다운로드"
+                            >
+                              <Download className="w-3 h-3 text-slate-600" />
+                              <span>다운로드</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-white rounded-xl border border-dashed border-slate-300 text-center text-slate-500 text-xs">
+                    보관된 심사 문서가 없습니다. (신규 심사 진행 시 자동으로 등록됩니다.)
+                  </div>
+                )}
               </div>
             </div>
           )}

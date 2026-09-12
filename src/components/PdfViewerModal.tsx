@@ -420,14 +420,14 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-white font-bold text-base truncate">
-                  {viewMode === 'pdf_reader' ? `[구글 드라이브 PDF 열람] ${companyName}` : `[GMSCS 전자서식팩] ${companyName} - ${standard}`}
+                  {viewMode === 'pdf_reader' ? `[클라우드 PDF 열람] ${companyName}` : `[GMSCS 전자서식팩] ${companyName} - ${standard}`}
                 </h3>
                 <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold shrink-0 ${
                   viewMode === 'pdf_reader' 
-                    ? 'bg-amber-950/80 text-amber-300 border-amber-700' 
+                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700' 
                     : 'bg-cyan-900/80 text-cyan-300 border-cyan-700'
                 }`}>
-                  {viewMode === 'pdf_reader' ? '📂 구글 드라이브 원본 실물 PDF' : '🖥️ 신규 디지털 보고서 팩'}
+                  {viewMode === 'pdf_reader' ? '⚡ Firebase Cloud Storage 실물 PDF' : '🖥️ 신규 디지털 보고서 팩'}
                 </span>
               </div>
               <p className="text-slate-400 text-xs truncate mt-0.5">
@@ -444,13 +444,13 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                 onClick={() => setViewMode('pdf_reader')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                   viewMode === 'pdf_reader'
-                    ? 'bg-amber-600 text-white shadow-xs'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
-                title="구글 드라이브에 저장된 실제 과거 PDF 파일을 PDF 리더로 열람합니다."
+                title="Firebase Storage 클라우드에 보관된 실제 과거 PDF 파일을 PDF 리더로 열람합니다."
               >
                 <FolderOpen className="w-3.5 h-3.5" />
-                <span>구글 드라이브 PDF 리더</span>
+                <span>클라우드 PDF 리더</span>
               </button>
               <button
                 type="button"
@@ -549,16 +549,16 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         </div>
 
         {/* ========================================================= */}
-        {/* VIEW 1: [구글 드라이브 원본 PDF 리더 모드] (기본 원칙)   */}
+        {/* VIEW 1: [Firebase Storage 원본 PDF 리더 모드]             */}
         {/* ========================================================= */}
         {viewMode === 'pdf_reader' && (
           <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
-            {/* 구글 드라이브 보관 파일 탭바 */}
+            {/* 클라우드 저장소 보관 파일 탭바 */}
             <div className="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 overflow-x-auto">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-400 flex items-center gap-1.5 font-medium shrink-0">
-                  <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
-                  <span>구글 드라이브 보관 파일 ({driveFiles.length}개):</span>
+                  <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>보관 문서 목록 ({driveFiles.length}건):</span>
                 </span>
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                   {driveFiles.length > 0 ? (
@@ -569,17 +569,18 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                         onClick={() => setSelectedDriveIndex(idx)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                           selectedDriveIndex === idx
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 font-bold'
                             : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
                         }`}
+                        title={`원본 파일명: ${df.originalName}`}
                       >
-                        <FileText className="w-3 h-3 text-amber-400" />
-                        <span className="max-w-[200px] truncate">{df.originalName.replace(/\.pdf - .*$/, '').replace('[GMSCS-REP]_', '')}</span>
-                        <span className="text-[10px] bg-slate-950/60 px-1 py-0.2 rounded text-slate-400 font-mono">{df.fileSize}</span>
+                        <FileText className="w-3 h-3 text-emerald-400" />
+                        <span className="max-w-[220px] truncate font-mono">{df.fileName}</span>
+                        <span className="text-[10px] bg-slate-950/60 px-1.5 py-0.5 rounded text-slate-400 font-mono">{df.fileSize}</span>
                       </button>
                     ))
                   ) : (
-                    <div className="px-3 py-1 rounded-lg text-xs bg-slate-800 text-amber-300 border border-amber-800/40 flex items-center gap-1.5">
+                    <div className="px-3 py-1 rounded-lg text-xs bg-slate-800 text-emerald-300 border border-emerald-800/40 flex items-center gap-1.5">
                       <FileText className="w-3 h-3" />
                       <span>{companyName}_심사보고서_원본.pdf (표준 PDF 리더 연결)</span>
                     </div>
@@ -589,8 +590,8 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
               {/* 현재 활성 파일 메타데이터 */}
               <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 shrink-0">
-                <span className="text-slate-500">파일명:</span>
-                <span className="font-mono text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 max-w-[320px] truncate" title={activeDriveFile.fileName}>
+                <span className="text-slate-500">클라우드 경로:</span>
+                <span className="font-mono text-emerald-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 max-w-[320px] truncate" title={activeDriveFile.storagePath || activeDriveFile.fileName}>
                   {activeDriveFile.fileName}
                 </span>
               </div>

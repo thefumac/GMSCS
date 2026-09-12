@@ -4,12 +4,11 @@ import {
   setDoc, 
   getDocs, 
   query, 
-  where, 
-  orderBy,
-  limit 
+  where 
 } from 'firebase/firestore';
-import { db, TENANT_CONFIG } from './firebase';
-import { DRIVE_REPORT_FILES, DriveReportFileItem } from '../data/driveReportFiles';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { db, storage, TENANT_CONFIG } from './firebase';
+import rawMigratedDocs from '../data/migratedAuditDocuments.json';
 
 export type AuditDocType = '심사보고서' | '인증서' | '신청/전환자료' | '심사계획서' | '기타증빙';
 
@@ -19,89 +18,178 @@ export interface AuditDocumentRecord {
   companyId?: string;
   companyName: string;
   docType: AuditDocType;
-  auditType: string; // '최초 1-2단계' | '1차 사후' | '2차 사후' | '갱신' | '전환' 등
+  auditType: string; // '최초심사' | '1차사후' | '2차사후' | '갱신심사' | '전환심사' 등
   standards: string[]; // ['ISO 9001:2015', 'ISO 14001:2015'] 등
   year: number; // 예: 2025, 2026
   month?: number; // 예: 3, 9
   auditorName: string; // 배정 심사원명
   auditorId?: string;
   agency?: string; // 협력기관/영업기관
-  storagePath: string; // Firebase Storage 경로 e.g. "audit_files/gmscs/company-123/report.pdf"
-  downloadUrl: string; // 보안 다운로드 URL 또는 로컬/클라우드 서빙 URL
+  storagePath: string; // Firebase Storage 경로 e.g. "audit_files/gmscs/미래디스플레이/2026-01_1차사후_심사보고서.pdf"
+  downloadUrl?: string; // Firebase Storage 다운로드 URL
   fileSizeBytes: number;
   originalFileName: string;
+  simplifiedFileName: string;
   createdAt: string;
   uploadedBy?: string;
   isLegacyMigrated?: boolean;
 }
 
+// In-memory 캐시: 기업별 문서 목록 및 다운로드 URL 캐시
+const companyDocsCache = new Map<string, AuditDocumentRecord[]>();
+const downloadUrlCache = new Map<string, string>();
+
 /**
- * 기존 파일명에서 복잡하게 얽혀 있던 메타데이터를 분해하여 구조화 객체로 변환하는 지능형 파서
+ * 기업명 정규화 (괄호, 주식회사, 공백 등 제거하여 매칭 정밀도 극대화)
  */
-export function parseLegacyFileNameToMetadata(rawFileName: string, companyFallback: string = '기타'): Partial<AuditDocumentRecord> {
-  let cleanName = rawFileName.replace(/\.pdf$/i, '').trim();
-  
-  // 1. 기업명 추출: 괄호 안의 이름 우선 (예: (세진엔지니어링), (디와이메탈))
-  const compMatch = cleanName.match(/\(([^\)]+)\)/);
-  const companyName = compMatch ? compMatch[1].trim() : companyFallback;
-
-  // 2. 문서 유형 판별
-  let docType: AuditDocType = '기타증빙';
-  if (/보고서|rep/i.test(cleanName)) docType = '심사보고서';
-  else if (/인증서|cert/i.test(cleanName)) docType = '인증서';
-  else if (/계획서|plan/i.test(cleanName)) docType = '심사계획서';
-  else if (/전환|신청/i.test(cleanName)) docType = '신청/전환자료';
-
-  // 3. 심사 차수 판별
-  let auditType = '정기심사';
-  if (/1-2단계|최초/i.test(cleanName)) auditType = '최초 1-2단계';
-  else if (/1차/i.test(cleanName)) auditType = '1차 사후';
-  else if (/2차/i.test(cleanName)) auditType = '2차 사후';
-  else if (/갱신/i.test(cleanName)) auditType = '갱신심사';
-  else if (/전환/i.test(cleanName)) auditType = '전환심사';
-
-  // 4. 연도 및 월 추출
-  let year = 2026;
-  let month = 1;
-  const dateMatch = cleanName.match(/(20\d{2})[.\-_](\d{1,2})/);
-  if (dateMatch) {
-    year = parseInt(dateMatch[1], 10);
-    month = parseInt(dateMatch[2], 10);
-  }
-
-  // 5. 적용 규격 추출
-  const standards: string[] = [];
-  if (/9001|qms|qe|품질/i.test(cleanName)) standards.push('ISO 9001:2015');
-  if (/14001|ems|qe|환경/i.test(cleanName)) standards.push('ISO 14001:2015');
-  if (/45001|ohs|안전/i.test(cleanName)) standards.push('ISO 45001:2018');
-  if (/27001|isms|보안/i.test(cleanName)) standards.push('ISO 27001:2022');
-  if (/esg/i.test(cleanName)) standards.push('ESG-MS:2023');
-  if (standards.length === 0) standards.push('ISO 9001:2015');
-
-  // 6. 심사원명 추출 (담당미상 등)
-  let auditorName = '사무국';
-  const auditorMatch = cleanName.match(/(김홍덕|이정호|최광현|박상범|정해선|김남훈|정만용|심사팀)/);
-  if (auditorMatch) {
-    auditorName = auditorMatch[1];
-  }
-
-  return {
-    tenantId: TENANT_CONFIG.tenantId,
-    companyName,
-    docType,
-    auditType,
-    standards,
-    year,
-    month,
-    auditorName,
-    originalFileName: rawFileName,
-    isLegacyMigrated: true,
-    createdAt: new Date().toISOString()
-  };
+export function normalizeCompanyName(name: string): string {
+  if (!name) return '';
+  return name.replace(/[\s\(\)\[\]주식회사㈜\.\-_]/g, '').toLowerCase().trim();
 }
 
 /**
- * Firestore에 심사 문서 메타데이터 저장
+ * 바이트 크기를 사람이 읽기 쉬운 문자열로 변환 (예: 1.4 MB)
+ */
+export function formatFileSizeBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * Firebase Storage 경로로부터 서명/공개 다운로드 URL 조회 (캐싱 지원)
+ */
+export async function getDocumentDownloadUrl(storagePath: string): Promise<string> {
+  if (!storagePath) return '/docs/2025_Audit_Report_Pack.pdf';
+  
+  if (downloadUrlCache.has(storagePath)) {
+    return downloadUrlCache.get(storagePath)!;
+  }
+
+  try {
+    const fileRef = ref(storage, storagePath);
+    const url = await getDownloadURL(fileRef);
+    downloadUrlCache.set(storagePath, url);
+    return url;
+  } catch (error) {
+    // Firebase Storage REST 직접 접근 URL 폴백
+    const fallbackUrl = `https://firebasestorage.googleapis.com/v0/b/gmscs-a9925.firebasestorage.app/o/${encodeURIComponent(storagePath)}?alt=media`;
+    downloadUrlCache.set(storagePath, fallbackUrl);
+    return fallbackUrl;
+  }
+}
+
+/**
+ * 특정 기업의 모든 심사 문서 목록 조회
+ * (1. 메모리 캐시 -> 2. Firestore query -> 3. 로컬 마이그레이션 JSON 폴백)
+ */
+export async function getCompanyAuditDocuments(companyName: string): Promise<AuditDocumentRecord[]> {
+  if (!companyName) return [];
+
+  const cleanTarget = normalizeCompanyName(companyName);
+  if (!cleanTarget) return [];
+
+  if (companyDocsCache.has(cleanTarget)) {
+    return companyDocsCache.get(cleanTarget)!;
+  }
+
+  let results: AuditDocumentRecord[] = [];
+
+  try {
+    // 1. Firestore에서 해당 테넌트 및 기업명으로 쿼리 시도
+    const q = query(
+      collection(db, 'audit_documents'),
+      where('tenantId', '==', TENANT_CONFIG.tenantId)
+    );
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const allDocs = snap.docs.map(d => d.data() as AuditDocumentRecord);
+      results = allDocs.filter(d => {
+        const docClean = normalizeCompanyName(d.companyName);
+        return docClean === cleanTarget || docClean.includes(cleanTarget) || cleanTarget.includes(docClean);
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore 조회 건너뜀 (로컬 마이그레이션 데이터 사용):', e);
+  }
+
+  // 2. Firestore에 데이터가 없거나 로컬 모드일 경우 마이그레이션된 JSON에서 검색
+  if (results.length === 0) {
+    const staticDocs = rawMigratedDocs as any[];
+    results = staticDocs
+      .filter(item => {
+        const itemClean = normalizeCompanyName(item.companyName || '');
+        return itemClean === cleanTarget || itemClean.includes(cleanTarget) || cleanTarget.includes(itemClean);
+      })
+      .map((item, idx) => ({
+        id: `migrated-${cleanTarget}-${idx}`,
+        tenantId: item.tenantId || TENANT_CONFIG.tenantId,
+        companyName: item.companyName || companyName,
+        docType: (item.docType as AuditDocType) || '심사보고서',
+        auditType: item.auditType || '정기심사',
+        standards: item.standards || ['ISO 9001:2015'],
+        year: item.year || 2026,
+        month: item.month || 1,
+        auditorName: item.auditorName || '사무국',
+        storagePath: item.storagePath || `audit_files/gmscs/${item.companyName}/${item.simplifiedFileName}`,
+        fileSizeBytes: item.fileSizeBytes || 800000,
+        originalFileName: item.originalFileName || '',
+        simplifiedFileName: item.simplifiedFileName || `${item.year || 2026}_심사문서.pdf`,
+        createdAt: '2026-09-13T00:00:00Z',
+        isLegacyMigrated: true
+      }));
+  }
+
+  // 최신 연도, 최신 월 순으로 정렬
+  results.sort((a, b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    return (b.month || 0) - (a.month || 0);
+  });
+
+  companyDocsCache.set(cleanTarget, results);
+  return results;
+}
+
+/**
+ * 전체 아카이브 문서 목록 조회 (사무국 관리자용)
+ */
+export async function getAllArchivedDocuments(): Promise<AuditDocumentRecord[]> {
+  try {
+    const q = query(
+      collection(db, 'audit_documents'),
+      where('tenantId', '==', TENANT_CONFIG.tenantId)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs.map(d => d.data() as AuditDocumentRecord);
+    }
+  } catch (e) {
+    console.warn('전체 아카이브 Firestore 조회 실패, 로컬 데이터 사용:', e);
+  }
+
+  return (rawMigratedDocs as any[]).map((item, idx) => ({
+    id: `migrated-all-${idx}`,
+    tenantId: item.tenantId || TENANT_CONFIG.tenantId,
+    companyName: item.companyName,
+    docType: item.docType || '심사보고서',
+    auditType: item.auditType || '정기심사',
+    standards: item.standards || ['ISO 9001:2015'],
+    year: item.year || 2026,
+    month: item.month || 1,
+    auditorName: item.auditorName || '사무국',
+    storagePath: item.storagePath,
+    fileSizeBytes: item.fileSizeBytes || 0,
+    originalFileName: item.originalFileName || '',
+    simplifiedFileName: item.simplifiedFileName || '',
+    createdAt: '2026-09-13T00:00:00Z',
+    isLegacyMigrated: true
+  }));
+}
+
+/**
+ * Firestore에 신규 심사 문서 메타데이터 저장
  */
 export async function saveAuditDocumentMetadata(docData: AuditDocumentRecord): Promise<void> {
   try {
@@ -110,98 +198,12 @@ export async function saveAuditDocumentMetadata(docData: AuditDocumentRecord): P
       ...docData,
       updatedAt: new Date().toISOString()
     }, { merge: true });
+    
+    // 캐시 무효화
+    const cleanTarget = normalizeCompanyName(docData.companyName);
+    companyDocsCache.delete(cleanTarget);
   } catch (error) {
     console.error('Firestore 문서 메타데이터 저장 실패:', error);
     throw error;
   }
-}
-
-/**
- * 특정 기업의 심사 문서 목록 조회 (Firestore 연동 + 기존 정적 데이터 폴백)
- */
-export async function getCompanyAuditDocuments(companyName: string): Promise<AuditDocumentRecord[]> {
-  if (!companyName) return [];
-
-  const cleanTarget = companyName.replace(/[\s\(\)\[\]주식회사㈜\.]/g, '').toLowerCase();
-
-  try {
-    // 1. Firestore에서 해당 Tenant 및 기업명의 문서 쿼리 시도
-    const q = query(
-      collection(db, 'audit_documents'),
-      where('tenantId', '==', TENANT_CONFIG.tenantId),
-      where('companyName', '==', companyName)
-    );
-    const snap = await getDocs(q);
-
-    if (!snap.empty) {
-      return snap.docs.map(d => d.data() as AuditDocumentRecord);
-    }
-  } catch (e) {
-    console.warn('Firestore 조회 건너뜀 (오프라인/로컬 모드 유지):', e);
-  }
-
-  // 2. Firestore에 데이터가 없거나 로컬 모드일 경우 기존 DRIVE_REPORT_FILES에서 구조화 변환 후 제공
-  for (const [compKey, items] of Object.entries(DRIVE_REPORT_FILES)) {
-    const cleanKey = compKey.replace(/[\s\(\)\[\]주식회사㈜\.]/g, '').toLowerCase();
-    if (cleanKey === cleanTarget || cleanTarget.includes(cleanKey) || cleanKey.includes(cleanTarget)) {
-      return items.map((item: DriveReportFileItem, idx: number) => {
-        const parsed = parseLegacyFileNameToMetadata(item.fileName || item.originalName, companyName);
-        return {
-          id: `legacy-${cleanKey}-${idx}`,
-          tenantId: TENANT_CONFIG.tenantId,
-          companyName: parsed.companyName || companyName,
-          docType: item.docType || parsed.docType || '심사보고서',
-          auditType: parsed.auditType || '정기심사',
-          standards: parsed.standards || ['ISO 9001:2015'],
-          year: parsed.year || 2025,
-          month: parsed.month || 10,
-          auditorName: item.auditor || parsed.auditorName || '사무국',
-          storagePath: `audit_files/${TENANT_CONFIG.tenantId}/${cleanKey}/${item.fileName}`,
-          downloadUrl: item.pdfUrl,
-          fileSizeBytes: item.sizeBytes || 800000,
-          originalFileName: item.originalName,
-          createdAt: '2025-10-01T00:00:00Z',
-          isLegacyMigrated: true
-        } as AuditDocumentRecord;
-      });
-    }
-  }
-
-  // 3. 기본 샘플 표준 문서 반환
-  return [
-    {
-      id: `sample-rep-${cleanTarget}`,
-      tenantId: TENANT_CONFIG.tenantId,
-      companyName,
-      docType: '심사보고서',
-      auditType: '정기심사',
-      standards: ['ISO 9001:2015', 'ISO 14001:2015'],
-      year: 2025,
-      month: 10,
-      auditorName: '사무국',
-      storagePath: `audit_files/${TENANT_CONFIG.tenantId}/${cleanTarget}/2025_Audit_Report_Pack.pdf`,
-      downloadUrl: '/docs/2025_Audit_Report_Pack.pdf',
-      fileSizeBytes: 872919,
-      originalFileName: '2025 Aduit Report Pack(251001).pdf',
-      createdAt: '2025-10-01T00:00:00Z',
-      isLegacyMigrated: true
-    },
-    {
-      id: `sample-cert-${cleanTarget}`,
-      tenantId: TENANT_CONFIG.tenantId,
-      companyName,
-      docType: '인증서',
-      auditType: '정기심사',
-      standards: ['ISO 9001:2015'],
-      year: 2025,
-      month: 10,
-      auditorName: '사무국',
-      storagePath: `audit_files/${TENANT_CONFIG.tenantId}/${cleanTarget}/cert_change_application.pdf`,
-      downloadUrl: '/docs/cert_change_application.pdf',
-      fileSizeBytes: 605486,
-      originalFileName: '인증서_전자본.pdf',
-      createdAt: '2025-10-01T00:00:00Z',
-      isLegacyMigrated: true
-    }
-  ];
 }
