@@ -130,7 +130,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const auditorTabs = [
     { id: 'calendar' as ActiveTab, label: '심사일정 달력', icon: Calendar, description: '월간 배정 심사 일정 달력' },
     { id: 'portal' as ActiveTab, label: '나의 관리 대상 기업', icon: UserCheck, description: '배정 고객사 및 심사 착수 관리' },
-    { id: 'reports' as ActiveTab, label: '나의 심사보고서', icon: FileText, description: '심사보고서 실시간 작성 및 서명' },
   ];
   if (currentAuditorObj?.isCommitteeMember) {
     auditorTabs.push({

@@ -926,7 +926,6 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     }[] = [];
 
     // [핵심] 현재 심사원이 직접 심사팀장(책임심사원) 또는 심사팀원으로 참여하는 프로젝트만 엄격 필터링!
-    // 타 심사원이 수행하는 심사는 해당 업체의 기존 심사이력이 있더라도 개인 달력에 절대 노출되지 않음
     const myProjects = projects.filter(p => {
       const isLead = (p.leadAuditorId && p.leadAuditorId === currentAuditor.id) ||
                      (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
@@ -976,49 +975,32 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             ? 'in-progress'
             : 'prep';
           const key = `${p.id || p.companyId}-${dateStr}`;
-          addedKeys.add(key);
-
-          const isLead = (p.leadAuditorId && p.leadAuditorId === currentAuditor.id) ||
-                         (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
-          let roleNote: string | undefined = undefined;
-          if (isLead) {
-            const otherTeams = (p.teamAuditorNames || []).filter(t => !t.includes(currentAuditor.name));
-            roleNote = otherTeams.length > 0 ? `팀장 (팀원: ${otherTeams.join(', ')})` : '심사팀장';
-          } else {
-            roleNote = p.leadAuditorName ? `팀원 (팀장: ${p.leadAuditorName})` : '심사팀원';
-          }
-
-          let dayIndexText: string | undefined = undefined;
-          if (totalDays > 1) {
-            dayIndexText = `${curDayIdx}/${totalDays}일차`;
-          }
-
-          events.push({
-            id: `${p.id}-${dateStr}`,
-            title: p.companyName,
-            stage: p.auditType,
-            type: eventType,
-            dayIndexText,
-            extraNote: roleNote,
-            compStatus
-          });
-        }
-      });
-
-      // 2) 대장의 차기 심사 예정일 (프로젝트에 아직 미등록된 예정 일정 중 본인이 실제 심사원 역할을 맡은 업체만 추가)
-      auditScheduleRows.forEach(row => {
-        // 협력기관(단순 영업/유치) 또는 미배정 건은 개인 달력에서 철저히 배제하고, 실제 심사원(팀장/심사원) 역할인 건만 표시
-        const isAuditorRole = row.auditorRole === '팀장' || row.auditorRole === '심사원' || row.auditorRole === '심사원보';
-        if (isAuditorRole && row.dueDate === dateStr) {
-          const key = `${row.companyId}-${dateStr}`;
           if (!addedKeys.has(key)) {
+            addedKeys.add(key);
+
+            const isLead = (p.leadAuditorId && p.leadAuditorId === currentAuditor.id) ||
+                           (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
+            let roleNote: string | undefined = undefined;
+            if (isLead) {
+              const otherTeams = (p.teamAuditorNames || []).filter(t => !t.includes(currentAuditor.name));
+              roleNote = otherTeams.length > 0 ? `팀장 (팀원: ${otherTeams.join(', ')})` : '심사팀장';
+            } else {
+              roleNote = p.leadAuditorName ? `팀원 (팀장: ${p.leadAuditorName})` : '심사팀원';
+            }
+
+            let dayIndexText: string | undefined = undefined;
+            if (totalDays > 1) {
+              dayIndexText = `${curDayIdx}/${totalDays}일차`;
+            }
+
             events.push({
-              id: `${row.rowId}-due`,
-              title: row.companyName,
-              stage: row.stageText,
-              type: row.auditState === '일정·계획' ? 'prep' : 'scheduled',
-              extraNote: `예정 (${row.auditorRole})`,
-              compStatus: row.companyWithStatus
+              id: `${p.id}-${dateStr}`,
+              title: p.companyName,
+              stage: p.auditType,
+              type: eventType,
+              dayIndexText,
+              extraNote: roleNote,
+              compStatus
             });
           }
         }
@@ -1037,7 +1019,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     }
 
     return days;
-  }, [allCompanyItems, auditScheduleRows, projects, currentAuditor, selectedYear, selectedMonth]);
+  }, [allCompanyItems, projects, currentAuditor, selectedYear, selectedMonth]);
 
   // 9. 비용정산 탭 데이터 (송이실업 갱신 완료 반영)
   const settlementList = useMemo(() => {

@@ -1294,54 +1294,38 @@ export function App() {
           />
         )}
 
-        {/* 3-2. 심사 보고서 관리 (목록 대장 vs 클릭 시 세부 보고서/정산/OK ESG) */}
-        {activeTab === 'reports' && (
-          <div>
-            {!isEditingReport ? (
-              <AuditReportList
-                reports={visibleReports}
-                projects={visibleProjects}
-                settlements={visibleSettlements}
-                onSelectReport={handleOpenReportDetail}
-                onOpenIntegrations={() => {
-                  if (!isNonPermanent) {
-                    navigateTo('integrations', 'audit');
-                  }
-                }}
-              />
-            ) : (
-              <div className="space-y-4">
-                {isEmailDirectEntry && (
-                  <div className="bg-cyan-50 border border-cyan-200 text-cyan-900 px-5 py-3.5 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                        ✉️
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-cyan-950">
-                          [보안 직행 링크 인증 접속] <span className="font-mono text-cyan-800 font-normal">fumac@naver.com</span> 전용 세션
-                        </div>
-                        <div className="text-xs text-cyan-700">
-                          심사보고서 작성 및 실시간 저장 모드로 직접 접속되었습니다. 수정하신 모든 항목은 브라우저와 시스템 DB에 즉시 보관됩니다.
-                        </div>
-                      </div>
+        {/* 3-2. 심사 보고서 작성/편집 (특정 보고서 편집 모드일 때 렌더링, 목록은 심사진행현황으로 일원화) */}
+        {activeTab === 'reports' && isEditingReport && (
+          <div className="space-y-4">
+            {isEmailDirectEntry && (
+              <div className="bg-cyan-50 border border-cyan-200 text-cyan-900 px-5 py-3.5 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                    ✉️
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-cyan-950">
+                      [보안 직행 링크 인증 접속] <span className="font-mono text-cyan-800 font-normal">fumac@naver.com</span> 전용 세션
                     </div>
-                    <div className="text-xs font-semibold px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full border border-cyan-200">
-                      직행 링크 유효성 검증 완료 ✓
+                    <div className="text-xs text-cyan-700">
+                      심사보고서 작성 및 실시간 저장 모드로 직접 접속되었습니다. 수정하신 모든 항목은 브라우저와 시스템 DB에 즉시 보관됩니다.
                     </div>
                   </div>
-                )}
-                <AuditReportEditor
-                  report={reports[activeReportId] || reports['rep-1']}
-                  onSaveReport={handleSaveReport}
-                  onClose={handleBackToReportList}
-                  onBackToList={handleBackToReportList}
-                  currentUserRole={currentUserRole}
-                  onSubmitToSecretariat={handleSubmitToSecretariat}
-                  onSecretariatReview={handleSecretariatReview}
-                />
+                </div>
+                <div className="text-xs font-semibold px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full border border-cyan-200">
+                  직행 링크 유효성 검증 완료 ✓
+                </div>
               </div>
             )}
+            <AuditReportEditor
+              report={reports[activeReportId] || reports['rep-1']}
+              onSaveReport={handleSaveReport}
+              onClose={() => navigateTo('projects', 'audit')}
+              onBackToList={() => navigateTo('projects', 'audit')}
+              currentUserRole={currentUserRole}
+              onSubmitToSecretariat={handleSubmitToSecretariat}
+              onSecretariatReview={handleSecretariatReview}
+            />
           </div>
         )}
 

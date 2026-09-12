@@ -67,7 +67,20 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   const projectsByDate = useMemo(() => {
     const map: Record<string, AuditProject[]> = {};
     projects.forEach(p => {
-      const datesToMap = p.auditDates && p.auditDates.length > 0 ? p.auditDates : (p.startDate ? [p.startDate] : []);
+      let datesToMap: string[] = [];
+      if (p.auditDates && p.auditDates.length > 0) {
+        datesToMap = p.auditDates;
+      } else if (p.startDate && p.endDate && p.startDate !== p.endDate) {
+        let cur = new Date(p.startDate);
+        const end = new Date(p.endDate);
+        while (cur <= end) {
+          datesToMap.push(cur.toISOString().slice(0, 10));
+          cur.setDate(cur.getDate() + 1);
+        }
+      } else if (p.startDate) {
+        datesToMap = [p.startDate];
+      }
+
       datesToMap.forEach(dateKey => {
         if (!map[dateKey]) map[dateKey] = [];
         if (!map[dateKey].some(item => item.id === p.id)) {

@@ -80,19 +80,71 @@ const BANK_LIST = [
   '대구은행', '부산은행', '광주은행', '경남은행', '전북은행', '우체국'
 ];
 
+const IAF_CODE_NAME_MAP: Record<string, string> = {
+  '01': '01 (농축수산업 및 임업)',
+  '03': '03 (식음료 및 담배 제조업)',
+  '04': '04 (섬유 및 직물제품 제조업)',
+  '05': '05 (가죽 및 가죽제품 제조업)',
+  '06': '06 (목재 및 목재제품 제조업)',
+  '07': '07 (펄프, 종이 및 종이제품 제조업)',
+  '08': '08 (출판업)',
+  '09': '09 (인쇄업 및 기록매체 복제업)',
+  '10': '10 (코크스, 연탄 및 석유정제품 제조업)',
+  '12': '12 (화학물질, 화학제품 및 화학섬유 제조업)',
+  '13': '13 (의약품 및 의료용 화합물 제조업)',
+  '14': '14 (고무 및 플라스틱제품 제조업)',
+  '15': '15 (비금속 광물제품 제조업)',
+  '16': '16 (콘크리트, 시멘트 및 석제품 제조업)',
+  '17': '17 (기초금속 및 1차 금속 제조업)',
+  '18': '18 (금속가공제품, 기계 및 장비 제조업)',
+  '19': '19 (전기, 전자 및 광학기기 제조업)',
+  '20': '20 (조선 및 선박 건조업)',
+  '21': '21 (항공기 및 우주선 제조업)',
+  '22': '22 (자동차 및 기타 운송장비 제조업)',
+  '23': '23 (가구 및 기타 제품 제조업)',
+  '24': '24 (재활용 및 환경정화업)',
+  '25': '25 (전기, 가스 및 증기 공급업)',
+  '26': '26 (가스 공급업)',
+  '27': '27 (수도사업 및 수질정화업)',
+  '28': '28 (건설업 및 토목공사업)',
+  '29': '29 (도매 및 소매업, 자동차 수리업)',
+  '30': '30 (숙박 및 음식점업)',
+  '31': '31 (운송, 보관 및 통신업)',
+  '32': '32 (금융, 보험 및 부동산업)',
+  '33': '33 (정보기술 및 IT 소프트웨어 개발업)',
+  '34': '34 (전문 엔지니어링, 기술 및 연구개발업)',
+  '35': '35 (전문 서비스업, 경영컨설팅 및 법률)',
+  '36': '36 (공공행정 및 국방)',
+  '37': '37 (교육 서비스업)',
+  '38': '38 (보건업 및 사회복지 서비스업)',
+  '39': '39 (기타 사회 및 개인 서비스업)'
+};
+
+const getIafCodeDisplayName = (rawCode: string): string => {
+  const numMatch = rawCode.match(/\d+/);
+  const codeNum = numMatch ? numMatch[0].padStart(2, '0') : rawCode.padStart(2, '0');
+  return IAF_CODE_NAME_MAP[codeNum] || `${codeNum} (전문 산업분야)`;
+};
+
 const COMMON_IAF_CODES = [
-  '03 (식음료)',
-  '04 (화학물질/섬유)',
-  '09 (화학/석유)',
-  '14 (고무/플라스틱)',
-  '17 (기계/금속)',
-  '18 (기계설비)',
-  '19 (전기전자)',
-  '28 (건설/토목)',
-  '31 (운송/보관/통신)',
-  '33 (정보기술)',
-  '35 (전문서비스)',
-  '38 (보건/사회복지)'
+  '03 (식음료 및 담배 제조업)',
+  '04 (섬유 및 직물제품 제조업)',
+  '09 (인쇄업 및 기록매체 복제업)',
+  '12 (화학물질 및 화학제품)',
+  '14 (고무 및 플라스틱제품)',
+  '17 (기초금속 및 1차 금속)',
+  '18 (금속가공제품, 기계 및 장비)',
+  '19 (전기, 전자 및 광학기기)',
+  '22 (자동차 및 운송장비)',
+  '24 (재활용 및 환경정화업)',
+  '28 (건설업 및 토목공사업)',
+  '29 (도소매업 및 수리업)',
+  '31 (운송, 보관 및 통신업)',
+  '32 (금융, 보험 및 부동산)',
+  '33 (정보기술 및 IT 개발)',
+  '34 (전문 엔지니어링 및 R&D)',
+  '35 (전문 서비스 및 경영컨설팅)',
+  '38 (보건 및 사회복지 서비스)'
 ];
 
 export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
@@ -342,22 +394,22 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
     const map: Record<string, { code: string; name: string; count: number; totalMd: number }> = {};
     
     iafCodes.forEach(rawCode => {
-      const numMatch = rawCode.match(/^\d+/);
-      const codeNum = numMatch ? numMatch[0] : rawCode.substring(0, 2);
-      map[codeNum] = { code: codeNum, name: rawCode, count: 0, totalMd: 0 };
+      const numMatch = rawCode.match(/\d+/);
+      const codeNum = numMatch ? numMatch[0].padStart(2, '0') : rawCode.padStart(2, '0');
+      map[codeNum] = { code: codeNum, name: getIafCodeDisplayName(codeNum), count: 0, totalMd: 0 };
     });
 
     auditorAuditHistory.forEach(item => {
       if (!item.iafCode) return;
       const code = item.iafCode.replace(/[^0-9]/g, '').padStart(2, '0');
       if (!map[code]) {
-        map[code] = { code, name: `Code ${code}`, count: 0, totalMd: 0 };
+        map[code] = { code, name: getIafCodeDisplayName(code), count: 0, totalMd: 0 };
       }
       map[code].count += 1;
       map[code].totalMd += item.appliedMd;
     });
 
-    return map;
+    return Object.values(map).sort((a, b) => a.code.localeCompare(b.code));
   }, [iafCodes, auditorAuditHistory]);
 
   // Total Cumulative Audit MD
@@ -1188,7 +1240,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     className="px-5 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>기본정보 및 정산계좌 저장</span>
+                    <span>저장</span>
                   </button>
                 </div>
               )}
@@ -1435,21 +1487,21 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-medium">
                       <tr>
                         <th className="py-2.5 px-3 text-center w-20 border-r border-slate-200 font-medium">IAF 코드</th>
-                        <th className="py-2.5 px-3.5 border-r border-slate-200 font-medium">산업 분야 및 기술 영역</th>
-                        <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200 font-medium">심사 수행 건수</th>
+                        <th className="py-2.5 px-3.5 border-r border-slate-200 min-w-[320px] font-medium">산업 분야 및 기술 영역</th>
+                        <th className="py-2.5 px-3 text-center w-24 border-r border-slate-200 font-medium">심사 건수</th>
                         <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200 font-medium">누적 심사 MD</th>
                         <th className="py-2.5 px-3 text-center w-36 font-medium">코드 충족 요건 판정</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
-                      {Object.values(iafCodeMdSummary).length === 0 ? (
+                      {iafCodeMdSummary.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="py-8 text-center text-slate-400">
                             등록된 IAF 전문 코드가 없습니다.
                           </td>
                         </tr>
                       ) : (
-                        Object.values(iafCodeMdSummary).map((iaf) => {
+                        iafCodeMdSummary.map((iaf) => {
                           const isCodeFulfilled = iaf.totalMd >= 5.0;
 
                           return (
@@ -1457,7 +1509,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                               <td className="py-2.5 px-3 text-center font-mono text-slate-700 border-r border-slate-200 text-[11.5px]">
                                 {iaf.code}
                               </td>
-                              <td className="py-2.5 px-3.5 text-slate-800 border-r border-slate-200 text-[11.5px]">
+                              <td className="py-2.5 px-3.5 text-slate-800 border-r border-slate-200 text-[11.5px] font-medium">
                                 {iaf.name}
                               </td>
                               <td className="py-2.5 px-3 text-center font-mono text-slate-700 border-r border-slate-200 text-[11.5px]">
@@ -1468,7 +1520,7 @@ export const AuditorProfileModal: React.FC<AuditorProfileModalProps> = ({
                               </td>
                               <td className="py-2.5 px-3 text-center text-[11.5px]">
                                 {isCodeFulfilled ? (
-                                  <span className="text-emerald-700">
+                                  <span className="text-emerald-700 font-bold">
                                     ✓ 충족 ({iaf.totalMd.toFixed(1)} MD)
                                   </span>
                                 ) : (
