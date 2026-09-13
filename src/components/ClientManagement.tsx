@@ -92,7 +92,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   onOpenPdfReport,
   onAddCompany
 }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'dormant' | 'cloudDocs'>('all');
+  const [activeTab, setActiveTab] = useState<'normal' | 'dueSoon' | 'dormant_unrecorded' | 'all'>('normal');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
   const [selectedAuditState, setSelectedAuditState] = useState<string>('all');
@@ -151,27 +151,41 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
   // Client category statistics
   const counts = useMemo(() => {
-    let active = 0;
+    let normal = 0;
+    let dueSoon = 0;
     let dormant = 0;
-    let cloudDocs = 0;
+    let unrecorded = 0;
+    let exception = 0;
 
     companies.forEach(c => {
-      const state = getCompanyAuditState(c, contractMap.get(c.id), projectMap.get(c.id));
-      if (state === '자격정지') {
-        dormant++;
+      const fallbackContract = contractMap.get(c.id);
+      const fallbackProject = projectMap.get(c.id);
+      const state = getCompanyAuditState(c, fallbackContract, fallbackProject);
+      const cloudCount = getCloudDocCount(c);
+      const isDormant = (state === '자격정지');
+      const isUnrecorded = (cloudCount === 0);
+      const isException = isDormant || isUnrecorded;
+
+      if (isDormant) dormant++;
+      if (isUnrecorded && !isDormant) unrecorded++;
+      if (isException) {
+        exception++;
       } else {
-        active++;
-      }
-      if (getCloudDocCount(c) > 0) {
-        cloudDocs++;
+        normal++;
+        const timeline = getAuditTimelineStatus(c, fallbackContract, fallbackProject);
+        if (timeline && (timeline.daysRemainingToDeadline <= 60 || timeline.isPrepAlert || timeline.isOverdue)) {
+          dueSoon++;
+        }
       }
     });
 
     return {
       all: companies.length,
-      active,
+      normal,
+      dueSoon,
       dormant,
-      cloudDocs
+      unrecorded,
+      exception
     };
   }, [companies, contractMap, projectMap, cloudDocMap]);
 
@@ -266,13 +280,22 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const region = getRegionDisplay(c);
       const managingAuditor = auditorMap.get(c.managingAuditorId || '') || { name: compAny.assignedAuditor || '남경호' };
       const agencyDisplay = getAgencyDisplayName(c.consultant || compAny.consultant, managingAuditor.name);
-      const auditState = getCompanyAuditState(c, contractMap.get(c.id), projectMap.get(c.id));
+      const fallbackContract = contractMap.get(c.id);
+      const fallbackProject = projectMap.get(c.id);
+      const auditState = getCompanyAuditState(c, fallbackContract, fallbackProject);
       const cloudCount = getCloudDocCount(c);
+      const isDormant = (auditState === '자격정지');
+      const isUnrecorded = (cloudCount === 0);
+      const isException = isDormant || isUnrecorded;
+      const isNormal = !isException;
+      const timeline = getAuditTimelineStatus(c, fallbackContract, fallbackProject);
+      const isDueSoon = isNormal && Boolean(timeline && (timeline.daysRemainingToDeadline <= 60 || timeline.isPrepAlert || timeline.isOverdue));
 
       // 0. 스마트 분류 탭 필터
-      if (activeTab === 'active' && auditState === '자격정지') return false;
-      if (activeTab === 'dormant' && auditState !== '자격정지') return false;
-      if (activeTab === 'cloudDocs' && cloudCount === 0) return false;
+      if (activeTab === 'normal' && !isNormal) return false;
+      if (activeTab === 'dueSoon' && !isDueSoon) return false;
+      if (activeTab === 'dormant_unrecorded' && !isException) return false;
+      // if activeTab === 'all', show all companies
 
       // 1. 텍스트 검색 매칭 (기업명, 대표자, 사업자번호, 인증번호)
       const matchesSearch = !cleanSearch ||
@@ -327,90 +350,102 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
   return (
     <div className="space-y-3 animate-in fade-in">
-      {/* 0. 상단 스마트 고객 분류 탭 (전체 573 / 활성 정기유지 / 2년 미실시 휴면 / 클라우드 PDF 보관) */}
+      {/* 0. 상단 스마트 고객 분류 탭 (4개 카드 구성) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        {/* 카드 1: 정상 관리 대상 고객사 (기본 목록) */}
         <button
           type="button"
-          onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('normal'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
-            activeTab === 'all'
+            activeTab === 'normal'
               ? 'bg-cyan-50/90 border-cyan-500 ring-1 ring-cyan-500 text-cyan-950 shadow-2xs'
               : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
           }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className={`p-1.5 rounded ${activeTab === 'all' ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-500 font-normal">전체 고객사 DB</div>
-              <div className="text-sm font-bold text-slate-800">{counts.all}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
-            </div>
-          </div>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono font-normal">누적전체</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => { setActiveTab('active'); setCurrentPage(1); }}
-          className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
-            activeTab === 'active'
-              ? 'bg-emerald-50/90 border-emerald-500 ring-1 ring-emerald-500 text-emerald-950 shadow-2xs'
-              : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <div className={`p-1.5 rounded ${activeTab === 'active' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600'}`}>
+            <div className={`p-1.5 rounded ${activeTab === 'normal' ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-500 font-normal">정기유지 · 활성 고객사</div>
-              <div className="text-sm font-bold text-emerald-700">{counts.active}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[11px] text-slate-500 font-normal">정상 관리 대상 고객사</div>
+              <div className="text-sm font-bold text-slate-900">{counts.normal}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[10px] text-slate-400 font-normal mt-0.5">실물보고서 보유 · 정상유지</div>
             </div>
           </div>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-normal">정상유지</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 font-mono font-normal">기본목록</span>
         </button>
 
+        {/* 카드 2: 2개월 내 심사 대상 기업 */}
         <button
           type="button"
-          onClick={() => { setActiveTab('dormant'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('dueSoon'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
-            activeTab === 'dormant'
-              ? 'bg-amber-50/90 border-amber-500 ring-1 ring-amber-500 text-amber-950 shadow-2xs'
+            activeTab === 'dueSoon'
+              ? 'bg-indigo-50/90 border-indigo-500 ring-1 ring-indigo-500 text-indigo-950 shadow-2xs'
               : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
           }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className={`p-1.5 rounded ${activeTab === 'dormant' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600'}`}>
+            <div className={`p-1.5 rounded ${activeTab === 'dueSoon' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600'}`}>
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">2개월 내 심사 대상 기업</div>
+              <div className="text-sm font-bold text-indigo-700">{counts.dueSoon}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[10px] text-slate-400 font-normal mt-0.5">심사도래 · 일정 조율 대상</div>
+            </div>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono font-normal">일정집중</span>
+        </button>
+
+        {/* 카드 3: 휴면(인증정지) 및 기록없음 대상 */}
+        <button
+          type="button"
+          onClick={() => { setActiveTab('dormant_unrecorded'); setCurrentPage(1); }}
+          className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
+            activeTab === 'dormant_unrecorded'
+              ? 'bg-rose-50/90 border-rose-500 ring-1 ring-rose-500 text-rose-950 shadow-2xs'
+              : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className={`p-1.5 rounded ${activeTab === 'dormant_unrecorded' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'}`}>
               <AlertTriangle className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-500 font-normal">2년 미실시 휴면·만료 대상</div>
-              <div className="text-sm font-bold text-amber-700">{counts.dormant}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[11px] text-slate-500 font-normal">휴면(인증정지) 및 기록없음</div>
+              <div className="text-sm font-bold text-rose-700">{counts.exception}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[10px] text-slate-400 font-normal mt-0.5">
+                정지 {counts.dormant}개 / 기록없음 {counts.unrecorded}개
+              </div>
             </div>
           </div>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono font-normal">집중관리</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-mono font-normal">별도관리</span>
         </button>
 
+        {/* 카드 4: 전체 누적 고객사 마스터 DB */}
         <button
           type="button"
-          onClick={() => { setActiveTab('cloudDocs'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
-            activeTab === 'cloudDocs'
-              ? 'bg-sky-50/90 border-sky-500 ring-1 ring-sky-500 text-sky-950 shadow-2xs'
+            activeTab === 'all'
+              ? 'bg-slate-100 border-slate-500 ring-1 ring-slate-500 text-slate-950 shadow-2xs'
               : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
           }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className={`p-1.5 rounded ${activeTab === 'cloudDocs' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-600'}`}>
-              <Cloud className="w-4 h-4" />
+            <div className={`p-1.5 rounded ${activeTab === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <Building2 className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-500 font-normal">클라우드 PDF 보관 기업</div>
-              <div className="text-sm font-bold text-sky-700">{counts.cloudDocs}<span className="text-xs font-normal text-slate-500 ml-0.5">개사 (790건)</span></div>
+              <div className="text-[11px] text-slate-500 font-normal">전체 고객사 마스터 DB</div>
+              <div className="text-sm font-bold text-slate-900">총 {counts.all}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[10px] text-slate-500 font-normal mt-0.5 truncate max-w-[200px]" title={`총 ${counts.all}개 / 인증유지 ${counts.normal}개 / 휴면 및 기록없음 ${counts.exception}개`}>
+                총 {counts.all}개 / 인증유지 {counts.normal}개 / 휴면·기록없음 {counts.exception}개
+              </div>
             </div>
           </div>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono font-normal">PDF보관</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono font-normal">전체누적</span>
         </button>
       </div>
 
@@ -731,9 +766,19 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
                       {/* 인증상태 및 12/24/34개월 발행 마감 알람 */}
                       <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs font-normal">
-                        <span className={`px-2 py-0.5 text-[11px] rounded font-normal ${getAuditStateBadgeClass(auditState)}`}>
-                          {auditState}
-                        </span>
+                        {auditState === '자격정지' ? (
+                          <span className="px-2 py-0.5 text-[11px] rounded font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            인증정지
+                          </span>
+                        ) : cloudCount === 0 ? (
+                          <span className="px-2 py-0.5 text-[11px] rounded font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            기록없음
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-0.5 text-[11px] rounded font-normal ${getAuditStateBadgeClass(auditState)}`}>
+                            {auditState}
+                          </span>
+                        )}
                         {(() => {
                           const timeline = getAuditTimelineStatus(comp, fallbackContract, projectMap.get(comp.id));
                           if (!timeline) return null;
