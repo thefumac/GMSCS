@@ -805,39 +805,19 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                             </td>
                             <td className="py-2.5 px-3 align-middle">
                               <div className="flex items-center gap-3.5 flex-wrap">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onOpenPdfReport?.({
-                                      title: `[심사보고서] ${company.companyName} ${stageText}`,
-                                      companyName: company.companyName,
-                                      standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
-                                      auditType: stageText,
-                                      auditDate: latestProject?.startDate || '2026-06-08',
-                                      auditorName: managingAuditor.name || '사무국'
-                                    });
-                                  }}
-                                  className="text-cyan-800 hover:text-cyan-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                >
-                                  <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
-                                  <span>심사보고서 (PDF 열람)</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onOpenPdfReport?.({
-                                      title: `[인증서] ${company.companyName} 공식 인증서`,
-                                      companyName: company.companyName,
-                                      standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
-                                      auditType: '인증서 발급본',
-                                      auditDate: latestProject?.startDate || '2026-06-08'
-                                    });
-                                  }}
-                                  className="text-indigo-800 hover:text-indigo-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                >
-                                  <Award className="w-3.5 h-3.5 text-indigo-800 shrink-0" />
-                                  <span>인증서(국/영문)</span>
-                                </button>
+                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 text-[11px] font-normal">
+                                  기존보고서 없음 (신규 작성 대상)
+                                </span>
+                                {onOpenReportWorkbench && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onOpenReportWorkbench(effectiveCompany)}
+                                    className="text-cyan-800 hover:text-cyan-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
+                                    <span>심사보고서 작성/등록</span>
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => setIsPlanDocOpen(true)}

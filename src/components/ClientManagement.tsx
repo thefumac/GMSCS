@@ -307,6 +307,13 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const matchesAuditState = selectedAuditState === 'all' || auditState === selectedAuditState;
 
       return matchesSearch && matchesStandard && matchesRegion && matchesAuditor && matchesAgency && matchesAuditState;
+    }).sort((a, b) => {
+      // 보관 보고서가 있는 업체를 우선 정렬하고, '기존보고서 없음' 업체는 가장 뒤로 정렬
+      const countA = getCloudDocCount(a);
+      const countB = getCloudDocCount(b);
+      if (countA > 0 && countB === 0) return -1;
+      if (countA === 0 && countB > 0) return 1;
+      return 0;
     });
   }, [companies, activeTab, searchTerm, selectedStandard, selectedRegion, selectedAuditor, selectedAgency, selectedAuditState, auditorMap, contractMap, projectMap, cloudDocMap]);
 
@@ -637,13 +644,20 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                             {comp.companyName}
                           </span>
                           <ExternalLink className="w-3 h-3 text-cyan-600 opacity-60 shrink-0" />
-                          {cloudCount > 0 && (
+                          {cloudCount > 0 ? (
                             <span
                               className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10.5px] rounded bg-sky-50 text-sky-700 border border-sky-200 font-normal font-mono"
                               title={`클라우드 스토리지 보관 보고서 및 인증서 ${cloudCount}건 보유`}
                             >
                               <Cloud className="w-2.5 h-2.5" />
-                              <span>{cloudCount}건</span>
+                              <span>보관 {cloudCount}건</span>
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 text-[10.5px] rounded bg-slate-100 text-slate-500 border border-slate-200 font-normal"
+                              title="과거 스캔 PDF 미보관 (새 시스템에서 신규 작성 대상)"
+                            >
+                              <span>기존보고서 없음</span>
                             </span>
                           )}
                         </div>
