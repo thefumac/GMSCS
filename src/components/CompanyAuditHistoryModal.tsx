@@ -812,18 +812,18 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                   <button
                                     type="button"
                                     onClick={() => onOpenReportWorkbench(effectiveCompany)}
-                                    className="text-cyan-800 hover:text-cyan-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                   >
-                                    <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
+                                    <FileText className="w-3.5 h-3.5 text-slate-800 shrink-0" />
                                     <span>심사보고서 작성/등록</span>
                                   </button>
                                 )}
                                 <button
                                   type="button"
                                   onClick={() => setIsPlanDocOpen(true)}
-                                  className="text-slate-700 hover:text-slate-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                 >
-                                  <FileCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <FileCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
                                   <span>심사계획서</span>
                                 </button>
                               </div>
@@ -870,7 +870,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
 
                             {/* 5. 발급 문서 및 보고서 열람 (Firebase Cloud Storage 실물 PDF 연동) */}
                             <td className="py-2.5 px-3 align-middle">
-                              <div className="flex items-center gap-3 flex-wrap">
+                              <div className="flex items-center gap-3.5 flex-wrap">
                                 
                                 {/* 심사보고서 */}
                                 {grp.reportDoc ? (
@@ -878,7 +878,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     type="button"
                                     onClick={() => {
                                       onOpenPdfReport?.({
-                                        title: `[심사보고서] ${company.companyName} ${grp.auditType} (${dateText})`,
+                                        title: grp.reportDoc?.fileName || `[심사보고서] ${company.companyName} ${grp.auditType} (${dateText})`,
                                         companyName: company.companyName,
                                         standard: grp.standards[0] || 'ISO 9001:2015',
                                         auditType: grp.auditType,
@@ -887,30 +887,20 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                         pdfUrl: grp.reportDoc?.downloadUrl || grp.reportDoc?.pdfUrl
                                       });
                                     }}
-                                    className="text-cyan-800 hover:text-cyan-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                     title={`공식 심사보고서 열람 (${grp.reportDoc.fileSize})`}
                                   >
-                                    <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
-                                    <span>심사보고서 (PDF 열람)</span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onOpenPdfReport?.({
-                                        title: `[심사보고서] ${company.companyName} ${grp.auditType}`,
-                                        companyName: company.companyName,
-                                        standard: grp.standards[0] || 'ISO 9001:2015',
-                                        auditType: grp.auditType,
-                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
-                                        auditorName: grp.auditor
-                                      });
-                                    }}
-                                    className="text-slate-500 hover:text-slate-800 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  >
-                                    <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <FileText className="w-3.5 h-3.5 text-slate-800 shrink-0" />
                                     <span>심사보고서</span>
                                   </button>
+                                ) : (
+                                  <span 
+                                    className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none"
+                                    title="보관된 심사보고서 실물 파일 없음"
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                                    <span>심사보고서</span>
+                                  </span>
                                 )}
 
                                 {/* 인증서 */}
@@ -919,7 +909,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     type="button"
                                     onClick={() => {
                                       onOpenPdfReport?.({
-                                        title: `[인증서] ${company.companyName} 공식 인증서 (${grp.standards[0] || ''})`,
+                                        title: grp.certDoc?.fileName || `[인증서] ${company.companyName} 공식 인증서 (${grp.standards[0] || ''})`,
                                         companyName: company.companyName,
                                         standard: grp.standards[0] || 'ISO 9001:2015',
                                         auditType: '공식 인증서',
@@ -927,14 +917,17 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                         pdfUrl: grp.certDoc?.downloadUrl || grp.certDoc?.pdfUrl
                                       });
                                     }}
-                                    className="text-indigo-800 hover:text-indigo-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                     title={`공식 인증서 PDF 열람 (${grp.certDoc.fileSize})`}
                                   >
-                                    <Award className="w-3.5 h-3.5 text-indigo-800 shrink-0" />
+                                    <Award className="w-3.5 h-3.5 text-slate-800 shrink-0" />
                                     <span>인증서(국/영문)</span>
                                   </button>
                                 ) : (
-                                  <span className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs">
+                                  <span 
+                                    className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none"
+                                    title="보관된 인증서 실물 파일 없음"
+                                  >
                                     <Award className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                                     <span>인증서</span>
                                   </span>
@@ -946,7 +939,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     type="button"
                                     onClick={() => {
                                       onOpenPdfReport?.({
-                                        title: `[신청/전환자료] ${company.companyName} ${grp.auditType}`,
+                                        title: grp.planDoc?.fileName || `[신청/전환자료] ${company.companyName} ${grp.auditType}`,
                                         companyName: company.companyName,
                                         standard: grp.standards[0] || 'ISO 9001:2015',
                                         auditType: grp.auditType,
@@ -954,12 +947,12 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                         pdfUrl: grp.planDoc?.downloadUrl || grp.planDoc?.pdfUrl
                                       });
                                     }}
-                                    className="text-purple-800 hover:text-purple-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                     title={`신청/전환/계획서 열람 (${grp.planDoc.fileSize})`}
                                   >
-                                    <Paperclip className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                                    <Paperclip className="w-3.5 h-3.5 text-slate-800 shrink-0" />
                                     <span>전환/부속자료</span>
-                                    <span className="text-[10px] bg-purple-100 text-purple-800 px-1 rounded font-mono">
+                                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1 rounded font-mono border border-slate-200">
                                       {grp.planDoc.fileSize}
                                     </span>
                                   </button>
@@ -967,9 +960,9 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                   <button
                                     type="button"
                                     onClick={() => setIsPlanDocOpen(true)}
-                                    className="text-slate-600 hover:text-slate-900 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                   >
-                                    <FileCheck className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                    <FileCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
                                     <span>심사계획서</span>
                                   </button>
                                 )}
