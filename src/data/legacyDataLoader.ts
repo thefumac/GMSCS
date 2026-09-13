@@ -400,17 +400,43 @@ export function getMergedProjects(): AuditProject[] {
   const auditorNameMap = new Map<string, string>();
   auditors.forEach(a => auditorNameMap.set(a.name.trim(), a.id));
 
-  rawList.forEach(p => {
+  // 기업 데이터에서 기업명 -> 담당 심사원 매핑 테이블 구성
+  const companies = getMergedCompanies();
+  const companyAuditorMap = new Map<string, { auditorId: string; auditorName: string }>();
+  companies.forEach(c => {
+    const matchedAud = auditors.find(a => a.id === c.managingAuditorId);
+    if (matchedAud) {
+      companyAuditorMap.set(c.companyName.trim(), { auditorId: matchedAud.id, auditorName: matchedAud.name });
+    }
+  });
+
+  rawList.forEach((p, pIdx) => {
     // 키: 회사명 + 시작일 + 종료일 + 심사유형
     const key = [p.companyName.trim(), p.startDate, p.endDate, p.auditType].join('__');
     const cleanMd = normalizeMd(p.appliedMd);
     const cleanKabMd = normalizeMd(p.kabStandardMd || p.appliedMd);
-    const canonicalLeadId = auditorNameMap.get(p.leadAuditorName?.trim() || '') || p.leadAuditorId || 'admin';
+
+    // 책임심사원 식별 (직접 지정 > 회사 매핑 > 순환 배정)
+    let leadName = p.leadAuditorName?.trim() || '';
+    let canonicalLeadId = auditorNameMap.get(leadName) || p.leadAuditorId || '';
+
+    if (!leadName || !canonicalLeadId) {
+      const compMatch = companyAuditorMap.get(p.companyName.trim());
+      if (compMatch) {
+        leadName = compMatch.auditorName;
+        canonicalLeadId = compMatch.auditorId;
+      } else {
+        const fallbackAud = auditors[pIdx % auditors.length];
+        leadName = fallbackAud.name;
+        canonicalLeadId = fallbackAud.id;
+      }
+    }
 
     if (!map.has(key)) {
       map.set(key, {
         ...p,
         leadAuditorId: canonicalLeadId,
+        leadAuditorName: leadName,
         appliedMd: cleanMd,
         kabStandardMd: cleanKabMd,
         standards: [...(p.standards || [])],
@@ -418,7 +444,10 @@ export function getMergedProjects(): AuditProject[] {
       });
     } else {
       const existing = map.get(key)!;
-      if (canonicalLeadId) existing.leadAuditorId = canonicalLeadId;
+      if (canonicalLeadId) {
+        existing.leadAuditorId = canonicalLeadId;
+        existing.leadAuditorName = leadName;
+      }
       // 규격 합집합 병합
       (p.standards || []).forEach(s => {
         if (!existing.standards.includes(s)) existing.standards.push(s);
@@ -439,4 +468,4 @@ export function getMergedProjects(): AuditProject[] {
   });
 
   return Array.from(map.values());
-}
+}

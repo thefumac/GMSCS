@@ -48,8 +48,14 @@ import {
   saveAuditReportNotices,
   DEFAULT_AUDIT_REPORT_NOTICES
 } from '../utils/auditReportNotices';
+import {
+  CommitteeMember,
+  loadSavedCommitteeMembers,
+  saveCommitteeMembers,
+  DEFAULT_COMMITTEE_MEMBERS
+} from '../utils/committeeMembers';
 
-export type CertSubTab = 'standards' | 'reportNotices' | 'committee' | 'events' | 'kab' | 'settlements' | 'general' | 'mail';
+export type CertSubTab = 'standards' | 'reportNotices' | 'committee' | 'reviewers' | 'events' | 'kab' | 'settlements' | 'general' | 'mail';
 
 export interface CertificationManagementProps {
   auditors: Auditor[];
@@ -111,6 +117,92 @@ export const CertificationManagement: React.FC<CertificationManagementProps> = (
   const [noticeAuthorInput, setNoticeAuthorInput] = useState<string>('GMSCS 인증원 사무국');
   const [isAddingNewNotice, setIsAddingNewNotice] = useState<boolean>(false);
   const [noticeSaveSuccess, setNoticeSaveSuccess] = useState<boolean>(false);
+
+  // 심의위원 및 승인 비밀번호(PIN) 관리 상태
+  const [committeeMembers, setCommitteeMembers] = useState<CommitteeMember[]>(() => loadSavedCommitteeMembers());
+  const [memberPinInputs, setMemberPinInputs] = useState<{ [id: string]: string }>({});
+  const [isAddingMember, setIsAddingMember] = useState<boolean>(false);
+  const [newMemberName, setNewMemberName] = useState<string>('');
+  const [newMemberRole, setNewMemberRole] = useState<string>('심의위원');
+  const [newMemberAffiliation, setNewMemberAffiliation] = useState<'상근' | '비상근' | '외부위원'>('비상근');
+  const [newMemberSpecialty, setNewMemberSpecialty] = useState<string>('품질/환경/안전보건');
+  const [newMemberEmail, setNewMemberEmail] = useState<string>('');
+  const [newMemberPhone, setNewMemberPhone] = useState<string>('');
+  const [newMemberPin, setNewMemberPin] = useState<string>('1234');
+  const [newMemberNotes, setNewMemberNotes] = useState<string>('');
+
+  const handleUpdateMemberPin = (id: string) => {
+    const pin = memberPinInputs[id];
+    if (!pin || pin.trim().length < 4) {
+      alert('승인 비밀번호는 최소 4자리 이상 입력해 주십시오.');
+      return;
+    }
+    const updated = committeeMembers.map(m => m.id === id ? { ...m, approvalPin: pin.trim() } : m);
+    setCommitteeMembers(updated);
+    saveCommitteeMembers(updated);
+    alert('승인 비밀번호가 성공적으로 업데이트 및 저장되었습니다.');
+  };
+
+  const handleAddMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberName.trim()) {
+      alert('심의위원 성명을 입력해 주십시오.');
+      return;
+    }
+    if (!newMemberPin.trim() || newMemberPin.trim().length < 4) {
+      alert('승인 비밀번호는 4자리 이상 입력해 주십시오.');
+      return;
+    }
+    const newMember: CommitteeMember = {
+      id: `comm-mem-${Date.now()}`,
+      name: newMemberName.trim(),
+      role: newMemberRole.trim() || '심의위원',
+      affiliation: newMemberAffiliation,
+      isPermanent: newMemberAffiliation === '상근',
+      approvalPin: newMemberPin.trim(),
+      email: newMemberEmail.trim(),
+      phone: newMemberPhone.trim(),
+      specialty: newMemberSpecialty.trim(),
+      appointedDate: new Date().toISOString().slice(0, 10),
+      status: '활동중',
+      notes: newMemberNotes.trim()
+    };
+    const updated = [...committeeMembers, newMember];
+    setCommitteeMembers(updated);
+    saveCommitteeMembers(updated);
+    setIsAddingMember(false);
+    setNewMemberName('');
+    setNewMemberEmail('');
+    setNewMemberPhone('');
+    setNewMemberNotes('');
+    setNewMemberPin('1234');
+    alert(`[${newMember.name}] 심의위원이 성공적으로 추가 위촉되었습니다.`);
+  };
+
+  const handleDeleteMember = (id: string, name: string) => {
+    const member = committeeMembers.find(m => m.id === id);
+    if (member?.isPermanent) {
+      alert('기본 상근 직원(남경호, 정현일, 이혜원, 남효린)은 삭제할 수 없습니다. 필요 시 비밀번호 또는 상태를 변경해 주십시오.');
+      return;
+    }
+    if (window.confirm(`[${name}] 심의위원을 해촉(삭제)하시겠습니까?`)) {
+      const updated = committeeMembers.filter(m => m.id !== id);
+      setCommitteeMembers(updated);
+      saveCommitteeMembers(updated);
+    }
+  };
+
+  const handleToggleMemberStatus = (id: string) => {
+    const updated = committeeMembers.map(m => {
+      if (m.id === id) {
+        const nextStatus = m.status === '활동중' ? '휴직' : '활동중';
+        return { ...m, status: nextStatus as '활동중' | '휴직' };
+      }
+      return m;
+    });
+    setCommitteeMembers(updated);
+    saveCommitteeMembers(updated);
+  };
 
   const handleSaveNotice = (e: React.FormEvent) => {
     e.preventDefault();
@@ -430,6 +522,24 @@ export const CertificationManagement: React.FC<CertificationManagementProps> = (
             >
               <Calendar className={`w-4 h-4 ${activeSubTab === 'committee' ? 'text-cyan-700' : 'text-slate-400'}`} />
               <span>심의위원회 일정 관리</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('reviewers')}
+              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition text-left cursor-pointer ${
+                activeSubTab === 'reviewers'
+                  ? 'bg-white text-slate-950 border border-slate-300 shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900 border border-transparent'
+              }`}
+            >
+              <Users className={`w-4 h-4 ${activeSubTab === 'reviewers' ? 'text-cyan-700' : 'text-slate-400'}`} />
+              <div className="flex-1 min-w-0 flex items-center justify-between">
+                <span>심의위원 관리</span>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded font-bold font-mono">
+                  {committeeMembers.length}명
+                </span>
+              </div>
             </button>
 
             <button
@@ -1170,6 +1280,375 @@ export const CertificationManagement: React.FC<CertificationManagementProps> = (
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* 2-1. 심의위원 및 전자문서 승인 비밀번호(PIN) 관리 뷰 */}
+        {activeSubTab === 'reviewers' && (
+          <div className="space-y-5">
+            {/* 상단 타이틀 및 안내 */}
+            <div className="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-700" />
+                  <span>심의위원 명단 &amp; 전자문서 승인 비밀번호(PIN) 관리</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  인증심의위원회 위원 명단을 관리하고, 내부 상근 직원 4인의 전자문서(계약검토서, 공정성평가서, 심의결과보고서) 간편 승인 비밀번호를 설정합니다.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingMember(true)}
+                  className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>심의위원 신규 위촉</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 핵심 정책 배너: 상근 4인 비번 결재 안내 */}
+            <div className="bg-indigo-50/80 border border-indigo-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl p-1 bg-white rounded-lg border border-indigo-100 shadow-2xs">🔐</span>
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-black text-indigo-950">
+                    내부 상근 인원(4명) 전자문서 원터치 비밀번호 승인 체계
+                  </h4>
+                  <p className="text-[11.5px] text-indigo-800 leading-relaxed">
+                    상근 직원(<strong>남경호, 정현일, 이혜원, 남효린</strong>)은 심사관리의 내부 공문(계약검토보고서 F02, 공정성관리평가서 F14, 심의결과보고서 F18) 승인 시 본 화면에서 설정한 <strong>비밀번호(PIN)</strong>만 입력하면 서명 및 결재가 즉시 완료됩니다.
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center gap-1 text-[11px] font-mono text-indigo-900 bg-white px-3 py-1 rounded-md border border-indigo-200 font-bold">
+                <span>상근 4명 + 외부/비상근 {committeeMembers.filter(m => !m.isPermanent).length}명</span>
+              </div>
+            </div>
+
+            {/* 1. 내부 상근 인원 4인 전용 PIN 설정 카드 그리드 */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-700 inline-block"></span>
+                <span>내부 상근 심의위원 4인 (문서 승인 비밀번호 관리)</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {committeeMembers.filter(m => m.isPermanent || ['남경호', '정현일', '이혜원', '남효린'].includes(m.name)).map((member) => {
+                  const currentPin = memberPinInputs[member.id] !== undefined ? memberPinInputs[member.id] : member.approvalPin;
+                  return (
+                    <div
+                      key={member.id}
+                      className="bg-white border-2 border-indigo-200/80 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between space-y-3 relative hover:border-indigo-400 transition"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 bg-indigo-100 text-indigo-800 rounded">
+                            상근 결재권자
+                          </span>
+                          <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                            {member.status}
+                          </span>
+                        </div>
+                        <div className="pt-0.5">
+                          <h5 className="text-sm font-black text-slate-900 flex items-center gap-1">
+                            <span>{member.name}</span>
+                            <span className="text-[11px] text-slate-500 font-normal">{member.role.split(' ')[0]}</span>
+                          </h5>
+                          <p className="text-[11px] text-indigo-900 font-semibold truncate mt-0.5">
+                            {member.role}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate mt-0.5" title={member.specialty}>
+                            {member.specialty}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 비밀번호 설정 박스 */}
+                      <div className="pt-2 border-t border-slate-200/80 space-y-1.5">
+                        <label className="text-[10px] text-slate-600 font-bold block">
+                          문서 결재 승인 비밀번호 (PIN)
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={currentPin}
+                            onChange={(e) => setMemberPinInputs({ ...memberPinInputs, [member.id]: e.target.value })}
+                            placeholder="4자리 이상"
+                            maxLength={10}
+                            className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-950 focus:bg-white focus:outline-indigo-600"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateMemberPin(member.id)}
+                            className="px-2.5 py-1 bg-slate-900 hover:bg-indigo-950 text-white font-bold text-[11px] rounded transition shrink-0 cursor-pointer"
+                            title="비밀번호 저장"
+                          >
+                            저장
+                          </button>
+                        </div>
+                        <span className="text-[9.5px] text-slate-400 block text-right font-mono">
+                          연락처: {member.phone}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. 전체 심의위원 대장 테이블 */}
+            <div className="space-y-2.5 pt-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-slate-700 inline-block"></span>
+                  <span>전체 인증심의위원회 위원 명부 ({committeeMembers.length}명)</span>
+                </h4>
+              </div>
+
+              <div className="overflow-x-auto border border-slate-300 rounded-xl shadow-2xs">
+                <table className="w-full border-collapse text-xs bg-white text-left">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold">
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-12 text-center">No</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-24">성명</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-32">심의 직책</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-20 text-center">구분</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300">심의 전문분야</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-28">연락처</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-28 text-center">승인 비밀번호</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300 w-20 text-center">상태</th>
+                      <th className="py-2.5 px-3 w-16 text-center">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {committeeMembers.map((mem, idx) => {
+                      const curPin = memberPinInputs[mem.id] !== undefined ? memberPinInputs[mem.id] : mem.approvalPin;
+                      return (
+                        <tr key={mem.id} className="hover:bg-slate-50/80 transition">
+                          <td className="py-2 px-3 text-center font-mono text-slate-500 border-r border-slate-200">
+                            {idx + 1}
+                          </td>
+                          <td className="py-2 px-3 font-bold text-slate-900 border-r border-slate-200">
+                            <div className="flex items-center gap-1.5">
+                              <span>{mem.name}</span>
+                              {mem.isPermanent && (
+                                <span className="text-[9px] bg-indigo-100 text-indigo-800 font-bold px-1 rounded">
+                                  상근
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-slate-800 font-medium border-r border-slate-200">
+                            {mem.role}
+                          </td>
+                          <td className="py-2 px-3 text-center border-r border-slate-200">
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              mem.affiliation === '상근'
+                                ? 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                                : mem.affiliation === '비상근'
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}>
+                              {mem.affiliation}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-slate-600 text-[11px] border-r border-slate-200">
+                            {mem.specialty || '-'}
+                          </td>
+                          <td className="py-2 px-3 font-mono text-slate-700 text-[11px] border-r border-slate-200">
+                            {mem.phone || mem.email || '-'}
+                          </td>
+                          <td className="py-2 px-2 text-center border-r border-slate-200">
+                            <div className="flex items-center justify-center gap-1">
+                              <input
+                                type="text"
+                                value={curPin}
+                                onChange={(e) => setMemberPinInputs({ ...memberPinInputs, [mem.id]: e.target.value })}
+                                className="w-16 bg-slate-50 border border-slate-300 rounded px-1.5 py-0.5 text-center font-mono font-bold text-xs"
+                                maxLength={10}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateMemberPin(mem.id)}
+                                className="p-1 bg-slate-100 hover:bg-indigo-100 text-indigo-900 rounded border border-slate-300 text-[10px] font-bold cursor-pointer"
+                                title="비밀번호 변경 저장"
+                              >
+                                저장
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 text-center border-r border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMemberStatus(mem.id)}
+                              className={`text-[10.5px] font-bold px-1.5 py-0.5 rounded cursor-pointer ${
+                                mem.status === '활동중'
+                                  ? 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
+                                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                              }`}
+                              title="클릭 시 활동/휴직 상태 전환"
+                            >
+                              {mem.status}
+                            </button>
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            {!mem.isPermanent && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMember(mem.id, mem.name)}
+                                className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded transition cursor-pointer"
+                                title="심의위원 해촉(삭제)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 신규 심의위원 위촉 모달 */}
+            {isAddingMember && (
+              <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+                <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl w-full max-w-lg overflow-hidden space-y-4 p-6">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-indigo-700" />
+                      <h4 className="text-base font-bold text-slate-900">심의위원 신규 위촉 등록</h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingMember(false)}
+                      className="text-slate-400 hover:text-slate-700 text-lg font-bold cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleAddMember} className="space-y-3.5 text-xs">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">위원 성명 *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newMemberName}
+                          onChange={(e) => setNewMemberName(e.target.value)}
+                          placeholder="예: 홍길동"
+                          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">심의 직책 / 구분</label>
+                        <select
+                          value={newMemberAffiliation}
+                          onChange={(e) => setNewMemberAffiliation(e.target.value as any)}
+                          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs"
+                        >
+                          <option value="비상근">비상근 심의위원</option>
+                          <option value="외부위원">외부 전문위원</option>
+                          <option value="상근">상근 심의위원</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">직책 명칭</label>
+                        <input
+                          type="text"
+                          value={newMemberRole}
+                          onChange={(e) => setNewMemberRole(e.target.value)}
+                          placeholder="예: 심의위원, 기술전문위원"
+                          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          결재 승인 비밀번호 (PIN) *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newMemberPin}
+                          onChange={(e) => setNewMemberPin(e.target.value)}
+                          placeholder="4자리 이상 숫자/문자"
+                          maxLength={10}
+                          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">심의 전문분야</label>
+                      <input
+                        type="text"
+                        value={newMemberSpecialty}
+                        onChange={(e) => setNewMemberSpecialty(e.target.value)}
+                        placeholder="예: ISO 9001/14001, 정보보안, 전기전자"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">연락처</label>
+                        <input
+                          type="text"
+                          value={newMemberPhone}
+                          onChange={(e) => setNewMemberPhone(e.target.value)}
+                          placeholder="010-0000-0000"
+                          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">이메일</label>
+                        <input
+                          type="email"
+                          value={newMemberEmail}
+                          onChange={(e) => setNewMemberEmail(e.target.value)}
+                          placeholder="email@domain.com"
+                          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">비고 / 위촉 이력</label>
+                      <textarea
+                        rows={2}
+                        value={newMemberNotes}
+                        onChange={(e) => setNewMemberNotes(e.target.value)}
+                        placeholder="위촉 배경, 전문 경력 요약"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs resize-none"
+                      />
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingMember(false)}
+                        className="px-4 py-2 border border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg shadow-xs cursor-pointer"
+                      >
+                        위촉 등록하기
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

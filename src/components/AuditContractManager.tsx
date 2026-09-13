@@ -44,6 +44,12 @@ import { calculateKabMd } from '../services/kabMdEngine';
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { checkAuditPeriodForHolidays } from '../utils/koreanHolidays';
 import { cleanCeoName, cleanPersonName, splitPersonAndPosition, formatCeoDisplay } from '../utils/personUtils';
+import {
+  CommitteeMember,
+  loadSavedCommitteeMembers,
+  verifyMemberApprovalPin,
+  isPermanentStaffMember
+} from '../utils/committeeMembers';
 
 interface AuditContractManagerProps {
   companies: Company[];
@@ -51,6 +57,7 @@ interface AuditContractManagerProps {
   contracts: AuditContractRecord[];
   projects?: AuditProject[];
   isAdmin: boolean;
+  currentUserRole?: string;
   onSaveContract: (newContract: AuditContractRecord) => void;
   onApproveContract: (contractId: string, approvedBy: string) => void;
   onRejectContract: (contractId: string, reason: string) => void;
@@ -81,7 +88,7 @@ function numberToKorean(num: number): string {
 
       if (c1000 > 0) chunkStr += (c1000 === 1 ? '' : digits[c1000]) + '천';
       if (c100 > 0) chunkStr += (c100 === 1 ? '' : digits[c100]) + '백';
-      if (c10 > 0) chunkStr += (c10 === 1 ? '' : digits[c10]) + '십';
+      if (c100 > 0 || c10 > 0) chunkStr += (c10 === 1 ? '' : digits[c10]) + '십';
       if (c1 > 0) chunkStr += digits[c1];
 
       result = chunkStr + units[unitIdx] + (result ? ' ' + result : '');
@@ -92,12 +99,123 @@ function numberToKorean(num: number): string {
   return result;
 }
 
+// 심사원 자동완성 검색 및 선택 컴포넌트
+interface AuditorSearchInputProps {
+  valueId: string;
+  onSelect: (auditorId: string) => void;
+  auditors: Auditor[];
+  placeholder?: string;
+  allowEmptyText?: string;
+}
+
+const AuditorSearchInput: React.FC<AuditorSearchInputProps> = ({
+  valueId,
+  onSelect,
+  auditors,
+  placeholder = '성명 입력...',
+  allowEmptyText = '선택 해제'
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const selectedAuditor = useMemo(() => {
+    return auditors.find(a => a.id === valueId);
+  }, [auditors, valueId]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return auditors.slice(0, 30);
+    const q = query.toLowerCase().trim();
+    return auditors.filter(a => 
+      a.name.toLowerCase().includes(q) || 
+      (a.affiliation && a.affiliation.toLowerCase().includes(q)) ||
+      (a.agency && a.agency.toLowerCase().includes(q)) ||
+      (a.mobile && a.mobile.includes(q))
+    );
+  }, [auditors, query]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <input
+        type="text"
+        value={isOpen ? query : (selectedAuditor?.name || '')}
+        placeholder={placeholder}
+        onFocus={() => {
+          setIsOpen(true);
+          setQuery('');
+        }}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setIsOpen(true);
+        }}
+        className="w-full bg-slate-50 border border-slate-300 rounded px-1.5 py-0.5 font-bold text-slate-950 text-center text-xs focus:bg-white focus:outline-none focus:border-indigo-500 print:border-none print:bg-transparent print:p-0 print:text-center cursor-pointer"
+      />
+      {isOpen && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-52 max-h-56 bg-white border border-slate-300 shadow-xl rounded-md overflow-y-auto z-50 text-left divide-y divide-slate-100 no-print">
+          <button
+            type="button"
+            onClick={() => {
+              onSelect('');
+              setIsOpen(false);
+              setQuery('');
+            }}
+            className="w-full px-2.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 text-center font-medium block"
+          >
+            - {allowEmptyText} -
+          </button>
+          {filtered.length === 0 ? (
+            <div className="p-2.5 text-center text-xs text-slate-400">
+              일치하는 심사원이 없습니다.
+            </div>
+          ) : (
+            filtered.map(aud => (
+              <button
+                key={aud.id}
+                type="button"
+                onClick={() => {
+                  onSelect(aud.id);
+                  setIsOpen(false);
+                  setQuery('');
+                }}
+                className={`w-full px-2.5 py-1.5 text-xs hover:bg-indigo-50 flex items-center justify-between text-left transition-colors ${
+                  aud.id === valueId ? 'bg-indigo-50/80 font-bold text-indigo-900' : 'text-slate-800'
+                }`}
+              >
+                <div>
+                  <span className="font-bold mr-1">{aud.name}</span>
+                  <span className="text-[10px] text-slate-500">
+                    ({aud.agency && aud.agency !== '사무국직영' ? aud.agency : (aud.affiliation || 'GMS')})
+                  </span>
+                </div>
+                {aud.mobile && (
+                  <span className="text-[10px] font-mono text-slate-400">{aud.mobile.slice(-4)}</span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   companies,
   auditors,
   contracts,
   projects = [],
   isAdmin,
+  currentUserRole,
   onSaveContract,
   onApproveContract: _onApproveContract,
   onRejectContract: _onRejectContract,
@@ -151,8 +269,30 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [newStandards, setNewStandards] = useState<StandardCode[]>([]);
   const [newAgency, setNewAgency] = useState<string>('');
 
-  // [C-2] 심사계획서 및 공문 사무국 작성 필드 State
-  const [planDate, setPlanDate] = useState<string>('');
+  // [C-2] 심사계획서 및 공문 사무국 작성 필드 State (기본값: 오늘 작성일자)
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+  const todayDocStr = useMemo(() => todayStr.replace(/-/g, ''), [todayStr]);
+
+  const [planDate, setPlanDate] = useState<string>(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+  const [planDocDate, setPlanDocDate] = useState<string>(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+  });
   const [planDocSeq, setPlanDocSeq] = useState<string>('01');
   const [planDept, setPlanDept] = useState<string>('');
   const [planContactPerson, setPlanContactPerson] = useState<string>('');
@@ -161,12 +301,19 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const [planSubAddress, setPlanSubAddress] = useState<string>('');
   const [planKsicCode, setPlanKsicCode] = useState<string>('');
   const [planCustomerNumber, setPlanCustomerNumber] = useState<string>('');
+  const [planExtraCriteria, setPlanExtraCriteria] = useState<string>('');
+  const [planNextAuditType, setPlanNextAuditType] = useState<string>('');
+  const [planNextAuditMd, setPlanNextAuditMd] = useState<string>('상세 MD 추후 통보');
 
-  // [J] 심사 일정 및 심사원 배정 상태 선언
+  // [J] 심사 일정 및 심사원 배정 상태 선언 (팀장, 팀원1, 심사원2, 심사원3, 검증심사원, 심사훈련)
   const [plannedStartDate, setPlannedStartDate] = useState<string>('');
   const [plannedEndDate, setPlannedEndDate] = useState<string>('');
   const [leadAuditorId, setLeadAuditorId] = useState<string>('');
   const [teamAuditorId, setTeamAuditorId] = useState<string>('');
+  const [auditor2Id, setAuditor2Id] = useState<string>('');
+  const [auditor3Id, setAuditor3Id] = useState<string>('');
+  const [verifierAuditorId, setVerifierAuditorId] = useState<string>('');
+  const [traineeAuditorId, setTraineeAuditorId] = useState<string>('');
 
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -198,8 +345,13 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
       setPlannedStartDate('');
       setPlannedEndDate('');
       setPlanDate('');
+      setPlanDocDate('');
       setLeadAuditorId('');
       setTeamAuditorId('');
+      setAuditor2Id('');
+      setAuditor3Id('');
+      setVerifierAuditorId('');
+      setTraineeAuditorId('');
       setNewStandards([]);
       setAddedStandards([]);
       setIsDirty(false);
@@ -217,40 +369,52 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     setNewContactPhone(selectedCompany.contactPhone || '');
     setNewContactEmail(selectedCompany.contactEmail || '');
     setNewIndustry(selectedCompany.industry || '');
-    setNewIafCode(selectedCompany.iafCode || '17');
+    setNewIafCode(selectedCompany.iafCode || '');
     setNewScope(selectedCompany.scope || '');
-    setNewAgency(selectedCompany.consultant || selectedCompany.agency || '사무국직영');
-    setCurrentEmployeeCount(selectedCompany.totalEmployees || 1);
+    setNewAgency(selectedCompany.consultant || selectedCompany.agency || '');
+    setCurrentEmployeeCount(selectedCompany.totalEmployees || 0);
 
     const compAny = selectedCompany as any;
-    setPlanDept(compAny.department || '품질보증부');
+    setPlanDept(compAny.department || '');
     setPlanContactPerson(cleanPersonName(selectedCompany.contactPerson) || parsedContact.name || '');
-    setPlanContactPosition(selectedCompany.contactPosition || parsedContact.position || '담당자');
+    setPlanContactPosition(selectedCompany.contactPosition || parsedContact.position || '');
     setPlanFax(compAny.fax || compAny.contactFax || '');
     
     // 복수 추가사업장 주소 자동 연동 (1순위: additionalSites[0].address)
     const subAddr = selectedCompany.additionalSites?.[0]?.address || compAny.subAddress || compAny.factoryAddress || '';
     setPlanSubAddress(subAddr);
-    setPlanKsicCode(compAny.ksicCode || (selectedCompany.iafCode ? `IAF-${selectedCompany.iafCode}` : 'C2431'));
+    setPlanKsicCode(compAny.ksicCode || '');
     setPlanCustomerNumber(compAny.customerNumber || compAny.certNo || (selectedCompany.bizNumber ? 'Q' + selectedCompany.bizNumber.replace(/[^0-9]/g, '').slice(-6) : ''));
 
-    // 실제 프로젝트 일정 매칭 (projects에 등록된 실데이터가 있으면 해당 일자 및 심사원 호출)
+    // 실제 프로젝트 일정 매칭 (심사일정 및 심사원 호출)
     const matchedProject = projects?.find(p => p.companyId === selectedCompany.id || p.companyName === selectedCompany.companyName);
     if (matchedProject && matchedProject.startDate) {
       setPlannedStartDate(matchedProject.startDate);
       setPlannedEndDate(matchedProject.endDate || matchedProject.startDate);
-      setPlanDate(matchedProject.startDate);
     } else if (selectedCompany.lastAuditDate) {
       // 이전 심사일 기준으로 연도/월 산출 (평일 기본 제안)
       const targetMonth = selectedCompany.lastAuditDate.substring(5, 7) || '10';
       setPlannedStartDate(`2026-${targetMonth}-14`);
       setPlannedEndDate(`2026-${targetMonth}-15`);
-      setPlanDate(`2026-${targetMonth}-01`);
     } else {
       setPlannedStartDate('');
       setPlannedEndDate('');
-      setPlanDate('');
     }
+
+    // 문서 작성일자 및 문서번호는 오늘(현재일자) 기본값 유지
+    const targetDocDate = planDocDate || todayDocStr;
+    if (!planDate) {
+      setPlanDate(todayStr);
+      setPlanDocDate(todayDocStr);
+    }
+
+    // 동일 작성일자(targetDocDate)에 해당하는 문서/프로젝트 수를 파악하여 일련번호(01, 02...) 자동 채번
+    const sameDateCount = (projects || []).filter(p => {
+      const pDocDate = p.startDate ? p.startDate.replace(/[^0-9]/g, '').slice(0, 8) : '';
+      return pDocDate === targetDocDate;
+    }).length;
+    const nextSeq = String(sameDateCount + 1).padStart(2, '0');
+    setPlanDocSeq(nextSeq);
 
     // 심사원 자동 배정: 기업의 assignedAuditorName 또는 managingAuditorId 매칭
     const assignedStr = matchedProject?.leadAuditorName || selectedCompany.assignedAuditorName || compAny.assignedAuditor || '';
@@ -258,25 +422,58 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
       const auditorNames = assignedStr.split(/[,/]+/).map((s: string) => s.trim()).filter(Boolean);
       if (auditorNames.length > 0) {
         const matchedLead = auditors.find(a => a.name === auditorNames[0] || a.id === selectedCompany.managingAuditorId);
-        if (matchedLead) {
-          setLeadAuditorId(matchedLead.id);
-        } else {
-          setLeadAuditorId('');
-        }
+        setLeadAuditorId(matchedLead ? matchedLead.id : '');
+        
         if (auditorNames.length > 1) {
           const matchedTeam = auditors.find(a => a.name === auditorNames[1]);
           setTeamAuditorId(matchedTeam ? matchedTeam.id : '');
         } else {
           setTeamAuditorId('');
         }
+
+        if (auditorNames.length > 2) {
+          const matchedAud2 = auditors.find(a => a.name === auditorNames[2]);
+          setAuditor2Id(matchedAud2 ? matchedAud2.id : '');
+        } else {
+          setAuditor2Id('');
+        }
+
+        if (auditorNames.length > 3) {
+          const matchedAud3 = auditors.find(a => a.name === auditorNames[3]);
+          setAuditor3Id(matchedAud3 ? matchedAud3.id : '');
+        } else {
+          setAuditor3Id('');
+        }
+
+        if (auditorNames.length > 4) {
+          const matchedVerifier = auditors.find(a => a.name === auditorNames[4]);
+          setVerifierAuditorId(matchedVerifier ? matchedVerifier.id : '');
+        } else {
+          setVerifierAuditorId('');
+        }
+
+        if (auditorNames.length > 5) {
+          const matchedTrainee = auditors.find(a => a.name === auditorNames[5]);
+          setTraineeAuditorId(matchedTrainee ? matchedTrainee.id : '');
+        } else {
+          setTraineeAuditorId('');
+        }
       }
     } else if (selectedCompany.managingAuditorId) {
       const matched = auditors.find(a => a.id === selectedCompany.managingAuditorId);
       setLeadAuditorId(matched ? matched.id : '');
       setTeamAuditorId('');
+      setAuditor2Id('');
+      setAuditor3Id('');
+      setVerifierAuditorId('');
+      setTraineeAuditorId('');
     } else {
       setLeadAuditorId('');
       setTeamAuditorId('');
+      setAuditor2Id('');
+      setAuditor3Id('');
+      setVerifierAuditorId('');
+      setTraineeAuditorId('');
     }
 
     // 전환 기업 등록인 경우 전환심사로 자동 제안
@@ -327,7 +524,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     receptionType, hasCertChange, addedStandards,
     newCompanyName, newCeoName, newBizNumber, newAddress, newContactPerson, newContactPhone, newContactEmail, newIndustry, newIafCode, newScope, newAgency,
     planDate, planDocSeq, planDept, planContactPerson, planContactPosition, planFax, planSubAddress, planKsicCode, planCustomerNumber,
-    plannedStartDate, plannedEndDate, leadAuditorId, teamAuditorId
+    plannedStartDate, plannedEndDate, leadAuditorId, teamAuditorId, auditor2Id, auditor3Id, verifierAuditorId, traineeAuditorId
   ]);
 
   // 심사계획서 문서번호 산출 로직: GMS-인증-년월일8자리일련번호2자리 (예: GMS-인증- 2026062501)
@@ -504,6 +701,22 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     return auditors.find(a => a.id === teamAuditorId);
   }, [auditors, teamAuditorId]);
 
+  const selectedAuditor2 = useMemo(() => {
+    return auditors.find(a => a.id === auditor2Id);
+  }, [auditors, auditor2Id]);
+
+  const selectedAuditor3 = useMemo(() => {
+    return auditors.find(a => a.id === auditor3Id);
+  }, [auditors, auditor3Id]);
+
+  const selectedVerifierAuditor = useMemo(() => {
+    return auditors.find(a => a.id === verifierAuditorId);
+  }, [auditors, verifierAuditorId]);
+
+  const selectedTraineeAuditor = useMemo(() => {
+    return auditors.find(a => a.id === traineeAuditorId);
+  }, [auditors, traineeAuditorId]);
+
   // 상근/HQ 심사원 여부 판정 (남경호 대표, 김홍덕 등 상근직원)
   const isHqOrStaffLead = useMemo(() => {
     return selectedLeadAuditor?.isSystemAdmin || 
@@ -571,14 +784,21 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
   const isWeekendAudit = holidayCheck.hasWeekendOrHoliday;
 
-  // [탭별 작성 가능/활성화 여부 조건 (8대 공인 표준 서식)]
+  // 상근 인원(남경호, 정현일, 이혜원, 남효린 등 상근자/admin) 여부 판정
+  const isPermanentStaff = useMemo(() => {
+    if (isAdmin) return true;
+    if (currentUserRole && isPermanentStaffMember(currentUserRole)) return true;
+    return isHqOrStaffLead;
+  }, [isAdmin, currentUserRole, isHqOrStaffLead]);
+
+  // [탭별 작성 가능/활성화 여부 조건 (10대 공인 표준 서식)]
   // 1. 계약검토보고서 (F02): 전 심사 공통 활성화
   const isContractReviewAllowed = true;
   // 2. 공정성관리평가서 (F14): 전 심사 공통 활성화
   const isImpartialityAllowed = true;
   // 3. 표준계약서 (F16-004): 갱신, 최초(신규), 전환, 재인증 활성화
   const isContractAllowed = receptionType === '신규인증' || receptionType === '갱신심사' || receptionType === '전환심사' || (receptionType as string) === '재인증';
-  // 4. 심사계획·청구서 (F16): 전 심사 공통 활성화
+  // 4. 심사계획서 (F16-01): 전 심사 공통 활성화
   const isPlanAllowed = true;
   // 5. 심사설문서: 신규, 갱신, 전환, 재인, 규격추가, 인증변경, 재심사 활성화 (1,2차 사후관리 제외)
   const isSurveyAllowed = receptionType === '신규인증' || receptionType === '갱신심사' || receptionType === '전환심사' || (receptionType as string) === '재인증' || receptionType === '규격추가' || receptionType === '인증변경' || receptionType === '재심사';
@@ -588,10 +808,115 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
   const isCertChangeAllowed = hasCertChange || receptionType === '규격추가' || receptionType === '인증변경' || isEmployeeChanged || receptionType === '신규인증';
   // 8. 휴일근무확인서: 심사일정에 주말(토/일)이 포함된 경우에만 활성화
   const isWeekendAllowed = isWeekendAudit;
+  // 9. 심의결과보고서 (F18): 전 심사 공통 활성화 (가장 마지막 탭)
+  const isDeliberationAllowed = true;
 
-  // [L] 오른쪽 종이 파일 철 인덱스 탭 State (9대 공식 서식)
-  type DocTabKey = 'review' | 'impartiality' | 'deliberation' | 'contract' | 'plan' | 'survey' | 'renewal_survey' | 'change' | 'weekend';
+  // [L] 오른쪽 종이 파일 철 인덱스 탭 State (10대 공식 서식: deliberation을 맨 마지막으로 배치)
+  type DocTabKey = 'review' | 'impartiality' | 'contract' | 'plan' | 'invoice' | 'survey' | 'renewal_survey' | 'change' | 'weekend' | 'deliberation';
   const [activeDocTab, setActiveDocTab] = useState<DocTabKey>('review');
+
+  // 전자문서 비밀번호 승인 (PIN 결재) 상태
+  const [reviewApproval, setReviewApproval] = useState<{ approved: boolean; approver: string; approvedAt: string }>({ approved: false, approver: '', approvedAt: '' });
+  const [impartialityApproval, setImpartialityApproval] = useState<{ approved: boolean; approver: string; approvedAt: string }>({ approved: false, approver: '', approvedAt: '' });
+  const [deliberationApproval, setDeliberationApproval] = useState<{ approved: boolean; approver: string; approvedAt: string; decision: string }>({ approved: false, approver: '', approvedAt: '', decision: '승인' });
+
+  // PIN 승인 모달 상태
+  const [pinModal, setPinModal] = useState<{
+    isOpen: boolean;
+    docType: 'review' | 'impartiality' | 'deliberation';
+    docTitle: string;
+    selectedApprover: string;
+    enteredPin: string;
+    errorMsg: string;
+  }>({
+    isOpen: false,
+    docType: 'review',
+    docTitle: '',
+    selectedApprover: '남경호',
+    enteredPin: '',
+    errorMsg: ''
+  });
+
+  const handleOpenPinModal = (docType: 'review' | 'impartiality' | 'deliberation', docTitle: string) => {
+    setPinModal({
+      isOpen: true,
+      docType,
+      docTitle,
+      selectedApprover: selectedLeadAuditor?.name && ['남경호', '정현일', '이혜원', '남효린'].includes(selectedLeadAuditor.name) ? selectedLeadAuditor.name : '남경호',
+      enteredPin: '',
+      errorMsg: ''
+    });
+  };
+
+  const handleExecutePinApproval = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = verifyMemberApprovalPin(pinModal.selectedApprover, pinModal.enteredPin);
+    if (!res.valid) {
+      setPinModal(prev => ({ ...prev, errorMsg: '승인 비밀번호(PIN)가 일치하지 않습니다. 인증관리 > 심의위원 관리에서 설정한 비밀번호를 확인해 주십시오.' }));
+      return;
+    }
+
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    const approverName = res.member ? `${res.member.name} (${res.member.role})` : `${pinModal.selectedApprover}`;
+
+    if (pinModal.docType === 'review') {
+      setReviewApproval({ approved: true, approver: approverName, approvedAt: timeStr });
+    } else if (pinModal.docType === 'impartiality') {
+      setImpartialityApproval({ approved: true, approver: approverName, approvedAt: timeStr });
+    } else if (pinModal.docType === 'deliberation') {
+      setDeliberationApproval(prev => ({ ...prev, approved: true, approver: approverName, approvedAt: timeStr }));
+    }
+
+    setPinModal({ isOpen: false, docType: 'review', docTitle: '', selectedApprover: '남경호', enteredPin: '', errorMsg: '' });
+    alert(`✅ [${pinModal.docTitle}] 전자문서 비밀번호 승인이 정상 완료되었습니다.\n승인자: ${approverName}\n승인일시: ${timeStr}`);
+  };
+
+  // 선택된 기업의 전체 심사 이력 목록 산출 (기간(MD), 심사구분, 담당심사원, 규격 등)
+  const companyAuditHistoryList = useMemo(() => {
+    if (!selectedCompany) return [];
+    
+    // 1. projects에서 매칭되는 실데이터
+    const matchedProjects = (projects || []).filter(
+      p => p.companyId === selectedCompany.id || p.companyName === selectedCompany.companyName
+    );
+
+    // 2. selectedCompany 자체의 auditHistory 배열
+    const compHistory = ((selectedCompany as any).auditHistory || []).map((h: any, idx: number) => ({
+      id: `comp-hist-${idx}`,
+      startDate: h.auditStartDate || h.auditDate || '',
+      endDate: h.auditEndDate || h.auditDate || '',
+      periodText: h.auditStartDate ? (h.auditEndDate && h.auditEndDate !== h.auditStartDate ? `${h.auditStartDate} ~ ${h.auditEndDate}` : h.auditStartDate) : (h.auditDate || '-'),
+      appliedMd: h.md || h.appliedMd || (h.auditStage?.includes('2일') ? 2.0 : 1.0),
+      auditType: h.auditType || h.stage || h.auditStage || '정기사후',
+      leadAuditorName: h.leadAuditor || h.leadAuditorName || selectedCompany.assignedAuditorName || '-',
+      teamAuditorNames: h.teamAuditors || (h.teamAuditorName ? [h.teamAuditorName] : []),
+      standards: h.standards || (h.standard ? [h.standard] : (selectedCompany as any).standards || ['ISO 9001:2015']),
+      status: h.status || '완료'
+    }));
+
+    const projHistory = matchedProjects.map(p => ({
+      id: p.id,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      periodText: p.startDate ? (p.endDate && p.endDate !== p.startDate ? `${p.startDate} ~ ${p.endDate}` : p.startDate) : '-',
+      appliedMd: p.appliedMd || 0,
+      auditType: p.auditType,
+      leadAuditorName: p.leadAuditorName || '-',
+      teamAuditorNames: p.teamAuditorNames || [],
+      standards: p.standards || [],
+      status: p.status
+    }));
+
+    const combined = [...projHistory];
+    compHistory.forEach((ch: any) => {
+      if (!combined.some(p => p.startDate === ch.startDate && p.auditType === ch.auditType)) {
+        combined.push(ch);
+      }
+    });
+
+    return combined.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+  }, [selectedCompany, projects]);
 
   // 심사 구분 변경 시 비활성화된 탭에서 허용된 탭으로 자동 안전 이동
   useEffect(() => {
@@ -599,9 +924,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
       switch (tab) {
         case 'review': return isContractReviewAllowed;
         case 'impartiality': return isImpartialityAllowed;
-        case 'deliberation': return true;
+        case 'deliberation': return isDeliberationAllowed;
         case 'contract': return isContractAllowed;
         case 'plan': return isPlanAllowed;
+        case 'invoice': return true;
         case 'survey': return isSurveyAllowed;
         case 'renewal_survey': return isRenewalSurveyAllowed;
         case 'change': return isCertChangeAllowed;
@@ -611,9 +937,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
     };
 
     if (!checkAllowed(activeDocTab)) {
-      setActiveDocTab('review');
+      setActiveDocTab('plan');
     }
-  }, [activeDocTab, isContractReviewAllowed, isImpartialityAllowed, isContractAllowed, isPlanAllowed, isSurveyAllowed, isRenewalSurveyAllowed, isCertChangeAllowed, isWeekendAllowed]);
+  }, [activeDocTab, isContractReviewAllowed, isImpartialityAllowed, isDeliberationAllowed, isContractAllowed, isPlanAllowed, isSurveyAllowed, isRenewalSurveyAllowed, isCertChangeAllowed, isWeekendAllowed]);
 
   // [M] 3자 발송 상태
   const [dispatchStatus, setDispatchStatus] = useState<'미발송' | '발송완료'>('미발송');
@@ -901,7 +1227,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 value={selectedCompanyId}
                 onChange={(e) => {
                   const targetId = e.target.value;
-                  if (isDirty) {
+                  if (isDirty && selectedCompanyId && selectedCompanyId !== targetId) {
                     if (!window.confirm('[저장 & 동기화 확인]\n입력 중인 심사계획 및 계약 정보가 아직 [저장 & 동기화]되지 않았습니다.\n\n저장하지 않고 다른 고객사로 이동하시겠습니까?')) {
                       return;
                     }
@@ -1166,8 +1492,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 <span className="text-[10px] text-slate-500 block">IAF 코드</span>
                 <input
                   type="text"
-                  value={activeCompany.iafCode || '17'}
-                  readOnly={receptionType !== '신규인증' && receptionType !== '전환심사'}
+                  value={activeCompany.iafCode || ''}
+                  onChange={(e) => setNewIafCode(e.target.value)}
+                  placeholder={selectedCompany ? 'IAF' : '-'}
+                  readOnly={receptionType !== '신규인증' && receptionType !== '전환심사' && !isManualEditOpen}
                   className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-900"
                 />
               </div>
@@ -1175,7 +1503,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 <span className="text-[10px] text-slate-500 block">EA 코드</span>
                 <input
                   type="text"
-                  defaultValue="17"
+                  value={activeCompany.iafCode || ''}
+                  placeholder={selectedCompany ? 'EA' : '-'}
+                  readOnly={!isManualEditOpen}
                   className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-900"
                 />
               </div>
@@ -1183,363 +1513,110 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 <span className="text-[10px] text-slate-500 block">KSIC</span>
                 <input
                   type="text"
-                  defaultValue="C2431"
+                  value={planKsicCode || ((selectedCompany as any)?.ksicCode) || ''}
+                  onChange={(e) => setPlanKsicCode(e.target.value)}
+                  placeholder={selectedCompany ? 'KSIC' : '-'}
                   className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center text-slate-900"
                 />
               </div>
             </div>
           </div>
 
-          {/* 4. 심사 정보 & 배정 (팀장, 일정, 협력기관) */}
-          <div className="space-y-2 border-t border-slate-200 pt-3">
-            <label className="font-bold text-slate-900 flex items-center justify-between">
-              <span>4. 심사 배정 &amp; 일정 / 협력기관</span>
-              {isHqOrStaffLead && (
-                <span className="text-[10.5px] px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold">
-                  HQ 상근직원 배정
-                </span>
-              )}
-            </label>
-
-            <div className="space-y-1.5">
-              {/* 심사 표준 */}
-              <div>
-                <span className="text-[11px] text-slate-500 block">심사 표준 (규격):</span>
-                <div className="flex flex-wrap gap-1 mt-0.5">
-                  {activeStandards.map(s => (
-                    <span key={s} className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-800 font-bold text-[10.5px]">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* 일정 */}
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10.5px] text-slate-500 block">심사 시작일:</span>
-                  <input
-                    type="date"
-                    value={plannedStartDate}
-                    onChange={(e) => setPlannedStartDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px]"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10.5px] text-slate-500 block">심사 종료일:</span>
-                  <input
-                    type="date"
-                    value={plannedEndDate}
-                    onChange={(e) => setPlannedEndDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px]"
-                  />
-                </div>
-              </div>
-
-              {/* 주말/공휴일/임시공휴일 심사 감지 안내 */}
-              {isWeekendAudit ? (
-                <div className="text-[10.5px] font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded p-1.5 flex items-start gap-1.5 shadow-2xs">
-                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="leading-tight">
-                    <div>
-                      <span className="text-amber-700 font-extrabold">[휴일 감지: {holidayCheck.summaryText}]</span>
-                    </div>
-                    <div className="text-[10px] text-amber-800 font-medium mt-0.5">
-                      ➔ <strong>[휴일근무확인서(F19-003)]</strong> 탭이 자동 활성화되었습니다.
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-[10px] text-slate-500 pl-1">
-                  평일 심사 일정 (주말/공휴일 미포함 시 휴일근무확인서 작성 제외)
-                </div>
-              )}
-
-              {/* 심사팀장 배정 */}
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10.5px] text-slate-500 block">담당 심사팀장:</span>
-                  <select
-                    value={leadAuditorId}
-                    onChange={(e) => setLeadAuditorId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px] font-bold text-slate-800"
-                  >
-                    <option value="">-- 심사팀장 선택 --</option>
-                    {auditors.map(aud => (
-                      <option key={aud.id} value={aud.id}>
-                        {aud.name} ({aud.affiliation || '비상근'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <span className="text-[10.5px] text-slate-500 block">협력기관 (영업컨설팅):</span>
-                  <div className="p-1 px-2 rounded bg-slate-100 border border-slate-200 text-[11px] font-medium text-slate-800 truncate">
-                    {activeAgencyName}
-                  </div>
-                </div>
-              </div>
-
-              {/* HQ 심사 + 협력기관 존재 시: 사전 협의 확정란 */}
-              {needAgencyAgreement && (
-                <div className="p-2.5 rounded bg-slate-50 border border-slate-300 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
-                      <Briefcase className="w-3 h-3 text-amber-600" />
-                      <span>HQ-협력기관 사전 협의 확정</span>
-                    </span>
-                    <select
-                      value={agencyAgreementStatus}
-                      onChange={(e) => setAgencyAgreementStatus(e.target.value as any)}
-                      className="bg-white border border-slate-300 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-800"
-                    >
-                      <option value="협의완료">협의완료 ✓</option>
-                      <option value="협의대기">협의대기</option>
-                      <option value="협의불필요">협의불필요</option>
-                    </select>
-                  </div>
-                  <input
-                    type="text"
-                    value={agencyAgreementNote}
-                    onChange={(e) => setAgencyAgreementNote(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[10.5px]"
-                    placeholder="사전 유선 협의 내용 및 확정 비고..."
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 5. KAB MD 산정 & 단가 결정 & 5대 공식 비용 */}
+          {/* 4. 이전 심사 이력 (기간(MD), 심사구분, 담당심사원) */}
           <div className="space-y-2 border-t border-slate-200 pt-3">
             <div className="flex items-center justify-between">
-              <label className="font-bold text-slate-900 flex items-center gap-1">
-                <DollarSign className="w-3.5 h-3.5 text-slate-600" />
-                <span>5. MD 산정 &amp; 단가 및 5대 비용</span>
+              <label className="font-bold text-slate-900 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-cyan-700" />
+                <span>4. 이전 심사 이력</span>
               </label>
-              <span className="text-[10.5px] font-mono text-slate-500">
-                KAB 기준: {kabCalculationResult.calculatedMd} MD
-              </span>
+              {selectedCompany && (
+                <span className="text-[10px] font-mono px-1.5 py-0.2 bg-cyan-100 text-cyan-900 rounded font-bold">
+                  총 {companyAuditHistoryList.length}건
+                </span>
+              )}
             </div>
 
             <div className="space-y-1.5">
-              {/* MD 유지 vs 변경 & 단가 결정 */}
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block">MD 결정:</span>
-                  <select
-                    value={mdDecisionType}
-                    onChange={(e) => setMdDecisionType(e.target.value as any)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px] font-bold text-slate-800"
-                  >
-                    <option value="KAB표준유지">KAB 표준 유지 ({kabCalculationResult.calculatedMd} MD)</option>
-                    <option value="수동조정변경">수동 조정 변경</option>
-                  </select>
+              {!selectedCompany ? (
+                <div className="py-3 px-2 bg-slate-50 border border-slate-200 rounded text-center text-slate-400 text-[11px]">
+                  고객사를 선택하면 이전 심사 이력(기간, 심사구분, 담당심사원)이 자동 조회됩니다.
                 </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 block">MD당 단가:</span>
-                  <select
-                    value={ratePerMd}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      setRatePerMd(val);
-                      if (val === 800000) setAdjustmentReason('표준 80만/MD 준수');
-                      else setAdjustmentReason(`우대 협의 단가 적용 (${val / 10000}만/MD)`);
-                    }}
-                    className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-[11px] font-bold font-mono text-slate-800"
-                  >
-                    <option value={800000}>₩800,000 (KAB 표준단가)</option>
-                    <option value={750000}>₩750,000 (우대 협의단가)</option>
-                    <option value={700000}>₩700,000 (다규격 우대단가)</option>
-                    <option value={600000}>₩600,000 (특별 협의단가)</option>
-                  </select>
+              ) : companyAuditHistoryList.length === 0 ? (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded text-center text-slate-500 text-[11px] space-y-1">
+                  <div className="font-semibold text-slate-700">등록된 이전 심사 이력이 없습니다.</div>
+                  <div className="text-[10.5px] text-slate-400">신규 수검 기업이거나 최초 심사 대상입니다.</div>
                 </div>
-              </div>
-
-              {/* 5대 비용 테이블 명세 */}
-              <div className="border border-slate-200 rounded overflow-hidden">
-                <table className="w-full text-[10.5px]">
-                  <thead className="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-1 px-2 text-left">항목</th>
-                      <th className="py-1 px-1.5 text-center">공수</th>
-                      <th className="py-1 px-2 text-right">금액</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-800">
-                    <tr>
-                      <td className="py-1 px-2">1. 문서심사비</td>
-                      <td className="py-1 px-1.5 text-center font-mono">{docAuditMd} MD</td>
-                      <td className="py-1 px-2 text-right font-mono">₩{docAuditFee.toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 px-2">2. 현장심사비</td>
-                      <td className="py-1 px-1.5 text-center font-mono">{onsiteAuditMd} MD</td>
-                      <td className="py-1 px-2 text-right font-mono">₩{onsiteAuditFee.toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 px-2">3. 여비교통비</td>
-                      <td className="py-1 px-1.5 text-center text-slate-400">—</td>
-                      <td className="py-1 px-2 text-right font-mono">
-                        <input
-                          type="number"
-                          value={travelExpense}
-                          onChange={(e) => setTravelExpense(parseInt(e.target.value, 10) || 0)}
-                          className="w-20 text-right font-mono text-[10.5px] border border-slate-200 rounded px-1 py-0.5"
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 px-2">4. 출장숙박비</td>
-                      <td className="py-1 px-1.5 text-center text-slate-400">—</td>
-                      <td className="py-1 px-2 text-right text-slate-600 font-mono">₩{lodgingExpense} ({lodgingOption})</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 px-2">5. 신청및등록비</td>
-                      <td className="py-1 px-1.5 text-center text-slate-400">—</td>
-                      <td className="py-1 px-2 text-right font-mono">₩{applicationFee.toLocaleString()}</td>
-                    </tr>
-                    <tr className="bg-slate-50 font-bold border-t border-slate-300 text-slate-900">
-                      <td className="py-1.5 px-2" colSpan={2}>공급가액 소계</td>
-                      <td className="py-1.5 px-2 text-right font-mono">₩{finalFee.toLocaleString()}</td>
-                    </tr>
-                    <tr className="bg-slate-50 font-bold text-slate-900">
-                      <td className="py-1 px-2" colSpan={2}>부가가치세 (10%)</td>
-                      <td className="py-1 px-2 text-right font-mono">₩{vat.toLocaleString()}</td>
-                    </tr>
-                    <tr className="bg-cyan-900 text-white font-black">
-                      <td className="py-1.5 px-2" colSpan={2}>최종 청구 총액</td>
-                      <td className="py-1.5 px-2 text-right font-mono text-xs">₩{totalWithVat.toLocaleString()}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              ) : (
+                <div className="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+                  <div className="max-h-[220px] overflow-y-auto">
+                    <table className="w-full text-[11px] border-collapse">
+                      <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 sticky top-0 font-semibold">
+                        <tr>
+                          <th className="py-1.5 px-2 text-left">기간 (MD)</th>
+                          <th className="py-1.5 px-1.5 text-center">심사구분</th>
+                          <th className="py-1.5 px-2 text-left">담당심사원</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-800">
+                        {companyAuditHistoryList.map((hist, idx) => (
+                          <tr key={hist.id || idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-1.5 px-2">
+                              <div className="font-mono font-medium text-slate-900 text-[10.5px]">
+                                {hist.periodText || hist.startDate || '-'}
+                              </div>
+                              <div className="text-[10px] text-cyan-800 font-bold">
+                                {hist.appliedMd ? `${hist.appliedMd} MD` : ''}
+                                {hist.standards && hist.standards.length > 0 && (
+                                  <span className="text-slate-500 font-normal ml-1">
+                                    ({hist.standards.map((s: string) => s.replace('ISO ', '').replace(':2015', '').replace(':2018', '')).join('/')})
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-1.5 px-1.5 text-center align-middle">
+                              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                                {hist.auditType}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-2 text-[10.5px]">
+                              <div className="font-bold text-slate-900">
+                                {hist.leadAuditorName || '-'}
+                                <span className="text-[10px] font-normal text-slate-500 ml-0.5">(책임)</span>
+                              </div>
+                              {hist.teamAuditorNames && hist.teamAuditorNames.length > 0 && (
+                                <div className="text-[10px] text-slate-600 truncate max-w-[110px]" title={hist.teamAuditorNames.join(', ')}>
+                                  팀: {hist.teamAuditorNames.join(', ')}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {onOpenCompanyAuditHistory && (
+                    <div className="p-1.5 bg-slate-50 border-t border-slate-200 text-right">
+                      <button
+                        type="button"
+                        onClick={() => onOpenCompanyAuditHistory(selectedCompany)}
+                        className="text-[10.5px] text-cyan-700 hover:text-cyan-900 font-bold cursor-pointer inline-flex items-center gap-1"
+                      >
+                        전체 심사이력 상세 모달 열기 ↗
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 6. 심사계획서 및 공문 사무국 작성 정보 */}
-          <div className="space-y-2 border-t border-slate-200 pt-3">
-            <label className="font-bold text-slate-900 flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5 text-cyan-700" />
-                <span>6. 심사계획서 공문 입력 (사무국)</span>
-              </span>
-              <span className="text-[10.5px] font-mono text-cyan-900 font-bold">
-                {planDocNumber}
-              </span>
-            </label>
-
-            <div className="space-y-2 bg-slate-50 p-2.5 rounded border border-slate-200 text-xs">
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block">작성일자</span>
-                  <input
-                    type="date"
-                    value={planDate}
-                    onChange={(e) => setPlanDate(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 block">문서일련번호(2자리)</span>
-                  <input
-                    type="text"
-                    value={planDocSeq}
-                    maxLength={2}
-                    onChange={(e) => setPlanDocSeq(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-center"
-                    placeholder="01"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block">고객번호</span>
-                  <input
-                    type="text"
-                    value={planCustomerNumber}
-                    onChange={(e) => setPlanCustomerNumber(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono"
-                    placeholder="예: Q240233"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 block">담당부서</span>
-                  <input
-                    type="text"
-                    value={planDept}
-                    onChange={(e) => setPlanDept(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs"
-                    placeholder="품질보증부"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block font-semibold text-slate-700">담당자 성명</span>
-                  <input
-                    type="text"
-                    value={planContactPerson}
-                    onChange={(e) => setPlanContactPerson(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold text-slate-900"
-                    placeholder="담당자 성명"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 block">담당자 직책</span>
-                  <input
-                    type="text"
-                    value={planContactPosition}
-                    onChange={(e) => setPlanContactPosition(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs"
-                    placeholder="부장"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block">KSIC (산업분류코드)</span>
-                  <input
-                    type="text"
-                    value={planKsicCode}
-                    onChange={(e) => setPlanKsicCode(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold"
-                    placeholder="C2431"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 block">팩스번호</span>
-                  <input
-                    type="text"
-                    value={planFax}
-                    onChange={(e) => setPlanFax(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono"
-                    placeholder="054-956-8225"
-                  />
-                </div>
-              </div>
-
-              {/* 추가사업장 주소 (1행 전체 너비) */}
-              <div>
-                <span className="text-[10px] text-slate-500 block font-medium">추가사업장 주소 (사업장1 주소)</span>
-                <input
-                  type="text"
-                  value={planSubAddress}
-                  onChange={(e) => setPlanSubAddress(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded px-2.5 py-1 text-xs"
-                  placeholder="추가사업장 주소 (있을 시 자동 연동 및 직접 수정)"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 7. 3자 공문 발송 및 회신 시뮬레이션 버튼 바 */}
-          <div className="space-y-2 border-t border-slate-200 pt-3">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="font-bold text-slate-800">3자 공문 발송 &amp; 회신:</span>
+          {/* 5. 심사계획서 & 청구서 직접 입력 연동 및 3자 발송 */}
+          <div className="space-y-2.5 border-t border-slate-200 pt-3">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-900 flex items-center gap-1.5">
+                <FileCheck className="w-3.5 h-3.5 text-cyan-700" />
+                <span>5. 심사계획서 &amp; 청구서 직접 입력</span>
+              </label>
               <span className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${
                 dispatchStatus === '발송완료' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
               }`}>
@@ -1547,23 +1624,41 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleSimulateAgree('auditor')}
-                className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded border border-slate-300 text-[11px] transition cursor-pointer flex items-center justify-center gap-1"
-              >
-                <Check className="w-3 h-3 text-emerald-600" />
-                <span>심사원 동의 회신</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSimulateAgree('agency')}
-                className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded border border-slate-300 text-[11px] transition cursor-pointer flex items-center justify-center gap-1"
-              >
-                <Check className="w-3 h-3 text-blue-600" />
-                <span>협력기관 동의 회신</span>
-              </button>
+            {/* 안내 박스 */}
+            <div className="p-2.5 bg-sky-50/70 border border-sky-200 rounded-md text-[11px] text-sky-950 space-y-1.5">
+              <div className="font-bold flex items-center gap-1 text-sky-900">
+                <Sparkles className="w-3 h-3 text-sky-600" />
+                <span>우측 서식에서 직접 입력 방식 적용</span>
+              </div>
+              <p className="text-[10.5px] text-sky-900/90 leading-relaxed">
+                📋 <strong>심사계획서(F16-01)</strong> 및 💰 <strong>청구서(F16-02)</strong> 탭을 클릭하여 서식 내에서 일정, 심사원, MD, 단가, 수수료, 주소 등을 직접 입력/수정할 수 있습니다.
+              </p>
+              <p className="text-[10px] text-sky-800 font-medium">
+                ★ 상단 <strong className="text-sky-950">[저장 &amp; 동기화]</strong>를 누르면 모든 입력 내용이 DB에 영구 저장됩니다.
+              </p>
+            </div>
+
+            {/* 3자 공문 발송 & 회신 시뮬레이션 */}
+            <div className="space-y-1.5 pt-1">
+              <span className="font-bold text-slate-700 text-[10.5px] block">3자 발송 및 확정 회신:</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleSimulateAgree('auditor')}
+                  className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded border border-slate-300 text-[10.5px] transition cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  <span>심사원 동의 ({auditorReply})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSimulateAgree('agency')}
+                  className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded border border-slate-300 text-[10.5px] transition cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <Check className="w-3 h-3 text-blue-600" />
+                  <span>협력기관 동의 ({agencyReply})</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1594,7 +1689,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
             </button>
           </div>
 
-          {/* 종이 파일 인덱스 탭 바 (8대 공인 표준 서식 완벽 균등 배치) */}
+          {/* 종이 파일 인덱스 탭 바 (10대 공인 표준 서식: 상근자 전용 탭 제어 및 심의보고서 맨 마지막 배치) */}
           <div className="w-full bg-slate-300/80 border-b border-slate-400 p-0 m-0 no-print print:hidden flex items-stretch">
             {[
               {
@@ -1616,15 +1711,6 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 disabledHint: ''
               },
               {
-                id: 'deliberation' as DocTabKey,
-                label: '심의결과보고서',
-                sub: '(F18)',
-                icon: Award,
-                isAllowed: true,
-                activeColor: 'bg-white border-t-purple-700 text-purple-950',
-                disabledHint: ''
-              },
-              {
                 id: 'contract' as DocTabKey,
                 label: '표준계약서',
                 sub: '(F16-004)',
@@ -1635,11 +1721,20 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
               },
               {
                 id: 'plan' as DocTabKey,
-                label: '심사계획·청구서',
-                sub: '(F16)',
-                icon: Receipt,
+                label: '심사계획서',
+                sub: '(F16-01)',
+                icon: FileText,
                 isAllowed: isPlanAllowed,
                 activeColor: 'bg-white border-t-indigo-700 text-indigo-950',
+                disabledHint: ''
+              },
+              {
+                id: 'invoice' as DocTabKey,
+                label: '심사비용 청구서',
+                sub: '(F16-02)',
+                icon: Receipt,
+                isAllowed: true,
+                activeColor: 'bg-white border-t-emerald-700 text-emerald-950',
                 disabledHint: ''
               },
               {
@@ -1677,6 +1772,15 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 isAllowed: isWeekendAllowed,
                 activeColor: 'bg-white border-t-amber-700 text-amber-950',
                 disabledHint: '심사일정에 주말(토/일) 및 법정 공휴일이 포함된 경우에만 활성화됩니다.'
+              },
+              {
+                id: 'deliberation' as DocTabKey,
+                label: '심의결과보고서',
+                sub: '(F18)',
+                icon: Award,
+                isAllowed: isDeliberationAllowed,
+                activeColor: 'bg-white border-t-purple-700 text-purple-950',
+                disabledHint: ''
               }
             ].map((tab) => {
               const isActive = activeDocTab === tab.id;
@@ -2129,17 +2233,32 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <th className="w-28 bg-slate-100 p-2 border-r border-slate-300 font-medium text-center">계약검토자 승인</th>
                         <th className="w-20 bg-slate-50 p-2 border-r border-slate-300 font-medium text-center">검토일자</th>
                         <td className="p-2 border-r border-slate-300 font-mono">
-                          <input type="text" placeholder="YYYY-MM-DD" className="w-28 border border-slate-300 rounded px-1.5 py-0.5 text-xs text-center font-mono bg-white" />
+                          <input 
+                            type="text" 
+                            defaultValue={reviewApproval.approved ? reviewApproval.approvedAt.split(' ')[0] : ''} 
+                            placeholder="YYYY-MM-DD" 
+                            className="w-28 border border-slate-300 rounded px-1.5 py-0.5 text-xs text-center font-mono bg-white" 
+                          />
                         </td>
                         <th className="w-20 bg-slate-50 p-2 border-r border-slate-300 font-medium text-center">검토자</th>
                         <td className="p-2 font-medium">
-                          <div className="flex items-center justify-between gap-2">
-                            <select className="border border-slate-300 rounded px-2 py-0.5 text-xs bg-white">
-                              <option value="">- 검토자 -</option>
-                              {auditors.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                            </select>
-                            <span className="text-slate-500 text-[11px]">(서명/인)</span>
-                          </div>
+                          {reviewApproval.approved ? (
+                            <div className="flex items-center justify-between gap-2 bg-emerald-50 px-2 py-1 rounded border border-emerald-300">
+                              <span className="font-bold text-emerald-900 text-xs">{reviewApproval.approver}</span>
+                              <span className="text-emerald-700 font-bold text-[11px]">✓ 비밀번호 전자승인 완료 ({reviewApproval.approvedAt})</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-slate-600 text-xs">상근 임직원 검토 승인</span>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenPinModal('review', '계약검토보고서(F02)')}
+                                className="px-3 py-1 bg-blue-700 hover:bg-blue-800 text-white rounded font-medium text-xs shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <span>🔐 비밀번호 승인</span>
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     </tbody>
@@ -2475,7 +2594,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         </td>
                       </tr>
                       <tr>
-                        <td className="border border-slate-300 p-1.5">5. 기타 심사 단계에서 자문, 윤리준수 및 공평성 보장 위협 가능성</td>
+                        <td className="border border-slate-300 p-1.5">5. 심사 단계에서 자문, 윤리준수 및 공평성 보장 위협 가능성</td>
                         <td className="border border-slate-300 p-1.5 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <input type="checkbox" className="rounded border-slate-400" />
@@ -2622,489 +2741,30 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                       <span>부적격: L(1)등급 2 ~ 3개: 인증 중지, L(1)등급 4개 이상: 인증 거부</span>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* ================================================================= */}
-              {/* 3. 인증심의결과보고서 (F18) - ERP MenuD/D002_Add.do 1:1 완벽 서식 */}
-              {/* ================================================================= */}
-              {activeDocTab === 'deliberation' && (
-                <div className="space-y-3 text-xs leading-relaxed text-slate-900 font-sans">
-                  {/* 상단 타이틀 바 */}
-                  <div className="border-b-2 border-slate-900 pb-2 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-950 tracking-tight">인증심의결과보고서</h2>
-                      <span className="font-mono text-[10px] text-slate-500">gms.z99.kr/Admin/MenuD/D002_Add.do</span>
-                    </div>
-                    <div className="text-right flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[11px] text-slate-600 font-medium">관리번호:</span>
-                        <input type="text" placeholder="관리번호 입력" className="border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono w-36 bg-white" />
+                  {/* 공평성 평가 결재/승인란 */}
+                  <div className="border border-slate-300 rounded bg-slate-50 p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-slate-900 text-xs block">공평성 관리 평가 승인</span>
+                        <p className="text-[11px] text-slate-500">상근 임직원(심의위원) 비밀번호 승인 결재</p>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[11px] text-slate-600 font-medium">심의일자:</span>
-                        <input type="text" placeholder="YYYY-MM-DD" className="border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono w-28 text-center bg-white" />
-                      </div>
+                      {impartialityApproval.approved ? (
+                        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded text-xs text-emerald-900">
+                          <span className="font-bold text-emerald-700">✓ 전자승인 완료</span>
+                          <span>승인자: <strong>{impartialityApproval.approver}</strong></span>
+                          <span className="font-mono text-[11px] text-slate-500">({impartialityApproval.approvedAt})</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPinModal('impartiality', '공평성관리 평가서(F14)')}
+                          className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded font-medium text-xs shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <span>🔐 비밀번호 승인 결재</span>
+                        </button>
+                      )}
                     </div>
-                  </div>
-
-                  {/* 1. 기본정보 */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-slate-900 text-xs">1. 기본정보</h3>
-                    <table className="w-full border-collapse border border-slate-300 text-xs">
-                      <tbody>
-                        <tr>
-                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold w-24 text-center">고 객 명</th>
-                          <td className="border border-slate-300 p-1.5 font-medium text-slate-900">{activeCompany.companyName}</td>
-                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold w-24 text-center">인증번호</th>
-                          <td className="p-1.5 font-mono">
-                            <input 
-                              type="text" 
-                              defaultValue={(activeCompany as any).certNo || ''} 
-                              placeholder="인증번호 입력" 
-                              className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono bg-white" 
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">인 증 범 위</th>
-                          <td className="border border-slate-300 p-1.5 text-slate-800">
-                            <input 
-                              type="text" 
-                              defaultValue={activeCompany.scope || ''} 
-                              placeholder="인증범위 입력" 
-                              className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs bg-white" 
-                            />
-                          </td>
-                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">인증코드</th>
-                          <td className="p-1.5 font-mono">
-                            <input 
-                              type="text" 
-                              defaultValue={activeCompany.iafCode || ''} 
-                              placeholder="인증코드" 
-                              className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono bg-white" 
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">인 증 표 준</th>
-                          <td colSpan={3} className="border border-slate-300 p-1.5">
-                            <div className="flex items-center flex-wrap gap-4 text-xs">
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
-                                <span>ISO 9001:2015</span>
-                              </label>
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
-                                <span>ISO 14001:2015</span>
-                              </label>
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
-                                <span>ISO 45001:2018</span>
-                              </label>
-                              <div className="flex items-center gap-1">
-                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
-                                <span>기타</span>
-                                <select className="border border-slate-300 rounded px-1 py-0.5 text-xs bg-white">
-                                  <option value="">- 선택 -</option>
-                                  <option value="Q/E">Q/E</option>
-                                  <option value="Q">Q</option>
-                                  <option value="E">E</option>
-                                  <option value="OH&S">OH&S</option>
-                                </select>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">심 사 팀</th>
-                          <td colSpan={3} className="border border-slate-300 p-0">
-                            <div className="grid grid-cols-4 divide-x divide-slate-300 text-center">
-                              <div className="bg-slate-50 p-1.5 font-semibold">심사팀장</div>
-                              <div className="p-1">
-                                <select className="w-full border border-slate-200 rounded px-1 py-0.5 text-xs bg-white">
-                                  <option value="">- 심사팀장 선택 -</option>
-                                  {auditors.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                                </select>
-                              </div>
-                              <div className="bg-slate-50 p-1.5 font-semibold">심사팀원</div>
-                              <div className="p-1">
-                                <select className="w-full border border-slate-200 rounded px-1 py-0.5 text-xs bg-white">
-                                  <option value="">- 심사팀원 선택 -</option>
-                                  {auditors.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                                </select>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* 2. 인증심의 */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-slate-900 text-xs">2. 인증심의</h3>
-                    <table className="w-full border-collapse border border-slate-300 text-xs">
-                      <thead className="bg-slate-100 font-bold text-slate-800 text-center">
-                        <tr>
-                          <th rowSpan={2} className="border border-slate-300 p-1.5 w-28">심의항목</th>
-                          <th rowSpan={2} className="border border-slate-300 p-1.5">심의 기준</th>
-                          <th colSpan={2} className="border border-slate-300 p-1">심의 결과</th>
-                        </tr>
-                        <tr>
-                          <th className="border border-slate-300 p-1 w-28">확인</th>
-                          <th className="border border-slate-300 p-1 w-36">심의내역</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* 1. 심사팀 구성의 적합성 및 공평성 */}
-                        <tr>
-                          <td rowSpan={3} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            심사팀 구성의<br />적합성 및 공평성
-                          </td>
-                          <td className="border border-slate-300 p-1.5">1. 심사일수 및 비용산정이 절차에 맞는가?(계약검토서 확인)</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_1" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_1" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_1" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" placeholder="" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">2. 심사팀 구성 및 심사 준비에 대한 원칙이 준수되었는가?(인증범위와 심사원 코드)</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_2" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_2" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_2" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">3. 심사업체와의 이해상충 및 공평성 위협요소는 없는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_3" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_3" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_3" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 2. 심사 수행의 적합성 */}
-                        <tr>
-                          <td rowSpan={5} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            심사 수행의 적합성
-                          </td>
-                          <td className="border border-slate-300 p-1.5">4. 심사계획은 최소 1주일 이전에 통보하였는가?(늦어도 3일전)</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_4" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_4" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_4" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">5. 심사팀의 구성은 적합한가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_5" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_5" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_5" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">6. 내부심사 및 경영 검토는 실시하였는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_6" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_6" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_6" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">7. 심사시간은 준수하였는가?(현장 이동시간 포함)</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_7" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_7" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_7" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">8. 사후 심사는 전 심사의 12개월내에 실시 되었는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_8" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_8" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_8" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" placeholder="YYYY-MM-DD" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center font-mono bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 3. 인증범위의 명확성 */}
-                        <tr>
-                          <td rowSpan={3} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            인증범위의<br />명확성
-                          </td>
-                          <td className="border border-slate-300 p-1.5">9. 인증수행범위는 적합한가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_9" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_9" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_9" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">10. 복합코드의 경우 코드가 전부 적용 되었는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_10" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_10" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_10" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" defaultValue={activeCompany.iafCode || ''} placeholder="코드" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center font-mono bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">11. 복수사업장의 경우 대상 사업장을 명확히 기술하였는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_11" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_11" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_11" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 4. 부적합 사항의 적합성 */}
-                        <tr>
-                          <td rowSpan={2} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            부적합 사항의<br />적합성
-                          </td>
-                          <td className="border border-slate-300 p-1.5">12. 부적합 사항이 적합하게 발행되었는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_12" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_12" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_12" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" placeholder="" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">13. 부적합 내용과 표준 적용 항목번호는 적합한가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_13" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_13" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_13" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 5. 시정조치의 효과성 */}
-                        <tr>
-                          <td rowSpan={2} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            시정조치의<br />효과성
-                          </td>
-                          <td className="border border-slate-300 p-1.5">14. 부적합 사항에 대한 시정조치가 효과적인가?(이전심사 포함)</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_14" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_14" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_14" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">15. 재발방지 대책은 적합한가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_15" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_15" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_15" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 6. 기록관리 */}
-                        <tr>
-                          <td rowSpan={3} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            기록관리
-                          </td>
-                          <td className="border border-slate-300 p-1.5">16. 보고서에 오기 및 누락된 부분은 없는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_16" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_16" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_16" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">17. 심사보고서는 기록관리 순서로 Filing 되었는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_17" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_17" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_17" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-300 p-1.5">18. 양식은 최신 본 인가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_18" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_18" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_18" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 7. 고객 피드백 */}
-                        <tr>
-                          <td className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            고객 피드백
-                          </td>
-                          <td className="border border-slate-300 p-1.5">19. 심사와 관련 고객 불만은 없었는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_19" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_19" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_19" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-
-                        {/* 8. 변경사항 */}
-                        <tr>
-                          <td className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
-                            변경사항
-                          </td>
-                          <td className="border border-slate-300 p-1.5">20. 사후 심사 시 변경 사항은 없는가?</td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_20" value="Y" className="text-blue-600" /> Y</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_20" value="N" className="text-blue-600" /> N</label>
-                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_20" value="NA" className="text-blue-600" /> NA</label>
-                            </div>
-                          </td>
-                          <td className="border border-slate-300 p-1 text-center">
-                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* 인증심의 결과 결재 표 */}
-                  <div className="border border-slate-300 rounded overflow-hidden">
-                    <table className="w-full border-collapse text-xs">
-                      <tbody>
-                        <tr className="border-b border-slate-300">
-                          <th className="bg-slate-50 p-2 font-bold w-28 text-center border-r border-slate-300">인증심의 결과</th>
-                          <td className="p-2">
-                            <div className="flex items-center gap-6 text-xs font-semibold">
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="deli_final_decision" value="승인" className="text-blue-600" />
-                                <span>승인</span>
-                              </label>
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="deli_final_decision" value="보류" className="text-blue-600" />
-                                <span>보류</span>
-                              </label>
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="deli_final_decision" value="재승인" className="text-blue-600" />
-                                <span>재승인</span>
-                              </label>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr className="border-b border-slate-300">
-                          <th className="bg-slate-50 p-2 font-bold text-center border-r border-slate-300">인증심의 일자</th>
-                          <td className="p-2">
-                            <div className="grid grid-cols-3 gap-3">
-                              <input type="text" placeholder="YYYY-MM-DD" className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center font-mono bg-white" />
-                              <input type="text" placeholder="YYYY-MM-DD" className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center font-mono bg-white" />
-                              <input type="text" placeholder="YYYY-MM-DD" className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center font-mono bg-white" />
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="bg-slate-50 p-2 font-bold text-center border-r border-slate-300">인증위원 확인</th>
-                          <td className="p-2">
-                            <div className="grid grid-cols-3 gap-3">
-                              <input type="text" placeholder="(서명)" className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center bg-white" />
-                              <input type="text" placeholder="(서명)" className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center bg-white" />
-                              <input type="text" placeholder="(서명)" className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center bg-white" />
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
                   </div>
                 </div>
               )}
@@ -3470,9 +3130,11 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                             {/* ================================================================= */}
               {/* 2. 심사계획서 공식 공문 서식 (첨부 실물 양식 100% 모방 구현) */}
               {/* ================================================================= */}
+              {/* ================================================================= */}
+              {/* 2. 심사계획서 공식 공문 서식 (F16-01: 사무국 직접 입력 및 DB 연동) */}
+              {/* ================================================================= */}
               {activeDocTab === 'plan' && (
                 <div className="space-y-3.5 print:space-y-2 text-xs print:text-[9.5px] leading-normal print:leading-tight font-sans text-slate-900 bg-white p-2">
-                  
                   {/* 최상단 헤더 블록 (좌: 심사계획서 대제목 & 심사종류, 우: 문서번호/수신처/작성일자 3단표) */}
                   <div className="border-2 border-slate-950 grid grid-cols-1 md:grid-cols-12">
                     
@@ -3487,11 +3149,17 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <div className="col-span-4 bg-slate-100 p-2 print:p-1 text-center font-bold text-slate-950 border-r border-slate-950 flex items-center justify-center">
                           심사종류
                         </div>
-                        <div className="col-span-8 p-2 print:p-1 text-center font-bold text-slate-950 flex items-center justify-center">
-                          {receptionType === '신규인증' ? '신규 / 2단계 심사' :
-                           receptionType === '갱신심사' ? '갱신 / 2단계 심사' :
-                           receptionType === '정기사후' ? '사후 1차심사' :
-                           receptionType === '전환심사' ? '전환 / 2단계 심사' : calculatedAuditStageText}
+                        <div className="col-span-8 p-1.5 print:p-1 text-center font-bold text-slate-950 flex items-center justify-center">
+                          <select
+                            value={receptionType}
+                            onChange={(e) => setReceptionType(e.target.value as AuditContractType)}
+                            className="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 font-bold text-slate-950 text-center print:border-none print:bg-transparent print:p-0 print:appearance-none cursor-pointer focus:ring-1 focus:ring-indigo-500 text-xs"
+                          >
+                            <option value="신규인증">최초 심사</option>
+                            <option value="정기사후">1차 사후 심사</option>
+                            <option value="전환심사">2차 사후 심사</option>
+                            <option value="갱신심사">갱신 심사</option>
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -3504,24 +3172,67 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                             <th className="w-20 bg-slate-100 p-2 print:p-1 text-center font-bold text-slate-950 border-r border-slate-950">
                               문서번호
                             </th>
-                            <td className="p-2 print:p-1 font-mono font-bold text-slate-950 text-center">
-                              {planDocNumber}
+                            <td className="p-1.5 print:p-1 font-mono font-bold text-slate-950 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <span>GMS-인증-</span>
+                                <input
+                                  type="text"
+                                  value={planDocDate}
+                                  onChange={(e) => setPlanDocDate(e.target.value)}
+                                  placeholder="YYYYMMDD"
+                                  className="w-24 border border-slate-300 rounded px-1.5 py-0.5 text-center font-mono text-xs bg-slate-50 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                                  maxLength={8}
+                                />
+                                <span>-</span>
+                                <input
+                                  type="text"
+                                  value={planDocSeq}
+                                  onChange={(e) => setPlanDocSeq(e.target.value)}
+                                  placeholder="01"
+                                  className="w-10 border border-slate-300 rounded px-1 py-0.5 text-center font-mono text-xs bg-slate-50 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                                  maxLength={2}
+                                />
+                              </div>
                             </td>
                           </tr>
                           <tr className="border-b border-slate-950">
                             <th className="w-20 bg-slate-100 p-2 print:p-1 text-center font-bold text-slate-950 border-r border-slate-950">
                               수신처
                             </th>
-                            <td className="p-2 print:p-1 font-bold text-slate-950 text-center">
-                              {activeCompany.companyName} 대표이사 귀하
+                            <td className="p-1.5 print:p-1 font-bold text-slate-950 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <span className="font-bold text-slate-950 text-xs print:text-[9.5px]">
+                                  {newCompanyName || selectedCompany?.companyName || '수신 기업'}
+                                </span>
+                                <span>귀하</span>
+                              </div>
                             </td>
                           </tr>
                           <tr>
                             <th className="w-20 bg-slate-100 p-2 print:p-1 text-center font-bold text-slate-950 border-r border-slate-950">
                               작성일자
                             </th>
-                            <td className="p-2 print:p-1 font-mono text-slate-950 text-center">
-                              {planDate}
+                            <td className="p-1.5 print:p-1 font-mono text-slate-950 text-center">
+                              <input
+                                type="date"
+                                value={planDate}
+                                onChange={(e) => {
+                                  const newDateVal = e.target.value;
+                                  setPlanDate(newDateVal);
+                                  if (newDateVal) {
+                                    const formattedDocDate = newDateVal.replace(/-/g, '');
+                                    setPlanDocDate(formattedDocDate);
+
+                                    // 날짜 변경 시 해당 날짜 프로젝트 수 카운팅 후 순번 계산
+                                    const sameDateCount = (projects || []).filter(p => {
+                                      const pDocDate = p.startDate ? p.startDate.replace(/[^0-9]/g, '').slice(0, 8) : '';
+                                      return pDocDate === formattedDocDate;
+                                    }).length;
+                                    setPlanDocSeq(String(sameDateCount + 1).padStart(2, '0'));
+                                  }
+                                }}
+                                className="border border-slate-300 rounded px-1.5 py-0.5 text-center font-mono text-xs bg-slate-50 print:border-none print:bg-transparent print:p-0"
+                              />
                             </td>
                           </tr>
                         </tbody>
@@ -3529,116 +3240,142 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     </div>
                   </div>
 
-                  {/* 안내 인사말 (실물 양식 1, 2번 및 입금 안내 문구) */}
+                  {/* 안내 인사말 (실물 양식 1, 2번 문구) */}
                   <div className="space-y-0.5 text-[11.5px] print:text-[9px] text-slate-900 py-1 font-medium leading-relaxed print:leading-tight">
                     <p className="font-bold">1. 귀사의 발전과 지속적 개선을 기원합니다.</p>
-                    <p className="font-bold">2. 아래와 같이 ISO 국제표준에 따른 심사계획서 및 청구내역서를 송부하오니 확인하여 주시기 바랍니다.</p>
+                    <p className="font-bold">2. 아래와 같이 ISO 국제표준에 따른 심사계획서를 송부하오니 확인하여 주시기 바랍니다.</p>
                     <p className="font-bold pl-3 text-slate-950">심사비용은 심사 수행 5일전까지 입금하여 주시기 바랍니다.</p>
                   </div>
 
                   {/* Ⅰ. 인증현황 */}
                   <div className="space-y-1 print:space-y-0.5">
-                    <h3 className="font-bold text-slate-950 text-xs print:text-[10px] flex items-center gap-1.5">
+                    <h3 className="font-bold text-slate-950 text-xs print:text-[10px] flex items-center justify-between">
                       <span className="font-black">Ⅰ. 인증현황</span>
                     </h3>
-                    <table className="w-full border-collapse border-2 border-slate-950 text-xs print:text-[9.5px]">
+                    <table className="w-full border-collapse border-2 border-slate-950 text-xs print:text-[9.5px] table-fixed">
+                      <colgroup>
+                        <col className="w-[12%]" />
+                        <col className="w-[8%]" />
+                        <col className="w-[8%]" />
+                        <col className="w-[8%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[14%]" />
+                        <col className="w-[14%]" />
+                        <col className="w-[13%]" />
+                        <col className="w-[13%]" />
+                      </colgroup>
                       <tbody>
-                        {/* 1행: 고객명 / 대표자 / 고객번호 */}
+                        {/* 1행: [1] 고객명 | [2-4] 고객명 값 | [5] 대표자 | [6] 대표자 값 | [7] 고객(인증)번호 | [8-9] 고객번호 값 */}
                         <tr className="border-b border-slate-950">
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
-                            고 객 명
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                            고객명
                           </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 font-bold text-slate-950 text-center">
-                            {activeCompany.companyName}
+                          <td colSpan={3} className="p-1.5 print:p-1 border-r border-slate-950 font-bold text-slate-950 text-center bg-white">
+                            {newCompanyName || selectedCompany?.companyName || '-'}
                           </td>
-                          <th className="w-20 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
-                            대 표 자
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                            대표자
                           </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-slate-950 text-center font-semibold">
-                            {cleanCeoName(activeCompany.ceoName)}
+                          <td className="p-1.5 print:p-1 border-r border-slate-950 text-slate-950 text-center font-semibold bg-white">
+                            {newCeoName || selectedCompany?.ceoName || '-'}
                           </td>
-                          <th className="w-20 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
-                            고객번호
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                            고객(인증)번호
                           </th>
-                          <td className="p-2 print:p-1 font-mono text-slate-950 text-center">
-                            {planCustomerNumber || (activeCompany.bizNumber ? 'Q' + activeCompany.bizNumber.replace(/[^0-9]/g, '').slice(-6) : '')}
+                          <td colSpan={2} className="p-1.5 print:p-1 font-mono text-slate-950 text-center bg-white">
+                            {planCustomerNumber || (selectedCompany?.bizNumber ? 'Q' + selectedCompany.bizNumber.replace(/[^0-9]/g, '').slice(-6) : '-')}
                           </td>
                         </tr>
 
-                        {/* 2~5행: 사업장 주소 & 담당부서 / 담당자 / 전화 / 팩스 (실물 그리드 정밀 준용) */}
+                        {/* 2~5행: [1] 인증대상사업장주소 (4행 병합) 
+                            2-3행: [2-6] 주사업장 (2행 5컬럼 병합)
+                            4-5행: [2-6] 사업장1 (2행 5컬럼 병합, 사업장 많을시 높이 확장)
+                            오른쪽: [7] 제목 담당부서/담당자/직책/전화/팩스, [8-9] 값 병합
+                        */}
+                        {/* 2행: 주사업장 상단 + 담당부서 */}
                         <tr className="border-b border-slate-950">
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950" rowSpan={4}>
-                            인 증 대 상<br />사업장 주소
+                          <th rowSpan={4} className="bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950 leading-snug">
+                            인증대상사업<br />장주소
                           </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-slate-950" rowSpan={2}>
-                            <span className="font-semibold text-slate-950 mr-1">주사업장:</span>
-                            <span>{activeCompany.address}</span>
+                          <td rowSpan={2} colSpan={5} className="p-2 print:p-1 border-r border-slate-950 text-slate-950 align-top bg-white">
+                            <div className="flex items-start gap-1">
+                              <span className="font-semibold text-slate-950 shrink-0">주사업장:</span>
+                              <span className="leading-relaxed">{newAddress || selectedCompany?.address || '-'}</span>
+                            </div>
                           </td>
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             담당부서
                           </th>
-                          <td className="p-2 print:p-1 text-slate-950 text-center" colSpan={3}>
-                            {planDept}
+                          <td colSpan={2} className="p-1.5 print:p-1 text-slate-950 text-center bg-white">
+                            {planDept || '-'}
                           </td>
                         </tr>
 
+                        {/* 3행: 담당자/직책 */}
                         <tr className="border-b border-slate-950">
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             담당자/직책
                           </th>
-                          <td className="p-2 print:p-1 text-slate-950 text-center font-semibold" colSpan={2}>
-                            {cleanPersonName(planContactPerson || activeCompany.contactPerson)}
-                          </td>
-                          <td className="p-2 print:p-1 text-slate-950 text-center font-semibold">
-                            {planContactPosition}
+                          <td colSpan={2} className="p-1.5 print:p-1 text-slate-950 text-center font-semibold bg-white">
+                            {planContactPerson ? (
+                              <span>{planContactPerson}{planContactPosition ? ` / ${planContactPosition}` : ''}</span>
+                            ) : (
+                              <span>{selectedCompany?.contactPerson || '-'}{selectedCompany?.contactPosition ? ` / ${selectedCompany.contactPosition}` : ''}</span>
+                            )}
                           </td>
                         </tr>
 
+                        {/* 4행: 사업장1 상단 + 전화 */}
                         <tr className="border-b border-slate-950">
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-slate-950" rowSpan={2}>
-                            <span className="font-semibold text-slate-950 mr-1">사업장1:</span>
-                            <span>{activeCompany.additionalSites?.[0]?.address || planSubAddress || '-'}</span>
+                          <td rowSpan={2} colSpan={5} className="p-2 print:p-1 border-r border-slate-950 text-slate-950 align-top bg-white">
+                            <div className="flex items-start gap-1">
+                              <span className="font-semibold text-slate-950 shrink-0">사업장1:</span>
+                              <span className="leading-relaxed whitespace-pre-wrap">{planSubAddress || '-'}</span>
+                            </div>
                           </td>
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
-                            전    화
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                            전화
                           </th>
-                          <td className="p-2 print:p-1 font-mono text-slate-950 text-center" colSpan={3}>
-                            {activeCompany.contactPhone}
+                          <td colSpan={2} className="p-1.5 print:p-1 font-mono text-slate-950 text-center bg-white">
+                            {newContactPhone || selectedCompany?.contactPhone || '-'}
                           </td>
                         </tr>
 
+                        {/* 5행: 팩스 (4행 전화와 높이가 1:1로 동일하게 맞춰짐) */}
                         <tr className="border-b border-slate-950">
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
-                            팩    스
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                            팩스
                           </th>
-                          <td className="p-2 print:p-1 font-mono text-slate-950 text-center" colSpan={3}>
-                            {planFax}
+                          <td colSpan={2} className="p-1.5 print:p-1 font-mono text-slate-950 text-center bg-white">
+                            {planFax || (selectedCompany as any)?.fax || (selectedCompany as any)?.contactFax || '-'}
                           </td>
                         </tr>
 
-                        {/* 6행: 인증범위 */}
+                        {/* 6~7행: [1] 인증범위 (2행 병합) | [2-6] 인증범위 값 (2행 5컬럼 병합)
+                            6행 오른쪽: [7] 인증코드 | [8-9] 인증코드 값 병합
+                            7행 오른쪽: [7] KSIC(산업분류코드) | [8-9] KSIC 값 병합
+                        */}
                         <tr className="border-b border-slate-950">
-                          <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                          <th rowSpan={2} className="bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             인증범위
                           </th>
-                          <td className="p-2 print:p-1 text-slate-950 text-center font-medium leading-relaxed" colSpan={5}>
-                            {activeCompany.scope || '-'}
+                          <td rowSpan={2} colSpan={5} className="p-2 print:p-1 border-r border-slate-950 text-slate-950 text-center font-medium leading-relaxed align-middle bg-white whitespace-pre-wrap">
+                            {newScope || selectedCompany?.scope || '-'}
+                          </td>
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
+                            인증코드
+                          </th>
+                          <td colSpan={2} className="p-1.5 print:p-1 border-slate-950 text-center font-mono font-bold text-slate-950 bg-white">
+                            {newIafCode || selectedCompany?.iafCode || '-'}
                           </td>
                         </tr>
 
-                        {/* 7행: 인증코드 & KSIC */}
                         <tr>
-                          <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
-                            인증코드
-                          </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-center font-mono font-bold text-slate-950">
-                            {activeCompany.iafCode}
-                          </td>
-                          <th className="bg-slate-100 p-2 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950" colSpan={2}>
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950 leading-tight">
                             KSIC<br />(산업분류코드)
                           </th>
-                          <td className="p-2 print:p-1 text-center font-mono text-slate-950 font-bold" colSpan={2}>
-                            {planKsicCode}
+                          <td colSpan={2} className="p-1.5 print:p-1 text-center font-mono text-slate-950 font-bold bg-white">
+                            {planKsicCode || (selectedCompany as any)?.ksicCode || '-'}
                           </td>
                         </tr>
                       </tbody>
@@ -3647,11 +3384,18 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
                   {/* Ⅱ. 심사기준 */}
                   <div className="space-y-1 print:space-y-0.5">
-                    <h3 className="font-bold text-slate-950 text-xs print:text-[10px] flex items-center gap-1.5">
+                    <h3 className="font-bold text-slate-950 text-xs print:text-[10px] flex items-center gap-1.5 justify-between">
                       <span className="font-black">Ⅱ. 심사기준</span>
                     </h3>
-                    <div className="p-2.5 print:p-1 border-2 border-slate-950 text-xs print:text-[9.5px] font-bold text-slate-950 text-center bg-white">
-                      {activeStandards.join(' & ')} &amp; 관련법규, 고객요구사항, 고객기준문서
+                    <div className="p-1.5 print:p-1 border-2 border-slate-950 text-xs print:text-[9.5px] font-bold text-slate-950 text-center bg-white flex items-center justify-center gap-1">
+                      <input
+                        type="text"
+                        value={planExtraCriteria !== '' ? planExtraCriteria : activeStandards.join(' & ')}
+                        onChange={(e) => setPlanExtraCriteria(e.target.value)}
+                        placeholder="ISO 9001:2015 등 규격 입력"
+                        className="font-bold text-slate-950 text-center bg-transparent border-b border-dashed border-slate-400 focus:border-indigo-600 focus:outline-none px-1 py-0.5 print:border-none print:p-0 min-w-[140px]"
+                      />
+                      <span>&amp; 관련법규, 고객요구사항, 고객기준문서</span>
                     </div>
                   </div>
 
@@ -3670,94 +3414,223 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
                   {/* Ⅳ. 심사일정 */}
                   <div className="space-y-1.5 print:space-y-0.5">
-                    <h3 className="font-bold text-slate-950 text-xs print:text-[10px] flex items-center gap-1.5">
+                    <h3 className="font-bold text-slate-950 text-xs print:text-[10px] flex items-center justify-between">
                       <span className="font-black">Ⅳ. 심사일정</span>
                     </h3>
-                    <table className="w-full border-collapse border-2 border-slate-950 text-xs print:text-[9.5px] text-center">
+                    <table className="w-full border-collapse border-2 border-slate-950 text-xs print:text-[9.5px] text-center table-fixed">
+                      <colgroup>
+                        <col className="w-[12%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[15%]" />
+                        <col className="w-[15%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[14%]" />
+                        <col className="w-[14%]" />
+                      </colgroup>
                       <tbody>
-                        {/* 1행: 심사일자 */}
+                        {/* 1행: [1-2] 심사일자(기간) (회색, 심사팀+역할 셀 합친 너비) | [3-7] 날짜 입력 + (00일간) | [8] MD (회색) | [9] MD값 입력 */}
                         <tr className="border-b border-slate-950">
-                          <th className="w-24 bg-slate-100 p-2 print:p-1 border-r border-slate-950 font-bold text-slate-950">
-                            심사일자
+                          <th colSpan={2} className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 font-bold text-slate-950 text-center">
+                            심사일자(기간)
                           </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 font-mono font-bold text-slate-950" colSpan={3}>
-                            {formattedKoSchedule}
+                          <td colSpan={5} className="p-1 print:p-0.5 border-r border-slate-950 font-mono font-bold text-slate-950 bg-white">
+                            <div className="flex items-center justify-center gap-1.5 h-full">
+                              <input
+                                type="date"
+                                value={plannedStartDate}
+                                onChange={(e) => setPlannedStartDate(e.target.value)}
+                                className="w-auto bg-transparent border-none font-mono text-center focus:outline-none focus:bg-indigo-50/50 rounded px-1"
+                              />
+                              <span>~</span>
+                              <input
+                                type="date"
+                                value={plannedEndDate}
+                                onChange={(e) => setPlannedEndDate(e.target.value)}
+                                className="w-auto bg-transparent border-none font-mono text-center focus:outline-none focus:bg-indigo-50/50 rounded px-1"
+                              />
+                              <span className="text-slate-900 font-bold ml-1">
+                                ({(() => {
+                                  if (!plannedStartDate || !plannedEndDate) return '1일간';
+                                  const start = new Date(plannedStartDate);
+                                  const end = new Date(plannedEndDate);
+                                  const diffDays = Math.round(Math.abs((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))) + 1;
+                                  return `${diffDays || 1}일간`;
+                                })()})
+                              </span>
+                            </div>
                           </td>
-                          <td className="p-2 print:p-1 border-r border-slate-950 font-bold text-slate-950" colSpan={2}>
-                            {appliedMd >= 2.0 ? '2일간' : '1일간'}
-                          </td>
-                          <td className="p-2 print:p-1 font-mono font-bold text-slate-950" colSpan={2}>
-                            {appliedMd.toFixed(1)}M/D
+                          <th className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 font-bold text-slate-950 text-center">
+                            MD
+                          </th>
+                          <td className="p-1 print:p-0.5 font-mono font-bold text-slate-950 bg-white">
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0.5"
+                              value={appliedMd}
+                              onChange={(e) => {
+                                setMdDecisionType('수동조정변경');
+                                setManualMd(parseFloat(e.target.value) || 0);
+                              }}
+                              className="w-full text-center bg-transparent border-none font-mono font-bold focus:outline-none focus:bg-indigo-50/50 rounded px-1"
+                            />
                           </td>
                         </tr>
 
-                        {/* 2행: 심사팀 헤더 */}
+                        {/* 2행: 헤더 [1] 심사팀 (4행 병합 회색) | [2] 역할 | [3] 소속 | [4] 성명 | [5] 연락처 | [6] 역할 | [7] 소속 | [8] 성명 | [9] 연락처 (회색 헤더, 9컬럼) */}
                         <tr className="border-b border-slate-950 bg-slate-100 font-bold text-slate-950">
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-24" rowSpan={4}>
+                          <th rowSpan={4} className="bg-slate-100 p-1.5 print:p-1 border-r border-slate-950 text-center font-bold text-slate-950">
                             심사팀
                           </th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-20">역할</th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-16">소속</th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-20">성명</th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-28">연락처</th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-20">역할</th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-16">소속</th>
-                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 w-20">성명</th>
-                          <th className="p-1.5 print:p-0.5 w-28">연락처</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">역할</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">소속</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">성명</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">연락처</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">역할</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">소속</th>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950">성명</th>
+                          <th className="p-1.5 print:p-0.5">연락처</th>
                         </tr>
 
-                        {/* 3행: 심사팀장 / 팀원 */}
-                        <tr className="border-b border-slate-950 text-slate-950">
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold">심사팀장</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">GMS</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold">{selectedLeadAuditor?.name}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-mono text-[11px] print:text-[9px]">{selectedLeadAuditor?.mobile}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">{selectedTeamAuditor ? '심사원' : '-'}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">{selectedTeamAuditor ? (selectedTeamAuditor.agency && selectedTeamAuditor.agency !== '사무국직영' ? selectedTeamAuditor.agency : 'GMS') : '-'}</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold">{selectedTeamAuditor?.name || '-'}</td>
-                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px]">{selectedTeamAuditor?.mobile || '-'}</td>
-                        </tr>
-
-                        {/* 4행: 검증심사원 */}
-                        <tr className="border-b border-slate-950 text-slate-950">
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-medium">검증심사원</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5">-</td>
-                        </tr>
-
-                        {/* 5행: 심사훈련 / 심사원보 */}
-                        <tr className="border-b border-slate-950 text-slate-950">
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-medium">심사훈련</td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-[10px] print:text-[8px] leading-tight" colSpan={1}>
-                            심사원보<br />코드확장
+                        {/* 3행: 심사팀장 (좌 하드코딩) / 심사원 (우 하드코딩) */}
+                        <tr className="border-b border-slate-950 text-slate-950 bg-white">
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold text-center">심사팀장</th>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedLeadAuditor?.agency && selectedLeadAuditor.agency !== '사무국직영' ? selectedLeadAuditor.agency : (selectedLeadAuditor?.affiliation || 'GMS')}
                           </td>
-                          <td className="p-1.5 print:p-0.5 border-r border-slate-950">-</td>
-                          <td className="p-1.5 print:p-0.5">-</td>
+                          <td className="p-1 print:p-0.5 border-r border-slate-950 font-bold text-center">
+                            <AuditorSearchInput
+                              valueId={leadAuditorId}
+                              onSelect={(id) => setLeadAuditorId(id)}
+                              auditors={auditors}
+                              placeholder="성명 검색..."
+                              allowEmptyText="팀장 선택 해제"
+                            />
+                          </td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-mono text-[11px] print:text-[9px] text-center">
+                            {selectedLeadAuditor?.mobile || '-'}
+                          </td>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold text-center">심사원</th>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedTeamAuditor ? (selectedTeamAuditor.agency && selectedTeamAuditor.agency !== '사무국직영' ? selectedTeamAuditor.agency : (selectedTeamAuditor.affiliation || 'GMS')) : '-'}
+                          </td>
+                          <td className="p-1 print:p-0.5 border-r border-slate-950 font-bold text-center">
+                            <AuditorSearchInput
+                              valueId={teamAuditorId}
+                              onSelect={(id) => setTeamAuditorId(id)}
+                              auditors={auditors.filter(a => a.id !== leadAuditorId)}
+                              placeholder="성명 검색..."
+                              allowEmptyText="심사원 미배정"
+                            />
+                          </td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px] text-center">
+                            {selectedTeamAuditor?.mobile || '-'}
+                          </td>
                         </tr>
 
-                        {/* 6행: 차기심사종류/일수 */}
-                        <tr className="text-slate-950 font-bold">
-                          <th className="p-2 print:p-1 border-r border-slate-950 bg-slate-100" colSpan={2}>
+                        {/* 4행: 빈칸 심사원 2 (좌) / 빈칸 심사원 3 또는 검증 (우) */}
+                        <tr className="border-b border-slate-950 text-slate-950 bg-white">
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedAuditor2 ? '심사원' : ''}
+                          </td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedAuditor2 ? (selectedAuditor2.agency && selectedAuditor2.agency !== '사무국직영' ? selectedAuditor2.agency : (selectedAuditor2.affiliation || 'GMS')) : ''}
+                          </td>
+                          <td className="p-1 print:p-0.5 border-r border-slate-950 font-bold text-center">
+                            <AuditorSearchInput
+                              valueId={auditor2Id}
+                              onSelect={(id) => setAuditor2Id(id)}
+                              auditors={auditors.filter(a => a.id !== leadAuditorId && a.id !== teamAuditorId)}
+                              placeholder="성명 검색..."
+                              allowEmptyText="심사원 2 미배정"
+                            />
+                          </td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-mono text-[11px] print:text-[9px] text-center">
+                            {selectedAuditor2?.mobile || ''}
+                          </td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedAuditor3 ? '심사원' : ''}
+                          </td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedAuditor3 ? (selectedAuditor3.agency && selectedAuditor3.agency !== '사무국직영' ? selectedAuditor3.agency : (selectedAuditor3.affiliation || 'GMS')) : ''}
+                          </td>
+                          <td className="p-1 print:p-0.5 border-r border-slate-950 font-bold text-center">
+                            <AuditorSearchInput
+                              valueId={auditor3Id}
+                              onSelect={(id) => setAuditor3Id(id)}
+                              auditors={auditors.filter(a => a.id !== leadAuditorId && a.id !== teamAuditorId && a.id !== auditor2Id)}
+                              placeholder="성명 검색..."
+                              allowEmptyText="심사원 3 미배정"
+                            />
+                          </td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px] text-center">
+                            {selectedAuditor3?.mobile || ''}
+                          </td>
+                        </tr>
+
+                        {/* 5행: 검증심사원 (좌 하드코딩) / 심사훈련 (우 하드코딩) */}
+                        <tr className="border-b border-slate-950 text-slate-950 bg-white">
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold text-center">검증심사원</th>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedVerifierAuditor ? (selectedVerifierAuditor.agency && selectedVerifierAuditor.agency !== '사무국직영' ? selectedVerifierAuditor.agency : (selectedVerifierAuditor.affiliation || 'GMS')) : ''}
+                          </td>
+                          <td className="p-1 print:p-0.5 border-r border-slate-950 font-bold text-center">
+                            <AuditorSearchInput
+                              valueId={verifierAuditorId}
+                              onSelect={(id) => setVerifierAuditorId(id)}
+                              auditors={auditors.filter(a => a.id !== leadAuditorId && a.id !== teamAuditorId && a.id !== auditor2Id && a.id !== auditor3Id)}
+                              placeholder="성명 검색..."
+                              allowEmptyText="검증심사원 미배정"
+                            />
+                          </td>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 font-mono text-[11px] print:text-[9px] text-center">
+                            {selectedVerifierAuditor?.mobile || ''}
+                          </td>
+                          <th className="p-1.5 print:p-0.5 border-r border-slate-950 font-bold text-center">심사훈련</th>
+                          <td className="p-1.5 print:p-0.5 border-r border-slate-950 text-center">
+                            {selectedTraineeAuditor ? (selectedTraineeAuditor.agency && selectedTraineeAuditor.agency !== '사무국직영' ? selectedTraineeAuditor.agency : (selectedTraineeAuditor.affiliation || 'GMS')) : ''}
+                          </td>
+                          <td className="p-1 print:p-0.5 border-r border-slate-950 font-bold text-center">
+                            <AuditorSearchInput
+                              valueId={traineeAuditorId}
+                              onSelect={(id) => setTraineeAuditorId(id)}
+                              auditors={auditors.filter(a => a.id !== leadAuditorId && a.id !== teamAuditorId && a.id !== auditor2Id && a.id !== auditor3Id && a.id !== verifierAuditorId)}
+                              placeholder="성명 검색..."
+                              allowEmptyText="심사훈련(보) 미배정"
+                            />
+                          </td>
+                          <td className="p-1.5 print:p-0.5 font-mono text-[11px] print:text-[9px] text-center">
+                            {selectedTraineeAuditor?.mobile || ''}
+                          </td>
+                        </tr>
+
+                        {/* 6행: [1-2] 차기심사종류/일수 (회색, 심사팀+역할 셀 합친 너비) | [3-5] 차기심사종류 풀다운(4개) | [6-9] 상세 MD 추후 통보 입력 */}
+                        <tr className="text-slate-950 font-bold bg-white border-b border-slate-950">
+                          <th colSpan={2} className="p-1.5 print:p-1 border-r border-slate-950 bg-slate-100 text-center font-bold">
                             차기심사종류/일수
                           </th>
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-center" colSpan={3}>
-                            {receptionType === '신규인증' ? '사후 1차심사' :
-                             receptionType === '정기사후' ? '사후 2차심사' : '갱신심사'}
+                          <td colSpan={3} className="p-1 print:p-0.5 border-r border-slate-950 text-center">
+                            <select
+                              value={planNextAuditType !== '' ? planNextAuditType : (receptionType === '신규인증' ? '1차 사후 심사' : receptionType === '정기사후' ? '2차 사후 심사' : '갱신 심사')}
+                              onChange={(e) => setPlanNextAuditType(e.target.value)}
+                              className="w-full bg-transparent border-none font-bold text-slate-950 text-center focus:outline-none focus:bg-indigo-50/50 rounded px-1 cursor-pointer"
+                            >
+                              <option value="최초 심사">최초 심사</option>
+                              <option value="1차 사후 심사">1차 사후 심사</option>
+                              <option value="2차 사후 심사">2차 사후 심사</option>
+                              <option value="갱신 심사">갱신 심사</option>
+                            </select>
                           </td>
-                          <td className="p-2 print:p-1 border-r border-slate-950 text-center" colSpan={1}>
-                            /
-                          </td>
-                          <td className="p-2 print:p-1 text-center font-medium" colSpan={3}>
-                            추후통보M/D
+                          <td colSpan={4} className="p-1 print:p-0.5 text-center font-medium">
+                            <input
+                              type="text"
+                              value={planNextAuditMd}
+                              onChange={(e) => setPlanNextAuditMd(e.target.value)}
+                              placeholder="상세 MD 추후 통보"
+                              className="w-full text-center bg-transparent border-none font-medium text-slate-800 focus:outline-none focus:bg-indigo-50/50 rounded px-1"
+                            />
                           </td>
                         </tr>
                       </tbody>
@@ -3767,9 +3640,9 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                   {/* 하단 공식 고객안내 (IAF Guide, 전담심사원, 남효린 주임 연락처) */}
                   <div className="space-y-1 print:space-y-0.5 text-[10.5px] print:text-[8px] text-slate-700 leading-normal print:leading-tight pt-1">
                     <p>※ IAF Guide 와 KAB 적용기준에 근거한 인증원 규정 [GSI-03 인증심사일수와 비용기준]에 따라 심사일수가 산정됩니다.</p>
-                    <p>※ 귀사는 인증심사전 " 인증기준 및 인증등록 조직의 권리와 의무사항" 에 대한 내용을 반드시 숙지하시기 바랍니다.</p>
+                    <p>※ 귀사는 인증심사전 &quot;인증기준 및 인증등록 조직의 권리와 의무사항&quot;에 대한 내용을 반드시 숙지하시기 바랍니다.</p>
                     <p className="pl-3">- 위 내용은 인증원 홈페이지 자료실 &lt;인증절차안내서&gt;로 게재되어 있습니다.</p>
-                    <p>※ 심사팀에는 심사원 양성을 위한 심사훈련자 또는 심사팀의 심사수행 검증을 위한 검증심사원이 참석할 수 있으며,관련비용은 기업에서 부담하지 않습니다.</p>
+                    <p>※ 심사팀에는 심사원 양성을 위한 심사훈련자 또는 심사팀의 심사수행 검증을 위한 검증심사원이 참석할 수 있으며, 관련비용은 기업에서 부담하지 않습니다.</p>
                     <p>※ ICT를 활용한 원격심사는 전체 심사시간대비()%로 진행됩니다.(해당 시)</p>
                     <p className="font-semibold text-slate-900">
                       ▶ 당인증원은 귀사의 시스템 향상을 위하여 최선을 다하고 있습니다. 심사진행과 관련하여 궁금한 사항이 있으시면 언제라도 귀사의 전담심사원 또는 인증운영담당 ( 남효린 주임 ) ( ☎02-6929-1702, E-mail kgms2304@gmail.com ) 에게 전화주시면 고객 감동의 정신으로 상세하게 안내하여 드리겠습니다.
@@ -3789,18 +3662,21 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                       작성자 : 직위 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, 성명 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, 서명: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* 심사비 청구내역서 연계 출력 (F16 심사계획·청구서 팩) */}
-                  <div className="my-8 border-t-4 border-double border-slate-400 pt-6"></div>
-
-                  <div className="space-y-4 print:space-y-1.5 text-xs print:text-[10px] leading-normal print:leading-tight font-sans text-slate-900">
-                    {/* 상단 인증원 헤더 정보 */}
-                    <div className="border-b-2 border-slate-900 pb-2 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-700">
-                      <div>
-                        <p className="font-semibold text-slate-900">서울특별시 강서구 강서로 406, 905호 (등촌동, 동광빌딩)</p>
-                        <p className="text-slate-600">http://www.gmscs.co.kr &nbsp;|&nbsp; esggnf@naver.com</p>
-                        <p className="font-mono text-slate-700">Tel : 02-6929-1702 &nbsp;|&nbsp; Fax : 070-8270-2141</p>
-                      </div>
+              {/* ================================================================= */}
+              {/* 3. 심사비용 청구서 공식 서식 (F16-02: 사무국 직접 입력 및 DB 연동) */}
+              {/* ================================================================= */}
+              {activeDocTab === 'invoice' && (
+                <div className="space-y-4 print:space-y-2 text-xs print:text-[10px] leading-normal print:leading-tight font-sans text-slate-900 bg-white p-3">
+                  {/* 상단 인증원 헤더 정보 */}
+                  <div className="border-b-2 border-slate-900 pb-2 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-700">
+                    <div>
+                      <p className="font-semibold text-slate-900">서울특별시 강서구 강서로 406, 905호 (등촌동, 동광빌딩)</p>
+                      <p className="text-slate-600">http://www.gmscs.co.kr &nbsp;|&nbsp; esggnf@naver.com</p>
+                      <p className="font-mono text-slate-700">Tel : 02-6929-1702 &nbsp;|&nbsp; Fax : 070-8270-2141</p>
+                    </div>
                     <div className="sm:text-right mt-2 sm:mt-0 flex flex-col items-start sm:items-end justify-between">
                       <span className="inline-block px-2.5 py-1 bg-slate-900 text-white font-bold text-xs rounded-xs tracking-wider">
                         ESG with GMSCS !
@@ -3823,22 +3699,44 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     <tbody>
                       <tr className="border-b border-slate-400">
                         <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">청구번호</th>
-                        <td className="p-2 border-r border-slate-400 font-mono font-bold text-slate-900">
-                          GMS-인증-{currentContractRecord.contractNumber ? currentContractRecord.contractNumber.replace(/[^0-9]/g, '').slice(-8) : ''}
+                        <td className="p-2 border-r border-slate-400 font-mono font-bold text-slate-900 text-center">
+                          GMS-인증-{planDocNumber.replace(/[^0-9]/g, '').slice(-8) || '20260901'}
                         </td>
                         <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">작성일자</th>
-                        <td className="p-2 font-mono text-slate-900">
-                          {currentContractRecord.contractDate || ''}
+                        <td className="p-1.5 border-slate-400 font-mono text-slate-900 text-center">
+                          <input
+                            type="date"
+                            value={planDate}
+                            onChange={(e) => setPlanDate(e.target.value)}
+                            className="border border-slate-300 rounded px-1.5 py-0.5 text-center font-mono text-xs bg-slate-50 print:border-none print:bg-transparent print:p-0"
+                          />
                         </td>
                       </tr>
                       <tr>
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">수 신 처</th>
-                        <td className="p-2 border-r border-slate-400 font-bold text-slate-900">
-                          {activeCompany.companyName} 대표이사 귀하
+                        <td className="p-1.5 border-r border-slate-400 font-bold text-slate-900 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                              type="text"
+                              value={newCompanyName}
+                              onChange={(e) => setNewCompanyName(e.target.value)}
+                              className="border border-slate-300 rounded px-1.5 py-0.5 text-center font-bold text-slate-950 bg-slate-50 w-36 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                            />
+                            <span>귀하</span>
+                          </div>
                         </td>
                         <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">참    조</th>
-                        <td className="p-2 text-slate-900 font-semibold">
-                          {activeCompany.contactPerson || ''} {activeCompany.contactPerson ? '담당자' : ''}
+                        <td className="p-1.5 text-slate-900 font-semibold text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                              type="text"
+                              value={planContactPerson}
+                              onChange={(e) => setPlanContactPerson(e.target.value)}
+                              placeholder="담당자명"
+                              className="border border-slate-300 rounded px-1.5 py-0.5 text-center font-semibold text-slate-950 bg-slate-50 w-28 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                            />
+                            <span>담당자</span>
+                          </div>
                         </td>
                       </tr>
                     </tbody>
@@ -3846,9 +3744,12 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
 
                   {/* ■ 인증심사 비용 */}
                   <div className="space-y-2 pt-1">
-                    <h3 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-slate-900 inline-block"></span>
-                      <span>인증심사 비용</span>
+                    <h3 className="font-bold text-slate-900 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-slate-900 inline-block"></span>
+                        <span>인증심사 비용</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-700 font-normal print:hidden">※ 단가 및 부대비용 직접 조정 가능 (MD 및 일정은 심사계획서 연동)</span>
                     </h3>
 
                     {/* 심사 개요 요약 표 */}
@@ -3857,7 +3758,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr className="border-b border-slate-400">
                           <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">기업명</th>
                           <td className="p-2 border-r border-slate-400 font-bold text-slate-900" colSpan={3}>
-                            {activeCompany.companyName}
+                            {newCompanyName || activeCompany.companyName}
                           </td>
                         </tr>
                         <tr className="border-b border-slate-400">
@@ -3869,7 +3770,10 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         <tr className="border-b border-slate-400">
                           <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사종류</th>
                           <td className="p-2 border-r border-slate-400 font-bold text-slate-900">
-                            {receptionType === '정기사후' ? '사후1차' : calculatedAuditStageText}
+                            {receptionType === '신규인증' ? '신규 / 2단계 심사' :
+                             receptionType === '정기사후' ? '사후 1차심사' :
+                             receptionType === '갱신심사' ? '갱신 / 2단계 심사' :
+                             receptionType === '전환심사' ? '전환 / 2단계 심사' : receptionType}
                           </td>
                           <th className="w-24 bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사형태</th>
                           <td className="p-2 text-slate-900">
@@ -3878,48 +3782,131 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                         </tr>
                         <tr>
                           <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사일자</th>
-                          <td className="p-2 border-r border-slate-400 font-mono text-slate-900">
-                            {plannedStartDate} ~ {plannedEndDate}
+                          <td className="p-1.5 border-r border-slate-400 font-mono text-slate-900">
+                            <span className="font-bold">{formattedKoSchedule || (plannedStartDate ? `${plannedStartDate} ~ ${plannedEndDate}` : '심사계획서 미작성')}</span>
                           </td>
                           <th className="bg-slate-100 p-2 border-r border-slate-400 text-center font-bold text-slate-800">심사일수(MD)</th>
-                          <td className="p-2 font-mono font-bold text-slate-900">
-                            {appliedMd} MD
+                          <td className="p-1.5 font-mono font-bold text-slate-900">
+                            <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-950 font-bold font-mono">
+                              {appliedMd > 0 ? `${appliedMd} MD` : '계획서 미산출'}
+                            </span>
                           </td>
                         </tr>
                       </tbody>
                     </table>
 
-                    {/* 비용 세부 내역 표 (Remark 청구내역서 원본 표 준용) */}
+                    {/* 비용 세부 내역 표 (사무국 직접 수정 및 DB 연동) */}
                     <table className="w-full border-collapse border border-slate-700 text-xs text-center mt-3">
                       <thead className="bg-slate-100 border-b border-slate-400 font-bold text-slate-800">
                         <tr>
                           <th className="p-2 border-r border-slate-400 w-1/2">구분 / 항목</th>
-                          <th className="p-2 border-r border-slate-400 w-1/2">금    액</th>
+                          <th className="p-2 border-r border-slate-400 w-1/2">금    액 (원)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-300 text-slate-900">
-                        <tr>
-                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">신청비</td>
-                          <td className="p-2 font-mono text-right pr-6">₩{applicationFee.toLocaleString()}</td>
+                        {/* MD당 단가 조정 행 */}
+                        <tr className="bg-indigo-50/40 print:bg-transparent">
+                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6 text-indigo-900">
+                            적용 MD당 단가
+                          </td>
+                          <td className="p-1.5 font-mono text-right pr-6">
+                            <div className="flex items-center justify-end gap-1">
+                              <span>₩</span>
+                              <input
+                                type="number"
+                                step="10000"
+                                value={ratePerMd}
+                                onChange={(e) => setRatePerMd(parseInt(e.target.value) || 0)}
+                                className="w-32 border border-slate-300 rounded px-2 py-0.5 text-right font-mono font-semibold bg-white print:border-none print:bg-transparent print:p-0 print:w-auto"
+                              />
+                            </div>
+                          </td>
                         </tr>
                         <tr>
-                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">심사비</td>
-                          <td className="p-2 font-mono text-right pr-6 font-bold">₩{(docAuditFee + onsiteAuditFee).toLocaleString()}</td>
+                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">
+                            신청비 {receptionType === '신규인증' ? '(신규인증 기본)' : ''}
+                          </td>
+                          <td className="p-1.5 font-mono text-right pr-6">
+                            <div className="flex items-center justify-end gap-1">
+                              <span>₩</span>
+                              <input
+                                type="number"
+                                step="10000"
+                                value={applicationFee}
+                                onChange={(e) => setApplicationFee(parseInt(e.target.value) || 0)}
+                                className="w-32 border border-slate-300 rounded px-2 py-0.5 text-right font-mono bg-slate-50 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                              />
+                            </div>
+                          </td>
                         </tr>
                         <tr>
-                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">출장비</td>
-                          <td className="p-2 font-mono text-right pr-6">₩{travelExpense.toLocaleString()}</td>
+                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">
+                            심사비 (문서 ₩{docAuditFee.toLocaleString()} + 현장 ₩{onsiteAuditFee.toLocaleString()})
+                          </td>
+                          <td className="p-2 font-mono text-right pr-6 font-bold text-slate-950">
+                            ₩{(docAuditFee + onsiteAuditFee).toLocaleString()}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">
+                            출장비
+                          </td>
+                          <td className="p-1.5 font-mono text-right pr-6">
+                            <div className="flex items-center justify-end gap-1">
+                              <span>₩</span>
+                              <input
+                                type="number"
+                                step="10000"
+                                value={travelExpense}
+                                onChange={(e) => setTravelExpense(parseInt(e.target.value) || 0)}
+                                className="w-32 border border-slate-300 rounded px-2 py-0.5 text-right font-mono bg-slate-50 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border-r border-slate-400 font-semibold text-left pl-6">
+                            숙식비
+                            <select
+                              value={lodgingOption}
+                              onChange={(e) => {
+                                const opt = e.target.value as any;
+                                setLodgingOption(opt);
+                                if (opt === '턴키포함' && lodgingExpense === 0) {
+                                  setLodgingExpense(100000);
+                                } else if (opt === '업체직접제공') {
+                                  setLodgingExpense(0);
+                                }
+                              }}
+                              className="ml-2 text-xs border border-slate-300 rounded px-1 py-0.5 bg-slate-50 print:hidden cursor-pointer"
+                            >
+                              <option value="업체직접제공">업체직접제공(미포함)</option>
+                              <option value="턴키포함">턴키포함(청구합산)</option>
+                            </select>
+                          </td>
+                          <td className="p-1.5 font-mono text-right pr-6">
+                            <div className="flex items-center justify-end gap-1">
+                              <span>₩</span>
+                              <input
+                                type="number"
+                                step="10000"
+                                value={lodgingExpense}
+                                onChange={(e) => setLodgingExpense(parseInt(e.target.value) || 0)}
+                                className="w-32 border border-slate-300 rounded px-2 py-0.5 text-right font-mono bg-slate-50 print:border-none print:bg-transparent print:p-0 print:w-auto"
+                              />
+                            </div>
+                          </td>
                         </tr>
                         <tr className="bg-slate-50 font-bold border-t-2 border-slate-400">
-                          <td className="p-2 border-r border-slate-400 text-left pl-6 text-slate-800">소 계</td>
+                          <td className="p-2 border-r border-slate-400 text-left pl-6 text-slate-800">소 계 (공급가액)</td>
                           <td className="p-2 font-mono text-right pr-6 text-slate-900">₩{finalFee.toLocaleString()}</td>
                         </tr>
                         <tr className="bg-slate-50 font-bold">
-                          <td className="p-2 border-r border-slate-400 text-left pl-6 text-slate-800">V.A.T</td>
+                          <td className="p-2 border-r border-slate-400 text-left pl-6 text-slate-800">V.A.T (10%)</td>
                           <td className="p-2 font-mono text-right pr-6 text-slate-900">₩{vat.toLocaleString()}</td>
                         </tr>
                         <tr className="bg-slate-100 font-black border-t-2 border-slate-700 text-slate-950 text-sm">
-                          <td className="p-2.5 border-r border-slate-400 text-left pl-6">총 심사비용</td>
+                          <td className="p-2.5 border-r border-slate-400 text-left pl-6">총 심사비용 (합계)</td>
                           <td className="p-2.5 font-mono text-right pr-6 text-cyan-950 font-bold">
                             ₩{totalWithVat.toLocaleString()}
                           </td>
@@ -3949,7 +3936,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     </div>
                   </div>
 
-                  {/* 하단 입금 안내 사항 (결재란 없음 - 공문) */}
+                  {/* 하단 입금 안내 사항 */}
                   <div className="border border-slate-700 p-3 space-y-1.5 text-[11px] text-slate-700 bg-white leading-relaxed">
                     <p className="font-semibold text-slate-900">
                       1. 인증심사비는 심사일 4일전까지 입금 바라오며, 기업명으로 입금하여 주시기 바랍니다.
@@ -3962,8 +3949,7 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                     </p>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
               {/* ================================================================= */}
               {/* 4. 심사설문서 (인증신청 및 설문서 Pack - 2025 Pack 형태 완벽 준용) */}
@@ -4601,12 +4587,610 @@ export const AuditContractManager: React.FC<AuditContractManagerProps> = ({
                 </div>
               )}
 
+              {/* ================================================================= */}
+              {/* 10. 인증심의결과보고서 (F18) - ERP MenuD/D002_Add.do 1:1 완벽 서식 (가장 마지막 탭) */}
+              {/* ================================================================= */}
+              {activeDocTab === 'deliberation' && (
+                <div className="space-y-3 text-xs leading-relaxed text-slate-900 font-sans">
+                  {/* 상단 타이틀 바 */}
+                  <div className="border-b-2 border-slate-900 pb-2 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-950 tracking-tight">인증심의결과보고서</h2>
+                      <span className="font-mono text-[10px] text-slate-500">gms.z99.kr/Admin/MenuD/D002_Add.do</span>
+                    </div>
+                    <div className="text-right flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] text-slate-600 font-medium">관리번호:</span>
+                        <input type="text" placeholder="관리번호 입력" className="border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono w-36 bg-white" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] text-slate-600 font-medium">심의일자:</span>
+                        <input 
+                          type="text" 
+                          defaultValue={deliberationApproval.approved ? deliberationApproval.approvedAt.split(' ')[0] : ''} 
+                          placeholder="YYYY-MM-DD" 
+                          className="border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono w-28 text-center bg-white" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 1. 기본정보 */}
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-slate-900 text-xs">1. 기본정보</h3>
+                    <table className="w-full border-collapse border border-slate-300 text-xs">
+                      <tbody>
+                        <tr>
+                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold w-24 text-center">고 객 명</th>
+                          <td className="border border-slate-300 p-1.5 font-medium text-slate-900">{activeCompany.companyName}</td>
+                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold w-24 text-center">인증번호</th>
+                          <td className="p-1.5 font-mono">
+                            <input 
+                              type="text" 
+                              defaultValue={(activeCompany as any).certNo || ''} 
+                              placeholder="인증번호 입력" 
+                              className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono bg-white" 
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">인 증 범 위</th>
+                          <td className="border border-slate-300 p-1.5 text-slate-800">
+                            <input 
+                              type="text" 
+                              defaultValue={activeCompany.scope || ''} 
+                              placeholder="인증범위 입력" 
+                              className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs bg-white" 
+                            />
+                          </td>
+                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">인증코드</th>
+                          <td className="p-1.5 font-mono">
+                            <input 
+                              type="text" 
+                              defaultValue={activeCompany.iafCode || ''} 
+                              placeholder="인증코드" 
+                              className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono bg-white" 
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">인 증 표 준</th>
+                          <td colSpan={3} className="border border-slate-300 p-1.5">
+                            <div className="flex items-center flex-wrap gap-4 text-xs">
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="checkbox" defaultChecked className="rounded border-slate-400 text-blue-600" />
+                                <span>ISO 9001:2015</span>
+                              </label>
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
+                                <span>ISO 14001:2015</span>
+                              </label>
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
+                                <span>ISO 45001:2018</span>
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
+                                <span>기타</span>
+                                <select className="border border-slate-300 rounded px-1 py-0.5 text-xs bg-white">
+                                  <option value="">- 선택 -</option>
+                                  <option value="Q/E">Q/E</option>
+                                  <option value="Q">Q</option>
+                                  <option value="E">E</option>
+                                  <option value="OH&S">OH&S</option>
+                                </select>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th className="border border-slate-300 bg-slate-50 p-1.5 font-semibold text-center">심 사 팀</th>
+                          <td colSpan={3} className="border border-slate-300 p-0">
+                            <div className="grid grid-cols-4 divide-x divide-slate-300 text-center">
+                              <div className="bg-slate-50 p-1.5 font-semibold">심사팀장</div>
+                              <div className="p-1">
+                                <select 
+                                  value={leadAuditorId}
+                                  onChange={(e) => setLeadAuditorId(e.target.value)}
+                                  className="w-full border border-slate-200 rounded px-1 py-0.5 text-xs bg-white"
+                                >
+                                  <option value="">- 심사팀장 선택 -</option>
+                                  {auditors.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="bg-slate-50 p-1.5 font-semibold">심사팀원</div>
+                              <div className="p-1">
+                                <select 
+                                  value={teamAuditorId}
+                                  onChange={(e) => setTeamAuditorId(e.target.value)}
+                                  className="w-full border border-slate-200 rounded px-1 py-0.5 text-xs bg-white"
+                                >
+                                  <option value="">- 심사팀원 선택 -</option>
+                                  {auditors.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                </select>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 2. 인증심의 */}
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-slate-900 text-xs">2. 인증심의</h3>
+                    <table className="w-full border-collapse border border-slate-300 text-xs">
+                      <thead className="bg-slate-100 font-bold text-slate-800 text-center">
+                        <tr>
+                          <th rowSpan={2} className="border border-slate-300 p-1.5 w-28">심의항목</th>
+                          <th rowSpan={2} className="border border-slate-300 p-1.5">심의 기준</th>
+                          <th colSpan={2} className="border border-slate-300 p-1">심의 결과</th>
+                        </tr>
+                        <tr>
+                          <th className="border border-slate-300 p-1 w-28">확인</th>
+                          <th className="border border-slate-300 p-1 w-36">심의내역</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* 1. 심사팀 구성의 적합성 및 공평성 */}
+                        <tr>
+                          <td rowSpan={3} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            심사팀 구성의<br />적합성 및 공평성
+                          </td>
+                          <td className="border border-slate-300 p-1.5">1. 심사일수 및 비용산정이 절차에 맞는가?(계약검토서 확인)</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_1" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_1" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_1" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" placeholder="" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">2. 심사팀 구성 및 심사 준비에 대한 원칙이 준수되었는가?(인증범위와 심사원 코드)</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_2" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_2" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_2" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">3. 심사업체와의 이해상충 및 공평성 위협요소는 없는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_3" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_3" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_3" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 2. 심사 수행의 적합성 */}
+                        <tr>
+                          <td rowSpan={5} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            심사 수행의 적합성
+                          </td>
+                          <td className="border border-slate-300 p-1.5">4. 심사계획은 최소 1주일 이전에 통보하였는가?(늦어도 3일전)</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_4" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_4" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_4" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">5. 심사팀의 구성은 적합한가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_5" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_5" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_5" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">6. 내부심사 및 경영 검토는 실시하였는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_6" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_6" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_6" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">7. 심사시간은 준수하였는가?(현장 이동시간 포함)</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_7" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_7" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_7" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">8. 사후 심사는 전 심사의 12개월내에 실시 되었는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_8" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_8" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_8" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" placeholder="YYYY-MM-DD" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center font-mono bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 3. 인증범위의 명확성 */}
+                        <tr>
+                          <td rowSpan={3} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            인증범위의<br />명확성
+                          </td>
+                          <td className="border border-slate-300 p-1.5">9. 인증수행범위는 적합한가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_9" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_9" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_9" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">10. 복합코드의 경우 코드가 전부 적용 되었는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_10" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_10" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_10" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" defaultValue={activeCompany.iafCode || ''} placeholder="코드" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center font-mono bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">11. 복수사업장의 경우 대상 사업장을 명확히 기술하였는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_11" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_11" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_11" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 4. 부적합 사항의 적합성 */}
+                        <tr>
+                          <td rowSpan={2} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            부적합 사항의<br />적합성
+                          </td>
+                          <td className="border border-slate-300 p-1.5">12. 부적합 사항이 적합하게 발행되었는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_12" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_12" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_12" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" placeholder="" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs text-center bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">13. 부적합 내용과 표준 적용 항목번호는 적합한가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_13" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_13" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_13" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 5. 시정조치의 효과성 */}
+                        <tr>
+                          <td rowSpan={2} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            시정조치의<br />효과성
+                          </td>
+                          <td className="border border-slate-300 p-1.5">14. 부적합 사항에 대한 시정조치가 효과적인가?(이전심사 포함)</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_14" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_14" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_14" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">15. 재발방지 대책은 적합한가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_15" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_15" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_15" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 6. 기록관리 */}
+                        <tr>
+                          <td rowSpan={3} className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            기록관리
+                          </td>
+                          <td className="border border-slate-300 p-1.5">16. 보고서에 오기 및 누락된 부분은 없는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_16" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_16" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_16" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">17. 심사보고서는 기록관리 순서로 Filing 되었는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_17" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_17" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_17" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 p-1.5">18. 양식은 최신 본 인가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_18" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_18" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_18" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 7. 고객 피드백 */}
+                        <tr>
+                          <td className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            고객 피드백
+                          </td>
+                          <td className="border border-slate-300 p-1.5">19. 심사와 관련 고객 불만은 없었는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_19" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_19" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_19" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+
+                        {/* 8. 변경사항 */}
+                        <tr>
+                          <td className="border border-slate-300 p-1.5 font-bold text-center align-middle bg-slate-50/50">
+                            변경사항
+                          </td>
+                          <td className="border border-slate-300 p-1.5">20. 사후 심사 시 변경 사항은 없는가?</td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_20" defaultChecked value="Y" className="text-blue-600" /> Y</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_20" value="N" className="text-blue-600" /> N</label>
+                              <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_cm_20" value="NA" className="text-blue-600" /> NA</label>
+                            </div>
+                          </td>
+                          <td className="border border-slate-300 p-1 text-center">
+                            <input type="text" className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white" />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 인증심의 결과 결재 표 */}
+                  <div className="border border-slate-300 rounded overflow-hidden">
+                    <table className="w-full border-collapse text-xs">
+                      <tbody>
+                        <tr className="border-b border-slate-300">
+                          <th className="bg-slate-50 p-2 font-bold w-28 text-center border-r border-slate-300">인증심의 결과</th>
+                          <td className="p-2">
+                            <div className="flex items-center gap-6 text-xs font-semibold">
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="deli_final_decision" defaultChecked value="승인" className="text-blue-600" />
+                                <span>승인</span>
+                              </label>
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="deli_final_decision" value="보류" className="text-blue-600" />
+                                <span>보류</span>
+                              </label>
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="deli_final_decision" value="재승인" className="text-blue-600" />
+                                <span>재승인</span>
+                              </label>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr className="border-b border-slate-300">
+                          <th className="bg-slate-50 p-2 font-bold text-center border-r border-slate-300">인증심의 일자</th>
+                          <td className="p-2">
+                            <input 
+                              type="text" 
+                              defaultValue={deliberationApproval.approved ? deliberationApproval.approvedAt.split(' ')[0] : ''} 
+                              placeholder="YYYY-MM-DD" 
+                              className="border border-slate-300 rounded px-2 py-0.5 text-xs text-center font-mono bg-white w-36" 
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th className="bg-slate-50 p-2 font-bold text-center border-r border-slate-300">인증위원 확인</th>
+                          <td className="p-2">
+                            {deliberationApproval.approved ? (
+                              <div className="flex items-center justify-between gap-2 bg-emerald-50 px-3 py-2 rounded border border-emerald-300">
+                                <div>
+                                  <span className="font-bold text-emerald-900 text-xs">{deliberationApproval.approver}</span>
+                                  <span className="text-slate-500 text-[11px] ml-2">({deliberationApproval.approvedAt})</span>
+                                </div>
+                                <span className="text-emerald-700 font-bold text-xs">✓ 심의위원 비밀번호 전자승인 완료</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded">
+                                <span className="text-slate-600 text-xs">상근직원 및 위촉 심의위원 비밀번호 전자결재</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPinModal('deliberation', '인증심의결과보고서(F18)')}
+                                  className="px-3.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded font-bold text-xs shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                                >
+                                  <span>🔐 심의위원 비밀번호 승인</span>
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
         </div>
 
       </div>
+
+      {/* ================================================================= */}
+      {/* 전자결재 비밀번호(PIN) 승인 모달 */}
+      {/* ================================================================= */}
+      {pinModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+            <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🔐</span>
+                <h3 className="font-bold text-sm">전자문서 비밀번호 승인 결재</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setPinModal(prev => ({ ...prev, isOpen: false, errorMsg: '' }))}
+                className="text-slate-400 hover:text-white text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleExecutePinApproval} className="p-5 space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs space-y-1">
+                <div className="font-semibold text-blue-900">결재 대상 서식: <span className="underline">{pinModal.docTitle}</span></div>
+                <div className="text-blue-700">인증관리 &gt; 심의위원 탭에서 설정된 상근직원/심의위원 비밀번호를 입력하십시오.</div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {pinModal.docType === 'deliberation' ? '결재 승인자 선택 (심의위원 / 상근직원)' : '결재 승인자 선택 (내부 상근직원 전용)'}
+                </label>
+                <select
+                  value={pinModal.selectedApprover}
+                  onChange={(e) => setPinModal(prev => ({ ...prev, selectedApprover: e.target.value, errorMsg: '' }))}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium text-slate-900"
+                >
+                  {(pinModal.docType === 'deliberation'
+                    ? loadSavedCommitteeMembers()
+                    : loadSavedCommitteeMembers().filter(m => m.isPermanent || m.affiliation === '상근')
+                  ).map(m => (
+                    <option key={m.id} value={m.name}>
+                      {m.name} ({m.role}) {m.isPermanent ? '- 상근직원' : '- 위촉위원'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">승인 비밀번호 (PIN)</label>
+                <input
+                  type="password"
+                  value={pinModal.enteredPin}
+                  onChange={(e) => setPinModal(prev => ({ ...prev, enteredPin: e.target.value, errorMsg: '' }))}
+                  placeholder="비밀번호 4자리 입력 (기본: 1234)"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm tracking-widest text-center font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                  autoFocus
+                  maxLength={10}
+                />
+              </div>
+
+              {pinModal.errorMsg && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 font-medium">
+                  ⚠️ {pinModal.errorMsg}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setPinModal(prev => ({ ...prev, isOpen: false, errorMsg: '' }))}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>✓ 승인 결재 완료</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

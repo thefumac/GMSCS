@@ -1445,6 +1445,7 @@ export function App() {
             contracts={auditContracts}
             projects={projects}
             isAdmin={currentUserRole === 'admin'}
+            currentUserRole={currentUserRole}
             onSaveContract={handleSaveContract}
             onApproveContract={handleApproveContract}
             onRejectContract={handleRejectContract}
