@@ -59,12 +59,18 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     if (driveFiles.length > 0 && driveFiles[selectedDriveIndex]) {
       return driveFiles[selectedDriveIndex];
     }
+    const hasCustomUrl = Boolean(pdfUrl && pdfUrl !== '/docs/2025_Audit_Report_Pack.pdf');
     return {
-      fileName: `[GMSCS-REP]_${auditDate.slice(0, 7)}_${auditType}_심사_${auditorName || '담당'}_심사보고서팩(${companyName}).pdf`,
-      originalName: `[GMSCS-REP]_${companyName}_심사보고서.pdf`,
-      docType: '심사보고서',
-      fileSize: '1.4 MB',
-      sizeBytes: 1468000,
+      fileName: hasCustomUrl
+        ? `[GMSCS-DOC]_${companyName}_심사문서.pdf`
+        : `[GMSCS-FORM]_표준_심사보고서_공서식_템플릿(${companyName}).pdf`,
+      simplifiedFileName: hasCustomUrl
+        ? `${companyName}_심사문서.pdf`
+        : `[공서식 템플릿] 표준 심사보고서팩.pdf`,
+      originalName: hasCustomUrl ? `${companyName}_문서.pdf` : 'GMSCS_2025_Audit_Report_Pack(251001).pdf',
+      docType: hasCustomUrl ? '심사문서' : '표준 양식 템플릿 (과거 PDF 미보관)',
+      fileSize: '873 KB',
+      sizeBytes: 893869,
       auditor: auditorName || '사무국',
       pdfUrl: pdfUrl || '/docs/2025_Audit_Report_Pack.pdf'
     };
@@ -217,17 +223,26 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                   </button>
                 ))
               ) : (
-                <div className="px-3 py-1 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>단일 심사문서 실시간 스트리밍</span>
+                <div className="px-3 py-1 rounded-lg text-xs bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>과거 스캔 PDF 미이관 기업 (GMSCS 표준 공서식 템플릿 열람 중)</span>
                 </div>
               )}
             </div>
           </div>
 
           <div className="text-[11px] text-slate-500 font-medium shrink-0 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Cloud Storage 연결 완료</span>
+            {driveFiles.length > 0 ? (
+              <>
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-emerald-700 font-medium">Cloud Storage 실물 문서 연동</span>
+              </>
+            ) : (
+              <>
+                <span className="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
+                <span className="text-slate-500">표준 서식 뷰어</span>
+              </>
+            )}
           </div>
         </div>
 
