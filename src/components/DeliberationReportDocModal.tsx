@@ -41,7 +41,13 @@ export const DeliberationReportDocModal: React.FC<DeliberationReportDocModalProp
   const stds = project?.standards?.length ? project.standards.join(', ') : (company.standards ? (Array.isArray(company.standards) ? company.standards.join(', ') : company.standards) : 'ISO 9001:2015');
   const iafCode = company.iafCode || '29, 14';
   const auditType = project?.auditType || '정기 사후관리심사';
-  const leadAuditor = project?.leadAuditorName || (company as any).assignedAuditorName || auditor?.name || '남경호';
+  
+  // Auditor sanitization
+  const invalidKeywords = ['수금', '미수', '입금', '청구', 'HQ', '직영', '협력기관', '미배정', '사무국', 'admin'];
+  const rawLead = project?.leadAuditorName || (company as any).assignedAuditorName || auditor?.name || '';
+  const isInvalidLead = !rawLead || invalidKeywords.some(kw => rawLead.includes(kw));
+  const leadAuditor = isInvalidLead ? '미배정 (배정 검토 중)' : rawLead;
+
   const auditDateStr = project?.startDate && project?.endDate ? `${project.startDate} ~ ${project.endDate}` : (project?.startDate || '2026-09-08');
   const decisionDate = deliberationDate || project?.endDate || new Date().toISOString().substring(0, 10);
   const certNumber = (company as any).certNo || 'Q260101';
@@ -252,22 +258,26 @@ export const DeliberationReportDocModal: React.FC<DeliberationReportDocModalProp
               <p>{defaultNote}</p>
             </div>
 
-            {/* 심의위원 3인 서명란 */}
+            {/* 심의위원 3인 서명란 (가상 성명 배제 및 표준 서명란 적용) */}
             <div className="grid grid-cols-3 gap-3 pt-2">
-              <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-center">
-                <span className="text-[10px] text-slate-500 block mb-1">심의위원 1</span>
-                <span className="font-bold text-slate-900 text-xs">박 영 수 (서명/인)</span>
-                <span className="text-[10px] text-emerald-700 block mt-0.5 font-bold">✓ 승인 동의</span>
+              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center space-y-1.5">
+                <span className="text-[10px] text-slate-500 block">심의위원 1</span>
+                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
+                  ________________ (서명/인)
+                </div>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-center">
-                <span className="text-[10px] text-slate-500 block mb-1">심의위원 2</span>
-                <span className="font-bold text-slate-900 text-xs">이 정 훈 (서명/인)</span>
-                <span className="text-[10px] text-emerald-700 block mt-0.5 font-bold">✓ 승인 동의</span>
+              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center space-y-1.5">
+                <span className="text-[10px] text-slate-500 block">심의위원 2</span>
+                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
+                  ________________ (서명/인)
+                </div>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-indigo-300 bg-indigo-50/50 text-center">
-                <span className="text-[10px] text-indigo-800 block mb-1 font-bold">인증심의위원장</span>
-                <span className="font-bold text-indigo-950 text-xs">강 성 호 (직인생략)</span>
-                <span className="text-[10px] text-indigo-900 block mt-0.5 font-mono">{decisionDate}</span>
+              <div className="p-3 bg-white rounded-lg border border-indigo-300 bg-indigo-50/50 text-center space-y-1.5">
+                <span className="text-[10px] text-indigo-800 block font-bold">인증심의위원장</span>
+                <div className="text-indigo-400 font-mono text-xs py-1 tracking-wider">
+                  ________________ (직인)
+                </div>
+                <span className="text-[10px] text-indigo-900 block font-mono">{decisionDate}</span>
               </div>
             </div>
           </div>

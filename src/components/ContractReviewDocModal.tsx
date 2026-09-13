@@ -38,10 +38,18 @@ export const ContractReviewDocModal: React.FC<ContractReviewDocModalProps> = ({
   const stds = contract?.standards?.length ? contract.standards.join(', ') : (company.standards ? (Array.isArray(company.standards) ? company.standards.join(', ') : company.standards) : 'ISO 9001:2015');
   const iafCode = company.iafCode || '29, 14';
   const totalEmployees = company.totalEmployees || 25;
-  const scope = company.scope || '금속 가공 및 정밀 기계 부품의 제조 및 조립';
+  const scope = company.scope || '공식 인증 등록 범위';
   const contractType = contract?.contractType || (project?.auditType?.includes('최초') ? '신규인증' : project?.auditType?.includes('갱신') ? '갱신심사' : '사후관리');
-  const leadAuditor = project?.leadAuditorName || contract?.leadAuditorName || (company as any).assignedAuditorName || auditor?.name || '남경호';
-  const teamAuditor = project?.teamAuditorNames?.length ? project.teamAuditorNames.join(', ') : '단독심사';
+  
+  // Auditor name sanitization (filter out accounting/system words like 수금, 미수, HQ 등)
+  const invalidKeywords = ['수금', '미수', '입금', '청구', 'HQ', '직영', '협력기관', '미배정', '사무국', 'admin'];
+  const rawLead = project?.leadAuditorName || contract?.leadAuditorName || auditor?.name || '';
+  const isInvalidLead = !rawLead || invalidKeywords.some(kw => rawLead.includes(kw));
+  const leadAuditor = isInvalidLead ? '미배정 (배정 검토 중)' : rawLead;
+  
+  const rawTeam = project?.teamAuditorNames?.length ? project.teamAuditorNames.join(', ') : '';
+  const isInvalidTeam = !rawTeam || invalidKeywords.some(kw => rawTeam.includes(kw));
+  const teamAuditor = isInvalidTeam ? '단독심사' : rawTeam;
   
   // MD & Fee calculation
   const appliedMd = contract?.appliedMd || project?.appliedMd || 2.0;
@@ -240,9 +248,13 @@ export const ContractReviewDocModal: React.FC<ContractReviewDocModalProps> = ({
                 <tr>
                   <td className="border border-slate-300 p-2 font-bold text-cyan-900">심사팀장 (Lead)</td>
                   <td className="border border-slate-300 p-2 font-bold">{leadAuditor}</td>
-                  <td className="border border-slate-300 p-2">KAB 선임심사원</td>
-                  <td className="border border-slate-300 p-2 text-emerald-800 font-bold text-left px-3">
-                    ✓ IAF Code {iafCode} 정규 등록 심사원 자격 보유 (적격)
+                  <td className="border border-slate-300 p-2">{leadAuditor.includes('미배정') ? '-' : 'KAB 선임심사원'}</td>
+                  <td className="border border-slate-300 p-2 text-left px-3">
+                    {leadAuditor.includes('미배정') ? (
+                      <span className="text-slate-500">배정 시 IAF Code {iafCode} 정규 등록 심사원 자격 검토 예정</span>
+                    ) : (
+                      <span className="text-emerald-800 font-bold">✓ IAF Code {iafCode} 정규 등록 심사원 자격 보유 (적격)</span>
+                    )}
                   </td>
                 </tr>
                 {teamAuditor !== '단독심사' && (
@@ -274,17 +286,21 @@ export const ContractReviewDocModal: React.FC<ContractReviewDocModalProps> = ({
               </p>
             </div>
 
-            {/* 결재란 */}
+            {/* 결재 서명란 (가상 성명 배제 및 표준 서명란 적용) */}
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center">
-                <span className="text-[11px] text-slate-500 block mb-1">계약 검토자 (인증운영팀)</span>
-                <span className="font-bold text-slate-900 text-sm">김 홍 덕 (서명/인)</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">{reviewDate}</span>
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-center space-y-2">
+                <span className="text-[11px] text-slate-500 block">계약 검토자 (인증운영팀)</span>
+                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
+                  ________________________ (서명/인)
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono">{reviewDate}</span>
               </div>
-              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center">
-                <span className="text-[11px] text-slate-500 block mb-1">계약 승인권자 (인증원장)</span>
-                <span className="font-bold text-cyan-950 text-sm">남 경 호 (직인생략)</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">{reviewDate}</span>
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-center space-y-2">
+                <span className="text-[11px] text-slate-500 block">계약 승인권자 (인증원장)</span>
+                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
+                  ________________________ (직인/서명)
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono">{reviewDate}</span>
               </div>
             </div>
           </div>

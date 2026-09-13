@@ -37,8 +37,17 @@ export const ImpartialityAssessmentDocModal: React.FC<ImpartialityAssessmentDocM
   const stds = contract?.standards?.length ? contract.standards.join(', ') : (company.standards ? (Array.isArray(company.standards) ? company.standards.join(', ') : company.standards) : 'ISO 9001:2015');
   const iafCode = company.iafCode || '29, 14';
   const auditType = project?.auditType || (contract?.contractType === '신규인증' ? '최초심사 (1·2단계)' : '사후관리심사');
-  const leadAuditorName = project?.leadAuditorName || contract?.leadAuditorName || (company as any).assignedAuditorName || auditor?.name || '남경호';
-  const teamAuditorNames = project?.teamAuditorNames?.length ? project.teamAuditorNames.join(', ') : '단독심사';
+  
+  // Auditor sanitization
+  const invalidKeywords = ['수금', '미수', '입금', '청구', 'HQ', '직영', '협력기관', '미배정', '사무국', 'admin'];
+  const rawLead = project?.leadAuditorName || contract?.leadAuditorName || auditor?.name || '';
+  const isInvalidLead = !rawLead || invalidKeywords.some(kw => rawLead.includes(kw));
+  const leadAuditorName = isInvalidLead ? '미배정 (배정 검토 중)' : rawLead;
+  
+  const rawTeam = project?.teamAuditorNames?.length ? project.teamAuditorNames.join(', ') : '';
+  const isInvalidTeam = !rawTeam || invalidKeywords.some(kw => rawTeam.includes(kw));
+  const teamAuditorNames = isInvalidTeam ? '단독심사' : rawTeam;
+  
   const consultantName = company.consultant || company.agency || '직영';
   const assessmentDate = project?.startDate || contract?.contractDate || new Date().toISOString().substring(0, 10);
 
@@ -244,17 +253,21 @@ export const ImpartialityAssessmentDocModal: React.FC<ImpartialityAssessmentDocM
               </p>
             </div>
 
-            {/* 결재란 */}
+            {/* 결재란 (가상 성명 배제 및 표준 서명란 적용) */}
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center">
-                <span className="text-[11px] text-slate-500 block mb-1">공정성 검토자 (심사기획팀장)</span>
-                <span className="font-bold text-slate-900 text-sm">김 홍 덕 (서명/인)</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">{assessmentDate}</span>
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-center space-y-2">
+                <span className="text-[11px] text-slate-500 block">공정성 검토자 (심사기획팀장)</span>
+                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
+                  ________________________ (서명/인)
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono">{assessmentDate}</span>
               </div>
-              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center">
-                <span className="text-[11px] text-slate-500 block mb-1">공정성 승인권자 (대표이사/원장)</span>
-                <span className="font-bold text-cyan-950 text-sm">남 경 호 (직인생략)</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">{assessmentDate}</span>
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-center space-y-2">
+                <span className="text-[11px] text-slate-500 block">공정성 승인권자 (대표이사/원장)</span>
+                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
+                  ________________________ (직인/서명)
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono">{assessmentDate}</span>
               </div>
             </div>
           </div>
