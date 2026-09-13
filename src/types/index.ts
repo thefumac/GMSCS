@@ -626,10 +626,10 @@ export interface EmailDispatchLog {
 export interface BackupRecord {
   id: string;
   backupDate: string;
-  backupType: 'Full DB' | 'Incremental File' | 'PDF Archive';
+  backupType: 'Full DB' | 'Incremental File' | 'PDF Archive' | string;
   sizeBytes: number;
-  destination: '사내 주 서버 (Postgres)' | '외장 하드 디스크 (USB 3.0)' | 'NAS 오프라인 콜드보관';
-  status: '정상완료' | '동기화중' | '외장하드 미연결경고';
+  destination: '사내 주 서버 (Postgres)' | '외장 하드 디스크 (USB 3.0)' | 'NAS 오프라인 콜드보관' | string;
+  status: '정상완료' | '동기화중' | '외장하드 미연결경고' | string;
   checksum: string;
 }
 
