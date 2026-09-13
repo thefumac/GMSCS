@@ -27,7 +27,7 @@ export type DriveReportFileItem = DriveReportFile;
 export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -49,7 +49,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -72,7 +72,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -95,7 +95,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -117,7 +117,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -139,7 +139,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)미래디스플레이",
+    "companyName": "미래디스플레이",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -161,7 +161,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)미래디스플레이",
+    "companyName": "미래디스플레이",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -183,7 +183,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)미래디스플레이",
+    "companyName": "(주",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -195,7 +195,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 862636,
     "originalFileName": "[GMSCS-REP]__2차사후_2026.02_iso9001_인증서_전자본((주)미래디스플레이).pdf - 842 KB.pdf",
     "simplifiedFileName": "2026-02_2차사후_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/미래디스플레이/2026-02_2차사후_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/주/2026-02_2차사후_ISO9001_인증서.pdf",
     "fileName": "2026-02_2차사후_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2026.02_iso9001_인증서_전자본((주)미래디스플레이).pdf - 842 KB.pdf",
     "fileSize": "842 KB",
@@ -295,7 +295,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)그린마이스터",
+    "companyName": "그린마이스터",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -317,7 +317,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)그린마이스터",
+    "companyName": "그린마이스터",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -339,7 +339,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)그린마이스터",
+    "companyName": "그린마이스터",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -439,7 +439,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 847750,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2026.01_2601_c-gmp_in_신청자료(태봉화장품).pdf - 828 KB.pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO9001_신청/전환자료.pdf",
-    "storagePath": "audit_files/태봉화장품/2026-01_최초심사_ISO9001_신청/전환자료.pdf",
+    "storagePath": "audit_files/태봉TB화장품/2026-01_최초심사_ISO9001_신청/전환자료.pdf",
     "fileName": "2026-01_최초심사_ISO9001_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2026.01_2601_c-gmp_in_신청자료(태봉화장품).pdf - 828 KB.pdf",
     "fileSize": "828 KB",
@@ -461,7 +461,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1374125,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2026.01_2601_c-gmp_in_심사보고서(태봉화장품).pdf - 1 MB.pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/태봉화장품/2026-01_최초심사_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/태봉TB화장품/2026-01_최초심사_ISO9001_심사보고서.pdf",
     "fileName": "2026-01_최초심사_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2026.01_2601_c-gmp_in_심사보고서(태봉화장품).pdf - 1 MB.pdf",
     "fileSize": "1.3 MB",
@@ -483,7 +483,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 726648,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2026.01_iso22716_인증서_전자본(태봉화장품).pdf - 710 KB.pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/태봉화장품/2026-01_최초심사_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/태봉TB화장품/2026-01_최초심사_ISO9001_인증서.pdf",
     "fileName": "2026-01_최초심사_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2026.01_iso22716_인증서_전자본(태봉화장품).pdf - 710 KB.pdf",
     "fileSize": "710 KB",
@@ -493,7 +493,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -515,7 +515,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -537,7 +537,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -559,7 +559,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -581,7 +581,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -603,7 +603,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -625,7 +625,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -647,7 +647,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -999,7 +999,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -1011,7 +1011,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 548464,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.07_iso45001_인증서_전자본(선진뷰티사이언스).pdf - 536 KB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO45001_인증서.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO45001_인증서.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO45001_인증서.pdf",
     "fileName": "2025-07_최초심사_ISO45001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.07_iso45001_인증서_전자본(선진뷰티사이언스).pdf - 536 KB.pdf",
     "fileSize": "536 KB",
@@ -1021,7 +1021,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -1033,7 +1033,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 10938347,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.07_2507_eoh_tr_전환자료(선진뷰티사이언스).pdf - 10 MB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO9001_신청/전환자료.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO9001_신청/전환자료.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO9001_신청/전환자료.pdf",
     "fileName": "2025-07_최초심사_ISO9001_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.07_2507_eoh_tr_전환자료(선진뷰티사이언스).pdf - 10 MB.pdf",
     "fileSize": "10.4 MB",
@@ -1043,7 +1043,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -1055,7 +1055,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1721011,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.07_2508_eoh_re_심사보고서(선진뷰티사이언스).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO9001_심사보고서.pdf",
     "fileName": "2025-07_최초심사_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.07_2508_eoh_re_심사보고서(선진뷰티사이언스).pdf - 2 MB.pdf",
     "fileSize": "1.6 MB",
@@ -1065,7 +1065,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -1077,7 +1077,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 543572,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.07_iso14001_인증서_전자본(선진뷰티사이언스).pdf - 531 KB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO14001_인증서.pdf",
     "fileName": "2025-07_최초심사_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.07_iso14001_인증서_전자본(선진뷰티사이언스).pdf - 531 KB.pdf",
     "fileSize": "531 KB",
@@ -1772,7 +1772,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2907986,
     "originalFileName": "[GMSCS-REP]__2차사후_2025.05_2506_qe_su2_심사보고서(장업시스템).pdf - 3 MB.pdf",
     "simplifiedFileName": "2025-05_2차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2025-05_2차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2025.05_2506_qe_su2_심사보고서(장업시스템).pdf - 3 MB.pdf",
     "fileSize": "2.8 MB",
@@ -1795,7 +1795,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 21344234,
     "originalFileName": "[GMSCS-REP]__2차사후_2025.05_2506_qe_tr_전환자료(장업시스템)_.pdf - 20 MB.pdf",
     "simplifiedFileName": "2025-05_2차사후_QMS-EMS_신청/전환자료.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_QMS-EMS_신청/전환자료.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_QMS-EMS_신청/전환자료.pdf",
     "fileName": "2025-05_2차사후_QMS-EMS_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2025.05_2506_qe_tr_전환자료(장업시스템)_.pdf - 20 MB.pdf",
     "fileSize": "20.4 MB",
@@ -1817,7 +1817,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 536725,
     "originalFileName": "[GMSCS-REP]__2차사후_2025.05_iso9001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "simplifiedFileName": "2025-05_2차사후_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_ISO9001_인증서.pdf",
     "fileName": "2025-05_2차사후_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2025.05_iso9001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "fileSize": "524 KB",
@@ -1839,7 +1839,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 536240,
     "originalFileName": "[GMSCS-REP]__2차사후_2025.05_iso14001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "simplifiedFileName": "2025-05_2차사후_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_ISO14001_인증서.pdf",
     "fileName": "2025-05_2차사후_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2025.05_iso14001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "fileSize": "524 KB",
@@ -2345,7 +2345,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 535766,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.05_iso9001_인증서_전자본(지에이치테크).pdf - 523 KB.pdf",
     "simplifiedFileName": "2025-05_최초심사_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_ISO9001_인증서.pdf",
     "fileName": "2025-05_최초심사_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.05_iso9001_인증서_전자본(지에이치테크).pdf - 523 KB.pdf",
     "fileSize": "523 KB",
@@ -2367,7 +2367,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 534857,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.05_iso14001_인증서_전자본(지에이치테크).pdf - 522 KB.pdf",
     "simplifiedFileName": "2025-05_최초심사_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_ISO14001_인증서.pdf",
     "fileName": "2025-05_최초심사_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.05_iso14001_인증서_전자본(지에이치테크).pdf - 522 KB.pdf",
     "fileSize": "522 KB",
@@ -2389,7 +2389,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 539845,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.05_iso45001_인증서_전자본(지에이치테크).pdf - 527 KB.pdf",
     "simplifiedFileName": "2025-05_최초심사_ISO45001_인증서.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_ISO45001_인증서.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_ISO45001_인증서.pdf",
     "fileName": "2025-05_최초심사_ISO45001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.05_iso45001_인증서_전자본(지에이치테크).pdf - 527 KB.pdf",
     "fileSize": "527 KB",
@@ -2412,7 +2412,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1284902,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.05_2506_qeo_in심사보고서(지에이치테크).pdf - 1 MB.pdf",
     "simplifiedFileName": "2025-05_최초심사_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_QMS-EMS_심사보고서.pdf",
     "fileName": "2025-05_최초심사_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.05_2506_qeo_in심사보고서(지에이치테크).pdf - 1 MB.pdf",
     "fileSize": "1.2 MB",
@@ -2435,7 +2435,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2484314,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.05_2506_qeo_in인증신청자료(지에이치테크).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-05_최초심사_QMS-EMS_신청/전환자료.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_QMS-EMS_신청/전환자료.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_QMS-EMS_신청/전환자료.pdf",
     "fileName": "2025-05_최초심사_QMS-EMS_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.05_2506_qeo_in인증신청자료(지에이치테크).pdf - 2 MB.pdf",
     "fileSize": "2.4 MB",
@@ -2973,7 +2973,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1716237,
     "originalFileName": "[GMSCS-REP]__1차사후_2025.04_2504_qe_su1심사보고서(디아이엔바이로).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-04_1차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2025-04_1차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2025.04_2504_qe_su1심사보고서(디아이엔바이로).pdf - 2 MB.pdf",
     "fileSize": "1.6 MB",
@@ -2996,7 +2996,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 4525436,
     "originalFileName": "[GMSCS-REP]__1차사후_2025.04_2504_qe_tr_su1신청자료(디아이엔바이로).pdf - 4 MB.pdf",
     "simplifiedFileName": "2025-04_1차사후_QMS-EMS_신청/전환자료.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_QMS-EMS_신청/전환자료.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_QMS-EMS_신청/전환자료.pdf",
     "fileName": "2025-04_1차사후_QMS-EMS_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2025.04_2504_qe_tr_su1신청자료(디아이엔바이로).pdf - 4 MB.pdf",
     "fileSize": "4.3 MB",
@@ -3018,7 +3018,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 475189,
     "originalFileName": "[GMSCS-REP]__1차사후_2025.04_iso9001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "simplifiedFileName": "2025-04_1차사후_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_ISO9001_인증서.pdf",
     "fileName": "2025-04_1차사후_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2025.04_iso9001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "fileSize": "464 KB",
@@ -3040,7 +3040,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 474764,
     "originalFileName": "[GMSCS-REP]__1차사후_2025.04_iso14001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "simplifiedFileName": "2025-04_1차사후_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_ISO14001_인증서.pdf",
     "fileName": "2025-04_1차사후_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2025.04_iso14001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "fileSize": "464 KB",
@@ -3063,7 +3063,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1261075,
     "originalFileName": "[GMSCS-REP]__2차사후_2025.04_2603_qe_su2_심사보고서(디아이엔바이로).pdf - 1 MB.pdf",
     "simplifiedFileName": "2025-04_2차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_2차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_2차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2025-04_2차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2025.04_2603_qe_su2_심사보고서(디아이엔바이로).pdf - 1 MB.pdf",
     "fileSize": "1.2 MB",
@@ -3350,7 +3350,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 4279861,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.02_2503_qe_in_심사보고서(연태장업).pdf - 4 MB.pdf",
     "simplifiedFileName": "2025-02_최초심사_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/연태장업/2025-02_최초심사_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_QMS-EMS_심사보고서.pdf",
     "fileName": "2025-02_최초심사_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.02_2503_qe_in_심사보고서(연태장업).pdf - 4 MB.pdf",
     "fileSize": "4.1 MB",
@@ -3373,7 +3373,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 11375191,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.02_2503_qe_in_심사신청자료(연태장업)_.pdf - 11 MB.pdf",
     "simplifiedFileName": "2025-02_최초심사_QMS-EMS_신청/전환자료.pdf",
-    "storagePath": "audit_files/연태장업/2025-02_최초심사_QMS-EMS_신청/전환자료.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_QMS-EMS_신청/전환자료.pdf",
     "fileName": "2025-02_최초심사_QMS-EMS_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.02_2503_qe_in_심사신청자료(연태장업)_.pdf - 11 MB.pdf",
     "fileSize": "10.8 MB",
@@ -3383,7 +3383,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업화장용구유한공",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3395,7 +3395,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 710399,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.02_iso9001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "simplifiedFileName": "2025-02_최초심사_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/연태장업화장용구유한공/2025-02_최초심사_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_ISO9001_인증서.pdf",
     "fileName": "2025-02_최초심사_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.02_iso9001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "fileSize": "694 KB",
@@ -3405,7 +3405,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업화장용구유한공",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3417,7 +3417,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 710313,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.02_iso14001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "simplifiedFileName": "2025-02_최초심사_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/연태장업화장용구유한공/2025-02_최초심사_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_ISO14001_인증서.pdf",
     "fileName": "2025-02_최초심사_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.02_iso14001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "fileSize": "694 KB",
@@ -3427,7 +3427,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업화장용구유한공",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -3439,7 +3439,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1575493,
     "originalFileName": "[GMSCS-REP]__1차사후_2025.02_2603_su1_심사보고서(연태장업화장용구유한공사).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-02_1차사후_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/연태장업화장용구유한공/2025-02_1차사후_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_1차사후_ISO9001_심사보고서.pdf",
     "fileName": "2025-02_1차사후_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2025.02_2603_su1_심사보고서(연태장업화장용구유한공사).pdf - 2 MB.pdf",
     "fileSize": "1.5 MB",
@@ -3770,7 +3770,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 6649929,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.10_전환신청자료(q-한국항로표지기술원).pdf - 6 MB.pdf",
     "simplifiedFileName": "2024-10_최초심사_ISO9001_신청/전환자료.pdf",
-    "storagePath": "audit_files/q-한국항로표지기술원/2024-10_최초심사_ISO9001_신청/전환자료.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_최초심사_ISO9001_신청/전환자료.pdf",
     "fileName": "2024-10_최초심사_ISO9001_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.10_전환신청자료(q-한국항로표지기술원).pdf - 6 MB.pdf",
     "fileSize": "6.3 MB",
@@ -3792,7 +3792,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2024316,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.10_갱신심사자료(q-한국항로표지기술원).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-10_최초심사_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/q-한국항로표지기술원/2024-10_최초심사_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_최초심사_ISO9001_심사보고서.pdf",
     "fileName": "2024-10_최초심사_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.10_갱신심사자료(q-한국항로표지기술원).pdf - 2 MB.pdf",
     "fileSize": "1.9 MB",
@@ -3858,7 +3858,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 7108809,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.10_전환신청자료(oh-한국항로표지기술원).pdf - 7 MB.pdf",
     "simplifiedFileName": "2024-10_2차사후_ISO9001_신청/전환자료.pdf",
-    "storagePath": "audit_files/oh-한국항로표지기술원/2024-10_2차사후_ISO9001_신청/전환자료.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_2차사후_ISO9001_신청/전환자료.pdf",
     "fileName": "2024-10_2차사후_ISO9001_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.10_전환신청자료(oh-한국항로표지기술원).pdf - 7 MB.pdf",
     "fileSize": "6.8 MB",
@@ -3880,7 +3880,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1991241,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.10_사후심사자료(oh-한국항로표지기술원).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-10_2차사후_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/oh-한국항로표지기술원/2024-10_2차사후_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_2차사후_ISO9001_심사보고서.pdf",
     "fileName": "2024-10_2차사후_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.10_사후심사자료(oh-한국항로표지기술원).pdf - 2 MB.pdf",
     "fileSize": "1.9 MB",
@@ -4022,7 +4022,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)휴파마",
+    "companyName": "휴파마",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -4044,7 +4044,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)휴파마",
+    "companyName": "휴파마",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -4364,7 +4364,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1797828,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.08_2408_사후심사보고서(수영전자).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/수영전자/2024-08_2차사후_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO9001_심사보고서.pdf",
     "fileName": "2024-08_2차사후_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.08_2408_사후심사보고서(수영전자).pdf - 2 MB.pdf",
     "fileSize": "1.7 MB",
@@ -4386,7 +4386,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 10879174,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.08_2408_전환신청자료(수영전자).pdf - 10 MB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO9001_신청/전환자료.pdf",
-    "storagePath": "audit_files/수영전자/2024-08_2차사후_ISO9001_신청/전환자료.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO9001_신청/전환자료.pdf",
     "fileName": "2024-08_2차사후_ISO9001_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.08_2408_전환신청자료(수영전자).pdf - 10 MB.pdf",
     "fileSize": "10.4 MB",
@@ -4408,7 +4408,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 744643,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.08_iso9001_인증서_전자본(수영전자(심천)유한공사).pdf - 727 KB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/심천/2024-08_2차사후_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO9001_인증서.pdf",
     "fileName": "2024-08_2차사후_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.08_iso9001_인증서_전자본(수영전자(심천)유한공사).pdf - 727 KB.pdf",
     "fileSize": "727 KB",
@@ -4430,7 +4430,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 486299,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.08_iso14001_인증서_전자본(수영전자(심천)유한공사).pdf - 475 KB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/심천/2024-08_2차사후_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO14001_인증서.pdf",
     "fileName": "2024-08_2차사후_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.08_iso14001_인증서_전자본(수영전자(심천)유한공사).pdf - 475 KB.pdf",
     "fileSize": "475 KB",
@@ -4453,7 +4453,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 5643200,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.06_2508_qe_re_심사자료(수영전자).pdf - 5 MB.pdf",
     "simplifiedFileName": "2025-06_최초심사_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/수영전자/2025-06_최초심사_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2025-06_최초심사_QMS-EMS_심사보고서.pdf",
     "fileName": "2025-06_최초심사_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.06_2508_qe_re_심사자료(수영전자).pdf - 5 MB.pdf",
     "fileSize": "5.4 MB",
@@ -5081,7 +5081,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5093,7 +5093,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 500926,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2025.10_esg-ms_인증서_전자본(케이원메탈1공장).pdf - 489 KB.pdf",
     "simplifiedFileName": "2025-10_최초심사_ESG_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2025-10_최초심사_ESG_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2025-10_최초심사_ESG_인증서.pdf",
     "fileName": "2025-10_최초심사_ESG_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2025.10_esg-ms_인증서_전자본(케이원메탈1공장).pdf - 489 KB.pdf",
     "fileSize": "489 KB",
@@ -5103,7 +5103,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장ohs",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -5125,7 +5125,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장ohs",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -5147,7 +5147,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5159,7 +5159,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 520133,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈1공장).pdf - 508 KB.pdf",
     "simplifiedFileName": "2024-07_최초심사_ISO45001_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_최초심사_ISO45001_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-07_최초심사_ISO45001_인증서.pdf",
     "fileName": "2024-07_최초심사_ISO45001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈1공장).pdf - 508 KB.pdf",
     "fileSize": "508 KB",
@@ -5169,7 +5169,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -5181,7 +5181,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 517377,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 505 KB.pdf",
     "simplifiedFileName": "2024-07_2차사후_ISO45001_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_2차사후_ISO45001_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-07_2차사후_ISO45001_인증서.pdf",
     "fileName": "2024-07_2차사후_ISO45001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 505 KB.pdf",
     "fileSize": "505 KB",
@@ -5191,7 +5191,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5203,7 +5203,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 518669,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈1공장).pdf - 507 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_최초심사_ISO9001_인증서.pdf",
     "fileName": "2024-05_최초심사_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈1공장).pdf - 507 KB.pdf",
     "fileSize": "507 KB",
@@ -5213,7 +5213,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -5235,7 +5235,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -5257,7 +5257,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5269,7 +5269,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 518148,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈1공장).pdf - 506 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_최초심사_ISO14001_인증서.pdf",
     "fileName": "2024-05_최초심사_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈1공장).pdf - 506 KB.pdf",
     "fileSize": "506 KB",
@@ -5279,7 +5279,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -5292,7 +5292,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1715403,
     "originalFileName": "[GMSCS-REP]__1차사후_2024.05_2506_qeoh_su1심사보고서(케이원메탈1공장).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-05_1차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_1차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_1차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2024-05_1차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2024.05_2506_qeoh_su1심사보고서(케이원메탈1공장).pdf - 2 MB.pdf",
     "fileSize": "1.6 MB",
@@ -5302,7 +5302,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -5315,7 +5315,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1467866,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_2606_qeo_su2_심사보고서(케이원메탈1공장).pdf - 1 MB.pdf",
     "simplifiedFileName": "2024-05_2차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_2차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2024-05_2차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_2606_qeo_su2_심사보고서(케이원메탈1공장).pdf - 1 MB.pdf",
     "fileSize": "1.4 MB",
@@ -5325,7 +5325,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -5337,7 +5337,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 515617,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 504 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_2차사후_ISO9001_인증서.pdf",
     "fileName": "2024-05_2차사후_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 504 KB.pdf",
     "fileSize": "504 KB",
@@ -5347,7 +5347,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -5359,7 +5359,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 513471,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 501 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_2차사후_ISO14001_인증서.pdf",
     "fileName": "2024-05_2차사후_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 501 KB.pdf",
     "fileSize": "501 KB",
@@ -5369,7 +5369,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장qe",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -5392,7 +5392,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장qe",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -5415,7 +5415,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원메탈제2공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5427,7 +5427,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 474034,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈제2공장).pdf - 463 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/케이원메탈제2공장/2024-05_최초심사_ISO9001_인증서_2.pdf",
     "fileName": "2024-05_최초심사_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈제2공장).pdf - 463 KB.pdf",
     "fileSize": "463 KB",
@@ -5437,7 +5437,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원메탈제2공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5449,7 +5449,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 517856,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈제2공장).pdf - 506 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/케이원메탈제2공장/2024-05_최초심사_ISO14001_인증서_2.pdf",
     "fileName": "2024-05_최초심사_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈제2공장).pdf - 506 KB.pdf",
     "fileSize": "506 KB",
@@ -5459,7 +5459,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원메탈",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -5482,7 +5482,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -5495,7 +5495,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 7649821,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_2606_qeoh_su2_심사보고서(케이원메탈2공장).pdf - 7 MB.pdf",
     "simplifiedFileName": "2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_2606_qeoh_su2_심사보고서(케이원메탈2공장).pdf - 7 MB.pdf",
     "fileSize": "7.3 MB",
@@ -5505,7 +5505,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -5517,7 +5517,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 515512,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 503 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-05_2차사후_ISO9001_인증서_2.pdf",
     "fileName": "2024-05_2차사후_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 503 KB.pdf",
     "fileSize": "503 KB",
@@ -5527,7 +5527,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -5539,7 +5539,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 513227,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 501 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-05_2차사후_ISO14001_인증서_2.pdf",
     "fileName": "2024-05_2차사후_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 501 KB.pdf",
     "fileSize": "501 KB",
@@ -5549,7 +5549,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장ohs",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -5571,7 +5571,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장ohs",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -5593,7 +5593,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5605,7 +5605,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 518674,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈2공장).pdf - 507 KB.pdf",
     "simplifiedFileName": "2024-07_최초심사_ISO45001_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_최초심사_ISO45001_인증서_2.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-07_최초심사_ISO45001_인증서_2.pdf",
     "fileName": "2024-07_최초심사_ISO45001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈2공장).pdf - 507 KB.pdf",
     "fileSize": "507 KB",
@@ -5615,7 +5615,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -5627,7 +5627,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 517719,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 506 KB.pdf",
     "simplifiedFileName": "2024-07_2차사후_ISO45001_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_2차사후_ISO45001_인증서_2.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-07_2차사후_ISO45001_인증서_2.pdf",
     "fileName": "2024-07_2차사후_ISO45001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 506 KB.pdf",
     "fileSize": "506 KB",
@@ -5869,7 +5869,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 545393,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso45001_인증서_전자본(유니퀘스트).pdf - 533 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO45001_인증서.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO45001_인증서.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO45001_인증서.pdf",
     "fileName": "2024-05_최초심사_ISO45001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso45001_인증서_전자본(유니퀘스트).pdf - 533 KB.pdf",
     "fileSize": "533 KB",
@@ -5891,7 +5891,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 544900,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso9001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_인증서.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO9001_인증서.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO9001_인증서.pdf",
     "fileName": "2024-05_최초심사_ISO9001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso9001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "fileSize": "532 KB",
@@ -5913,7 +5913,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 12115866,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_신청자료(유니퀘스트).pdf - 12 MB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_신청/전환자료.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO9001_신청/전환자료.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO9001_신청/전환자료.pdf",
     "fileName": "2024-05_최초심사_ISO9001_신청/전환자료.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_신청자료(유니퀘스트).pdf - 12 MB.pdf",
     "fileSize": "11.6 MB",
@@ -5935,7 +5935,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2000678,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_심사자료(유니퀘스트).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_심사보고서.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO9001_심사보고서.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO9001_심사보고서.pdf",
     "fileName": "2024-05_최초심사_ISO9001_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_심사자료(유니퀘스트).pdf - 2 MB.pdf",
     "fileSize": "1.9 MB",
@@ -5958,7 +5958,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1894750,
     "originalFileName": "[GMSCS-REP]__1차사후_2024.05_2505_qeoh_su1심사보고서(유니퀘스트).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-05_1차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_1차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_1차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2024-05_1차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__1차사후_2024.05_2505_qeoh_su1심사보고서(유니퀘스트).pdf - 2 MB.pdf",
     "fileSize": "1.8 MB",
@@ -5981,7 +5981,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1281231,
     "originalFileName": "[GMSCS-REP]__2차사후_2024.05_2606_qeo_su2_심사보고서(유니퀘스트).pdf - 1 MB.pdf",
     "simplifiedFileName": "2024-05_2차사후_QMS-EMS_심사보고서.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_2차사후_QMS-EMS_심사보고서.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_2차사후_QMS-EMS_심사보고서.pdf",
     "fileName": "2024-05_2차사후_QMS-EMS_심사보고서.pdf",
     "originalName": "[GMSCS-REP]__2차사후_2024.05_2606_qeo_su2_심사보고서(유니퀘스트).pdf - 1 MB.pdf",
     "fileSize": "1.2 MB",
@@ -6003,7 +6003,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 544386,
     "originalFileName": "[GMSCS-REP]__1-2단계최초_2024.05_iso14001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO14001_인증서.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO14001_인증서.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO14001_인증서.pdf",
     "fileName": "2024-05_최초심사_ISO14001_인증서.pdf",
     "originalName": "[GMSCS-REP]__1-2단계최초_2024.05_iso14001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "fileSize": "532 KB",
@@ -6035,7 +6035,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)씨앤에스",
+    "companyName": "시앤에스",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6057,7 +6057,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)씨앤에스",
+    "companyName": "시앤에스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6215,7 +6215,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6237,7 +6237,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -6259,7 +6259,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -6281,7 +6281,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6303,7 +6303,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스,qeo",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6326,7 +6326,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6348,7 +6348,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -6371,7 +6371,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -6393,7 +6393,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -6415,7 +6415,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -6679,7 +6679,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "국문",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6701,7 +6701,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "영문",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6723,7 +6723,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6745,7 +6745,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6767,7 +6767,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -6789,7 +6789,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -7848,7 +7848,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)태진에이엔티",
+    "companyName": "태진a&t",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -7914,7 +7914,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)태진에이엔티",
+    "companyName": "태진a&t",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -8575,7 +8575,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)메탈이노베이션코리아",
+    "companyName": "메탈이노베이션코리아",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -8597,7 +8597,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)메탈이노베이션코리아",
+    "companyName": "메탈이노베이션",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -8619,7 +8619,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "심사보고서",
     "auditType": "정기심사",
     "standards": [
@@ -8631,7 +8631,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 3362224,
     "originalFileName": "[GMSCS-REP]_202510_(주)케이원메탈1공장_esg-ms_심사기록.pdf",
     "simplifiedFileName": "2026-01_정기심사_ESG_심사보고서.pdf",
-    "storagePath": "audit_files/케이원메탈/2026-01_정기심사_ESG_심사보고서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2026-01_정기심사_ESG_심사보고서.pdf",
     "fileName": "2026-01_정기심사_ESG_심사보고서.pdf",
     "originalName": "[GMSCS-REP]_202510_(주)케이원메탈1공장_esg-ms_심사기록.pdf",
     "fileSize": "3.2 MB",
@@ -8641,7 +8641,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -8653,7 +8653,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 873643,
     "originalFileName": "[GMSCS-DOC]_202407_(주)케이원메탈1공장_2407_최초신청자료(케이원1공장ohs).pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO45001_신청/전환자료.pdf",
-    "storagePath": "audit_files/케이원1공장ohs/2026-01_최초심사_ISO45001_신청/전환자료.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2026-01_최초심사_ISO45001_신청/전환자료.pdf",
     "fileName": "2026-01_최초심사_ISO45001_신청/전환자료.pdf",
     "originalName": "[GMSCS-DOC]_202407_(주)케이원메탈1공장_2407_최초신청자료(케이원1공장ohs).pdf",
     "fileSize": "853 KB",
@@ -8663,7 +8663,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "정기심사",
     "standards": [
@@ -8675,7 +8675,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 500926,
     "originalFileName": "[GMSCS-CERT]_202510_(주)케이원메탈1공장_esg-ms_인증서_전자본(케이원메탈1공장).pdf",
     "simplifiedFileName": "2026-01_정기심사_ESG_인증서.pdf",
-    "storagePath": "audit_files/케이원메탈/2026-01_정기심사_ESG_인증서.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2026-01_정기심사_ESG_인증서.pdf",
     "fileName": "2026-01_정기심사_ESG_인증서.pdf",
     "originalName": "[GMSCS-CERT]_202510_(주)케이원메탈1공장_esg-ms_인증서_전자본(케이원메탈1공장).pdf",
     "fileSize": "489 KB",
@@ -8841,7 +8841,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -8863,7 +8863,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -8886,7 +8886,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -8909,7 +8909,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -8931,7 +8931,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링(주)",
+    "companyName": "세진엔지니어링",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -8953,7 +8953,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)미래디스플레이",
+    "companyName": "미래디스플레이",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -8975,7 +8975,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)미래디스플레이",
+    "companyName": "미래디스플레이",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -8997,7 +8997,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)미래디스플레이",
+    "companyName": "(주",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -9009,7 +9009,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 862636,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2026.02_iso9001_인증서_전자본((주)미래디스플레이).pdf - 842 KB.pdf",
     "simplifiedFileName": "2026-02_2차사후_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/미래디스플레이/2026-02_2차사후_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/주/2026-02_2차사후_ISO9001_인증서_2.pdf",
     "fileName": "2026-02_2차사후_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2026.02_iso9001_인증서_전자본((주)미래디스플레이).pdf - 842 KB.pdf",
     "fileSize": "842 KB",
@@ -9109,7 +9109,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)그린마이스터",
+    "companyName": "그린마이스터",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -9131,7 +9131,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)그린마이스터",
+    "companyName": "그린마이스터",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -9153,7 +9153,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)그린마이스터",
+    "companyName": "그린마이스터",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -9253,7 +9253,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 847750,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2026.01_2601_c-gmp_in_신청자료(태봉화장품).pdf - 828 KB.pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO9001_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/태봉화장품/2026-01_최초심사_ISO9001_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/태봉TB화장품/2026-01_최초심사_ISO9001_신청/전환자료_2.pdf",
     "fileName": "2026-01_최초심사_ISO9001_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2026.01_2601_c-gmp_in_신청자료(태봉화장품).pdf - 828 KB.pdf",
     "fileSize": "828 KB",
@@ -9275,7 +9275,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1374125,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2026.01_2601_c-gmp_in_심사보고서(태봉화장품).pdf - 1 MB.pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/태봉화장품/2026-01_최초심사_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/태봉TB화장품/2026-01_최초심사_ISO9001_심사보고서_2.pdf",
     "fileName": "2026-01_최초심사_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2026.01_2601_c-gmp_in_심사보고서(태봉화장품).pdf - 1 MB.pdf",
     "fileSize": "1.3 MB",
@@ -9297,7 +9297,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 726648,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2026.01_iso22716_인증서_전자본(태봉화장품).pdf - 710 KB.pdf",
     "simplifiedFileName": "2026-01_최초심사_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/태봉화장품/2026-01_최초심사_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/태봉TB화장품/2026-01_최초심사_ISO9001_인증서_2.pdf",
     "fileName": "2026-01_최초심사_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2026.01_iso22716_인증서_전자본(태봉화장품).pdf - 710 KB.pdf",
     "fileSize": "710 KB",
@@ -9307,7 +9307,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -9329,7 +9329,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -9351,7 +9351,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -9373,7 +9373,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)신의코퍼레이션",
+    "companyName": "신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -9395,7 +9395,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -9417,7 +9417,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -9439,7 +9439,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -9461,7 +9461,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)오성이엔지",
+    "companyName": "오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -9813,7 +9813,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -9825,7 +9825,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 548464,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.07_iso45001_인증서_전자본(선진뷰티사이언스).pdf - 536 KB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO45001_인증서_2.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO45001_인증서_2.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO45001_인증서_2.pdf",
     "fileName": "2025-07_최초심사_ISO45001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.07_iso45001_인증서_전자본(선진뷰티사이언스).pdf - 536 KB.pdf",
     "fileSize": "536 KB",
@@ -9835,7 +9835,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -9847,7 +9847,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 10938347,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.07_2507_eoh_tr_전환자료(선진뷰티사이언스).pdf - 10 MB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO9001_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO9001_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO9001_신청/전환자료_2.pdf",
     "fileName": "2025-07_최초심사_ISO9001_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.07_2507_eoh_tr_전환자료(선진뷰티사이언스).pdf - 10 MB.pdf",
     "fileSize": "10.4 MB",
@@ -9857,7 +9857,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -9869,7 +9869,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1721011,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.07_2508_eoh_re_심사보고서(선진뷰티사이언스).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO9001_심사보고서_2.pdf",
     "fileName": "2025-07_최초심사_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.07_2508_eoh_re_심사보고서(선진뷰티사이언스).pdf - 2 MB.pdf",
     "fileSize": "1.6 MB",
@@ -9879,7 +9879,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "선진뷰티이언스",
+    "companyName": "선진뷰티사이언스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -9891,7 +9891,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 543572,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.07_iso14001_인증서_전자본(선진뷰티사이언스).pdf - 531 KB.pdf",
     "simplifiedFileName": "2025-07_최초심사_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/선진뷰티이언스/2025-07_최초심사_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/선진뷰티사이언스/2025-07_최초심사_ISO14001_인증서_2.pdf",
     "fileName": "2025-07_최초심사_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.07_iso14001_인증서_전자본(선진뷰티사이언스).pdf - 531 KB.pdf",
     "fileSize": "531 KB",
@@ -10586,7 +10586,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2907986,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2025.05_2506_qe_su2_심사보고서(장업시스템).pdf - 3 MB.pdf",
     "simplifiedFileName": "2025-05_2차사후_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2025-05_2차사후_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2025.05_2506_qe_su2_심사보고서(장업시스템).pdf - 3 MB.pdf",
     "fileSize": "2.8 MB",
@@ -10609,7 +10609,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 21344234,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2025.05_2506_qe_tr_전환자료(장업시스템)_.pdf - 20 MB.pdf",
     "simplifiedFileName": "2025-05_2차사후_QMS-EMS_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_QMS-EMS_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_QMS-EMS_신청/전환자료_2.pdf",
     "fileName": "2025-05_2차사후_QMS-EMS_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2025.05_2506_qe_tr_전환자료(장업시스템)_.pdf - 20 MB.pdf",
     "fileSize": "20.4 MB",
@@ -10631,7 +10631,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 536725,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2025.05_iso9001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "simplifiedFileName": "2025-05_2차사후_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_ISO9001_인증서_2.pdf",
     "fileName": "2025-05_2차사후_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2025.05_iso9001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "fileSize": "524 KB",
@@ -10653,7 +10653,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 536240,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2025.05_iso14001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "simplifiedFileName": "2025-05_2차사후_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/장업시스템/2025-05_2차사후_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-05_2차사후_ISO14001_인증서_2.pdf",
     "fileName": "2025-05_2차사후_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2025.05_iso14001_인증서_전자본(장업시스템).pdf - 524 KB.pdf",
     "fileSize": "524 KB",
@@ -11159,7 +11159,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 535766,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.05_iso9001_인증서_전자본(지에이치테크).pdf - 523 KB.pdf",
     "simplifiedFileName": "2025-05_최초심사_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_ISO9001_인증서_2.pdf",
     "fileName": "2025-05_최초심사_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.05_iso9001_인증서_전자본(지에이치테크).pdf - 523 KB.pdf",
     "fileSize": "523 KB",
@@ -11181,7 +11181,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 534857,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.05_iso14001_인증서_전자본(지에이치테크).pdf - 522 KB.pdf",
     "simplifiedFileName": "2025-05_최초심사_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_ISO14001_인증서_2.pdf",
     "fileName": "2025-05_최초심사_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.05_iso14001_인증서_전자본(지에이치테크).pdf - 522 KB.pdf",
     "fileSize": "522 KB",
@@ -11203,7 +11203,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 539845,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.05_iso45001_인증서_전자본(지에이치테크).pdf - 527 KB.pdf",
     "simplifiedFileName": "2025-05_최초심사_ISO45001_인증서_2.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_ISO45001_인증서_2.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_ISO45001_인증서_2.pdf",
     "fileName": "2025-05_최초심사_ISO45001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.05_iso45001_인증서_전자본(지에이치테크).pdf - 527 KB.pdf",
     "fileSize": "527 KB",
@@ -11226,7 +11226,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1284902,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.05_2506_qeo_in심사보고서(지에이치테크).pdf - 1 MB.pdf",
     "simplifiedFileName": "2025-05_최초심사_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2025-05_최초심사_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.05_2506_qeo_in심사보고서(지에이치테크).pdf - 1 MB.pdf",
     "fileSize": "1.2 MB",
@@ -11249,7 +11249,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2484314,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.05_2506_qeo_in인증신청자료(지에이치테크).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-05_최초심사_QMS-EMS_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/지에이치테크/2025-05_최초심사_QMS-EMS_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/지에이치테크GH테크/2025-05_최초심사_QMS-EMS_신청/전환자료_2.pdf",
     "fileName": "2025-05_최초심사_QMS-EMS_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.05_2506_qeo_in인증신청자료(지에이치테크).pdf - 2 MB.pdf",
     "fileSize": "2.4 MB",
@@ -11787,7 +11787,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1716237,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2025.04_2504_qe_su1심사보고서(디아이엔바이로).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-04_1차사후_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2025-04_1차사후_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2025.04_2504_qe_su1심사보고서(디아이엔바이로).pdf - 2 MB.pdf",
     "fileSize": "1.6 MB",
@@ -11810,7 +11810,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 4525436,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2025.04_2504_qe_tr_su1신청자료(디아이엔바이로).pdf - 4 MB.pdf",
     "simplifiedFileName": "2025-04_1차사후_QMS-EMS_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_QMS-EMS_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_QMS-EMS_신청/전환자료_2.pdf",
     "fileName": "2025-04_1차사후_QMS-EMS_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2025.04_2504_qe_tr_su1신청자료(디아이엔바이로).pdf - 4 MB.pdf",
     "fileSize": "4.3 MB",
@@ -11832,7 +11832,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 475189,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2025.04_iso9001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "simplifiedFileName": "2025-04_1차사후_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_ISO9001_인증서_2.pdf",
     "fileName": "2025-04_1차사후_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2025.04_iso9001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "fileSize": "464 KB",
@@ -11854,7 +11854,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 474764,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2025.04_iso14001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "simplifiedFileName": "2025-04_1차사후_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_1차사후_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_1차사후_ISO14001_인증서_2.pdf",
     "fileName": "2025-04_1차사후_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2025.04_iso14001_인증서_전자본(디아이_엔바이로).pdf - 464 KB.pdf",
     "fileSize": "464 KB",
@@ -11877,7 +11877,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1261075,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2025.04_2603_qe_su2_심사보고서(디아이엔바이로).pdf - 1 MB.pdf",
     "simplifiedFileName": "2025-04_2차사후_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/디아이엔바이로/2025-04_2차사후_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/주식회사디아이엔바이로/2025-04_2차사후_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2025-04_2차사후_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2025.04_2603_qe_su2_심사보고서(디아이엔바이로).pdf - 1 MB.pdf",
     "fileSize": "1.2 MB",
@@ -12164,7 +12164,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 4279861,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.02_2503_qe_in_심사보고서(연태장업).pdf - 4 MB.pdf",
     "simplifiedFileName": "2025-02_최초심사_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/연태장업/2025-02_최초심사_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2025-02_최초심사_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.02_2503_qe_in_심사보고서(연태장업).pdf - 4 MB.pdf",
     "fileSize": "4.1 MB",
@@ -12187,7 +12187,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 11375191,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.02_2503_qe_in_심사신청자료(연태장업)_.pdf - 11 MB.pdf",
     "simplifiedFileName": "2025-02_최초심사_QMS-EMS_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/연태장업/2025-02_최초심사_QMS-EMS_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_QMS-EMS_신청/전환자료_2.pdf",
     "fileName": "2025-02_최초심사_QMS-EMS_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.02_2503_qe_in_심사신청자료(연태장업)_.pdf - 11 MB.pdf",
     "fileSize": "10.8 MB",
@@ -12197,7 +12197,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업화장용구유한공",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -12209,7 +12209,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 710399,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.02_iso9001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "simplifiedFileName": "2025-02_최초심사_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/연태장업화장용구유한공/2025-02_최초심사_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_ISO9001_인증서_2.pdf",
     "fileName": "2025-02_최초심사_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.02_iso9001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "fileSize": "694 KB",
@@ -12219,7 +12219,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업화장용구유한공",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -12231,7 +12231,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 710313,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.02_iso14001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "simplifiedFileName": "2025-02_최초심사_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/연태장업화장용구유한공/2025-02_최초심사_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_최초심사_ISO14001_인증서_2.pdf",
     "fileName": "2025-02_최초심사_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.02_iso14001_인증서_전자본(연태장업화장용구유한공사).pdf - 694 KB.pdf",
     "fileSize": "694 KB",
@@ -12241,7 +12241,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업화장용구유한공",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -12253,7 +12253,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1575493,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2025.02_2603_su1_심사보고서(연태장업화장용구유한공사).pdf - 2 MB.pdf",
     "simplifiedFileName": "2025-02_1차사후_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/연태장업화장용구유한공/2025-02_1차사후_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/연태장업화장용구유한공사/2025-02_1차사후_ISO9001_심사보고서_2.pdf",
     "fileName": "2025-02_1차사후_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2025.02_2603_su1_심사보고서(연태장업화장용구유한공사).pdf - 2 MB.pdf",
     "fileSize": "1.5 MB",
@@ -12584,7 +12584,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 6649929,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.10_전환신청자료(q-한국항로표지기술원).pdf - 6 MB.pdf",
     "simplifiedFileName": "2024-10_최초심사_ISO9001_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/q-한국항로표지기술원/2024-10_최초심사_ISO9001_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_최초심사_ISO9001_신청/전환자료_2.pdf",
     "fileName": "2024-10_최초심사_ISO9001_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.10_전환신청자료(q-한국항로표지기술원).pdf - 6 MB.pdf",
     "fileSize": "6.3 MB",
@@ -12606,7 +12606,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2024316,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.10_갱신심사자료(q-한국항로표지기술원).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-10_최초심사_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/q-한국항로표지기술원/2024-10_최초심사_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_최초심사_ISO9001_심사보고서_2.pdf",
     "fileName": "2024-10_최초심사_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.10_갱신심사자료(q-한국항로표지기술원).pdf - 2 MB.pdf",
     "fileSize": "1.9 MB",
@@ -12672,7 +12672,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 7108809,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.10_전환신청자료(oh-한국항로표지기술원).pdf - 7 MB.pdf",
     "simplifiedFileName": "2024-10_2차사후_ISO9001_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/oh-한국항로표지기술원/2024-10_2차사후_ISO9001_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_2차사후_ISO9001_신청/전환자료_2.pdf",
     "fileName": "2024-10_2차사후_ISO9001_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.10_전환신청자료(oh-한국항로표지기술원).pdf - 7 MB.pdf",
     "fileSize": "6.8 MB",
@@ -12694,7 +12694,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1991241,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.10_사후심사자료(oh-한국항로표지기술원).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-10_2차사후_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/oh-한국항로표지기술원/2024-10_2차사후_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/한국항로표지기술원/2024-10_2차사후_ISO9001_심사보고서_2.pdf",
     "fileName": "2024-10_2차사후_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.10_사후심사자료(oh-한국항로표지기술원).pdf - 2 MB.pdf",
     "fileSize": "1.9 MB",
@@ -12836,7 +12836,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)휴파마",
+    "companyName": "휴파마",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -12858,7 +12858,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)휴파마",
+    "companyName": "휴파마",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -13178,7 +13178,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1797828,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.08_2408_사후심사보고서(수영전자).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/수영전자/2024-08_2차사후_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO9001_심사보고서_2.pdf",
     "fileName": "2024-08_2차사후_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.08_2408_사후심사보고서(수영전자).pdf - 2 MB.pdf",
     "fileSize": "1.7 MB",
@@ -13200,7 +13200,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 10879174,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.08_2408_전환신청자료(수영전자).pdf - 10 MB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO9001_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/수영전자/2024-08_2차사후_ISO9001_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO9001_신청/전환자료_2.pdf",
     "fileName": "2024-08_2차사후_ISO9001_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.08_2408_전환신청자료(수영전자).pdf - 10 MB.pdf",
     "fileSize": "10.4 MB",
@@ -13222,7 +13222,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 744643,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.08_iso9001_인증서_전자본(수영전자(심천)유한공사).pdf - 727 KB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/심천/2024-08_2차사후_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO9001_인증서_2.pdf",
     "fileName": "2024-08_2차사후_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.08_iso9001_인증서_전자본(수영전자(심천)유한공사).pdf - 727 KB.pdf",
     "fileSize": "727 KB",
@@ -13244,7 +13244,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 486299,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.08_iso14001_인증서_전자본(수영전자(심천)유한공사).pdf - 475 KB.pdf",
     "simplifiedFileName": "2024-08_2차사후_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/심천/2024-08_2차사후_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2024-08_2차사후_ISO14001_인증서_2.pdf",
     "fileName": "2024-08_2차사후_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.08_iso14001_인증서_전자본(수영전자(심천)유한공사).pdf - 475 KB.pdf",
     "fileSize": "475 KB",
@@ -13267,7 +13267,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 5643200,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.06_2508_qe_re_심사자료(수영전자).pdf - 5 MB.pdf",
     "simplifiedFileName": "2025-06_최초심사_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/수영전자/2025-06_최초심사_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/수영전자심천유한공사/2025-06_최초심사_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2025-06_최초심사_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.06_2508_qe_re_심사자료(수영전자).pdf - 5 MB.pdf",
     "fileSize": "5.4 MB",
@@ -13895,7 +13895,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -13907,7 +13907,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 500926,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2025.10_esg-ms_인증서_전자본(케이원메탈1공장).pdf - 489 KB.pdf",
     "simplifiedFileName": "2025-10_최초심사_ESG_인증서_2.pdf",
-    "storagePath": "audit_files/케이원메탈/2025-10_최초심사_ESG_인증서_2.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2025-10_최초심사_ESG_인증서_2.pdf",
     "fileName": "2025-10_최초심사_ESG_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2025.10_esg-ms_인증서_전자본(케이원메탈1공장).pdf - 489 KB.pdf",
     "fileSize": "489 KB",
@@ -13917,7 +13917,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장ohs",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -13939,7 +13939,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장ohs",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -13961,7 +13961,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -13973,7 +13973,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 520133,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈1공장).pdf - 508 KB.pdf",
     "simplifiedFileName": "2024-07_최초심사_ISO45001_인증서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_최초심사_ISO45001_인증서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-07_최초심사_ISO45001_인증서_3.pdf",
     "fileName": "2024-07_최초심사_ISO45001_인증서_3.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈1공장).pdf - 508 KB.pdf",
     "fileSize": "508 KB",
@@ -13983,7 +13983,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -13995,7 +13995,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 517377,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 505 KB.pdf",
     "simplifiedFileName": "2024-07_2차사후_ISO45001_인증서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_2차사후_ISO45001_인증서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-07_2차사후_ISO45001_인증서_3.pdf",
     "fileName": "2024-07_2차사후_ISO45001_인증서_3.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 505 KB.pdf",
     "fileSize": "505 KB",
@@ -14005,7 +14005,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -14017,7 +14017,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 518669,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈1공장).pdf - 507 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_인증서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO9001_인증서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_최초심사_ISO9001_인증서_3.pdf",
     "fileName": "2024-05_최초심사_ISO9001_인증서_3.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈1공장).pdf - 507 KB.pdf",
     "fileSize": "507 KB",
@@ -14027,7 +14027,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -14049,7 +14049,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원1공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -14071,7 +14071,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -14083,7 +14083,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 518148,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈1공장).pdf - 506 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO14001_인증서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO14001_인증서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_최초심사_ISO14001_인증서_3.pdf",
     "fileName": "2024-05_최초심사_ISO14001_인증서_3.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈1공장).pdf - 506 KB.pdf",
     "fileSize": "506 KB",
@@ -14093,7 +14093,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -14106,7 +14106,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1715403,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2024.05_2506_qeoh_su1심사보고서(케이원메탈1공장).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-05_1차사후_QMS-EMS_심사보고서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_1차사후_QMS-EMS_심사보고서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_1차사후_QMS-EMS_심사보고서_3.pdf",
     "fileName": "2024-05_1차사후_QMS-EMS_심사보고서_3.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2024.05_2506_qeoh_su1심사보고서(케이원메탈1공장).pdf - 2 MB.pdf",
     "fileSize": "1.6 MB",
@@ -14116,7 +14116,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -14129,7 +14129,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1467866,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_2606_qeo_su2_심사보고서(케이원메탈1공장).pdf - 1 MB.pdf",
     "simplifiedFileName": "2024-05_2차사후_QMS-EMS_심사보고서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_QMS-EMS_심사보고서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_2차사후_QMS-EMS_심사보고서_3.pdf",
     "fileName": "2024-05_2차사후_QMS-EMS_심사보고서_3.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_2606_qeo_su2_심사보고서(케이원메탈1공장).pdf - 1 MB.pdf",
     "fileSize": "1.4 MB",
@@ -14139,7 +14139,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -14151,7 +14151,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 515617,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 504 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO9001_인증서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO9001_인증서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_2차사후_ISO9001_인증서_3.pdf",
     "fileName": "2024-05_2차사후_ISO9001_인증서_3.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 504 KB.pdf",
     "fileSize": "504 KB",
@@ -14161,7 +14161,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -14173,7 +14173,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 513471,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 501 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO14001_인증서_3.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO14001_인증서_3.pdf",
+    "storagePath": "audit_files/주케이원메탈1공장/2024-05_2차사후_ISO14001_인증서_3.pdf",
     "fileName": "2024-05_2차사후_ISO14001_인증서_3.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈1공장)_기업영문명수정.pdf - 501 KB.pdf",
     "fileSize": "501 KB",
@@ -14183,7 +14183,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장qe",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -14206,7 +14206,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장qe",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -14229,7 +14229,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원메탈제2공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -14241,7 +14241,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 474034,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈제2공장).pdf - 463 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_인증서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO9001_인증서_4.pdf",
+    "storagePath": "audit_files/케이원메탈제2공장/2024-05_최초심사_ISO9001_인증서_4.pdf",
     "fileName": "2024-05_최초심사_ISO9001_인증서_4.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso9001_인증서_전자본(케이원메탈제2공장).pdf - 463 KB.pdf",
     "fileSize": "463 KB",
@@ -14251,7 +14251,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원메탈제2공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -14263,7 +14263,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 517856,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈제2공장).pdf - 506 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO14001_인증서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_최초심사_ISO14001_인증서_4.pdf",
+    "storagePath": "audit_files/케이원메탈제2공장/2024-05_최초심사_ISO14001_인증서_4.pdf",
     "fileName": "2024-05_최초심사_ISO14001_인증서_4.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso14001_인증서_전자본(케이원메탈제2공장).pdf - 506 KB.pdf",
     "fileSize": "506 KB",
@@ -14273,7 +14273,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "케이원메탈",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -14296,7 +14296,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -14309,7 +14309,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 7649821,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_2606_qeoh_su2_심사보고서(케이원메탈2공장).pdf - 7 MB.pdf",
     "simplifiedFileName": "2024-05_2차사후_QMS-EMS_심사보고서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_QMS-EMS_심사보고서_4.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-05_2차사후_QMS-EMS_심사보고서_4.pdf",
     "fileName": "2024-05_2차사후_QMS-EMS_심사보고서_4.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_2606_qeoh_su2_심사보고서(케이원메탈2공장).pdf - 7 MB.pdf",
     "fileSize": "7.3 MB",
@@ -14319,7 +14319,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -14331,7 +14331,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 515512,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 503 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO9001_인증서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO9001_인증서_4.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-05_2차사후_ISO9001_인증서_4.pdf",
     "fileName": "2024-05_2차사후_ISO9001_인증서_4.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_iso9001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 503 KB.pdf",
     "fileSize": "503 KB",
@@ -14341,7 +14341,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -14353,7 +14353,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 513227,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 501 KB.pdf",
     "simplifiedFileName": "2024-05_2차사후_ISO14001_인증서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-05_2차사후_ISO14001_인증서_4.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-05_2차사후_ISO14001_인증서_4.pdf",
     "fileName": "2024-05_2차사후_ISO14001_인증서_4.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_iso14001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 501 KB.pdf",
     "fileSize": "501 KB",
@@ -14363,7 +14363,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장ohs",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -14385,7 +14385,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈2공장",
+    "companyName": "케이원2공장ohs",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -14407,7 +14407,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -14419,7 +14419,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 518674,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈2공장).pdf - 507 KB.pdf",
     "simplifiedFileName": "2024-07_최초심사_ISO45001_인증서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_최초심사_ISO45001_인증서_4.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-07_최초심사_ISO45001_인증서_4.pdf",
     "fileName": "2024-07_최초심사_ISO45001_인증서_4.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.07_iso45001_인증서_전자본(케이원메탈2공장).pdf - 507 KB.pdf",
     "fileSize": "507 KB",
@@ -14429,7 +14429,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)케이원메탈1공장",
+    "companyName": "(주)케이원메탈 2공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -14441,7 +14441,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 517719,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 506 KB.pdf",
     "simplifiedFileName": "2024-07_2차사후_ISO45001_인증서_4.pdf",
-    "storagePath": "audit_files/케이원메탈/2024-07_2차사후_ISO45001_인증서_4.pdf",
+    "storagePath": "audit_files/주케이원메탈2공장/2024-07_2차사후_ISO45001_인증서_4.pdf",
     "fileName": "2024-07_2차사후_ISO45001_인증서_4.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.07_iso45001_인증서_전자본(케이원메탈2공장)_2026년06월22일기준.pdf - 506 KB.pdf",
     "fileSize": "506 KB",
@@ -14683,7 +14683,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 545393,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso45001_인증서_전자본(유니퀘스트).pdf - 533 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO45001_인증서_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO45001_인증서_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO45001_인증서_2.pdf",
     "fileName": "2024-05_최초심사_ISO45001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso45001_인증서_전자본(유니퀘스트).pdf - 533 KB.pdf",
     "fileSize": "533 KB",
@@ -14705,7 +14705,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 544900,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso9001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_인증서_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO9001_인증서_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO9001_인증서_2.pdf",
     "fileName": "2024-05_최초심사_ISO9001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso9001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "fileSize": "532 KB",
@@ -14727,7 +14727,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 12115866,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_신청자료(유니퀘스트).pdf - 12 MB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_신청/전환자료_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO9001_신청/전환자료_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO9001_신청/전환자료_2.pdf",
     "fileName": "2024-05_최초심사_ISO9001_신청/전환자료_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_신청자료(유니퀘스트).pdf - 12 MB.pdf",
     "fileSize": "11.6 MB",
@@ -14749,7 +14749,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 2000678,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_심사자료(유니퀘스트).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO9001_심사보고서_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO9001_심사보고서_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO9001_심사보고서_2.pdf",
     "fileName": "2024-05_최초심사_ISO9001_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_심사자료(유니퀘스트).pdf - 2 MB.pdf",
     "fileSize": "1.9 MB",
@@ -14772,7 +14772,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1894750,
     "originalFileName": "[GMSCS-REP]_--__1차사후_2024.05_2505_qeoh_su1심사보고서(유니퀘스트).pdf - 2 MB.pdf",
     "simplifiedFileName": "2024-05_1차사후_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_1차사후_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_1차사후_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2024-05_1차사후_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1차사후_2024.05_2505_qeoh_su1심사보고서(유니퀘스트).pdf - 2 MB.pdf",
     "fileSize": "1.8 MB",
@@ -14795,7 +14795,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 1281231,
     "originalFileName": "[GMSCS-REP]_--__2차사후_2024.05_2606_qeo_su2_심사보고서(유니퀘스트).pdf - 1 MB.pdf",
     "simplifiedFileName": "2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
     "fileName": "2024-05_2차사후_QMS-EMS_심사보고서_2.pdf",
     "originalName": "[GMSCS-REP]_--__2차사후_2024.05_2606_qeo_su2_심사보고서(유니퀘스트).pdf - 1 MB.pdf",
     "fileSize": "1.2 MB",
@@ -14817,7 +14817,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
     "fileSizeBytes": 544386,
     "originalFileName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso14001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "simplifiedFileName": "2024-05_최초심사_ISO14001_인증서_2.pdf",
-    "storagePath": "audit_files/유니퀘스트/2024-05_최초심사_ISO14001_인증서_2.pdf",
+    "storagePath": "audit_files/유니퀘스트주/NBLESS/2024-05_최초심사_ISO14001_인증서_2.pdf",
     "fileName": "2024-05_최초심사_ISO14001_인증서_2.pdf",
     "originalName": "[GMSCS-REP]_--__1-2단계최초_2024.05_iso14001_인증서_전자본(유니퀘스트).pdf - 532 KB.pdf",
     "fileSize": "532 KB",
@@ -14849,7 +14849,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)씨앤에스",
+    "companyName": "시앤에스",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -14871,7 +14871,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)씨앤에스",
+    "companyName": "시앤에스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -15029,7 +15029,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -15051,7 +15051,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -15073,7 +15073,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -15095,7 +15095,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -15117,7 +15117,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스,qeo",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -15140,7 +15140,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -15162,7 +15162,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -15185,7 +15185,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -15207,7 +15207,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -15229,7 +15229,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)에스앤에스",
+    "companyName": "에스얜에스",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -15493,7 +15493,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "국문",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -15515,7 +15515,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "영문",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -15537,7 +15537,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -15559,7 +15559,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -15581,7 +15581,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -15603,7 +15603,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)제이에스지",
+    "companyName": "제이에스지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -16662,7 +16662,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)태진에이엔티",
+    "companyName": "태진a&t",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -16728,7 +16728,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)태진에이엔티",
+    "companyName": "태진a&t",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -17389,7 +17389,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)메탈이노베이션코리아",
+    "companyName": "메탈이노베이션코리아",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -17411,7 +17411,7 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
   },
   {
     "tenantId": "gmscs",
-    "companyName": "(주)메탈이노베이션코리아",
+    "companyName": "메탈이노베이션",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -17523,9 +17523,12 @@ export const MIGRATED_AUDIT_DOCUMENTS: DriveReportFile[] = [
 
 export const getDriveReportsForCompany = (companyName: string): DriveReportFile[] => {
   if (!companyName) return [];
-  const cleanTarget = companyName.replace(/[\(\)주식회사\s\-_]/g, '').toLowerCase();
+  const cleanTarget = companyName.replace(/[\(\)\[\]주식회사㈜\s\-_]/g, '').toLowerCase();
+  if (!cleanTarget) return [];
+  
   return MIGRATED_AUDIT_DOCUMENTS.filter(doc => {
-    const cleanDocComp = (doc.companyName || '').replace(/[\(\)주식회사\s\-_]/g, '').toLowerCase();
+    const cleanDocComp = (doc.companyName || '').replace(/[\(\)\[\]주식회사㈜\s\-_]/g, '').toLowerCase();
+    if (!cleanDocComp) return false;
     return cleanDocComp.includes(cleanTarget) || cleanTarget.includes(cleanDocComp);
   });
 };
