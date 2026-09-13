@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar, ActiveTab, MainCategory } from './components/Navbar';
 import { DashboardCalendar } from './components/DashboardCalendar';
 import { AuditReportEditor } from './components/AuditReportEditor';
@@ -25,6 +25,8 @@ import { CertificationManagement } from './components/CertificationManagement';
 import { CompanyAuditHistoryModal } from './components/CompanyAuditHistoryModal';
 import { AuditReportWorkbench } from './components/AuditReportWorkbench';
 import { CommitteeScheduleItem, loadSavedCommitteeSchedules } from './utils/committeeSchedule';
+import { getAuditorsFromDb } from './services/auditorService';
+import { getCompaniesFromDb, saveCompanyToDb } from './services/companyService';
 
 import { 
   mockAuditors, 
@@ -95,6 +97,21 @@ export function App() {
     return base;
   });
 
+  // Firestore 클라우드 DB 실시간 동기화 (심사원 36명 및 고객사 573개사)
+  useEffect(() => {
+    getAuditorsFromDb().then(dbAuditors => {
+      if (dbAuditors && dbAuditors.length > 0) {
+        setAuditors(dbAuditors);
+      }
+    }).catch(err => console.warn('[App] Firestore auditors sync note:', err));
+
+    getCompaniesFromDb().then(dbCompanies => {
+      if (dbCompanies && dbCompanies.length > 0) {
+        setCompanies(dbCompanies);
+      }
+    }).catch(err => console.warn('[App] Firestore companies sync note:', err));
+  }, []);
+
   const handleAddCompany = (newCompany: Company) => {
     setCompanies(prev => {
       const updated = [newCompany, ...prev];
@@ -106,6 +123,8 @@ export function App() {
       }
       return updated;
     });
+    // Cloud Firestore 저장
+    saveCompanyToDb(newCompany).catch(console.error);
   };
 
   const [contracts, setContracts] = useState<CertContract[]>(() => getMergedContracts());
