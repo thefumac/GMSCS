@@ -87,9 +87,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   const currentPdfUrl = activeDriveFile.pdfUrl || pdfUrl || '/docs/2025_Audit_Report_Pack.pdf';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-2 sm:p-4 overflow-hidden animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-2 sm:p-4 overflow-hidden animate-in fade-in">
       <div 
-        className={`bg-slate-900 border border-slate-700 text-slate-100 flex flex-col shadow-2xl transition-all duration-200 overflow-hidden ${
+        className={`bg-white border border-slate-200 text-slate-900 flex flex-col shadow-2xl transition-all duration-200 overflow-hidden ${
           isFullscreen 
             ? 'fixed inset-0 rounded-none z-50' 
             : 'w-full max-w-7xl h-[92vh] max-h-[95vh] rounded-2xl'
@@ -98,31 +98,31 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         {/* ========================================================= */}
         {/* TOP BAR: 타이틀, 기업정보 및 조작 도구                    */}
         {/* ========================================================= */}
-        <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="bg-white border-b border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-700 shrink-0 shadow-xs">
               <FileText className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
                   {activeDriveFile.simplifiedFileName || activeDriveFile.fileName || title}
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-cyan-50 text-cyan-800 border border-cyan-200 font-bold">
                   {standard}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
                   {activeDriveFile.docType || '공식 문서'}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5 font-normal">
-                <span>기업명: <strong className="text-white font-bold">{companyName}</strong></span>
+              <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-1 font-normal">
+                <span>기업명: <strong className="text-slate-900 font-bold">{companyName}</strong></span>
                 <span>·</span>
-                <span>심사구분: <span className="text-slate-200">{activeDriveFile.auditType || auditType}</span></span>
+                <span>심사구분: <span className="text-slate-700 font-medium">{activeDriveFile.auditType || auditType}</span></span>
                 {activeDriveFile.auditor && (
                   <>
                     <span>·</span>
-                    <span>담당: <span className="text-slate-200">{activeDriveFile.auditor}</span></span>
+                    <span>담당 심사원: <span className="text-slate-700 font-medium">{activeDriveFile.auditor}</span></span>
                   </>
                 )}
               </div>
@@ -137,10 +137,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
               download={activeDriveFile.simplifiedFileName || activeDriveFile.fileName || `${companyName}_심사문서.pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors border border-slate-700 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200 cursor-pointer shadow-xs"
               title="원본 PDF 파일 다운로드"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-slate-600" />
               <span className="hidden sm:inline">다운로드</span>
             </a>
 
@@ -148,10 +148,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <button
               type="button"
               onClick={() => window.open(currentPdfUrl, '_blank')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors border border-slate-700 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200 cursor-pointer shadow-xs"
               title="브라우저 새 창에서 PDF 원본 열기"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3.5 h-3.5 text-slate-600" />
               <span className="hidden sm:inline">새 창 열기</span>
             </button>
 
@@ -159,7 +159,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-medium rounded-lg transition-colors border border-cyan-600 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-colors border border-cyan-600 cursor-pointer shadow-xs shadow-cyan-600/20"
               title="PDF 인쇄"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -170,7 +170,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <button
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-200"
               title={isFullscreen ? "창 모드" : "전체 화면"}
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -180,7 +180,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer ml-1"
+              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer ml-1 border border-transparent hover:border-rose-200"
               title="닫기"
             >
               <X className="w-5 h-5" />
@@ -191,10 +191,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         {/* ========================================================= */}
         {/* SUB BAR: 클라우드 보관 문서 탭 목록 ({driveFiles.length}건) */}
         {/* ========================================================= */}
-        <div className="bg-slate-950 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 overflow-x-auto">
+        <div className="bg-slate-50 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between gap-3 shrink-0 overflow-x-auto">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xs text-slate-400 flex items-center gap-1.5 font-medium shrink-0">
-              <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-xs text-slate-600 flex items-center gap-1.5 font-bold shrink-0">
+              <FolderOpen className="w-4 h-4 text-emerald-600" />
               <span>보관 문서 목록 ({driveFiles.length}건):</span>
             </span>
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
@@ -206,44 +206,64 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                     onClick={() => setSelectedDriveIndex(idx)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                       selectedDriveIndex === idx
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold'
-                        : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                        ? 'bg-slate-900 text-white shadow-xs font-bold'
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                     }`}
                     title={`원본 파일명: ${df.originalName || df.fileName}`}
                   >
-                    <FileText className="w-3 h-3 text-cyan-400" />
+                    <FileText className={`w-3.5 h-3.5 ${selectedDriveIndex === idx ? 'text-cyan-400' : 'text-slate-400'}`} />
                     <span className="max-w-[220px] truncate font-mono">{df.simplifiedFileName || df.fileName}</span>
-                    <span className="text-[10px] bg-slate-950/80 px-1.5 py-0.5 rounded text-slate-400 font-mono">{df.fileSize}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${selectedDriveIndex === idx ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-500'}`}>{df.fileSize}</span>
                   </button>
                 ))
               ) : (
-                <div className="px-3 py-1 rounded-lg text-xs bg-slate-900 text-emerald-300 border border-emerald-900/40 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  <span>{companyName}_심사보고서_표준문서 (PDF 리더 연결)</span>
+                <div className="px-3 py-1 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>단일 심사문서 실시간 스트리밍</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* 현재 활성 파일 클라우드 경로 정보 */}
-          <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 shrink-0">
-            <span className="text-slate-500">클라우드 경로:</span>
-            <span className="font-mono text-cyan-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 max-w-[320px] truncate" title={activeDriveFile.storagePath || activeDriveFile.fileName}>
-              {activeDriveFile.storagePath || activeDriveFile.fileName}
-            </span>
+          <div className="text-[11px] text-slate-500 font-medium shrink-0 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Cloud Storage 연결 완료</span>
           </div>
         </div>
 
         {/* ========================================================= */}
-        {/* MAIN VIEWER: 순수 내장 브라우저 PDF 리더 iframe          */}
+        {/* PDF VIEWPORT: iframe 스트리밍 뷰어                         */}
         {/* ========================================================= */}
-        <div className="flex-1 w-full h-full relative bg-slate-950 min-h-0">
+        <div className="flex-1 bg-slate-100 relative overflow-hidden flex flex-col min-h-0">
           <iframe
-            src={`${currentPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-            className="w-full h-full border-0 bg-slate-950"
+            src={`${currentPdfUrl}#toolbar=1&navpanes=1&statusbar=1`}
             title={activeDriveFile.simplifiedFileName || activeDriveFile.fileName || title}
+            className="w-full h-full border-0 flex-1"
           />
         </div>
+
+        {/* ========================================================= */}
+        {/* FOOTER BAR: KAB 공인 심사기록 확인 안내                    */}
+        {/* ========================================================= */}
+        <div className="bg-white border-t border-slate-200 px-5 py-2.5 flex items-center justify-between text-xs text-slate-500 shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 text-slate-700 font-bold">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>KAB 공인 인증기록 공식 열람기</span>
+            </span>
+            <span>·</span>
+            <span>파일명: <code className="font-mono text-slate-700 text-[11px] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{activeDriveFile.fileName}</code></span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer border border-slate-200"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
