@@ -92,7 +92,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   onOpenPdfReport,
   onAddCompany
 }) => {
-  const [activeTab, setActiveTab] = useState<'normal' | 'dueSoon' | 'dormant_unrecorded' | 'all'>('normal');
+  const [activeTab, setActiveTab] = useState<'normal' | 'dueSoon' | 'dormant' | 'all'>('normal');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
   const [selectedAuditState, setSelectedAuditState] = useState<string>('all');
@@ -149,32 +149,47 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     return cloudDocMap.get(cleanName) || 0;
   };
 
+  // Helper: 정상 관리 대상 기업 판별 (인증완료 307 + 심사진행 11 + 인증유지 1 = 319개사)
+  const isNormalCompany = (c: Company): boolean => {
+    const compAny = c as any;
+    const rawStatus = (compAny.status || compAny.rawStatus || '').trim();
+    const isCancelledOrDormant = 
+      rawStatus.includes('취소') || 
+      rawStatus.includes('정지') || 
+      rawStatus.includes('철회') || 
+      rawStatus === '심사보류' || 
+      !rawStatus || 
+      rawStatus === 'None';
+    return !isCancelledOrDormant;
+  };
+
   // Client category statistics
   const counts = useMemo(() => {
     let normal = 0;
     let dueSoon = 0;
     let dormant = 0;
-    let unrecorded = 0;
-    let exception = 0;
+    let cancelled = 0;
+    let unassigned = 0;
 
     companies.forEach(c => {
+      const compAny = c as any;
+      const rawStatus = (compAny.status || compAny.rawStatus || '').trim();
       const fallbackContract = contractMap.get(c.id);
       const fallbackProject = projectMap.get(c.id);
-      const state = getCompanyAuditState(c, fallbackContract, fallbackProject);
-      const cloudCount = getCloudDocCount(c);
-      const isDormant = (state === '자격정지');
-      const isUnrecorded = (cloudCount === 0);
-      const isException = isDormant || isUnrecorded;
+      const isNormal = isNormalCompany(c);
 
-      if (isDormant) dormant++;
-      if (isUnrecorded && !isDormant) unrecorded++;
-      if (isException) {
-        exception++;
-      } else {
+      if (isNormal) {
         normal++;
         const timeline = getAuditTimelineStatus(c, fallbackContract, fallbackProject);
         if (timeline && (timeline.daysRemainingToDeadline <= 60 || timeline.isPrepAlert || timeline.isOverdue)) {
           dueSoon++;
+        }
+      } else {
+        dormant++;
+        if (rawStatus.includes('취소') || rawStatus.includes('정지')) {
+          cancelled++;
+        } else {
+          unassigned++;
         }
       }
     });
@@ -184,10 +199,10 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       normal,
       dueSoon,
       dormant,
-      unrecorded,
-      exception
+      cancelled,
+      unassigned
     };
-  }, [companies, contractMap, projectMap, cloudDocMap]);
+  }, [companies, contractMap, projectMap]);
 
   // 1. 고유 지역 목록 추출
   const regionOptions = useMemo(() => {
@@ -283,18 +298,14 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const fallbackContract = contractMap.get(c.id);
       const fallbackProject = projectMap.get(c.id);
       const auditState = getCompanyAuditState(c, fallbackContract, fallbackProject);
-      const cloudCount = getCloudDocCount(c);
-      const isDormant = (auditState === '자격정지');
-      const isUnrecorded = (cloudCount === 0);
-      const isException = isDormant || isUnrecorded;
-      const isNormal = !isException;
+      const isNormal = isNormalCompany(c);
       const timeline = getAuditTimelineStatus(c, fallbackContract, fallbackProject);
       const isDueSoon = isNormal && Boolean(timeline && (timeline.daysRemainingToDeadline <= 60 || timeline.isPrepAlert || timeline.isOverdue));
 
       // 0. 스마트 분류 탭 필터
       if (activeTab === 'normal' && !isNormal) return false;
       if (activeTab === 'dueSoon' && !isDueSoon) return false;
-      if (activeTab === 'dormant_unrecorded' && !isException) return false;
+      if (activeTab === 'dormant' && isNormal) return false;
       // if activeTab === 'all', show all companies
 
       // 1. 텍스트 검색 매칭 (기업명, 대표자, 사업자번호, 인증번호)
@@ -368,11 +379,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             </div>
             <div>
               <div className="text-[11px] text-slate-500 font-normal">정상 관리 대상 고객사</div>
-              <div className="text-sm font-bold text-slate-900">{counts.normal}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
-              <div className="text-[10px] text-slate-400 font-normal mt-0.5">실물보고서 보유 · 정상유지</div>
+              <div className="text-sm font-bold text-cyan-900">{counts.normal}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[10px] text-slate-400 font-normal mt-0.5">정상 인증유지 및 심사진행</div>
             </div>
           </div>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 font-mono font-normal">기본목록</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 font-mono font-normal">정상유지</span>
         </button>
 
         {/* 카드 2: 2개월 내 심사 대상 기업 */}
@@ -398,25 +409,25 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono font-normal">일정집중</span>
         </button>
 
-        {/* 카드 3: 휴면(인증정지) 및 기록없음 대상 */}
+        {/* 카드 3: 휴면 및 인증정지/취소 대상 기업 */}
         <button
           type="button"
-          onClick={() => { setActiveTab('dormant_unrecorded'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('dormant'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
-            activeTab === 'dormant_unrecorded'
+            activeTab === 'dormant'
               ? 'bg-rose-50/90 border-rose-500 ring-1 ring-rose-500 text-rose-950 shadow-2xs'
               : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
           }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className={`p-1.5 rounded ${activeTab === 'dormant_unrecorded' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'}`}>
+            <div className={`p-1.5 rounded ${activeTab === 'dormant' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'}`}>
               <AlertTriangle className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-500 font-normal">휴면(인증정지) 및 기록없음</div>
-              <div className="text-sm font-bold text-rose-700">{counts.exception}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+              <div className="text-[11px] text-slate-500 font-normal">휴면 및 인증정지 대상</div>
+              <div className="text-sm font-bold text-rose-700">{counts.dormant}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
               <div className="text-[10px] text-slate-400 font-normal mt-0.5">
-                정지 {counts.dormant}개 / 기록없음 {counts.unrecorded}개
+                취소·정지 {counts.cancelled}개 / 미실시 {counts.unassigned}개
               </div>
             </div>
           </div>
@@ -440,8 +451,8 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             <div>
               <div className="text-[11px] text-slate-500 font-normal">전체 고객사 마스터 DB</div>
               <div className="text-sm font-bold text-slate-900">총 {counts.all}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
-              <div className="text-[10px] text-slate-500 font-normal mt-0.5 truncate max-w-[200px]" title={`총 ${counts.all}개 / 인증유지 ${counts.normal}개 / 휴면 및 기록없음 ${counts.exception}개`}>
-                총 {counts.all}개 / 인증유지 {counts.normal}개 / 휴면·기록없음 {counts.exception}개
+              <div className="text-[10px] text-slate-500 font-normal mt-0.5 truncate max-w-[200px]" title={`총 ${counts.all}개 / 정상유지 ${counts.normal}개 / 휴면·정지 ${counts.dormant}개`}>
+                총 {counts.all}개 / 정상유지 {counts.normal}개 / 휴면·정지 {counts.dormant}개
               </div>
             </div>
           </div>
@@ -766,17 +777,23 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
                       {/* 인증상태 및 12/24/34개월 발행 마감 알람 */}
                       <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs font-normal">
-                        {auditState === '자격정지' ? (
-                          <span className="px-2 py-0.5 text-[11px] rounded font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                            인증정지
-                          </span>
-                        ) : cloudCount === 0 ? (
-                          <span className="px-2 py-0.5 text-[11px] rounded font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                            기록없음
-                          </span>
+                        {!isNormalCompany(comp) ? (
+                          compAny.status === '인증취소' || compAny.status?.includes('취소') ? (
+                            <span className="px-2 py-0.5 text-[11px] rounded font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              인증취소
+                            </span>
+                          ) : auditState === '자격정지' || compAny.status?.includes('정지') ? (
+                            <span className="px-2 py-0.5 text-[11px] rounded font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              인증정지
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-[11px] rounded font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                              휴면(미실시)
+                            </span>
+                          )
                         ) : (
                           <span className={`px-2 py-0.5 text-[11px] rounded font-normal ${getAuditStateBadgeClass(auditState)}`}>
-                            {auditState}
+                            {compAny.status || auditState}
                           </span>
                         )}
                         {(() => {
