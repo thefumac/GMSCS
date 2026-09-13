@@ -1,43 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  X,
-  Download,
-  Printer,
-  FileText,
-  CheckCircle2,
-  Shield,
-  Mail,
-  PenTool,
-  Check,
-  Calendar,
-  Building2,
-  Users,
-  AlertTriangle,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Minimize2,
-  FileCheck,
-  HelpCircle,
-  Clock,
-  Send,
-  Lock,
-  Layers,
-  Sparkles,
-  ChevronRight,
-  ExternalLink,
-  Award,
-  RefreshCcw,
-  CheckSquare,
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  X, 
+  Printer, 
+  Download, 
+  ExternalLink, 
+  Maximize2, 
+  Minimize2, 
+  FileText, 
   FolderOpen,
-  FileCode,
-  HardDrive
+  CheckCircle2,
+  Calendar,
+  User,
+  ShieldCheck
 } from 'lucide-react';
-import { initialFullReportData, FullAuditReportPackData, ProcessAuditNoteItem } from '../data/mockFullRemarkPack';
-import { remarkMeetingAgendas } from '../data/mockRemarkData';
 import { getDriveReportsForCompany, DriveReportFileItem } from '../data/driveReportFiles';
 
-interface PdfViewerModalProps {
+export interface PdfViewerModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -49,47 +27,6 @@ interface PdfViewerModalProps {
   auditorName?: string;
   auditorEmail?: string;
 }
-
-// 전자메일 서명 레코드
-export interface EmailSignatureRecord {
-  slotId: string;
-  slotLabel: string;
-  role: '고객확인' | '근로자대표' | '심사팀장' | '심사팀원' | '확인심사원';
-  signerName: string;
-  signerPosition: string;
-  signerEmail: string;
-  signedAt: string; // ISO / YYYY-MM-DD HH:mm:ss
-  signatureHash: string;
-  isVerified: boolean;
-  ipAddress: string;
-}
-
-export interface Stage1ClauseItem {
-  clause: string;
-  findings: string;
-  result: '적합' | '부적합' | '관찰/권고';
-  note: string;
-}
-
-export interface Stage2ClauseItem {
-  clause: string;
-  findings: string;
-  dept: string;
-  result: '적합' | '경부적합' | '중부적합' | '관찰사항';
-  evidence: string;
-}
-
-type ReportSectionTab = 
-  | 'all'
-  | 'cover_agenda'
-  | 'schedule_coi'
-  | 'stage1'
-  | 'stage2'
-  | 'audit_note'
-  | 'findings_summary'
-  | 'three_year_plan'
-  | 'ncr_report'
-  | 'cert_preview';
 
 export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   isOpen,
@@ -103,20 +40,21 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   auditorName = '',
   auditorEmail = ''
 }) => {
-  // 모드 전환: 'pdf_reader' (구글 드라이브 원본 PDF 리더) | 'digital_pack' (GMSCS 신규 전자 서식 팩)
-  const [viewMode, setViewMode] = useState<'pdf_reader' | 'digital_pack'>('pdf_reader');
-  const [zoomLevel, setZoomLevel] = useState<number>(100);
-  const [activeTab, setActiveTab] = useState<ReportSectionTab>('all');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // 구글 드라이브 표준화 보관 파일 목록 조회
+  // 구글 드라이브/파이어베이스 스토리지 보관 문서 목록 조회
   const driveFiles = useMemo(() => {
     return getDriveReportsForCompany(companyName);
   }, [companyName]);
 
   const [selectedDriveIndex, setSelectedDriveIndex] = useState<number>(0);
 
-  // 활성 구글 드라이브 파일 계산
+  // 선택된 문서가 바뀔 때 index 초기화
+  useEffect(() => {
+    setSelectedDriveIndex(0);
+  }, [companyName]);
+
+  // 활성 PDF 파일 계산
   const activeDriveFile: DriveReportFileItem = useMemo(() => {
     if (driveFiles.length > 0 && driveFiles[selectedDriveIndex]) {
       return driveFiles[selectedDriveIndex];
@@ -132,377 +70,74 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     };
   }, [driveFiles, selectedDriveIndex, companyName, auditDate, auditType, auditorName, pdfUrl]);
 
-  // 브라우저 인쇄 / PDF 저장 시 파일명에 심사팀장 성명이 자동 포함되도록 document.title 동적 설정
+  // 브라우저 인쇄 / PDF 저장 시 파일명 동적 설정
   useEffect(() => {
     if (isOpen) {
       const originalTitle = document.title;
       const leadAuditor = auditorName || activeDriveFile.auditor || '남경호';
-      document.title = `[심사보고서] ${companyName}_${standard}_${auditType}_(심사팀장 ${leadAuditor})`;
+      document.title = `[GMSCS_PDF] ${companyName}_${standard}_${auditType}_(${leadAuditor})`;
       return () => {
         document.title = originalTitle;
       };
     }
   }, [isOpen, companyName, standard, auditType, auditorName, activeDriveFile]);
 
-  // 저장된 전자메일 서명 목록 (LocalStorage 연동)
-  const storageKey = useMemo(() => `GMSCS_PDF_SIGNATURES_${companyName}_${auditDate}`, [companyName, auditDate]);
-  
-  const [signatures, setSignatures] = useState<Record<string, EmailSignatureRecord>>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {}
-      }
-    }
-    return {};
-  });
-  const [stage1Clauses, setStage1Clauses] = useState<Stage1ClauseItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`GMSCS_STAGE1_CLAUSES_${companyName}`);
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return [
-      {
-        clause: '4. 조직상황',
-        findings: '조직의 목적과 전략적 방향에 관련된 내·외부 이슈(HS-CTX-2026) 파악 및 이해관계자 요구사항 등록부(Rev.3) 검토 완료. 인증적용범위 설정의 타당성 확인됨.',
-        result: '적합',
-        note: '조직상황 분석 주기적 검토 확인'
-      },
-      {
-        clause: '5. 리더십',
-        findings: '최고경영자의 품질·환경 경영방침 제정 및 전 임직원 공표 확인. 업무분장 규정(HS-HR-04) 상의 리더십 및 의지표명 체계 적합.',
-        result: '적합',
-        note: '방침 게시 및 숙지 상태 양호'
-      },
-      {
-        clause: '6. 기획',
-        findings: '2026년 리스크 및 기회 평가표(HS-QP-02) 수립 확인. 전사 및 부서별 품질·환경 목표 수립 및 세부 달성계획 적정 수립됨.',
-        result: '적합',
-        note: '리스크 조치 계획 적절'
-      },
-      {
-        clause: '7. 지원',
-        findings: '인적·물적 자원 관리 절차 수립. 2026년 교육훈련 계획서 및 적격성 평가 기준 확인. 품질/환경 문서화된 정보 관리체계 양호.',
-        result: '적합',
-        note: '법정 의무교육 이수 확인'
-      },
-      {
-        clause: '8. 운용',
-        findings: '제품 및 서비스 요구사항 검토 절차, 생산 운영 관리 기준(SOP-PR-01~12) 및 외주업체 관리 평가 기준서 적합 수립됨.',
-        result: '적합',
-        note: '작업표준서 제개정 상태 양호'
-      },
-      {
-        clause: '9. 성과평가',
-        findings: '2026년 상반기 내부심사 실시(2026-05-15, 전 부서 대상) 및 경영검토 회의(2026-07-20) 실시 결과 보고서 확인.',
-        result: '적합',
-        note: '경영검토 후속조치 확인 완료'
-      },
-      {
-        clause: '10. 개선',
-        findings: '부적합 관리 및 시정조치 절차서(HS-QP-10) 수립. 과거 시정조치 요구건에 대한 4M 원인분석 및 유효성 검증 체계 확인.',
-        result: '적합',
-        note: '재발방지대책 이행 점검'
-      },
-      {
-        clause: '11. 기타문서',
-        findings: '환경 인허가(대기배출시설 설치신고) 및 안전보건 위험성평가표, 물질안전보건자료(MSDS) 최신본 비치 확인.',
-        result: '적합',
-        note: '법규 등록부 갱신 확인'
-      }
-    ];
-  });
-
-  // 2단계 요구사항별 현장 실사 기록 (Table 21 & Table 31: 4~10장)
-  const [stage2Clauses, setStage2Clauses] = useState<Stage2ClauseItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`GMSCS_STAGE2_CLAUSES_${companyName}`);
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return [
-      {
-        clause: '4. 조직상황',
-        findings: '2026 사업계획서(HS-BP-2026) 상에 전기차 부품 전환에 따른 외부 리스크 파악 및 대응 전략 수립 확인. 이해관계자 요구사항 등록부(Rev.3) 주기적 갱신 확인됨.',
-        dept: '대표이사실 / 기획팀',
-        result: '적합',
-        evidence: '2026 사업계획서 및 이해관계자 관리대장'
-      },
-      {
-        clause: '5. 리더십',
-        findings: '최고경영자가 품질 및 환경 방침을 제정하여 사내 로비 및 MES 로그인 화면에 게시하고 전 임직원이 숙지하고 있음을 면담을 통해 확인. 2026 업무분장 규정 확인.',
-        dept: '경영총괄 / 전사',
-        result: '적합',
-        evidence: '품질/환경 경영방침서 및 2026 업무분장 규정'
-      },
-      {
-        clause: '6. 기획',
-        findings: '2026년도 전사 및 부서별 품질/환경 목표 달성률 94.2% 모니터링 확인. 리스크 평가표(Rev.3) 상에 기계설비 노후화 대응 조치 반영 적정함.',
-        dept: '품질혁신팀 / 생산기술팀',
-        result: '적합',
-        evidence: '2026 목표추진실적 및 리스크 관리대장'
-      },
-      {
-        clause: '7. 지원',
-        findings: '정밀가공 라인 작업자 적격성 평가 및 사내외 교육훈련 이수표(연간 24시간) 확인. 제2공장 정밀 계측기 교정검사 대장(QC-CAL-01~12) 확인.',
-        dept: '인사총무팀 / 품질관리팀',
-        result: '적합',
-        evidence: '교육훈련 이수대장 및 계측기 검교정 성적서'
-      },
-      {
-        clause: '8. 운용',
-        findings: '제1공장 프레스 및 제2공장 사출성형 라인의 작업표준서(SOP-PR-05) 현장 비치 및 준수 상태 확인. 초·중·종물 자주검사 체크시트 실시간 기록 확인.',
-        dept: '생산팀 (1공장/2공장)',
-        result: '적합',
-        evidence: '작업표준서 및 현장 자주검사 체크시트'
-      },
-      {
-        clause: '9. 성과평가',
-        findings: '2026년도 상반기 내부심사(2026-05-15) 및 경영검토(2026-07-20) 실행 기록 확인. 프로세스별 핵심성과지표(KPI) 모니터링 주기적 보고 확인.',
-        dept: '품질혁신팀 / 경영진',
-        result: '적합',
-        evidence: '내부심사 보고서 및 경영검토 회의록'
-      },
-      {
-        clause: '10. 개선',
-        findings: '고객 불만 접수 및 부적합 발생에 따른 4M 원인분석, 시정조치 및 재발방지대책 수립의 유효성 검증 완료 확인.',
-        dept: '품질관리팀 / 고객지원팀',
-        result: '적합',
-        evidence: '시정조치 요구서(CAR) 및 개선 유효성 검증서'
-      }
-    ];
-  });
-
-  // 서명 모달 상태
-  const [activeSigningSlot, setActiveSigningSlot] = useState<{
-    slotId: string;
-    slotLabel: string;
-    role: '고객확인' | '근로자대표' | '심사팀장' | '심사팀원' | '확인심사원';
-    defaultName?: string;
-    defaultPosition?: string;
-    defaultEmail?: string;
-  } | null>(null);
-
-  const [signingForm, setSigningForm] = useState({
-    name: '',
-    position: '',
-    email: '',
-    pinCode: '',
-    isPinSent: false,
-    generatedPin: '789012'
-  });
-
-  // 서명 상태 LocalStorage 동기화
-  const handleSaveSignature = (record: EmailSignatureRecord) => {
-    setSignatures(prev => {
-      const updated = { ...prev, [record.slotId]: record };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(storageKey, JSON.stringify(updated));
-      }
-      return updated;
-    });
-    setActiveSigningSlot(null);
-  };
-
-  const handleResetSignature = (slotId: string) => {
-    if (confirm('해당 서명을 초기화하고 재서명 가능한 상태로 전환하시겠습니까?')) {
-      setSignatures(prev => {
-        const updated = { ...prev };
-        delete updated[slotId];
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-        }
-        return updated;
-      });
-    }
-  };
-
   if (!isOpen) return null;
 
-  const reportData = initialFullReportData;
-
-  // 서명 컴포넌트 렌더러
-  const renderSignatureSlot = (
-    slotId: string,
-    slotLabel: string,
-    role: '고객확인' | '근로자대표' | '심사팀장' | '심사팀원' | '확인심사원',
-    defaultName?: string,
-    defaultPos?: string,
-    defaultEmail?: string
-  ) => {
-    const signed = signatures[slotId];
-
-    if (signed && signed.isVerified) {
-      return (
-        <div 
-          onClick={() => handleResetSignature(slotId)}
-          className="group relative cursor-pointer inline-flex flex-col items-center justify-center p-2 rounded-xl bg-emerald-50 border border-emerald-300 hover:border-emerald-500 shadow-2xs transition-all text-left min-w-[170px]"
-          title="전자메일 서명 검증 완료 (클릭 시 서명 초기화 가능)"
-        >
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-emerald-800">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>[전자메일 서명완료]</span>
-          </div>
-          <div className="text-xs font-extrabold text-slate-900 mt-0.5">
-            {signed.signerName} ({signed.signerPosition})
-          </div>
-          <div className="text-[10px] text-slate-600 font-mono flex items-center gap-1 mt-0.5">
-            <Mail className="w-2.5 h-2.5 text-slate-400" />
-            <span>{signed.signerEmail}</span>
-          </div>
-          <div className="text-[9.5px] text-slate-500 font-mono mt-0.5">
-            {signed.signedAt} ({signed.signatureHash})
-          </div>
-          <span className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 rounded-xl flex items-center justify-center text-[10px] font-bold text-slate-800 backdrop-blur-2xs transition-opacity">
-            클릭 시 재서명
-          </span>
-        </div>
-      );
-    }
-
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          setSigningForm({
-            name: defaultName || (role === '심사팀장' ? (auditorName || '') : ''),
-            position: defaultPos || (role === '심사팀장' ? '선임심사원' : role === '고객확인' ? '대표이사' : role === '근로자대표' ? '근로자 대표' : '심사원'),
-            email: defaultEmail || (role === '심사팀장' ? (auditorEmail || '') : ''),
-            pinCode: '',
-            isPinSent: false,
-            generatedPin: Math.floor(100000 + Math.random() * 900000).toString()
-          });
-          setActiveSigningSlot({
-            slotId,
-            slotLabel,
-            role,
-            defaultName,
-            defaultPosition: defaultPos,
-            defaultEmail
-          });
-        }}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-cyan-500 bg-cyan-50/70 hover:bg-cyan-100 text-cyan-900 text-xs font-semibold hover:shadow-xs transition-all cursor-pointer group"
-        title="전자메일 인증을 통해 서명을 진행합니다."
-      >
-        <PenTool className="w-3.5 h-3.5 text-cyan-700 group-hover:scale-110 transition-transform" />
-        <span>{slotLabel}</span>
-        <span className="text-[10px] bg-cyan-200/80 text-cyan-900 px-1 py-0.2 rounded font-mono">이메일 인증</span>
-      </button>
-    );
-  };
-
-  const totalSignatureSlots = 8;
-  const verifiedCount = Object.values(signatures).filter(s => s.isVerified).length;
+  const currentPdfUrl = activeDriveFile.pdfUrl || pdfUrl || '/docs/2025_Audit_Report_Pack.pdf';
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4 animate-in fade-in duration-200 no-print-bg">
-      <div className={`bg-slate-900 border border-slate-700 rounded-2xl w-full flex flex-col shadow-2xl overflow-hidden transition-all duration-300 ${
-        isFullscreen ? 'h-full max-w-none rounded-none' : 'max-w-[1550px] h-[95vh]'
-      }`}>
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-2 sm:p-4 overflow-hidden animate-in fade-in">
+      <div 
+        className={`bg-slate-900 border border-slate-700 text-slate-100 flex flex-col shadow-2xl transition-all duration-200 overflow-hidden ${
+          isFullscreen 
+            ? 'fixed inset-0 rounded-none z-50' 
+            : 'w-full max-w-7xl h-[92vh] max-h-[95vh] rounded-2xl'
+        }`}
+      >
         {/* ========================================================= */}
-        {/* 상단 통합 네비게이션 툴바 */}
+        {/* TOP BAR: 타이틀, 기업정보 및 조작 도구                    */}
         {/* ========================================================= */}
-        <div className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
-              {viewMode === 'pdf_reader' ? (
-                <HardDrive className="w-5 h-5 text-cyan-400" />
-              ) : (
-                <FileText className="w-5 h-5 text-cyan-400" />
-              )}
+        <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+              <FileText className="w-5 h-5" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-white font-bold text-base truncate">
-                  {viewMode === 'pdf_reader' ? `[클라우드 PDF 열람] ${companyName}` : `[GMSCS 전자서식팩] ${companyName} - ${standard}`}
-                </h3>
-                <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold shrink-0 ${
-                  viewMode === 'pdf_reader' 
-                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700' 
-                    : 'bg-cyan-900/80 text-cyan-300 border-cyan-700'
-                }`}>
-                  {viewMode === 'pdf_reader' ? '⚡ Firebase Cloud Storage 실물 PDF' : '🖥️ 신규 디지털 보고서 팩'}
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                  {activeDriveFile.simplifiedFileName || activeDriveFile.fileName || title}
+                </h2>
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  {standard}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                  {activeDriveFile.docType || '공식 문서'}
                 </span>
               </div>
-              <p className="text-slate-400 text-xs truncate mt-0.5">
-                심사구분: <span className="text-slate-200 font-medium">{auditType}</span> | 심사일자: <span className="text-slate-200 font-mono">{auditDate}</span> | 심사팀장: <span className="text-cyan-300 font-bold">{auditorName || activeDriveFile.auditor || '남경호'}</span>
-              </p>
+              <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5 font-normal">
+                <span>기업명: <strong className="text-white font-bold">{companyName}</strong></span>
+                <span>·</span>
+                <span>심사구분: <span className="text-slate-200">{activeDriveFile.auditType || auditType}</span></span>
+                {activeDriveFile.auditor && (
+                  <>
+                    <span>·</span>
+                    <span>담당: <span className="text-slate-200">{activeDriveFile.auditor}</span></span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {/* 뷰 모드 전환 토글 탭 */}
-            <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-700 text-xs">
-              <button
-                type="button"
-                onClick={() => setViewMode('pdf_reader')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  viewMode === 'pdf_reader'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-                title="Firebase Storage 클라우드에 보관된 실제 과거 PDF 파일을 PDF 리더로 열람합니다."
-              >
-                <FolderOpen className="w-3.5 h-3.5" />
-                <span>클라우드 PDF 리더</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('digital_pack')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  viewMode === 'digital_pack'
-                    ? 'bg-cyan-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-                title="GMSCS 신규 시스템에서 작성된 10대 디지털 서식 팩으로 열람합니다."
-              >
-                <FileCode className="w-3.5 h-3.5" />
-                <span>GMSCS 전자 서식 팩</span>
-              </button>
-            </div>
-
-            {/* 디지털 팩 모드일 때만 서명 카운터 & 줌 표시 */}
-            {viewMode === 'digital_pack' && (
-              <>
-                <div className="hidden lg:flex items-center gap-2 bg-slate-950/80 border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-slate-300">
-                  <Shield className="w-4 h-4 text-emerald-400" />
-                  <span>전자메일 서명:</span>
-                  <strong className="text-emerald-400 font-mono font-bold">{verifiedCount}</strong> / {totalSignatureSlots}건 완료
-                </div>
-
-                <div className="hidden sm:flex items-center bg-slate-700/80 rounded-lg p-0.5 border border-slate-600 text-slate-300 text-xs">
-                  <button 
-                    onClick={() => setZoomLevel(prev => Math.max(70, prev - 10))}
-                    className="p-1 hover:text-white hover:bg-slate-600 rounded cursor-pointer"
-                    title="축소"
-                  >
-                    <ZoomOut className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="px-2 font-mono font-bold">{zoomLevel}%</span>
-                  <button 
-                    onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
-                    className="p-1 hover:text-white hover:bg-slate-600 rounded cursor-pointer"
-                    title="확대"
-                  >
-                    <ZoomIn className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* 원본 파일 다운로드 */}
+          {/* 우측 조작 도구: 다운로드, 새 창 열기, 인쇄, 전체화면, 닫기 */}
+          <div className="flex items-center gap-2">
+            {/* 다운로드 */}
             <a
-              href={activeDriveFile.pdfUrl}
-              download={activeDriveFile.fileName}
+              href={currentPdfUrl}
+              download={activeDriveFile.simplifiedFileName || activeDriveFile.fileName || `${companyName}_심사문서.pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold rounded-lg transition-colors border border-slate-600 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors border border-slate-700 cursor-pointer shadow-xs"
               title="원본 PDF 파일 다운로드"
             >
               <Download className="w-3.5 h-3.5" />
@@ -511,8 +146,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
             {/* 새 창에서 열기 */}
             <button
-              onClick={() => window.open(activeDriveFile.pdfUrl, '_blank')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold rounded-lg transition-colors border border-slate-600 cursor-pointer shadow-xs"
+              type="button"
+              onClick={() => window.open(currentPdfUrl, '_blank')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors border border-slate-700 cursor-pointer shadow-xs"
               title="브라우저 새 창에서 PDF 원본 열기"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -521,8 +157,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
             {/* 인쇄 */}
             <button
+              type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-semibold rounded-lg transition-colors border border-cyan-600 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-medium rounded-lg transition-colors border border-cyan-600 cursor-pointer shadow-xs"
+              title="PDF 인쇄"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>인쇄</span>
@@ -530,8 +168,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
             {/* 전체화면 전환 */}
             <button
+              type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
               title={isFullscreen ? "창 모드" : "전체 화면"}
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -539,8 +178,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
             {/* 닫기 */}
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-lg transition-colors cursor-pointer ml-1"
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer ml-1"
               title="닫기"
             >
               <X className="w-5 h-5" />
@@ -549,1207 +189,62 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         </div>
 
         {/* ========================================================= */}
-        {/* VIEW 1: [Firebase Storage 원본 PDF 리더 모드]             */}
+        {/* SUB BAR: 클라우드 보관 문서 탭 목록 ({driveFiles.length}건) */}
         {/* ========================================================= */}
-        {viewMode === 'pdf_reader' && (
-          <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
-            {/* 클라우드 저장소 보관 파일 탭바 */}
-            <div className="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 overflow-x-auto">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 flex items-center gap-1.5 font-medium shrink-0">
-                  <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>보관 문서 목록 ({driveFiles.length}건):</span>
-                </span>
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                  {driveFiles.length > 0 ? (
-                    driveFiles.map((df, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedDriveIndex(idx)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                          selectedDriveIndex === idx
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 font-bold'
-                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-                        }`}
-                        title={`원본 파일명: ${df.originalName}`}
-                      >
-                        <FileText className="w-3 h-3 text-emerald-400" />
-                        <span className="max-w-[220px] truncate font-mono">{df.fileName}</span>
-                        <span className="text-[10px] bg-slate-950/60 px-1.5 py-0.5 rounded text-slate-400 font-mono">{df.fileSize}</span>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-3 py-1 rounded-lg text-xs bg-slate-800 text-emerald-300 border border-emerald-800/40 flex items-center gap-1.5">
-                      <FileText className="w-3 h-3" />
-                      <span>{companyName}_심사보고서_원본.pdf (표준 PDF 리더 연결)</span>
-                    </div>
-                  )}
+        <div className="bg-slate-950 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs text-slate-400 flex items-center gap-1.5 font-medium shrink-0">
+              <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
+              <span>보관 문서 목록 ({driveFiles.length}건):</span>
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {driveFiles.length > 0 ? (
+                driveFiles.map((df, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedDriveIndex(idx)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      selectedDriveIndex === idx
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold'
+                        : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    }`}
+                    title={`원본 파일명: ${df.originalName || df.fileName}`}
+                  >
+                    <FileText className="w-3 h-3 text-cyan-400" />
+                    <span className="max-w-[220px] truncate font-mono">{df.simplifiedFileName || df.fileName}</span>
+                    <span className="text-[10px] bg-slate-950/80 px-1.5 py-0.5 rounded text-slate-400 font-mono">{df.fileSize}</span>
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-1 rounded-lg text-xs bg-slate-900 text-emerald-300 border border-emerald-900/40 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>{companyName}_심사보고서_표준문서 (PDF 리더 연결)</span>
                 </div>
-              </div>
-
-              {/* 현재 활성 파일 메타데이터 */}
-              <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 shrink-0">
-                <span className="text-slate-500">클라우드 경로:</span>
-                <span className="font-mono text-emerald-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 max-w-[320px] truncate" title={activeDriveFile.storagePath || activeDriveFile.fileName}>
-                  {activeDriveFile.fileName}
-                </span>
-              </div>
-            </div>
-
-            {/* 실제 내장 브라우저 PDF 리더 iframe */}
-            <div className="flex-1 w-full h-full relative bg-slate-900 min-h-0">
-              <iframe
-                src={`${activeDriveFile.pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-                className="w-full h-full border-0 bg-slate-900"
-                title={activeDriveFile.fileName}
-              />
+              )}
             </div>
           </div>
-        )}
 
-        {/* ========================================================= */}
-        {/* VIEW 2: [GMSCS 신규 전자 서식 팩 모드]                    */}
-        {/* ========================================================= */}
-        {viewMode === 'digital_pack' && (
-          <>
-            {/* 서브 섹션 탭 네비게이션 */}
-            <div className="bg-slate-800/60 border-b border-slate-700 px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-xs shrink-0 no-scrollbar">
-              {[
-                { key: 'all', label: '전체 보고서 (연속 열람)' },
-                { key: 'cover_agenda', label: '1. 표지 및 회의안건' },
-                { key: 'schedule_coi', label: '2. 심사일정 & 이해관계확인' },
-                { key: 'stage1', label: '3. 1단계 문서심사' },
-                { key: 'stage2', label: '4. 2단계 현장심사' },
-                { key: 'audit_note', label: '5. PROCESS Audit Note' },
-                { key: 'findings_summary', label: '6. 심사발견사항 & 총평' },
-                { key: 'three_year_plan', label: '7. 3개년 심사계획' },
-                { key: 'ncr_report', label: '8. 시정조치요구서 (NCR)' },
-                { key: 'cert_preview', label: '9. 인증서 표기확인' },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as ReportSectionTab)}
-                  className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all cursor-pointer ${
-                    activeTab === tab.key
-                      ? 'bg-cyan-600 text-white font-bold shadow-xs'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* 메인 A4 PDF 문서 열람 뷰어 영역 (배경 회색 + A4 시트) */}
-            <div className="flex-1 bg-slate-950 p-3 sm:p-6 overflow-y-auto flex flex-col items-center">
-              <div 
-                style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-                className="w-full max-w-[1100px] transition-transform duration-150 space-y-8 print:w-full print:max-w-none print:transform-none"
-              >
-                
-                {/* ========================================================================= */}
-                {/* SECTION 1: [표지 & 기본정보 & 시작/종결 회의 안건]                         */}
-                {/* ========================================================================= */}
-                {(activeTab === 'all' || activeTab === 'cover_agenda') && (
-                  <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                
-                {/* 1.1 공식 문서 헤더 */}
-                <div className="border-b-2 border-slate-900 pb-4 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <span className="text-[11px] font-extrabold tracking-widest text-cyan-900 block font-mono uppercase">
-                      ESG with GMSCS · KAB-QC/EC-01
-                    </span>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
-                      적합성 평가 심사보고서 (1st &amp; 2nd Stage)
-                    </h1>
-                    <p className="text-xs text-slate-600">
-                      국제표준화기구(ISO) 경영시스템 인증심사 기준 및 KAB 적합성평가 기준 준수
-                    </p>
-                  </div>
-                  <div className="text-right space-y-1">
-                    <div className="border-2 border-slate-900 px-3 py-1 text-center rounded">
-                      <span className="text-[10px] block font-bold text-slate-600">문서 관리번호</span>
-                      <span className="text-xs font-mono font-extrabold text-slate-900">F16-001 (Rev.0)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 1.2 고객 기본 정보 & 서명란 (Table 0, Table 1, Table 2 원본 실물 구현) */}
-                <div className="border border-slate-400 text-xs">
-                  <table className="w-full border-collapse">
-                    <tbody>
-                      <tr className="border-b border-slate-300">
-                        <td className="w-28 bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">고 객 명</td>
-                        <td className="p-2.5 font-semibold text-slate-950 border-r border-slate-300">{companyName}</td>
-                        <td className="w-24 bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">인증번호</td>
-                        <td className="p-2.5 font-mono font-bold text-slate-900">{reportData.certNumber}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">심 사 표 준</td>
-                        <td className="p-2.5 border-r border-slate-300">
-                          <span className="font-bold text-cyan-950">{standard}</span>
-                          <span className="text-slate-500 ml-2">(ISO 9001 / ISO 14001 / ISO 45001 / ESG-MS)</span>
-                        </td>
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">심 사 유 형</td>
-                        <td className="p-2.5 font-bold text-emerald-800">{auditType}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">주사업장 주소</td>
-                        <td colSpan={3} className="p-2.5 text-slate-900">{reportData.mainSiteAddress}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">추가사업장</td>
-                        <td colSpan={3} className="p-2.5 text-slate-900">
-                          {reportData.additionalSites.map(s => `${s.siteName}: ${s.address} (${s.scope})`).join(' / ')}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">연락처 / Email</td>
-                        <td className="p-2.5 border-r border-slate-300 font-mono">TEL: {reportData.tel} / FAX: {reportData.fax}</td>
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">담당자/직책</td>
-                        <td className="p-2.5 text-slate-900">{reportData.contactPerson} ({reportData.contactPosition})</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">인증범위(국문)</td>
-                        <td colSpan={3} className="p-2.5 font-medium text-slate-900 leading-relaxed">{reportData.auditScope}</td>
-                      </tr>
-                      <tr>
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">인증범위(영문)</td>
-                        <td colSpan={3} className="p-2.5 font-mono text-[11px] text-slate-800 leading-relaxed">{reportData.auditScopeEn}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* 1.3 [핵심 전자메일 서명란] 고객확인, 근로자대표, 심사팀장 서명 (Table 1 & Table 2) */}
-                <div className="bg-slate-50 border-2 border-slate-400 p-4 rounded-xl space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-300 pb-2">
-                    <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
-                      <Shield className="w-4 h-4 text-cyan-700" />
-                      보고서 공식 확인 및 전자메일 서명 날인 (Word 서식 인/서명란)
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-normal">
-                      ※ ISO 45001 심사의 경우 근로자 대표 서명 필수
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    {/* 고객 확인 서명 */}
-                    <div className="border border-slate-300 bg-white p-3 rounded-lg flex flex-col justify-between space-y-2">
-                      <div className="font-bold text-slate-800 border-b border-slate-200 pb-1">
-                        고객 확인 (대표자/총괄책임)
-                      </div>
-                      <div className="py-1">
-                        {renderSignatureSlot('cover_customer', '고객 확인 (서명)', '고객확인', reportData.ceoName, '대표이사', reportData.email)}
-                      </div>
-                    </div>
-
-                    {/* 근로자 대표 서명 */}
-                    <div className="border border-slate-300 bg-white p-3 rounded-lg flex flex-col justify-between space-y-2">
-                      <div className="font-bold text-slate-800 border-b border-slate-200 pb-1">
-                        근로자 대표 (ISO 45001 안전보건)
-                      </div>
-                      <div className="py-1">
-                        {renderSignatureSlot('cover_worker_rep', '근로자 대표 (서명)', '근로자대표', '최진우', '노사협의회 근로자대표', 'worker.rep@k1metal.co.kr')}
-                      </div>
-                    </div>
-
-                    {/* 심사 팀장 서명 */}
-                    <div className="border border-slate-300 bg-white p-3 rounded-lg flex flex-col justify-between space-y-2">
-                      <div className="font-bold text-slate-800 border-b border-slate-200 pb-1">
-                        심사 팀장 (GMSCS 공인심사원)
-                      </div>
-                      <div className="py-1">
-                        {renderSignatureSlot('cover_lead_auditor', '심사 팀장 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 1.4 시작회의 및 종결회의 안건 (Table 16 원본 실물) */}
-                <div className="space-y-2">
-                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-cyan-800" />
-                    시작 / 종결회의 공식 안건 및 회의록
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
-                    <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 space-y-1.5">
-                      <div className="font-bold text-slate-900 border-b border-slate-300 pb-1 flex justify-between">
-                        <span>시작회의 안건 (13개 항목 확인)</span>
-                        <span className="text-emerald-700 font-bold">전원 참석 완료</span>
-                      </div>
-                      <ol className="list-decimal pl-4 space-y-0.5 text-slate-700">
-                        {remarkMeetingAgendas.map((item) => (
-                          <li key={item.id}>{item.opening}</li>
-                        ))}
-                      </ol>
-                    </div>
-
-                    <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 space-y-1.5">
-                      <div className="font-bold text-slate-900 border-b border-slate-300 pb-1 flex justify-between">
-                        <span>종결회의 안건 (11개 항목 확인)</span>
-                        <span className="text-emerald-700 font-bold">합의 완료</span>
-                      </div>
-                      <ol className="list-decimal pl-4 space-y-0.5 text-slate-700">
-                        {remarkMeetingAgendas.filter(item => item.closing && item.closing !== '-').map((item) => (
-                          <li key={item.id}>{item.closing}</li>
-                        ))}
-                      </ol>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 2: [심사 세부일정표 & 공평성·이해관계유무 확인서]                    */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'schedule_coi') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2">
-                  <h3 className="text-lg font-bold text-slate-950">
-                    Ⅱ. 심사 세부 일정표 및 공평성·이해관계유무 확인서
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    공평성보장 절차(GSP-02) 준수 서약 및 프로세스별 세부 심사 배정
-                  </p>
-                </div>
-
-                {/* 2.1 세부 일정표 (Table 17) */}
-                <div className="border border-slate-300 text-xs">
-                  <table className="w-full border-collapse">
-                    <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
-                      <tr>
-                        <th className="p-2 border-r border-slate-300 w-24 text-center">일자</th>
-                        <th className="p-2 border-r border-slate-300 w-28 text-center">시각</th>
-                        <th className="p-2 border-r border-slate-300">심사 프로세스 / 조항</th>
-                        <th className="p-2 border-r border-slate-300 w-32">대상 부서</th>
-                        <th className="p-2 w-28 text-center">담당 심사원</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      <tr>
-                        <td rowSpan={3} className="p-2 border-r border-slate-300 text-center font-mono font-bold bg-slate-50">1일차</td>
-                        <td className="p-2 border-r border-slate-300 text-center font-mono">09:30 ~ 10:30</td>
-                        <td className="p-2 border-r border-slate-300">시작회의 / 최고경영자 면담 / 경영방침 및 조직상황(4, 5절)</td>
-                        <td className="p-2 border-r border-slate-300 font-medium">대표이사실 / 기획팀</td>
-                        <td className="p-2 text-center font-bold text-slate-800">{auditorName || '심사팀장'} (팀장)</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-center font-mono">10:30 ~ 12:30</td>
-                        <td className="p-2 border-r border-slate-300">리스크 및 기회조치(6절), 환경측면평가, 안전보건 위험성평가</td>
-                        <td className="p-2 border-r border-slate-300 font-medium">품질혁신팀 / 환경안전</td>
-                        <td className="p-2 text-center font-bold text-slate-800">{auditorName || '심사팀장'} (팀장)</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-center font-mono">13:30 ~ 17:30</td>
-                        <td className="p-2 border-r border-slate-300">자원관리, 적격성, 문서화된 정보(7절), 설계 및 개발(8.3)</td>
-                        <td className="p-2 border-r border-slate-300 font-medium">연구소 / 인사총무팀</td>
-                        <td className="p-2 text-center font-bold text-slate-800">심사팀원</td>
-                      </tr>
-                      <tr>
-                        <td rowSpan={2} className="p-2 border-r border-slate-300 text-center font-mono font-bold bg-slate-50">2일차</td>
-                        <td className="p-2 border-r border-slate-300 text-center font-mono">09:00 ~ 15:30</td>
-                        <td className="p-2 border-r border-slate-300">제조/서비스 운영관리(8.5), 설비보전, 유해물질/폐기물관리, 비상대응</td>
-                        <td className="p-2 border-r border-slate-300 font-medium">생산팀 (제1·제2공장)</td>
-                        <td className="p-2 text-center font-bold text-slate-800">{auditorName || '심사팀장'} / 심사팀원</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-center font-mono">15:30 ~ 17:30</td>
-                        <td className="p-2 border-r border-slate-300">성과평가, 내부심사, 경영검토(9절), 시정조치(10절), 종결회의</td>
-                        <td className="p-2 border-r border-slate-300 font-medium">경영진 / 전 부서</td>
-                        <td className="p-2 text-center font-bold text-slate-800">심사팀 전원</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* 2.2 이해관계유무 확인서 (공평성 보장 서약) & 서명 */}
-                <div className="bg-amber-50/50 border border-amber-300 rounded-xl p-5 space-y-3 text-xs">
-                  <div className="font-extrabold text-slate-900 border-b border-amber-200 pb-1.5 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Shield className="w-4 h-4 text-amber-800" />
-                      이해관계유무 확인서 (공평성 보장 절차 준수 서약)
-                    </span>
-                    <span className="text-[10.5px] font-mono text-amber-900">GMSCS-GSP-02</span>
-                  </div>
-                  <p className="text-slate-700 leading-relaxed">
-                    심사팀은 상기 업무를 수행함에 있어 인증원의 공정성 및 신뢰성에 위배되지 않도록 다음 사항을 준수하였으며, 만약 해당사항을 위반했을 경우 심사원 상벌규정에 따라 어떠한 처벌도 감수할 것을 확인합니다.
-                    <br />
-                    1. 본인은 상기 조직에 대하여 어떠한 자문행위를 제공하지 않았음을 확인합니다.
-                    <br />
-                    2. 최근 2년 내 재직, 주식 3% 이상 소유, 생산 제품의 공급/구매 관계, 경영진과의 학연/지연/친인척 관계 등 이해관계가 없음을 확인합니다.
-                    <br />
-                    3. 인증원의 “공평성보장 절차(GSP-02)”의 관련 규정을 준수하겠습니다.
-                  </p>
-                  
-                  <div className="flex items-center justify-between pt-2 border-t border-amber-200">
-                    <span className="font-mono text-slate-700">작성일자: {auditDate}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-800">심사팀장:</span>
-                      {renderSignatureSlot('coi_lead_auditor', '심사팀장 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 3: [1단계 문서심사 보고서 (1st Stage Audit Report)]                 */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'stage1') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-950">
-                      Ⅲ. 적합성 평가 심사보고서 (1단계 문서심사 - 1st Stage)
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      경영시스템 문서화 정보, 조직 상황, 2단계 준비상태 및 법적 요구사항 검토
-                    </p>
-                  </div>
-                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full border border-emerald-300">
-                    1단계 적합 판정 (2단계 진행 가능)
-                  </span>
-                </div>
-
-                {/* 3.1 요구사항별 문서화 정보 확인 결과 (Table 9: No 컬럼 제거, 첫 컬럼 요구사항 4~10, 심사원의 심사 내용 기록 및 저장) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-cyan-800" />
-                      요구사항별 문서화 정보 확인 결과 (심사원 심사 기록란)
-                    </h4>
-                    <span className="text-[11px] text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200 font-medium">
-                      ✎ 심사원이 직접 심사 내용을 입력/수정할 수 있습니다 (자동 저장)
-                    </span>
-                  </div>
-
-                  <div className="border border-slate-400 text-xs rounded-lg overflow-hidden">
-                    <table className="w-full border-collapse">
-                      <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
-                        <tr>
-                          <th className="p-2.5 border-r border-slate-300 w-32 text-left">요구사항</th>
-                          <th className="p-2.5 border-r border-slate-300 text-left">문서화된 정보 확인 사항 (심사원의 심사 내용 기록)</th>
-                          <th className="p-2.5 border-r border-slate-300 w-28 text-center">심사결과</th>
-                          <th className="p-2.5 w-40 text-left">심사확인 내역</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {stage1Clauses.map((c, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/50">
-                            {/* 1. 요구사항 (No 컬럼 없이 요구사항 4~10 바로 명시) */}
-                            <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900 align-top bg-slate-50/80">
-                              {c.clause}
-                            </td>
-
-                            {/* 2. 심사원의 심사 내용 기록 공간 (직접 입력/수정 가능) */}
-                            <td className="p-2 border-r border-slate-300 align-top">
-                              <textarea
-                                value={c.findings}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStage1Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], findings: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE1_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                rows={2}
-                                className="w-full p-1.5 text-xs text-slate-900 border border-transparent hover:border-slate-300 focus:border-cyan-500 rounded bg-transparent focus:bg-white focus:outline-hidden transition leading-relaxed resize-y"
-                                placeholder="심사원이 확인한 문서화 정보 및 심사 내용을 기록하십시오..."
-                              />
-                            </td>
-
-                            {/* 3. 심사결과 */}
-                            <td className="p-2 border-r border-slate-300 align-top text-center">
-                              <select
-                                value={c.result}
-                                onChange={(e) => {
-                                  const val = e.target.value as any;
-                                  setStage1Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], result: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE1_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className={`font-bold text-xs p-1 rounded border focus:outline-hidden cursor-pointer ${
-                                  c.result === '적합' ? 'text-emerald-800 bg-emerald-50 border-emerald-300' :
-                                  c.result === '부적합' ? 'text-rose-800 bg-rose-50 border-rose-300' :
-                                  'text-amber-800 bg-amber-50 border-amber-300'
-                                }`}
-                              >
-                                <option value="적합">적합</option>
-                                <option value="부적합">부적합</option>
-                                <option value="관찰/권고">관찰/권고</option>
-                              </select>
-                            </td>
-
-                            {/* 4. 심사확인 내역 */}
-                            <td className="p-2 align-top">
-                              <input
-                                type="text"
-                                value={c.note}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStage1Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], note: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE1_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="w-full p-1 text-xs text-slate-700 border border-transparent hover:border-slate-300 focus:border-cyan-500 rounded bg-transparent focus:bg-white focus:outline-hidden transition"
-                                placeholder="확인 메모..."
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* 3.2 ISO 14001, 45001, ESG-MS 규격별 세부 심사 내역 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                  <div className="border border-slate-300 rounded-xl p-3.5 bg-slate-50 space-y-2">
-                    <div className="font-bold text-slate-900 border-b border-slate-300 pb-1 text-emerald-800">
-                      ISO 14001 (환경경영)
-                    </div>
-                    <ul className="space-y-1 text-slate-700 text-[11px]">
-                      <li>• 환경배출시설 설치신고 완료 (화성시)</li>
-                      <li>• 환경영향평가 및 중대측면 파악 완료</li>
-                      <li>• 준수의무 평가 실시 (적합)</li>
-                      <li>• 환경관리자: <strong>이성훈 대리 선임</strong></li>
-                    </ul>
-                  </div>
-
-                  <div className="border border-slate-300 rounded-xl p-3.5 bg-slate-50 space-y-2">
-                    <div className="font-bold text-slate-900 border-b border-slate-300 pb-1 text-blue-800">
-                      ISO 45001 (안전보건경영)
-                    </div>
-                    <ul className="space-y-1 text-slate-700 text-[11px]">
-                      <li>• 안전보건총괄책임자: <strong>박한성 대표</strong></li>
-                      <li>• 근로자 대표 참여: <strong>최진우 과장</strong></li>
-                      <li>• 정기 위험성평가 실시 완료 (유해위험 3건)</li>
-                      <li>• 보건관리: 대한산업보건협회 위탁</li>
-                    </ul>
-                  </div>
-
-                  <div className="border border-slate-300 rounded-xl p-3.5 bg-slate-50 space-y-2">
-                    <div className="font-bold text-slate-900 border-b border-slate-300 pb-1 text-purple-800">
-                      통합경영시스템 (IMS)
-                    </div>
-                    <ul className="space-y-1 text-slate-700 text-[11px]">
-                      <li>• 매뉴얼 및 절차서 통합: <strong>예</strong></li>
-                      <li>• 내부심사 및 경영검토 통합: <strong>예</strong></li>
-                      <li>• 프로세스 접근 통합성: <strong>예</strong></li>
-                      <li>• 통합 수준 평가: <strong>높음 (95%)</strong></li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* 3.3 1단계 심사 결론 (Table 12) */}
-                <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-bold text-emerald-950 block">1단계 심사 결론:</span>
-                    <span className="text-emerald-900 mt-0.5 block">
-                      ✔ 중대한 부적합이 발견되지 않아 계획된 일정대로 2단계 현장심사로 진행 가능합니다.
-                    </span>
-                  </div>
-                  <span className="px-3 py-1 bg-emerald-600 text-white font-bold rounded-lg text-xs">
-                    2단계 진행 승인
-                  </span>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 4: [2단계 현장심사 보고서 (2nd Stage Audit Report)]                 */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'stage2') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-950">
-                      Ⅳ. 적합성 평가 심사보고서 (2단계 현장심사 - 2nd Stage)
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      표준 요구사항(조항 4~10)에 대한 현장 실사 증거 검증, 프로세스 성과 모니터링 및 심사 내용 기록
-                    </p>
-                  </div>
-                  <span className="px-2.5 py-1 bg-blue-100 text-blue-800 font-bold text-xs rounded-full border border-blue-300">
-                    인증 유지 및 추천 판정
-                  </span>
-                </div>
-
-                {/* 4.1 요구사항별 현장심사 확인 결과 및 심사원 현장 실사 기록란 (Table 21 & Table 31) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <FileCheck className="w-3.5 h-3.5 text-blue-800" />
-                      요구사항별 현장 실사 확인 결과 (심사원 현장 실사 기록란)
-                    </h4>
-                    <span className="text-[11px] text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-medium">
-                      ✎ 4~10장 조항별 심사원의 현장 확인 내용 및 객관적 증거를 직접 기록합니다 (자동 저장)
-                    </span>
-                  </div>
-
-                  <div className="border border-slate-400 text-xs rounded-lg overflow-hidden">
-                    <table className="w-full border-collapse">
-                      <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
-                        <tr>
-                          <th className="p-2.5 border-r border-slate-300 w-32 text-left">요구사항</th>
-                          <th className="p-2.5 border-r border-slate-300 text-left">현장 심사 확인 사항 (심사원의 현장 실사 내용 기록)</th>
-                          <th className="p-2.5 border-r border-slate-300 w-36 text-left">대상 프로세스/부서</th>
-                          <th className="p-2.5 border-r border-slate-300 w-28 text-center">심사결과</th>
-                          <th className="p-2.5 w-44 text-left">객관적 증거</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {stage2Clauses.map((c, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/50">
-                            {/* 1. 요구사항 (No 컬럼 없이 요구사항 4~10 바로 명시) */}
-                            <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900 align-top bg-slate-50/80">
-                              {c.clause}
-                            </td>
-
-                            {/* 2. 심사원의 현장 실사 내용 기록 공간 (직접 입력/수정 가능) */}
-                            <td className="p-2 border-r border-slate-300 align-top">
-                              <textarea
-                                value={c.findings}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStage2Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], findings: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE2_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                rows={2}
-                                className="w-full p-1.5 text-xs text-slate-900 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent focus:bg-white focus:outline-hidden transition leading-relaxed resize-y"
-                                placeholder="현장에서 면담 및 실사를 통해 확인한 객관적 사실 및 실행 기록을 기술하십시오..."
-                              />
-                            </td>
-
-                            {/* 3. 대상 프로세스/부서 */}
-                            <td className="p-2 border-r border-slate-300 align-top">
-                              <input
-                                type="text"
-                                value={c.dept}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStage2Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], dept: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE2_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="w-full p-1 text-xs text-slate-800 font-medium border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent focus:bg-white focus:outline-hidden transition"
-                                placeholder="대상 부서/공정..."
-                              />
-                            </td>
-
-                            {/* 4. 심사결과 */}
-                            <td className="p-2 border-r border-slate-300 align-top text-center">
-                              <select
-                                value={c.result}
-                                onChange={(e) => {
-                                  const val = e.target.value as any;
-                                  setStage2Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], result: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE2_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className={`font-bold text-xs p-1 rounded border focus:outline-hidden cursor-pointer ${
-                                  c.result === '적합' ? 'text-emerald-800 bg-emerald-50 border-emerald-300' :
-                                  c.result === '중부적합' ? 'text-rose-800 bg-rose-50 border-rose-300' :
-                                  c.result === '경부적합' ? 'text-amber-800 bg-amber-50 border-amber-300' :
-                                  'text-slate-800 bg-slate-50 border-slate-300'
-                                }`}
-                              >
-                                <option value="적합">적합</option>
-                                <option value="경부적합">경부적합</option>
-                                <option value="중부적합">중부적합</option>
-                                <option value="관찰사항">관찰사항</option>
-                              </select>
-                            </td>
-
-                            {/* 5. 객관적 증거 */}
-                            <td className="p-2 align-top">
-                              <input
-                                type="text"
-                                value={c.evidence}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStage2Clauses(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], evidence: val };
-                                    if (typeof window !== 'undefined') {
-                                      localStorage.setItem(`GMSCS_STAGE2_CLAUSES_${companyName}`, JSON.stringify(updated));
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="w-full p-1 text-xs text-slate-700 border border-transparent hover:border-slate-300 focus:border-blue-500 rounded bg-transparent focus:bg-white focus:outline-hidden transition"
-                                placeholder="확인된 문서번호, 설비명 등..."
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 5: [PROCESS Audit Note (조항 4~10 요구사항별 세부 심사기록)]          */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'audit_note') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-950">
-                      Ⅴ. PROCESS Audit Note (프로세스별 세부 심사기록 및 객관적 증거)
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      조항 4(조직상황) ~ 10(개선)에 대한 프로세스별 현장 실사 기록 및 실행 증빙
-                    </p>
-                  </div>
-                  <span className="text-xs text-slate-500 font-mono">
-                    심사원: 남경호, 정현일
-                  </span>
-                </div>
-
-                {/* Audit Note 카드 리스트 */}
-                <div className="space-y-4">
-                  {reportData.stage2.processNotes.map((note) => (
-                    <div key={note.id} className="border border-slate-300 rounded-xl overflow-hidden text-xs">
-                      <div className="bg-slate-100 p-2.5 font-bold text-slate-900 border-b border-slate-300 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-[11px] font-mono">
-                            {note.clauseNumber}
-                          </span>
-                          <span>{note.clauseTitle}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px]">
-                          <span className="text-slate-600">대상: <strong>{note.targetProcessDept}</strong></span>
-                          <span className="text-slate-300">|</span>
-                          <span className="text-slate-600">심사원: <strong>{note.auditorName}</strong></span>
-                          <span className="text-slate-300">|</span>
-                          <span className={`px-2 py-0.5 rounded font-bold ${
-                            note.result === '적합' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {note.result}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-3.5 space-y-2 bg-white">
-                        <div>
-                          <span className="font-bold text-slate-800 block text-[11px] text-slate-500 mb-0.5">구체적 심사 확인 내용 (실행기록/일자/면담):</span>
-                          <p className="text-slate-900 leading-relaxed">{note.detailedFindings}</p>
-                        </div>
-                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-600">
-                            <strong>객관적 증거(Objective Evidence):</strong> {note.objectiveEvidence}
-                          </span>
-                          {note.attachedFileName && (
-                            <span className="inline-flex items-center gap-1 text-cyan-800 font-mono">
-                              <FileCheck className="w-3.5 h-3.5" />
-                              {note.attachedFileName}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 6: [심사 발견사항 요약 & 심사총평 & 최종 심사결론]                    */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'findings_summary') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2">
-                  <h3 className="text-lg font-bold text-slate-950">
-                    Ⅵ. 심사 발견사항 요약 및 심사총평 / 결론
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    부적합 사항 집계, 시정조치 요구 및 인증추천 종합 의견
-                  </p>
-                </div>
-
-                {/* 6.1 부적합 집계표 (Table 24) */}
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="border border-slate-300 p-4 rounded-xl bg-slate-50">
-                    <span className="text-xs font-bold text-slate-600 block">중부적합 (Major)</span>
-                    <span className="text-2xl font-mono font-extrabold text-slate-400 mt-1 block">0 건</span>
-                    <span className="text-[10.5px] text-slate-400 mt-0.5 block">재심사 사유 없음</span>
-                  </div>
-                  <div className="border border-slate-300 p-4 rounded-xl bg-slate-50">
-                    <span className="text-xs font-bold text-slate-600 block">경부적합 (Minor)</span>
-                    <span className="text-2xl font-mono font-extrabold text-slate-400 mt-1 block">0 건</span>
-                    <span className="text-[10.5px] text-slate-400 mt-0.5 block">1개월 이내 시정조치</span>
-                  </div>
-                  <div className="border border-amber-300 p-4 rounded-xl bg-amber-50">
-                    <span className="text-xs font-bold text-amber-800 block">관찰사항 (Observation)</span>
-                    <span className="text-2xl font-mono font-extrabold text-amber-900 mt-1 block">1 건</span>
-                    <span className="text-[10.5px] text-amber-800 mt-0.5 block">차기 심사 시 개선 권고</span>
-                  </div>
-                </div>
-
-                {/* 6.2 심사 총평 (우수한 점 포함) */}
-                <div className="border border-slate-300 rounded-xl p-5 bg-slate-50 space-y-2 text-xs">
-                  <h4 className="font-bold text-slate-900 border-b border-slate-200 pb-1.5 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    심사 총평 및 우수한 점 (Audit Summary)
-                  </h4>
-                  <p className="text-slate-800 leading-relaxed">
-                    1. 최고경영자의 품질 및 환경경영시스템에 대한 추진 의지가 매우 확고하며, 전사 MES 시스템과의 연동을 통한 실시간 공정 데이터 추적 체계가 매우 우수하게 운영되고 있음.
-                    <br />
-                    2. 2026년 전기차 부품 전환에 대응한 공정 레이아웃 개선 및 작업자 적격성 교육이 체계적으로 수립되어 있음.
-                    <br />
-                    3. 환경/안전 법규 준수 평가가 성실히 이행되고 있으며 노사 협력 기반의 안전보건 활동이 정착되어 있음.
-                  </p>
-                </div>
-
-                {/* 6.3 최종 심사 결론 */}
-                <div className="p-5 bg-cyan-900 text-white rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-cyan-200 uppercase tracking-wider font-mono">
-                      FINAL AUDIT RECOMMENDATION
-                    </span>
-                    <span className="px-3 py-1 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-full">
-                      인증 유지 추천 (Recommendation)
-                    </span>
-                  </div>
-                  <h4 className="text-base font-bold">
-                    본 심사팀은 (주)한성정밀공업의 {standard} 경영시스템이 규격 요구사항을 충족하고 효과적으로 유지되고 있음을 확인하였으므로 [인증 유지]를 KAB 인증위원회에 추천합니다.
-                  </h4>
-                  <div className="pt-2 border-t border-cyan-800 flex items-center justify-between text-xs text-cyan-300">
-                    <span>심사팀장: <strong>{auditorName ? `${auditorName} 선임심사원` : ''}</strong></span>
-                    <span>차기 심사 예정: <strong>{auditDate ? `차기 심사` : ''}</strong></span>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 7: [3년 주기 심사계획 (3-Year Cycle Plan)]                         */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'three_year_plan') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2">
-                  <h3 className="text-lg font-bold text-slate-950">
-                    Ⅶ. 3개년 심사 주기 계획표 (3-Year Audit Cycle Plan)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    인증 주기(3년) 동안 모든 규격 조항이 누락 없이 심사되도록 수립된 중장기 계획 (Table 32)
-                  </p>
-                </div>
-
-                <div className="border border-slate-300 text-xs">
-                  <table className="w-full border-collapse text-center">
-                    <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
-                      <tr>
-                        <th className="p-2 border-r border-slate-300 text-left w-48">ISO 요구사항 (조항)</th>
-                        <th className="p-2 border-r border-slate-300 w-28">최초/갱신 심사</th>
-                        <th className="p-2 border-r border-slate-300 w-28">1차 사후</th>
-                        <th className="p-2 border-r border-slate-300 w-28 bg-cyan-50 text-cyan-950 font-extrabold">2차 사후</th>
-                        <th className="p-2 w-28">갱신 심사</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">4. 조직 상황</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">5. 리더십 및 방침</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">6. 기획 (리스크/기회)</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">○</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">7. 지원 (자원/적격성)</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">8. 운용 (생산/서비스)</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">9. 성과평가 (내부심사/경영검토)</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2 border-r border-slate-300 text-left font-medium">10. 개선 (시정조치)</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 font-bold text-slate-700">●</td>
-                        <td className="p-2 border-r border-slate-300 bg-cyan-50 font-bold text-cyan-900">●</td>
-                        <td className="p-2 font-bold text-slate-700">●</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 8: [시정조치 요구서 (NCR - Non-Conformity Report)]                  */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'ncr_report') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-950">
-                      Ⅷ. 시정조치 요구서 (NCR - Non-Conformity Report)
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      심사 중 발견된 부적합 사항, 4M 원인분석, 재발방지대책 및 심사원 조치확인 (Table 33)
-                    </p>
-                  </div>
-                  <span className="font-mono text-xs font-bold text-slate-700">
-                    발행번호: NCR-01
-                  </span>
-                </div>
-
-                <div className="border border-slate-400 text-xs">
-                  <table className="w-full border-collapse">
-                    <tbody>
-                      <tr className="border-b border-slate-300">
-                        <td className="w-28 bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">적 용 표 준</td>
-                        <td className="p-2.5 font-semibold text-slate-900 border-r border-slate-300">{standard} (조항: 7.1.5)</td>
-                        <td className="w-24 bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">부적합 등급</td>
-                        <td className="p-2.5 font-bold text-amber-800">관찰사항 (Observation)</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">심 사 부 서</td>
-                        <td className="p-2.5 border-r border-slate-300 text-slate-900">품질관리팀 (검사구역)</td>
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">발행 일자</td>
-                        <td className="p-2.5 font-mono text-slate-900">{auditDate}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">부적합 사실</td>
-                        <td colSpan={3} className="p-3 text-slate-900 leading-relaxed">
-                          제2공장 정밀 가공라인의 버니어 캘리퍼스(관리번호: QC-CAL-08)의 교정 유효기간이 만료되었으나 교정 의뢰가 지연되어 사용 중인 상태가 식별됨.
-                        </td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">원인 분석(4M)</td>
-                        <td colSpan={3} className="p-3 text-slate-900 leading-relaxed">
-                          [Method] 계측기 교정주기 알림 대장이 엑셀 수동관리로 되어 있어 월초 알림 확인 누락 발생.
-                        </td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">재발방지대책</td>
-                        <td colSpan={3} className="p-3 text-slate-900 leading-relaxed">
-                          1. 해당 캘리퍼스 즉시 한국계측기연구원에 공인교정 의뢰 및 합격성적서 수령 완료
-                          <br />
-                          2. 사내 ERP 계측기 관리 모듈에 만료 30일 전 자동 이메일 통보 시스템 구축
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* NCR 전자메일 서명란 */}
-                <div className="border border-slate-300 bg-slate-50 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800">인증고객 확인 서명:</span>
-                    {renderSignatureSlot('ncr_customer', '고객 확인 (서명)', '고객확인', reportData.contactPerson, '품질혁신팀장', reportData.email)}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800">조치확인 심사원 서명:</span>
-                    {renderSignatureSlot('ncr_auditor', '심사원 확인 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* SECTION 9: [인증서 표기사항 사전 확인서 (국/영문 인증범위·사업장)]            */}
-            {/* ========================================================================= */}
-            {(activeTab === 'all' || activeTab === 'cert_preview') && (
-              <div className="bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 space-y-6">
-                <div className="border-b border-slate-300 pb-2 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-950">
-                      Ⅸ. 인증서 표기사항 사전 확인서 (국/영문 상호·인증범위)
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      인증서에 표기될 기업명, 사업장 주소, 인증범위의 국/영문 정확성을 확인하고 서명합니다. (Table 29)
-                    </p>
-                  </div>
-                  <span className="px-2.5 py-1 bg-purple-100 text-purple-800 font-bold text-xs rounded-full border border-purple-300">
-                    국/영문 일치 확인
-                  </span>
-                </div>
-
-                <div className="border border-slate-400 text-xs">
-                  <table className="w-full border-collapse">
-                    <tbody>
-                      <tr className="border-b border-slate-300">
-                        <td className="w-28 bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">고객명 (국문)</td>
-                        <td className="p-2.5 font-bold text-slate-950 border-r border-slate-300">{companyName}</td>
-                        <td className="w-28 bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">고객명 (영문)</td>
-                        <td className="p-2.5 font-mono font-bold text-slate-900">{reportData.companyNameEn}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">사업장 주소 (국문)</td>
-                        <td colSpan={3} className="p-2.5 text-slate-900">{reportData.mainSiteAddress}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">사업장 주소 (영문)</td>
-                        <td colSpan={3} className="p-2.5 font-mono text-[11px] text-slate-800">{reportData.mainSiteAddressEn}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">인증범위 (국문)</td>
-                        <td colSpan={3} className="p-2.5 font-medium text-slate-900 leading-relaxed">{reportData.auditScope}</td>
-                      </tr>
-                      <tr className="border-b border-slate-300">
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">인증범위 (영문)</td>
-                        <td colSpan={3} className="p-2.5 font-mono text-[11px] text-slate-800 leading-relaxed">{reportData.auditScopeEn}</td>
-                      </tr>
-                      <tr>
-                        <td className="bg-slate-100 p-2.5 font-bold text-slate-800 border-r border-slate-300">확인 결과</td>
-                        <td colSpan={3} className="p-2.5 font-bold text-emerald-800">
-                          ✔ 1단계 심사 시 확인된 내용과 일치하며, 인증서에 그대로 발행함에 동의함.
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* 인증서 표기 확인 전자메일 서명란 */}
-                <div className="border border-slate-300 bg-slate-50 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800">고객 확인 서명:</span>
-                    {renderSignatureSlot('cert_customer', '고객 확인 (서명)', '고객확인', reportData.ceoName, '대표이사', reportData.email)}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-800">심사팀장 확인 서명:</span>
-                    {renderSignatureSlot('cert_lead_auditor', '심사팀장 확인 (서명)', '심사팀장', auditorName || '', '선임심사원', auditorEmail || '')}
-                  </div>
-                </div>
-
-              </div>
-            )}
-
+          {/* 현재 활성 파일 클라우드 경로 정보 */}
+          <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 shrink-0">
+            <span className="text-slate-500">클라우드 경로:</span>
+            <span className="font-mono text-cyan-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 max-w-[320px] truncate" title={activeDriveFile.storagePath || activeDriveFile.fileName}>
+              {activeDriveFile.storagePath || activeDriveFile.fileName}
+            </span>
           </div>
         </div>
-        </>
-        )}
 
         {/* ========================================================= */}
-        {/* 하단 통합 상태바 */}
+        {/* MAIN VIEWER: 순수 내장 브라우저 PDF 리더 iframe          */}
         {/* ========================================================= */}
-        <div className="bg-slate-800/90 border-t border-slate-700 px-5 py-2.5 flex items-center justify-between text-xs text-slate-400 shrink-0">
-          <span className="flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-cyan-400" />
-            GMSCS ISO/ESG 인증 공인 심사보고서 · 전자메일 서명 인증 시스템 가동 중
-          </span>
-          <span className="font-mono text-[11px]">
-            보관 식별자: [GMSCS-REP]_{companyName}_{standard}_{auditDate}.pdf
-          </span>
+        <div className="flex-1 w-full h-full relative bg-slate-950 min-h-0">
+          <iframe
+            src={`${currentPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+            className="w-full h-full border-0 bg-slate-950"
+            title={activeDriveFile.simplifiedFileName || activeDriveFile.fileName || title}
+          />
         </div>
-
       </div>
-
-      {/* ========================================================================= */}
-      {/* 전자메일 서명 인증 인터랙티브 다이얼로그 (Email Signature Modal)              */}
-      {/* ========================================================================= */}
-      {activeSigningSlot && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-300 w-full max-w-md overflow-hidden text-slate-900">
-            <div className="bg-cyan-900 text-white px-5 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-cyan-300" />
-                <h4 className="font-bold text-base">전자메일 서명 인증</h4>
-              </div>
-              <button
-                onClick={() => setActiveSigningSlot(null)}
-                className="text-cyan-200 hover:text-white cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4 text-xs">
-              <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-xl text-cyan-950 leading-relaxed">
-                <strong>[{activeSigningSlot.slotLabel}]</strong> 서명을 진행합니다.
-                <br />
-                기재된 이메일로 발송된 6자리 인증번호를 확인하여 전자서명을 날인합니다.
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">서명자 성명</label>
-                  <input
-                    type="text"
-                    value={signingForm.name}
-                    onChange={(e) => setSigningForm(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="예: 홍길동"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">직위 / 역할</label>
-                  <input
-                    type="text"
-                    value={signingForm.position}
-                    onChange={(e) => setSigningForm(prev => ({ ...prev, position: e.target.value }))}
-                    placeholder="예: 대표이사, 품질팀장, 선임심사원"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">인증 전자메일 (Email)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      value={signingForm.email}
-                      onChange={(e) => setSigningForm(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="signer@company.com"
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!signingForm.email) {
-                          alert('이메일 주소를 입력해 주세요.');
-                          return;
-                        }
-                        setSigningForm(prev => ({ ...prev, isPinSent: true }));
-                      }}
-                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg text-xs whitespace-nowrap cursor-pointer transition"
-                    >
-                      {signingForm.isPinSent ? '재발송' : '인증번호 발송'}
-                    </button>
-                  </div>
-                </div>
-
-                {signingForm.isPinSent && (
-                  <div className="p-3 bg-slate-50 border border-slate-300 rounded-xl space-y-2 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-slate-800">6자리 인증 PIN 번호</label>
-                      <span className="text-[10px] text-cyan-800 font-mono font-bold bg-cyan-100 px-1.5 py-0.5 rounded">
-                        테스트 PIN: {signingForm.generatedPin}
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={signingForm.pinCode}
-                      onChange={(e) => setSigningForm(prev => ({ ...prev, pinCode: e.target.value }))}
-                      placeholder="6자리 숫자 입력"
-                      className="w-full px-3 py-2 border border-slate-400 rounded-lg text-center text-sm font-mono tracking-widest font-extrabold focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveSigningSlot(null)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer transition"
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!signingForm.name || !signingForm.email) {
-                      alert('성명과 이메일을 모두 입력해 주세요.');
-                      return;
-                    }
-                    if (signingForm.isPinSent && signingForm.pinCode && signingForm.pinCode !== signingForm.generatedPin) {
-                      alert('인증번호가 일치하지 않습니다.');
-                      return;
-                    }
-
-                    const now = new Date();
-                    const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-                    const randomHash = `SIG-EMAIL-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-                    handleSaveSignature({
-                      slotId: activeSigningSlot.slotId,
-                      slotLabel: activeSigningSlot.slotLabel,
-                      role: activeSigningSlot.role,
-                      signerName: signingForm.name,
-                      signerPosition: signingForm.position || '직책 미지정',
-                      signerEmail: signingForm.email,
-                      signedAt: nowStr,
-                      signatureHash: randomHash,
-                      isVerified: true,
-                      ipAddress: '211.234.120.45'
-                    });
-                  }}
-                  className="px-5 py-2 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg text-xs cursor-pointer shadow-md shadow-cyan-700/20 transition flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>전자메일 서명 확정</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
