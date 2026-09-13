@@ -61,20 +61,23 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     }
     const hasCustomUrl = Boolean(pdfUrl && pdfUrl !== '/docs/2025_Audit_Report_Pack.pdf');
     return {
+      companyName: companyName,
+      standards: [standard || 'ISO 9001:2015'],
+      auditType: auditType || '정기심사',
+      year: 2026,
+      month: 1,
       fileName: hasCustomUrl
-        ? `[GMSCS-DOC]_${companyName}_심사문서.pdf`
-        : `[GMSCS-FORM]_표준_심사보고서_공서식_템플릿(${companyName}).pdf`,
-      simplifiedFileName: hasCustomUrl
         ? `${companyName}_심사문서.pdf`
         : `[공서식 템플릿] 표준 심사보고서팩.pdf`,
-      originalName: hasCustomUrl ? `${companyName}_문서.pdf` : 'GMSCS_2025_Audit_Report_Pack(251001).pdf',
-      docType: hasCustomUrl ? '심사문서' : '표준 양식 템플릿 (과거 PDF 미보관)',
+      originalFilename: hasCustomUrl ? `${companyName}_문서.pdf` : 'GMSCS_2025_Audit_Report_Pack(251001).pdf',
+      docType: hasCustomUrl ? '심사보고서' : '심사보고서',
       fileSize: '873 KB',
-      sizeBytes: 893869,
       auditor: auditorName || '사무국',
+      storagePath: '',
+      downloadUrl: pdfUrl || '/docs/2025_Audit_Report_Pack.pdf',
       pdfUrl: pdfUrl || '/docs/2025_Audit_Report_Pack.pdf'
     };
-  }, [driveFiles, selectedDriveIndex, companyName, auditDate, auditType, auditorName, pdfUrl]);
+  }, [driveFiles, selectedDriveIndex, companyName, standard, auditDate, auditType, auditorName, pdfUrl]);
 
   // 브라우저 인쇄 / PDF 저장 시 파일명 동적 설정
   useEffect(() => {
@@ -112,7 +115,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
-                  {activeDriveFile.simplifiedFileName || activeDriveFile.fileName || title}
+                  {activeDriveFile.fileName || title}
                 </h2>
                 <span className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-cyan-50 text-cyan-800 border border-cyan-200 font-bold">
                   {standard}
@@ -140,7 +143,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             {/* 다운로드 */}
             <a
               href={currentPdfUrl}
-              download={activeDriveFile.simplifiedFileName || activeDriveFile.fileName || `${companyName}_심사문서.pdf`}
+              download={activeDriveFile.fileName || `${companyName}_심사문서.pdf`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors border border-slate-200 cursor-pointer shadow-xs"
@@ -215,10 +218,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                         ? 'bg-slate-900 text-white shadow-xs font-bold'
                         : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                     }`}
-                    title={`원본 파일명: ${df.originalName || df.fileName}`}
+                    title={`원본 파일명: ${df.originalFilename || df.fileName}`}
                   >
                     <FileText className={`w-3.5 h-3.5 ${selectedDriveIndex === idx ? 'text-cyan-400' : 'text-slate-400'}`} />
-                    <span className="max-w-[220px] truncate font-mono">{df.simplifiedFileName || df.fileName}</span>
+                    <span className="max-w-[220px] truncate font-mono">{df.fileName}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${selectedDriveIndex === idx ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-500'}`}>{df.fileSize}</span>
                   </button>
                 ))
@@ -252,7 +255,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         <div className="flex-1 bg-slate-100 relative overflow-hidden flex flex-col min-h-0">
           <iframe
             src={`${currentPdfUrl}#toolbar=1&navpanes=1&statusbar=1`}
-            title={activeDriveFile.simplifiedFileName || activeDriveFile.fileName || title}
+            title={activeDriveFile.fileName || title}
             className="w-full h-full border-0 flex-1"
           />
         </div>
