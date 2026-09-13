@@ -42,17 +42,87 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // 구글 드라이브/파이어베이스 스토리지 보관 문서 목록 조회
+  // 구글 드라이브/파이어베이스 스토리지 보관 문서 목록 조회 (심사보고서 -> 신청/전환자료 -> 인증서 순으로 정렬)
   const driveFiles = useMemo(() => {
-    return getDriveReportsForCompany(companyName);
+    const list = getDriveReportsForCompany(companyName);
+    const typeOrder: Record<string, number> = {
+      '심사보고서': 1,
+      '신청/전환자료': 2,
+      '인증서': 3
+    };
+    return [...list].sort((a, b) => {
+      // 1. 년도/월 내림차순
+      const timeA = (Number(a.year || 0) * 100) + Number(a.month || 0);
+      const timeB = (Number(b.year || 0) * 100) + Number(b.month || 0);
+      if (timeA !== timeB) return timeB - timeA;
+      // 2. 문서 유형 우선순위: 심사보고서 우선
+      const orderA = typeOrder[a.docType] || 9;
+      const orderB = typeOrder[b.docType] || 9;
+      if (orderA !== orderB) return orderA - orderB;
+      return (a.fileName || '').localeCompare(b.fileName || '', 'ko');
+    });
   }, [companyName]);
 
   const [selectedDriveIndex, setSelectedDriveIndex] = useState<number>(0);
 
-  // 선택된 문서가 바뀔 때 index 초기화
+  // 모달이 열리거나 pdfUrl/title이 바뀔 때 정확한 문서 인덱스 동기화
   useEffect(() => {
-    setSelectedDriveIndex(0);
-  }, [companyName]);
+    if (!isOpen || driveFiles.length === 0) {
+      setSelectedDriveIndex(0);
+      return;
+    }
+
+    // 1. pdfUrl 또는 downloadUrl 완전 일치 검색
+    if (pdfUrl) {
+      const cleanTargetUrl = pdfUrl.split('?')[0].toLowerCase();
+      const foundIdx = driveFiles.findIndex(df => {
+        const dUrl = (df.downloadUrl || '').split('?')[0].toLowerCase();
+        const pUrl = (df.pdfUrl || '').split('?')[0].toLowerCase();
+        const sPath = (df.storagePath || '').toLowerCase();
+        const fName = (df.fileName || '').toLowerCase();
+        return dUrl === cleanTargetUrl || 
+               pUrl === cleanTargetUrl || 
+               (sPath && cleanTargetUrl.includes(sPath)) ||
+               (fName && cleanTargetUrl.includes(encodeURIComponent(fName).toLowerCase())) ||
+               (fName && cleanTargetUrl.includes(fName));
+      });
+      if (foundIdx !== -1) {
+        setSelectedDriveIndex(foundIdx);
+        return;
+      }
+    }
+
+    // 2. title 기반 매칭 (심사보고서 vs 인증서 vs 계획서)
+    if (title) {
+      const isReportTitle = title.includes('심사보고서') || title.includes('보고서');
+      const isCertTitle = title.includes('인증서');
+      const isPlanTitle = title.includes('신청') || title.includes('전환') || title.includes('계획');
+
+      if (isReportTitle) {
+        const repIdx = driveFiles.findIndex(df => df.docType === '심사보고서' || df.fileName.includes('보고서'));
+        if (repIdx !== -1) {
+          setSelectedDriveIndex(repIdx);
+          return;
+        }
+      } else if (isCertTitle) {
+        const certIdx = driveFiles.findIndex(df => df.docType === '인증서' || df.fileName.includes('인증서'));
+        if (certIdx !== -1) {
+          setSelectedDriveIndex(certIdx);
+          return;
+        }
+      } else if (isPlanTitle) {
+        const planIdx = driveFiles.findIndex(df => df.docType === '신청/전환자료' || df.fileName.includes('전환') || df.fileName.includes('신청'));
+        if (planIdx !== -1) {
+          setSelectedDriveIndex(planIdx);
+          return;
+        }
+      }
+    }
+
+    // 3. 기본값: 심사보고서를 최우선 선택 (인증서 대신)
+    const defaultReportIdx = driveFiles.findIndex(df => df.docType === '심사보고서' || df.fileName.includes('보고서'));
+    setSelectedDriveIndex(defaultReportIdx !== -1 ? defaultReportIdx : 0);
+  }, [isOpen, companyName, pdfUrl, title, driveFiles]);
 
   // 활성 PDF 파일 계산
   const activeDriveFile: DriveReportFileItem = useMemo(() => {
@@ -77,7 +147,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       downloadUrl: pdfUrl || '/docs/2025_Audit_Report_Pack.pdf',
       pdfUrl: pdfUrl || '/docs/2025_Audit_Report_Pack.pdf'
     };
-  }, [driveFiles, selectedDriveIndex, companyName, standard, auditDate, auditType, auditorName, pdfUrl]);
+  }, [driveFiles, selectedDriveIndex, companyName, standard, auditType, auditorName, pdfUrl]);
 
   // 브라우저 인쇄 / PDF 저장 시 파일명 동적 설정
   useEffect(() => {
@@ -93,7 +163,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentPdfUrl = activeDriveFile.pdfUrl || pdfUrl || '/docs/2025_Audit_Report_Pack.pdf';
+  const currentPdfUrl = activeDriveFile.downloadUrl || activeDriveFile.pdfUrl || pdfUrl || '/docs/2025_Audit_Report_Pack.pdf';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-2 sm:p-4 overflow-hidden animate-in fade-in">
