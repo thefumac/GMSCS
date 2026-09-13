@@ -702,22 +702,59 @@ export function App() {
     }));
   };
 
-  // 심사보고서 목록에서 특정 보고서 상세 열기 (사용자 요구사항: 목록을 보고 클릭하여 세부 사항 열람)
-  const handleOpenReportDetail = (reportId: string) => {
+  // 심사보고서 열기: 승인완료/과거 보고서는 클라우드 스토리지 실제 PDF 뷰어로 직행, 작성중일 때만 편집기 오픈
+  const handleOpenReport = (reportId: string) => {
+    const rep = reports[reportId] || Object.values(reports).find(r => r.id === reportId);
+    const prj = projects.find(p => p.reportId === reportId || p.id === reportId);
+    const compName = rep?.companyName || prj?.companyName;
+
+    const isDraftWriting = (prj?.status === '보고서작성' || prj?.status === '심사진행중' || rep?.secretariatReviewStatus === '작성중');
+
+    if (!isDraftWriting && compName) {
+      setPdfModalState({
+        isOpen: true,
+        title: `[공식 심사보고서] ${compName}`,
+        companyName: compName,
+        standard: prj?.standards?.[0] || rep?.standards?.[0] || 'ISO 9001:2015',
+        auditType: prj?.auditType || rep?.auditType || '정기 사후관리 심사',
+        auditDate: prj?.startDate || rep?.startDate || '2025-10-15',
+        auditorName: prj?.leadAuditorName || rep?.leadAuditor || '남경호'
+      });
+      return;
+    }
+
     navigateTo('reports', 'audit', {
       isEditingReport: true,
       reportId: reportId
     });
   };
 
-  // 캘린더나 타 화면에서 보고서 열기
-  const handleOpenReport = (reportId: string) => {
-    handleOpenReportDetail(reportId);
+  // 심사보고서 상세 열기
+  const handleOpenReportDetail = (reportId: string) => {
+    handleOpenReport(reportId);
   };
 
-  // 심사보고서 워크벤치 열기 (브라우저 새 탭으로 전용 작업대 오픈)
+  // 심사보고서 워크벤치 열기: 완료된 보고서는 PDF 뷰어로 직행, 작성중일 때만 새 탭 작업대 오픈
   const handleOpenReportWorkbench = (companyOrId: Company | string) => {
     const targetId = typeof companyOrId === 'string' ? companyOrId : companyOrId.id;
+    const targetComp = typeof companyOrId === 'string' 
+      ? (companies.find(c => c.id === companyOrId || c.companyName === companyOrId) || { id: targetId, companyName: targetId } as Company)
+      : companyOrId;
+    const prj = projects.find(p => p.companyId === targetId || p.companyName === targetComp?.companyName);
+
+    if (prj && prj.status !== '보고서작성' && prj.status !== '심사진행중' && targetComp) {
+      setPdfModalState({
+        isOpen: true,
+        title: `[공식 심사보고서] ${targetComp.companyName}`,
+        companyName: targetComp.companyName,
+        standard: prj.standards?.[0] || 'ISO 9001:2015',
+        auditType: prj.auditType || '정기 사후관리 심사',
+        auditDate: prj.startDate || '2025-10-15',
+        auditorName: prj.leadAuditorName || '남경호'
+      });
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       window.open(`#workbench/${encodeURIComponent(targetId)}`, '_blank');
     }
@@ -1280,6 +1317,18 @@ export function App() {
             auditContracts={auditContracts}
             projects={projects}
             onOpenReport={handleOpenReport}
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate,
+                auditorName: info.auditorName,
+                pdfUrl: info.pdfUrl
+              });
+            }}
             onOpenEmailModal={(companyName, contactEmail, templateType) => {
               handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');
             }}
@@ -1349,6 +1398,18 @@ export function App() {
             companies={companies}
             auditors={auditors}
             initialSubTab="companies"
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate,
+                auditorName: info.auditorName,
+                pdfUrl: info.pdfUrl
+              });
+            }}
             onToggleCommitteeMember={handleToggleCommitteeMember}
             onReassignCompanyAuditor={handleReassignCompanyAuditor}
             onUpdateAuditorAffiliation={handleUpdateAuditorAffiliation}

@@ -28,6 +28,7 @@ interface CompanyAuditorManagerProps {
   companies: (Company | LegacyCompanyExtended)[];
   auditors: Auditor[];
   initialSubTab?: 'companies' | 'auditors';
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; auditorName?: string; pdfUrl?: string }) => void;
   onToggleCommitteeMember?: (auditorId: string) => void;
   onReassignCompanyAuditor?: (companyId: string, newAuditorId: string, reasonCategory: AuditorReassignmentLog['reasonCategory'], reasonDetail: string) => void;
   onUpdateAuditorAffiliation?: (auditorId: string, affiliation: AuditorAffiliation) => void;
@@ -95,6 +96,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
   companies: initialCompanies,
   auditors: initialAuditors,
   initialSubTab = 'companies',
+  onOpenPdfReport,
   onToggleCommitteeMember,
   onReassignCompanyAuditor,
   onUpdateAuditorAffiliation,
@@ -922,6 +924,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
         onClose={() => setSelectedCompany(null)}
         company={selectedCompany}
         allAuditors={auditors}
+        onOpenPdfReport={onOpenPdfReport}
       />
 
       {/* ========================================================================= */}

@@ -22,6 +22,7 @@ export interface ClientManagementProps {
   auditContracts?: AuditContractRecord[];
   projects?: AuditProject[];
   onOpenReport?: (reportId: string) => void;
+  onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; auditorName?: string; pdfUrl?: string }) => void;
   onOpenEmailModal?: (recipientName?: string, recipientEmail?: string, templateType?: string) => void;
   onAddCompany?: (company: Company) => void;
 }
@@ -88,6 +89,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   contracts = [],
   projects = [],
   onOpenReport,
+  onOpenPdfReport,
   onAddCompany
 }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'dormant' | 'cloudDocs'>('all');
@@ -767,6 +769,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         projects={projects}
         allAuditors={auditors}
         onOpenReport={onOpenReport}
+        onOpenPdfReport={onOpenPdfReport}
       />
 
       {/* 신규 고객 등록 모달 (신규/전환) */}

@@ -776,9 +776,6 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                   const std = stdAndCerts[0]?.std || 'ISO 9001:2015';
                                   const leadAuditor = rec.leadAuditor || managingAuditor.name || '남경호';
                                   const title = `[심사보고서] ${rec.auditType} (${rec.auditDate}) - 심사팀장: ${leadAuditor}`;
-                                  if (typeof window !== 'undefined') {
-                                    window.open(`#pdf-report/${encodeURIComponent(company.companyName)}?standard=${encodeURIComponent(std)}&auditType=${encodeURIComponent(rec.auditType)}&auditDate=${encodeURIComponent(rec.auditDate)}&auditorName=${encodeURIComponent(leadAuditor)}`, '_blank');
-                                  }
                                   onOpenPdfReport?.({
                                     title,
                                     companyName: company.companyName,
@@ -788,11 +785,11 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     auditorName: leadAuditor
                                   });
                                 }}
-                                className="text-cyan-800 hover:text-cyan-950 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer group"
-                                title="공식 심사보고서 PDF 새 창 열람"
+                                className="text-cyan-800 hover:text-cyan-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer group text-xs"
+                                title="공식 심사보고서 PDF 열람"
                               >
-                                <FileText className="w-3.5 h-3.5 text-cyan-800 group-hover:scale-110 transition-transform" />
-                                <span>심사보고서 (이전 보고서 열람)</span>
+                                <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
+                                <span>심사보고서 (PDF 열람)</span>
                               </button>
 
                               {/* 인증서 링크 */}
@@ -801,23 +798,18 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                 onClick={() => {
                                   const std = stdAndCerts[0]?.std || 'ISO 9001:2015';
                                   const title = `[인증서] ${company.companyName} 공식 인증서 (${std})`;
-                                  if (typeof window !== 'undefined') {
-                                    window.open(`#pdf-cert/${encodeURIComponent(company.companyName)}?standard=${encodeURIComponent(std)}&auditDate=${encodeURIComponent(rec.auditDate)}`, '_blank');
-                                  }
-                                  if (onOpenPdfReport) {
-                                    onOpenPdfReport({
-                                      title,
-                                      companyName: company.companyName,
-                                      standard: std,
-                                      auditType: '인증서 발급본',
-                                      auditDate: rec.auditDate
-                                    });
-                                  }
+                                  onOpenPdfReport?.({
+                                    title,
+                                    companyName: company.companyName,
+                                    standard: std,
+                                    auditType: '인증서 발급본',
+                                    auditDate: rec.auditDate
+                                  });
                                 }}
-                                className="text-indigo-800 hover:text-indigo-950 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer group"
-                                title="공식 인증서 PDF 새 창 열람"
+                                className="text-indigo-800 hover:text-indigo-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer group text-xs"
+                                title="공식 인증서 PDF 열람"
                               >
-                                <Award className="w-3.5 h-3.5 text-indigo-800 group-hover:scale-110 transition-transform" />
+                                <Award className="w-3.5 h-3.5 text-indigo-800 shrink-0" />
                                 <span>인증서(국/영문)</span>
                               </button>
 
