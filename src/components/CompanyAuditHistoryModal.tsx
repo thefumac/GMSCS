@@ -41,6 +41,7 @@ import { AuditAttachmentDocModal, AttachmentDocItem } from './AuditAttachmentDoc
 import { ImpartialityAssessmentDocModal } from './ImpartialityAssessmentDocModal';
 import { ContractReviewDocModal } from './ContractReviewDocModal';
 import { DeliberationReportDocModal } from './DeliberationReportDocModal';
+import { StandardContractViewModal } from './StandardContractViewModal';
 import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
 import { getDriveReportsForCompany, DriveReportFileItem } from '../data/driveReportFiles';
 
@@ -165,6 +166,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   const [isImpartialityDocOpen, setIsImpartialityDocOpen] = useState(false);
   const [isContractReviewDocOpen, setIsContractReviewDocOpen] = useState(false);
   const [isDeliberationDocOpen, setIsDeliberationDocOpen] = useState(false);
+  const [isContractDocOpen, setIsContractDocOpen] = useState(false);
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [selectedAuditForAttachments, setSelectedAuditForAttachments] = useState<AuditHistoryRecordItem | null>(null);
 
@@ -775,10 +777,11 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
                     <tr>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[180px] whitespace-nowrap">심사일자 (연월)</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[170px] whitespace-nowrap">심사구분 &amp; 규격</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[190px] whitespace-nowrap">심사구분 &amp; 규격</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[170px] whitespace-nowrap">심사일자 (MD)</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[110px] whitespace-nowrap">차기 예정일</th>
                       <th className="py-2.5 px-3 border-r border-slate-200 w-[130px] whitespace-nowrap">담당 심사원</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[100px] text-center whitespace-nowrap">부적합 수</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[90px] text-center whitespace-nowrap">부적합 수</th>
                       <th className="py-2.5 px-3 whitespace-nowrap">발급 문서 및 보고서 열람</th>
                     </tr>
                   </thead>
@@ -848,42 +851,134 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                         const fallbackAuditDateStr = latestProject?.auditDates?.length 
                           ? (latestProject.auditDates.length > 1 ? `${latestProject.startDate} ~ ${latestProject.endDate.slice(5)}` : latestProject.startDate) 
                           : (dueDate?.slice(0, 7) || '2026.09');
-                        const fallbackMd = (effectiveContractRecord.appliedMd || latestProject?.appliedMd || 1.5).toFixed(1);
+                        const fallbackMd = (effectiveContractRecord.appliedMd || latestProject?.appliedMd || 2.0).toFixed(1);
                         const fallbackAuditorDisplay = latestProject?.leadAuditorName 
                           ? `팀장: ${latestProject.leadAuditorName}${latestProject.teamAuditorNames?.length ? ` / 팀원: ${latestProject.teamAuditorNames.join(', ')}` : ''}`
                           : ((effectiveCompany as any).assignedAuditor || managingAuditor.name || '사무국');
 
+                        // 차기 예정일 계산 (심사일자 기준 1년 뒤 또는 dueDate)
+                        let nextDueDate = dueDate || '';
+                        if (latestProject?.startDate) {
+                          const parts = latestProject.startDate.split('-');
+                          if (parts.length === 3) {
+                            nextDueDate = `${Number(parts[0]) + 1}.${parts[1]}.${parts[2]}`;
+                          }
+                        } else if (dueDate) {
+                          nextDueDate = dueDate.replace(/-/g, '.');
+                        }
+
                         return (
                           <tr className="hover:bg-slate-50 transition">
+                            {/* 1. 심사구분 & 규격 (첫번째 컬럼) */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                              <span className="font-semibold text-cyan-950 block">{stageText}</span>
+                              <span className="text-[10px] text-slate-500 font-mono">{stdAndCerts.map(s => s.std).join(' / ')}</span>
+                            </td>
+
+                            {/* 2. 심사일자 (MD) */}
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
                               {fallbackAuditDateStr} ({fallbackMd} MD)
                             </td>
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                              <span className="font-semibold text-cyan-950 block">{stageText}</span>
-                              <span className="text-[10px] text-slate-500">{stdAndCerts.map(s => s.std).join(' / ')}</span>
+
+                            {/* 3. 차기 예정일 */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[11px] font-medium text-slate-700 whitespace-nowrap">
+                              {nextDueDate || '-'}
                             </td>
+
+                            {/* 4. 담당 심사원 */}
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
                               <span className="font-medium text-slate-900 block">{fallbackAuditorDisplay}</span>
                               <span className="text-[10.5px] text-slate-400">인증원 공인심사</span>
                             </td>
+
+                            {/* 5. 부적합 수 */}
                             <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
                               중 0 · 경 0 · 관 0
                             </td>
+
+                            {/* 6. 발급 문서 및 보고서 열람 (7개 링크 엄격한 고정 순서 유지) */}
                             <td className="py-2.5 px-3 align-middle">
-                              <div className="flex items-center gap-3.5 flex-wrap">
-                                <span className="text-slate-400 font-normal text-xs">
-                                  기존보고서 없음
-                                </span>
-                                {onOpenReportWorkbench && (
+                              <div className="flex items-center gap-3 flex-wrap">
+                                
+                                {/* 1. 계약검토보고서 (F02) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsContractReviewDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F02] 인증신청 및 계약검토보고서 원문 열람/인쇄"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>계약검토보고서</span>
+                                </button>
+
+                                {/* 2. 공정성관리평가서 (F14) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsImpartialityDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F14] 공정성 관리 및 이해상충 평가서 원문 열람/인쇄"
+                                >
+                                  <Shield className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>공정성관리평가서</span>
+                                </button>
+
+                                {/* 3. 표준계약서 (F16) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsContractDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F16] 인증심사 표준계약서 열람/인쇄"
+                                >
+                                  <FileCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>표준계약서</span>
+                                </button>
+
+                                {/* 4. 심사계획·청구서 (F16) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsPlanDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F16] 심사계획 및 비용청구서 공문 열람/인쇄"
+                                >
+                                  <ClipboardList className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>심사계획·청구서</span>
+                                </button>
+
+                                {/* 5. 심사보고서 (F17) */}
+                                {onOpenReportWorkbench ? (
                                   <button
                                     type="button"
                                     onClick={() => onOpenReportWorkbench(effectiveCompany)}
                                     className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title="공식 심사보고서 작성 및 PDF 뷰어"
                                   >
-                                    <FileText className="w-3.5 h-3.5 text-slate-800 shrink-0" />
-                                    <span>심사보고서 작성/등록</span>
+                                    <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                    <span>심사보고서</span>
                                   </button>
+                                ) : (
+                                  <span className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none">
+                                    <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                                    <span>심사보고서</span>
+                                  </span>
                                 )}
+
+                                {/* 6. 심의결과보고서 (F18) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsDeliberationDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F18] 인증심의 결과보고서 및 의결서 열람/인쇄"
+                                >
+                                  <Award className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>심의결과보고서</span>
+                                </button>
+
+                                {/* 7. 인증서 (국/영문) */}
+                                <span className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none">
+                                  <Award className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                                  <span>인증서</span>
+                                </span>
+
                               </div>
                             </td>
                           </tr>
@@ -896,14 +991,14 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                         const mdText = grp.auditType.includes('최초') ? '3.0 MD' : '2.0 MD';
                         const stdDisplay = grp.standards.length > 0 ? grp.standards.map(s => s.split(':')[0]).join(' · ') : (stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') || 'ISO 9001');
 
+                        // 차기 예정일 계산 (해당 심사 연도 + 1년)
+                        const nextYear = Number(grp.year || 2025) + 1;
+                        const nextMonth = grp.month ? String(grp.month).padStart(2, '0') : '10';
+                        const nextDateStr = `${nextYear}.${nextMonth}`;
+
                         return (
                           <tr key={k} className="hover:bg-slate-50 transition">
-                            {/* 1. 심사일자 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
-                              {dateText} ({mdText})
-                            </td>
-
-                            {/* 2. 심사구분 & 규격 */}
+                            {/* 1. 심사구분 & 규격 (첫번째 컬럼) */}
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
                               <span className="font-semibold text-cyan-950 block">{grp.auditType}</span>
                               <span className="text-[11px] text-slate-600 font-mono font-normal block mt-0.5">
@@ -911,22 +1006,97 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                               </span>
                             </td>
 
-                            {/* 3. 담당 심사원 */}
+                            {/* 2. 심사일자 (MD) */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
+                              {dateText} ({mdText})
+                            </td>
+
+                            {/* 3. 차기 예정일 */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[11px] font-medium text-slate-700 whitespace-nowrap">
+                              {nextDateStr}
+                            </td>
+
+                            {/* 4. 담당 심사원 */}
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
                               <span className="font-medium text-slate-900 block">{grp.auditor || managingAuditor.name || '사무국'}</span>
                               <span className="text-[10.5px] text-slate-400 font-normal">인증원 공인심사</span>
                             </td>
 
-                            {/* 4. 부적합 수 */}
+                            {/* 5. 부적합 수 */}
                             <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
                               중 0 · 경 0 · 관 0
                             </td>
 
-                            {/* 5. 발급 문서 및 보고서 열람 (Firebase Cloud Storage 실물 PDF 연동) */}
+                            {/* 6. 발급 문서 및 보고서 열람 (7개 링크 엄격한 고정 순서 유지) */}
                             <td className="py-2.5 px-3 align-middle">
-                              <div className="flex items-center gap-3.5 flex-wrap">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 
-                                {/* 심사보고서 */}
+                                {/* 1. 계약검토보고서 (F02) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsContractReviewDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F02] 인증신청 및 계약검토보고서 열람/인쇄"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>계약검토보고서</span>
+                                </button>
+
+                                {/* 2. 공정성관리평가서 (F14) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsImpartialityDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F14] 공정성 관리 및 이해상충 평가서 열람/인쇄"
+                                >
+                                  <Shield className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>공정성관리평가서</span>
+                                </button>
+
+                                {/* 3. 표준계약서 (F16) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsContractDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F16] 인증심사 표준계약서 열람/인쇄"
+                                >
+                                  <FileCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>표준계약서</span>
+                                </button>
+
+                                {/* 4. 심사계획·청구서 (F16) */}
+                                {grp.planDoc ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onOpenPdfReport?.({
+                                        title: grp.planDoc?.fileName || `[심사계획서] ${company.companyName} ${grp.auditType}`,
+                                        companyName: company.companyName,
+                                        standard: grp.standards[0] || 'ISO 9001:2015',
+                                        auditType: grp.auditType,
+                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
+                                        pdfUrl: grp.planDoc?.downloadUrl || grp.planDoc?.pdfUrl
+                                      });
+                                    }}
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title={`신청/전환/계획서 열람 (${grp.planDoc.fileSize})`}
+                                  >
+                                    <ClipboardList className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                    <span>심사계획·청구서</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsPlanDocOpen(true)}
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title="[F16] 심사계획 및 비용청구서 열람/인쇄"
+                                  >
+                                    <ClipboardList className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                    <span>심사계획·청구서</span>
+                                  </button>
+                                )}
+
+                                {/* 5. 심사보고서 (F17) */}
                                 {grp.reportDoc ? (
                                   <button
                                     type="button"
@@ -942,9 +1112,19 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                       });
                                     }}
                                     className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title={`공식 심사보고서 열람 (${grp.reportDoc.fileSize})`}
+                                    title={`공식 심사보고서 PDF 열람 (${grp.reportDoc.fileSize})`}
                                   >
-                                    <FileText className="w-3.5 h-3.5 text-slate-800 shrink-0" />
+                                    <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                    <span>심사보고서</span>
+                                  </button>
+                                ) : onOpenReportWorkbench ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => onOpenReportWorkbench(effectiveCompany)}
+                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title="심사보고서 작성/열람"
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
                                     <span>심사보고서</span>
                                   </button>
                                 ) : (
@@ -957,7 +1137,18 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                   </span>
                                 )}
 
-                                {/* 인증서 */}
+                                {/* 6. 심의결과보고서 (F18) */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsDeliberationDocOpen(true)}
+                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  title="[F18] 인증심의 결과보고서 및 의결서 열람/인쇄"
+                                >
+                                  <Award className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>심의결과보고서</span>
+                                </button>
+
+                                {/* 7. 인증서 (국/영문) */}
                                 {grp.certDoc ? (
                                   <button
                                     type="button"
@@ -974,7 +1165,7 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                     title={`공식 인증서 PDF 열람 (${grp.certDoc.fileSize})`}
                                   >
-                                    <Award className="w-3.5 h-3.5 text-slate-800 shrink-0" />
+                                    <Award className="w-3.5 h-3.5 text-slate-700 shrink-0" />
                                     <span>인증서(국/영문)</span>
                                   </button>
                                 ) : (
@@ -984,39 +1175,6 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                   >
                                     <Award className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                                     <span>인증서</span>
-                                  </span>
-                                )}
-
-                                {/* 심사계획서 / 전환자료 */}
-                                {grp.planDoc ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onOpenPdfReport?.({
-                                        title: grp.planDoc?.fileName || `[신청/전환자료] ${company.companyName} ${grp.auditType}`,
-                                        companyName: company.companyName,
-                                        standard: grp.standards[0] || 'ISO 9001:2015',
-                                        auditType: grp.auditType,
-                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
-                                        pdfUrl: grp.planDoc?.downloadUrl || grp.planDoc?.pdfUrl
-                                      });
-                                    }}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title={`신청/전환/계획서 열람 (${grp.planDoc.fileSize})`}
-                                  >
-                                    <Paperclip className="w-3.5 h-3.5 text-slate-800 shrink-0" />
-                                    <span>전환/부속자료</span>
-                                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1 rounded font-mono border border-slate-200">
-                                      {grp.planDoc.fileSize}
-                                    </span>
-                                  </button>
-                                ) : (
-                                  <span 
-                                    className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none"
-                                    title="보관된 심사계획서/부속서류 파일 없음"
-                                  >
-                                    <FileCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                    <span>심사계획서</span>
                                   </span>
                                 )}
 
@@ -1118,6 +1276,13 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
         project={latestProject}
         auditor={managingAuditor as any}
         decision="인증등록승인"
+      />
+
+      {/* 인증심사 표준계약서 F16-004 모달 */}
+      <StandardContractViewModal
+        isOpen={isContractDocOpen}
+        onClose={() => setIsContractDocOpen(false)}
+        contract={effectiveContractRecord}
       />
 
       {/* 회차별 부속서류철 탭 모달 */}

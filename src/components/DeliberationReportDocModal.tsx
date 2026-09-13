@@ -1,17 +1,9 @@
 import React from 'react';
 import { 
   X, 
-  Printer, 
-  Award, 
-  Building2, 
-  CheckCircle2, 
-  Calendar,
-  FileCheck,
-  ShieldCheck,
-  UserCheck
+  Printer 
 } from 'lucide-react';
 import { Company, AuditProject, Auditor, CommitteeDecision } from '../types';
-import { cleanCeoName, cleanPersonName } from '../utils/personUtils';
 
 export interface DeliberationReportDocModalProps {
   isOpen: boolean;
@@ -30,260 +22,531 @@ export const DeliberationReportDocModal: React.FC<DeliberationReportDocModalProp
   company,
   project,
   auditor,
-  decision = '인증등록승인',
+  decision = '승인',
   reviewNote,
   deliberationDate
 }) => {
   if (!isOpen || !company) return null;
 
   const compName = company.companyName;
-  const ceoName = cleanCeoName(company.ceoName);
-  const stds = project?.standards?.length ? project.standards.join(', ') : (company.standards ? (Array.isArray(company.standards) ? company.standards.join(', ') : company.standards) : 'ISO 9001:2015');
-  const iafCode = company.iafCode || '29, 14';
-  const auditType = project?.auditType || '정기 사후관리심사';
-  
-  // Auditor sanitization
+  const certNumber = (company as any).certNo || '';
+  const scope = company.scope || (company as any).bizType || '-';
+  const iafCode = company.iafCode || '-';
+
+  // Standards
+  const stdsStr = (company.standards ? (Array.isArray(company.standards) ? company.standards.join(', ') : company.standards) : '') + 
+    (project?.standards ? project.standards.join(', ') : '');
+  const hasIso9001 = stdsStr.includes('9001');
+  const hasIso14001 = stdsStr.includes('14001');
+  const hasIso45001 = stdsStr.includes('45001');
+
+  // Audit Type category
+  const auditType = project?.auditType || '사후';
+  const auditTypeLabel = auditType.includes('최초') ? '최초' : (auditType.includes('갱신') ? '갱신' : '사후');
+
+  // Auditors sanitization
   const invalidKeywords = ['수금', '미수', '입금', '청구', 'HQ', '직영', '협력기관', '미배정', '사무국', 'admin'];
   const rawLead = project?.leadAuditorName || (company as any).assignedAuditorName || auditor?.name || '';
   const isInvalidLead = !rawLead || invalidKeywords.some(kw => rawLead.includes(kw));
-  const leadAuditor = isInvalidLead ? '미배정 (배정 검토 중)' : rawLead;
+  const leadAuditor = isInvalidLead ? '' : rawLead;
 
-  const auditDateStr = project?.startDate && project?.endDate ? `${project.startDate} ~ ${project.endDate}` : (project?.startDate || '2026-09-08');
-  const decisionDate = deliberationDate || project?.endDate || new Date().toISOString().substring(0, 10);
-  const certNumber = (company as any).certNo || 'Q260101';
-  
-  const defaultNote = reviewNote || `인증심사보고서 및 부적합 사항에 대한 시정조치 유효성 검증 결과를 엄정히 검토한 결과, KAB 공인 심사 기준 및 ISO 국제 표준 요구사항에 적합하게 수행되었으므로 최종 [${decision}]을 의결함.`;
+  const rawTeam = project?.teamAuditorNames?.length ? project.teamAuditorNames.join(', ') : '';
+  const isInvalidTeam = !rawTeam || invalidKeywords.some(kw => rawTeam.includes(kw));
+  const teamAuditor = isInvalidTeam ? '' : rawTeam;
+
+  const auditDateStr = project?.startDate ? project.startDate.replace(/-/g, '.') : '';
+  const projAny = project as any;
+  const mdStr = projAny?.md ? `${projAny.md}MD` : (projAny?.appliedMd ? `${projAny.appliedMd}MD` : '');
+  const item1Detail = mdStr && auditDateStr ? `${mdStr}/${auditDateStr}` : (auditDateStr || '');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto animate-in fade-in">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-2 sm:p-4 overflow-y-auto animate-in fade-in">
+      <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-slate-300 overflow-hidden my-4 flex flex-col max-h-[95vh]">
         
-        {/* 상단 툴바 (No-Print) */}
-        <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0 no-print">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Award className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-extrabold text-white">
-                  인증심의 결과보고서 및 의결서 (F18-001)
-                </h2>
-                <span className="px-2 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 text-[10px] font-mono border border-indigo-700">
-                  인증심의위원회 공식 의결
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                심사보고서 검토, 시정조치 유효성 평가 및 최종 인증등록·유지 승인 의결서
-              </p>
-            </div>
+        {/* 상단 타이틀 바 */}
+        <div className="bg-[#2b3a4a] text-white px-4 py-2.5 flex items-center justify-between shrink-0 no-print">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-bold tracking-tight">인증심의결과보고서( {auditTypeLabel} )</span>
           </div>
-
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={() => window.print()}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer border border-slate-700"
+              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs flex items-center gap-1 transition cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>인쇄 / PDF 저장</span>
+              <span>인쇄 / PDF</span>
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              className="p-1 rounded text-slate-300 hover:text-white hover:bg-slate-700 transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* 문서 본문 (A4 규격 스타일) */}
-        <div className="p-8 space-y-6 text-slate-900 text-xs leading-relaxed overflow-y-auto bg-white">
+        {/* 문서 본문 (ERP 1:1 완벽 양식) */}
+        <div className="p-4 sm:p-6 space-y-4 text-slate-900 text-xs overflow-y-auto bg-white font-sans">
           
-          {/* 문서 헤더 */}
-          <div className="text-center space-y-1 border-b-2 border-slate-900 pb-4">
-            <div className="flex justify-between items-center text-[10px] text-slate-500 font-mono">
-              <span>서식번호: F18-001 (Rev. 3)</span>
-              <span>한국인정지원센터(KAB) 공인인증원 심의위원회 운영규정 제18조</span>
-            </div>
-            <h1 className="text-xl font-black tracking-tight text-slate-900 mt-1">
-              경영시스템 인증심의 결과보고서 (의결서)
-            </h1>
-            <p className="text-xs text-slate-600 font-medium">
-              (Certification Decision &amp; Deliberation Result Report)
-            </p>
-          </div>
-
-          {/* 1. 심의 대상 기업 및 심사 개요 */}
-          <div>
-            <h3 className="font-bold text-slate-900 text-xs mb-2 flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-indigo-700" />
-              <span>1. 심의 대상 기업 및 심사 개요</span>
-            </h3>
+          {/* 1. 기본정보 */}
+          <div className="space-y-1.5">
+            <h3 className="font-bold text-slate-900 text-xs">1. 기본정보</h3>
             <table className="w-full border-collapse border border-slate-300 text-xs">
               <tbody>
                 <tr>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold w-28 text-center">신청 기업명</th>
+                  <th className="border border-slate-300 bg-slate-50 p-2 font-semibold w-24 text-center">고 객 명</th>
                   <td className="border border-slate-300 p-2 font-bold text-slate-900">{compName}</td>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold w-28 text-center">대표자</th>
-                  <td className="border border-slate-300 p-2">{ceoName}</td>
+                  <th className="border border-slate-300 bg-slate-50 p-2 font-semibold w-24 text-center">인증번호</th>
+                  <td className="border border-slate-300 p-2 font-mono">
+                    {certNumber ? (
+                      <span>{certNumber}</span>
+                    ) : (
+                      <input 
+                        type="text" 
+                        placeholder="최초인 경우 직접 입력" 
+                        className="w-full border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono" 
+                      />
+                    )}
+                  </td>
                 </tr>
                 <tr>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">인증 표준 규격</th>
-                  <td className="border border-slate-300 p-2 font-bold text-cyan-900">{stds}</td>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">인증번호</th>
-                  <td className="border border-slate-300 p-2 font-mono font-bold">{certNumber}</td>
+                  <th className="border border-slate-300 bg-slate-50 p-2 font-semibold text-center">인 증 범 위</th>
+                  <td className="border border-slate-300 p-2 text-slate-800">{scope}</td>
+                  <th className="border border-slate-300 bg-slate-50 p-2 font-semibold text-center">인증코드</th>
+                  <td className="border border-slate-300 p-2 font-mono">{iafCode}</td>
                 </tr>
                 <tr>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">심사 구분</th>
-                  <td className="border border-slate-300 p-2 font-semibold">{auditType}</td>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">심사 일자</th>
-                  <td className="border border-slate-300 p-2 font-mono">{auditDateStr}</td>
+                  <th className="border border-slate-300 bg-slate-50 p-2 font-semibold text-center">인 증 표 준</th>
+                  <td colSpan={3} className="border border-slate-300 p-2">
+                    <div className="flex items-center flex-wrap gap-4 text-xs">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" checked={hasIso9001} readOnly className="rounded border-slate-400 text-blue-600" />
+                        <span>ISO 9001:2015</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" checked={hasIso14001} readOnly className="rounded border-slate-400 text-blue-600" />
+                        <span>ISO 14001:2015</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" checked={hasIso45001} readOnly className="rounded border-slate-400 text-blue-600" />
+                        <span>ISO 45001:2018</span>
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <input type="checkbox" className="rounded border-slate-400 text-blue-600" />
+                        <span>기타</span>
+                        <select className="border border-slate-300 rounded px-1 py-0.5 text-xs bg-white">
+                          <option value="">- 선택 -</option>
+                          <option value="Q/E">Q/E</option>
+                          <option value="Q">Q</option>
+                          <option value="E">E</option>
+                          <option value="OH&S">OH&S</option>
+                        </select>
+                      </div>
+                    </div>
+                  </td>
                 </tr>
                 <tr>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">담당 심사팀장</th>
-                  <td className="border border-slate-300 p-2 font-semibold">{leadAuditor} (선임심사원)</td>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">IAF 분류 코드</th>
-                  <td className="border border-slate-300 p-2 font-mono font-medium">{iafCode}</td>
-                </tr>
-                <tr>
-                  <th className="border border-slate-300 bg-slate-100 p-2 font-bold text-center">인증 범위</th>
-                  <td colSpan={3} className="border border-slate-300 p-2 text-slate-800">
-                    {company.scope || '금속 가공 및 기계 부품의 제조'}
+                  <th className="border border-slate-300 bg-slate-50 p-2 font-semibold text-center">심 사 팀</th>
+                  <td colSpan={3} className="border border-slate-300 p-0">
+                    <div className="grid grid-cols-4 divide-x divide-slate-300 text-center">
+                      <div className="bg-slate-50 p-2 font-semibold">심사팀장</div>
+                      <div className="p-2 font-medium">{leadAuditor || '-'}</div>
+                      <div className="bg-slate-50 p-2 font-semibold">심사팀원</div>
+                      <div className="p-2 font-medium">{teamAuditor || '-'}</div>
+                    </div>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* 2. 심사 결과 및 부적합 시정조치 검토 */}
-          <div>
-            <h3 className="font-bold text-slate-900 text-xs mb-2 flex items-center gap-1.5">
-              <FileCheck className="w-4 h-4 text-indigo-700" />
-              <span>2. 심사 결과 및 부적합(NCR) 시정조치 유효성 검토</span>
-            </h3>
-            <table className="w-full border-collapse border border-slate-300 text-xs text-center">
-              <thead className="bg-slate-100 font-bold text-slate-800">
+          {/* 2. 인증심의 */}
+          <div className="space-y-1.5">
+            <h3 className="font-bold text-slate-900 text-xs">2. 인증심의</h3>
+            <table className="w-full border-collapse border border-slate-300 text-xs">
+              <thead className="bg-slate-100 font-bold text-slate-800 text-center">
                 <tr>
-                  <th className="border border-slate-300 p-2">중부적합 (Major)</th>
-                  <th className="border border-slate-300 p-2">경부적합 (Minor)</th>
-                  <th className="border border-slate-300 p-2">권고사항 (Obs)</th>
-                  <th className="border border-slate-300 p-2">시정조치 완료 여부</th>
-                  <th className="border border-slate-300 p-2">심사팀 추천 의견</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2 w-32">심의항목</th>
+                  <th rowSpan={2} className="border border-slate-300 p-2">심의 기준</th>
+                  <th colSpan={2} className="border border-slate-300 p-1.5">심의 결과</th>
+                </tr>
+                <tr>
+                  <th className="border border-slate-300 p-1.5 w-32">확인</th>
+                  <th className="border border-slate-300 p-1.5 w-44">심의내역</th>
                 </tr>
               </thead>
               <tbody>
+                {/* 1. 심사팀 구성의 적합성 및 공평성 */}
                 <tr>
-                  <td className="border border-slate-300 p-2 font-mono font-bold text-slate-700">0 건</td>
-                  <td className="border border-slate-300 p-2 font-mono font-bold text-slate-700">0 건</td>
-                  <td className="border border-slate-300 p-2 font-mono text-slate-500">1 건</td>
-                  <td className="border border-slate-300 p-2 font-bold text-emerald-800 bg-emerald-50/50">
-                    조치완료 / 유효성 확인됨
+                  <td rowSpan={3} className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    심사팀 구성의<br />적합성 및 공평성
                   </td>
-                  <td className="border border-slate-300 p-2 font-bold text-indigo-950">
-                    인증등록 (유지) 강력 추천
+                  <td className="border border-slate-300 p-2">1. 심사일수 및 비용산정이 절차에 맞는가?(계약검토서 확인)</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_1" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_1" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_1" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" defaultValue={item1Detail} className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">2. 심사팀 구성 및 심사 준비에 대한 원칙이 준수되었는가?<br />(인증범위와 심사원 코드)</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_2" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_2" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_2" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">3. 심사업체와의 이해상충 및 공평성 위협요소는 없는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_3" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_3" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_3" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+
+                {/* 2. 심사 수행의 적합성 */}
+                <tr>
+                  <td rowSpan={5} className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    심사 수행의 적합성
+                  </td>
+                  <td className="border border-slate-300 p-2">4. 심사계획은 최소 1주일 이전에 통보하였는가?(늦어도 3일전)</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_4" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_4" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_4" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">5. 심사팀의 구성은 적합한가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_5" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_5" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_5" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">6. 내부심사 및 경영 검토는 실시하였는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_6" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_6" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_6" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">7. 심사시간은 준수하였는가?(현장 이동시간 포함)</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_7" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_7" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_7" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">8. 사후 심사는 전 심사의 12개월내에 실시 되었는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_8" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_8" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_8" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" defaultValue={auditDateStr} className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center font-mono" />
+                  </td>
+                </tr>
+
+                {/* 3. 인증범위의 명확성 */}
+                <tr>
+                  <td rowSpan={3} className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    인증범위의<br />명확성
+                  </td>
+                  <td className="border border-slate-300 p-2">9. 인증수행범위는 적합한가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_9" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_9" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_9" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">10. 복합코드의 경우 코드가 전부 적용 되었는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_10" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_10" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_10" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" defaultValue={iafCode} className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center font-mono" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">11. 복수사업장의 경우 대상 사업장을 명확히 기술하였는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_11" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_11" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_11" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+
+                {/* 4. 부적합 사항의 적합성 */}
+                <tr>
+                  <td rowSpan={2} className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    부적합 사항의<br />적합성
+                  </td>
+                  <td className="border border-slate-300 p-2">12. 부적합 사항이 적합하게 발행되었는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_12" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_12" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_12" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" defaultValue={projAny?.minorNcrCount !== undefined ? String(projAny.minorNcrCount) : ""} className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs text-center font-bold" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">13. 부적합 내용과 표준 적용 항목번호는 적합한가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_13" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_13" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_13" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+
+                {/* 5. 시정조치의 효과성 */}
+                <tr>
+                  <td rowSpan={2} className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    시정조치의<br />효과성
+                  </td>
+                  <td className="border border-slate-300 p-2">14. 부적합 사항에 대한 시정조치가 효과적인가?(이전심사 포함)</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_14" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_14" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_14" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">15. 재발방지 대책은 적합한가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_15" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_15" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_15" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+
+                {/* 6. 기록관리 */}
+                <tr>
+                  <td rowSpan={3} className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    기록관리
+                  </td>
+                  <td className="border border-slate-300 p-2">16. 보고서에 오기 및 누락된 부분은 없는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_16" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_16" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_16" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">17. 심사보고서는 기록관리 순서로 Filing 되었는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_17" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_17" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_17" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border border-slate-300 p-2">18. 양식은 최신 본 인가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_18" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_18" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_18" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+
+                {/* 7. 고객 피드백 */}
+                <tr>
+                  <td className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    고객 피드백
+                  </td>
+                  <td className="border border-slate-300 p-2">19. 심사와 관련 고객 불만은 없었는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_19" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_19" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_19" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
+                  </td>
+                </tr>
+
+                {/* 8. 변경사항 */}
+                <tr>
+                  <td className="border border-slate-300 p-2 font-bold text-center align-middle bg-slate-50/50">
+                    변경사항
+                  </td>
+                  <td className="border border-slate-300 p-2">20. 사후 심사 시 변경 사항은 없는가?</td>
+                  <td className="border border-slate-300 p-1.5 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[11px]">
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_20" className="text-blue-600" /> Y</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_20" className="text-blue-600" /> N</label>
+                      <label className="flex items-center gap-0.5 cursor-pointer"><input type="radio" name="deli_20" className="text-blue-600" /> NA</label>
+                    </div>
+                  </td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    <input type="text" className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs" />
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* 3. 인증심의위원회 4대 검토 기준 */}
-          <div>
-            <h3 className="font-bold text-slate-900 text-xs mb-2 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-indigo-700" />
-              <span>3. 인증심의위원회 4대 심의 기준 평가 결과</span>
-            </h3>
-            <table className="w-full border-collapse border border-slate-300 text-xs">
-              <thead className="bg-slate-100 font-bold text-slate-800">
-                <tr>
-                  <th className="border border-slate-300 p-2 text-center w-12">No.</th>
-                  <th className="border border-slate-300 p-2 text-center">심의 세부 기준 (ISO/IEC 17021-1 제9.5조)</th>
-                  <th className="border border-slate-300 p-2 text-center w-24">판정</th>
-                  <th className="border border-slate-300 p-2 text-center w-40">심의위원 검토 소견</th>
-                </tr>
-              </thead>
-              <tbody className="text-slate-800">
-                <tr>
-                  <td className="border border-slate-300 p-2 text-center font-mono font-bold">1</td>
-                  <td className="border border-slate-300 p-2 font-medium">
-                    심사 계획, 심사 기간(MD), 절차의 KAB 인정기준 준수 여부
+          {/* 인증심의 결과 결재 표 */}
+          <div className="border border-slate-300 rounded overflow-hidden">
+            <table className="w-full border-collapse text-xs">
+              <tbody>
+                <tr className="border-b border-slate-300">
+                  <th className="bg-slate-50 p-2.5 font-bold w-28 text-center border-r border-slate-300">인증심의 결과</th>
+                  <td className="p-2.5">
+                    <div className="flex items-center gap-6 text-xs font-semibold">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="final_decision" className="text-blue-600" />
+                        <span>승인</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="final_decision" className="text-blue-600" />
+                        <span>보류</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="final_decision" className="text-blue-600" />
+                        <span>재승인</span>
+                      </label>
+                    </div>
                   </td>
-                  <td className="border border-slate-300 p-2 text-center font-bold text-emerald-800 bg-emerald-50/50">적합</td>
-                  <td className="border border-slate-300 p-2 text-[11px] text-slate-600">표준 MD 산정 및 절차 이행 확인</td>
                 </tr>
-                <tr>
-                  <td className="border border-slate-300 p-2 text-center font-mono font-bold">2</td>
-                  <td className="border border-slate-300 p-2 font-medium">
-                    심사팀 구성의 적격성 및 공정성·독립성 보장 여부
+                <tr className="border-b border-slate-300">
+                  <th className="bg-slate-50 p-2 font-bold text-center border-r border-slate-300">인증심의 일자</th>
+                  <td className="p-2">
+                    <div className="grid grid-cols-3 gap-3">
+                      <input type="text" defaultValue={auditDateStr} className="border border-slate-300 rounded px-2 py-1 text-xs text-center font-mono" />
+                      <input type="text" className="border border-slate-300 rounded px-2 py-1 text-xs text-center font-mono" />
+                      <input type="text" className="border border-slate-300 rounded px-2 py-1 text-xs text-center font-mono" />
+                    </div>
                   </td>
-                  <td className="border border-slate-300 p-2 text-center font-bold text-emerald-800 bg-emerald-50/50">적합</td>
-                  <td className="border border-slate-300 p-2 text-[11px] text-slate-600">공정성 평가 F14-001 통과 확인</td>
-                </tr>
-                <tr>
-                  <td className="border border-slate-300 p-2 text-center font-mono font-bold">3</td>
-                  <td className="border border-slate-300 p-2 font-medium">
-                    심사보고서 기술 내용의 객관적 증거 및 표준 요구사항 충족성
-                  </td>
-                  <td className="border border-slate-300 p-2 text-center font-bold text-emerald-800 bg-emerald-50/50">적합</td>
-                  <td className="border border-slate-300 p-2 text-[11px] text-slate-600">현장 객관적 증빙 충분히 기재됨</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 p-2 text-center font-mono font-bold">4</td>
-                  <td className="border border-slate-300 p-2 font-medium">
-                    부적합 사항에 대한 원인분석 및 시정조치 유효성 확인
+                  <th className="bg-slate-50 p-2 font-bold text-center border-r border-slate-300">인증위원 확인</th>
+                  <td className="p-2">
+                    <div className="grid grid-cols-3 gap-3">
+                      <input type="text" placeholder="(서명)" className="border border-slate-300 rounded px-2 py-1 text-xs text-center" />
+                      <input type="text" placeholder="(서명)" className="border border-slate-300 rounded px-2 py-1 text-xs text-center" />
+                      <input type="text" placeholder="(서명)" className="border border-slate-300 rounded px-2 py-1 text-xs text-center" />
+                    </div>
                   </td>
-                  <td className="border border-slate-300 p-2 text-center font-bold text-emerald-800 bg-emerald-50/50">적합</td>
-                  <td className="border border-slate-300 p-2 text-[11px] text-slate-600">미결 부적합 없음 (종결 완료)</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* 4. 심의위원회 최종 의결 판정 및 서명 */}
-          <div className="p-4 bg-indigo-50/70 rounded-xl border border-indigo-200 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-indigo-200">
-              <h3 className="font-bold text-indigo-950 text-xs flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-indigo-700" />
-                <span>4. 인증심의위원회 최종 의결 판정 결과</span>
-              </h3>
-              <span className="px-3 py-1 rounded-full bg-indigo-600 text-white font-black text-xs shadow-xs">
-                최종 의결: {decision}
-              </span>
-            </div>
-
-            <div className="p-3 bg-white rounded border border-indigo-200 text-slate-800 leading-relaxed text-xs">
-              <p className="font-semibold text-indigo-950 mb-1">[심의위원회 종합 의결 주문]</p>
-              <p>{defaultNote}</p>
-            </div>
-
-            {/* 심의위원 3인 서명란 (가상 성명 배제 및 표준 서명란 적용) */}
-            <div className="grid grid-cols-3 gap-3 pt-2">
-              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center space-y-1.5">
-                <span className="text-[10px] text-slate-500 block">심의위원 1</span>
-                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
-                  ________________ (서명/인)
-                </div>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-slate-200 text-center space-y-1.5">
-                <span className="text-[10px] text-slate-500 block">심의위원 2</span>
-                <div className="text-slate-400 font-mono text-xs py-1 tracking-wider">
-                  ________________ (서명/인)
-                </div>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-indigo-300 bg-indigo-50/50 text-center space-y-1.5">
-                <span className="text-[10px] text-indigo-800 block font-bold">인증심의위원장</span>
-                <div className="text-indigo-400 font-mono text-xs py-1 tracking-wider">
-                  ________________ (직인)
-                </div>
-                <span className="text-[10px] text-indigo-900 block font-mono">{decisionDate}</span>
-              </div>
-            </div>
+          {/* 하단 버튼 */}
+          <div className="flex items-center justify-center gap-2 pt-2 no-print">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-1.5 bg-[#c27d58] hover:bg-[#b06d4a] text-white rounded font-bold text-xs shadow-xs cursor-pointer"
+            >
+              등록
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-1.5 bg-[#4a5568] hover:bg-[#3b4453] text-white rounded font-bold text-xs shadow-xs cursor-pointer"
+            >
+              닫기
+            </button>
           </div>
 
         </div>
-
       </div>
     </div>
   );

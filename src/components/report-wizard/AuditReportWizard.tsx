@@ -51,45 +51,45 @@ export const AuditReportWizard: React.FC<AuditReportWizardProps> = ({
     project?.auditType || (contract?.contractType === '신규인증' ? '최초 2단계' : '사후관리 1차')
   );
   const [standards, setStandards] = useState<string[]>(
-    project?.standards || contract?.standards || ['ISO 9001:2015']
+    project?.standards || contract?.standards || (company.standards ? (Array.isArray(company.standards) ? company.standards : [company.standards]) : ['ISO 9001:2015'])
   );
   const [startDate, setStartDate] = useState<string>(
-    project?.startDate || contract?.plannedAuditStartDate || '2026-10-15'
+    project?.startDate || contract?.plannedAuditStartDate || ''
   );
   const [endDate, setEndDate] = useState<string>(
-    project?.endDate || contract?.plannedAuditEndDate || '2026-10-16'
+    project?.endDate || contract?.plannedAuditEndDate || ''
   );
   const [leadAuditorName, setLeadAuditorName] = useState<string>(
-    project?.leadAuditorName || contract?.leadAuditorName || auditor?.name || '남경호'
+    project?.leadAuditorName || contract?.leadAuditorName || auditor?.name || ''
   );
   const [teamAuditorName, setTeamAuditorName] = useState<string>(
-    contract?.teamAuditorName || '김홍덕'
+    (project as any)?.teamAuditorNames?.join(', ') || contract?.teamAuditorName || ''
   );
 
   // Step 2: 체크리스트 및 공정 관찰 상태
   const [checklist, setChecklist] = useState<Array<{ clause: string; title: string; result: '적합' | '경부적합' | '중부적합' | '해당없음'; note: string }>>([
-    { clause: '4.1 & 4.2', title: '조직 상황 및 이해관계자 요구사항 파악', result: '적합', note: '경영환경 분석 및 이해관계자 매트릭스 수립 확인됨' },
-    { clause: '5.1 & 5.2', title: '리더십과 의지표명, 방침 수립 및 전파', result: '적합', note: '최고경영자 면담 및 품질/환경/안전 방침 사내 게시 확인' },
-    { clause: '6.1', title: '리스크 및 기회에 대한 조치 계획', result: '적합', note: '2026년도 리스크 평가표 및 대응 계획 수립 완료' },
-    { clause: '7.1 ~ 7.5', title: '자원 관리, 역량, 적격성 및 문서화된 정보', result: '적합', note: '교육훈련 기록 및 교정검사 성적서 보관 양호' },
-    { clause: '8.1 ~ 8.7', title: '운영 기획, 생산 및 서비스 제공 통제', result: '적합', note: '공정검사 기준서 및 작업표준서 현장 비치 확인' },
-    { clause: '9.1 ~ 9.3', title: '성과 평가, 내부심사 및 경영검토', result: '적합', note: '정기 내부심사 실시 및 경영검토 보고 완료' },
-    { clause: '10.1 ~ 10.3', title: '부적합 조치 및 지속적 개선 활동', result: '적합', note: '시정조치 요구서 발행 및 개선 대책 실행 점검' }
+    { clause: '4.1 & 4.2', title: '조직 상황 및 이해관계자 요구사항 파악', result: '적합', note: '' },
+    { clause: '5.1 & 5.2', title: '리더십과 의지표명, 방침 수립 및 전파', result: '적합', note: '' },
+    { clause: '6.1', title: '리스크 및 기회에 대한 조치 계획', result: '적합', note: '' },
+    { clause: '7.1 ~ 7.5', title: '자원 관리, 역량, 적격성 및 문서화된 정보', result: '적합', note: '' },
+    { clause: '8.1 ~ 8.7', title: '운영 기획, 생산 및 서비스 제공 통제', result: '적합', note: '' },
+    { clause: '9.1 ~ 9.3', title: '성과 평가, 내부심사 및 경영검토', result: '적합', note: '' },
+    { clause: '10.1 ~ 10.3', title: '부적합 조치 및 지속적 개선 활동', result: '적합', note: '' }
   ]);
 
   // Step 3: NCR 및 종합평가
   const [majorCount, setMajorCount] = useState<number>(0);
   const [minorCount, setMinorCount] = useState<number>(0);
-  const [obsCount, setObsCount] = useState<number>(1);
+  const [obsCount, setObsCount] = useState<number>(0);
   const [executiveSummary, setExecutiveSummary] = useState<string>(
-    report?.executiveSummary || `${company.companyName}의 경영시스템은 표준 규격 요구사항에 따라 적절하게 수립 및 이행되고 있으며, 전 임직원의 개선 의지가 높음.`
+    report?.executiveSummary || ''
   );
   const [recommendation, setRecommendation] = useState<'인증등록 추천' | '시정조치 후 추천' | '재심사 추천'>(
     '인증등록 추천'
   );
 
   // Step 4: 전자서명 상태
-  const [leadSigned, setLeadSigned] = useState<boolean>(true);
+  const [leadSigned, setLeadSigned] = useState<boolean>(false);
   const [clientSigned, setClientSigned] = useState<boolean>(false);
 
   const handleSaveDraft = () => {

@@ -78,7 +78,7 @@ export const StandardContractViewModal: React.FC<StandardContractViewModalProps>
                 <th className="border border-slate-300 bg-slate-100 p-2 text-center">대표자</th>
                 <td className="border border-slate-300 p-2">피심사기업 대표자 (인/서명)</td>
                 <th className="border border-slate-300 bg-slate-100 p-2 text-center">대표이사</th>
-                <td className="border border-slate-300 p-2 font-bold text-cyan-900">남 경 호 (직인생략)</td>
+                <td className="border border-slate-300 p-2 font-bold text-slate-800">________________________ (직인/서명)</td>
               </tr>
               <tr>
                 <th className="border border-slate-300 bg-slate-100 p-2 text-center">소재지</th>
@@ -212,8 +212,8 @@ export const StandardContractViewModal: React.FC<StandardContractViewModalProps>
             <div className="space-y-2">
               <span className="font-bold text-slate-500">[인증기관]</span>
               <p className="font-extrabold text-sm text-cyan-900">지엠에스씨에스(주) (GMSCS)</p>
-              <div className="h-16 flex items-center justify-center font-bold text-cyan-800 border border-cyan-300 bg-cyan-50/40 rounded-lg">
-                대표이사 남 경 호 [공인직인]
+              <div className="h-16 flex items-center justify-center font-medium text-slate-500 border border-dashed border-slate-300 rounded-lg">
+                대표이사 ________________________ (직인/서명)
               </div>
             </div>
           </div>

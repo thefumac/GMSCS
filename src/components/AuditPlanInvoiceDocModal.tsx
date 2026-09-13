@@ -824,8 +824,8 @@ export const AuditPlanInvoiceDocModal: React.FC<AuditPlanInvoiceDocModalProps> =
                     <p className="text-[11px] text-slate-700">상호 : 지엠에스씨에스 주식회사</p>
                     <p className="text-[11px] text-slate-700">주소 : 서울특별시 강서구 강서로 406, 905호</p>
                     <p className="text-[11px] text-slate-700 flex items-center justify-between pt-2">
-                      <span>대표이사 : <strong>남 경 호</strong></span>
-                      <span className="text-cyan-800 text-xs font-bold">[직인생략]</span>
+                      <span>대표이사 : <strong>________________________</strong></span>
+                      <span className="text-slate-500 text-xs font-medium">(직인/서명)</span>
                     </p>
                   </div>
                 </div>
