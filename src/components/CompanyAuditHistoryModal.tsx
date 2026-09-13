@@ -38,6 +38,9 @@ import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettl
 import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
 import { AuditPlanInvoiceDocModal } from './AuditPlanInvoiceDocModal';
 import { AuditAttachmentDocModal, AttachmentDocItem } from './AuditAttachmentDocModal';
+import { ImpartialityAssessmentDocModal } from './ImpartialityAssessmentDocModal';
+import { ContractReviewDocModal } from './ContractReviewDocModal';
+import { DeliberationReportDocModal } from './DeliberationReportDocModal';
 import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
 import { getDriveReportsForCompany, DriveReportFileItem } from '../data/driveReportFiles';
 
@@ -159,6 +162,9 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   const [activeTab, setActiveTab] = useState<BinderTabKey>('profile');
   
   const [isPlanDocOpen, setIsPlanDocOpen] = useState(false);
+  const [isImpartialityDocOpen, setIsImpartialityDocOpen] = useState(false);
+  const [isContractReviewDocOpen, setIsContractReviewDocOpen] = useState(false);
+  const [isDeliberationDocOpen, setIsDeliberationDocOpen] = useState(false);
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [selectedAuditForAttachments, setSelectedAuditForAttachments] = useState<AuditHistoryRecordItem | null>(null);
 
@@ -715,6 +721,55 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                 </div>
               </div>
 
+              {/* 표준 서식 바로가기 바 */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-cyan-700 shrink-0" />
+                  <div>
+                    <span className="font-bold text-slate-900 text-xs">ISO 공인 표준 서식 원문 열람 및 출력</span>
+                    <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline">(계약검토, 공정성평가, 심사계획, 심의결과서)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setIsContractReviewDocOpen(true)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    title="[F02] 인증신청 및 계약검토보고서 열람/인쇄"
+                  >
+                    <FileText className="w-3 h-3 text-cyan-700" />
+                    <span>[F02] 계약검토보고서</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsImpartialityDocOpen(true)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    title="[F14] 공정성 관리 및 이해상충 평가서 열람/인쇄"
+                  >
+                    <Shield className="w-3 h-3 text-emerald-700" />
+                    <span>[F14] 공정성관리평가서</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsPlanDocOpen(true)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    title="[F16] 심사계획 및 비용청구서 열람/인쇄"
+                  >
+                    <ClipboardList className="w-3 h-3 text-indigo-700" />
+                    <span>[F16] 심사계획·청구서</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeliberationDocOpen(true)}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    title="[F18] 인증심의 결과보고서 및 의결서 열람/인쇄"
+                  >
+                    <Award className="w-3 h-3 text-purple-700" />
+                    <span>[F18] 심의결과보고서</span>
+                  </button>
+                </div>
+              </div>
+
               {/* 심사 대장 테이블: Firebase Cloud Storage 보관 문서를 기반으로 연차별 심사 이력 일원화 */}
               <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-2xs">
                 <table className="w-full text-xs text-left border-collapse">
@@ -1033,6 +1088,36 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
         company={company}
         contract={effectiveContractRecord}
         auditor={managingAuditor as any}
+      />
+
+      {/* 공정성 관리 및 이해상충 평가서 F14-001 모달 */}
+      <ImpartialityAssessmentDocModal
+        isOpen={isImpartialityDocOpen}
+        onClose={() => setIsImpartialityDocOpen(false)}
+        company={company}
+        project={latestProject}
+        contract={effectiveContractRecord}
+        auditor={managingAuditor as any}
+      />
+
+      {/* 인증신청 및 계약검토보고서 F02-001 모달 */}
+      <ContractReviewDocModal
+        isOpen={isContractReviewDocOpen}
+        onClose={() => setIsContractReviewDocOpen(false)}
+        company={company}
+        contract={effectiveContractRecord}
+        project={latestProject}
+        auditor={managingAuditor as any}
+      />
+
+      {/* 인증심의 결과보고서 및 의결서 F18-001 모달 */}
+      <DeliberationReportDocModal
+        isOpen={isDeliberationDocOpen}
+        onClose={() => setIsDeliberationDocOpen(false)}
+        company={company}
+        project={latestProject}
+        auditor={managingAuditor as any}
+        decision="인증등록승인"
       />
 
       {/* 회차별 부속서류철 탭 모달 */}
