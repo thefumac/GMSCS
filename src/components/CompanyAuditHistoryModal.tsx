@@ -530,9 +530,17 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="space-y-2">
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">담당 심사팀장:</span>
-                      <span className="text-slate-900 font-medium">{managingAuditor.name ? `${managingAuditor.name} (${managingAuditor.grade || '심사원'})` : '-'}</span>
+                      <span className="text-slate-500 font-normal">담당(관리) 심사원:</span>
+                      <span className="text-slate-900 font-medium">{(effectiveCompany as any).assignedAuditor || effectiveCompany.assignedAuditorName || managingAuditor.name || '-'}</span>
                     </div>
+                    {latestProject?.leadAuditorName && (
+                      <div className="flex justify-between border-b border-slate-200/60 pb-1">
+                        <span className="text-slate-500 font-normal">최근 심사팀 배정:</span>
+                        <span className="text-slate-900 font-medium">
+                          팀장: {latestProject.leadAuditorName}{latestProject.teamAuditorNames?.length ? ` · 팀원: ${latestProject.teamAuditorNames.join(', ')}` : ' (단독)'}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between border-b border-slate-200/60 pb-1">
                       <span className="text-slate-500 font-normal">심사원 연락처/이메일:</span>
                       <span className="font-mono text-slate-700 text-[11px] font-normal">{managingAuditor.mobile || ''}{managingAuditor.email ? ` / ${managingAuditor.email}` : ''}</span>
@@ -782,31 +790,34 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
 
                       // 만약 등록된 아카이브가 없으면 기본 최신 프로젝트 1줄 표시
                       if (sortedGroupKeys.length === 0) {
+                        const fallbackAuditDateStr = latestProject?.auditDates?.length 
+                          ? (latestProject.auditDates.length > 1 ? `${latestProject.startDate} ~ ${latestProject.endDate.slice(5)}` : latestProject.startDate) 
+                          : (dueDate?.slice(0, 7) || '2026.09');
+                        const fallbackMd = (effectiveContractRecord.appliedMd || latestProject?.appliedMd || 1.5).toFixed(1);
+                        const fallbackAuditorDisplay = latestProject?.leadAuditorName 
+                          ? `팀장: ${latestProject.leadAuditorName}${latestProject.teamAuditorNames?.length ? ` / 팀원: ${latestProject.teamAuditorNames.join(', ')}` : ''}`
+                          : ((effectiveCompany as any).assignedAuditor || managingAuditor.name || '사무국');
+
                         return (
                           <tr className="hover:bg-slate-50 transition">
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-medium text-slate-900">
-                              {latestProject?.startDate || dueDate || '2026-06'}
-                              <div className="mt-0.5">
-                                <span className="text-[10px] text-cyan-800 font-bold font-mono bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
-                                  {(effectiveContractRecord.appliedMd || 2.0).toFixed(1)} MD
-                                </span>
-                              </div>
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
+                              {fallbackAuditDateStr} ({fallbackMd} MD)
                             </td>
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
                               <span className="font-semibold text-cyan-950 block">{stageText}</span>
                               <span className="text-[10px] text-slate-500">{stdAndCerts.map(s => s.std).join(' / ')}</span>
                             </td>
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                              <span className="font-medium text-slate-900 block">{managingAuditor.name || '사무국'}</span>
-                              <span className="text-[10.5px] text-slate-400">단독심사</span>
+                              <span className="font-medium text-slate-900 block">{fallbackAuditorDisplay}</span>
+                              <span className="text-[10.5px] text-slate-400">인증원 공인심사</span>
                             </td>
                             <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
                               중 0 · 경 0 · 관 0
                             </td>
                             <td className="py-2.5 px-3 align-middle">
                               <div className="flex items-center gap-3.5 flex-wrap">
-                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 text-[11px] font-normal">
-                                  기존보고서 없음 (신규 작성 대상)
+                                <span className="text-slate-400 font-normal text-xs">
+                                  기존보고서 없음
                                 </span>
                                 {onOpenReportWorkbench && (
                                   <button
@@ -818,14 +829,6 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     <span>심사보고서 작성/등록</span>
                                   </button>
                                 )}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsPlanDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                >
-                                  <FileCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
-                                  <span>심사계획서</span>
-                                </button>
                               </div>
                             </td>
                           </tr>
@@ -834,25 +837,21 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
 
                       return sortedGroupKeys.map((k) => {
                         const grp = groups[k];
-                        const dateText = `${grp.year}년 ${grp.month ? String(grp.month).padStart(2, '0') + '월' : ''}`;
+                        const dateText = grp.month ? `${grp.year}.${String(grp.month).padStart(2, '0')}` : `${grp.year}`;
+                        const mdText = grp.auditType.includes('최초') ? '3.0 MD' : '2.0 MD';
                         const stdDisplay = grp.standards.length > 0 ? grp.standards.map(s => s.split(':')[0]).join(' · ') : (stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') || 'ISO 9001');
 
                         return (
                           <tr key={k} className="hover:bg-slate-50 transition">
                             {/* 1. 심사일자 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-medium text-slate-900 whitespace-nowrap">
-                              <div>{dateText}</div>
-                              <div className="mt-0.5">
-                                <span className="text-[10px] text-cyan-800 font-bold font-mono bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200 inline-block">
-                                  {grp.auditType.includes('최초') ? '3.0 MD' : '2.0 MD'}
-                                </span>
-                              </div>
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
+                              {dateText} ({mdText})
                             </td>
 
                             {/* 2. 심사구분 & 규격 */}
                             <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
                               <span className="font-semibold text-cyan-950 block">{grp.auditType}</span>
-                              <span className="text-[11px] text-indigo-800 font-mono font-medium block mt-0.5">
+                              <span className="text-[11px] text-slate-600 font-mono font-normal block mt-0.5">
                                 {stdDisplay}
                               </span>
                             </td>
@@ -957,14 +956,13 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                                     </span>
                                   </button>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsPlanDocOpen(true)}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  <span 
+                                    className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none"
+                                    title="보관된 심사계획서/부속서류 파일 없음"
                                   >
-                                    <FileCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
+                                    <FileCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                                     <span>심사계획서</span>
-                                  </button>
+                                  </span>
                                 )}
 
                               </div>

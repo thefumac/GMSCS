@@ -700,10 +700,10 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                             </span>
                           ) : (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 text-[10.5px] rounded bg-slate-100 text-slate-500 border border-slate-200 font-normal"
+                              className="text-[11px] text-slate-400 font-normal ml-0.5"
                               title="과거 스캔 PDF 미보관 (새 시스템에서 신규 작성 대상)"
                             >
-                              <span>기존보고서 없음</span>
+                              기존보고서 없음
                             </span>
                           )}
                         </div>
