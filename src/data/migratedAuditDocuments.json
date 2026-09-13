@@ -1,7 +1,7 @@
 [
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -17,7 +17,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -34,7 +34,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -51,7 +51,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -67,7 +67,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -83,7 +83,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "미래디스플레이",
+    "companyName": "(주)미래디스플레이",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -99,7 +99,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "미래디스플레이",
+    "companyName": "(주)미래디스플레이",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -115,7 +115,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "미래디스플레이",
+    "companyName": "(주)미래디스플레이",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -197,7 +197,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "그린마이스터",
+    "companyName": "(주)그린마이스터",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -213,7 +213,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "그린마이스터",
+    "companyName": "(주)그린마이스터",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -229,7 +229,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "그린마이스터",
+    "companyName": "(주)그린마이스터",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -293,7 +293,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태봉화장품",
+    "companyName": "태봉(TB)화장품",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -309,7 +309,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태봉화장품",
+    "companyName": "태봉(TB)화장품",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -325,7 +325,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태봉화장품",
+    "companyName": "태봉(TB)화장품",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -341,7 +341,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -357,7 +357,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -373,7 +373,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -389,7 +389,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -405,7 +405,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -421,7 +421,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -437,7 +437,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -453,7 +453,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -1265,7 +1265,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -1282,7 +1282,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -1299,7 +1299,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -1315,7 +1315,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -1683,7 +1683,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -1699,7 +1699,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -1715,7 +1715,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -1731,7 +1731,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -1748,7 +1748,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -2142,7 +2142,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -2159,7 +2159,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "신청/전환자료",
     "auditType": "1차사후",
     "standards": [
@@ -2176,7 +2176,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -2192,7 +2192,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -2208,7 +2208,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -2417,7 +2417,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -2434,7 +2434,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -2724,7 +2724,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "q-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -2740,7 +2740,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "q-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -2788,7 +2788,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "oh-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -2804,7 +2804,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "oh-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -2916,7 +2916,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "휴파마",
+    "companyName": "(주)휴파마",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -2932,7 +2932,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "휴파마",
+    "companyName": "(주)휴파마",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -3156,7 +3156,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "수영전자",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -3172,7 +3172,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "수영전자",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -3188,7 +3188,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "심천",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -3204,7 +3204,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "심천",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -3220,7 +3220,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "수영전자",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -3687,7 +3687,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3703,7 +3703,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장ohs",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -3719,7 +3719,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장ohs",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -3735,7 +3735,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3751,7 +3751,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -3767,7 +3767,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3783,7 +3783,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -3799,7 +3799,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -3815,7 +3815,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3831,7 +3831,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -3848,7 +3848,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -3865,7 +3865,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -3881,7 +3881,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -3897,7 +3897,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장qe",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -3914,7 +3914,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장qe",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -3931,7 +3931,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3947,7 +3947,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -3963,7 +3963,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -3980,7 +3980,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -3997,7 +3997,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -4013,7 +4013,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -4029,7 +4029,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장ohs",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -4045,7 +4045,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장ohs",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -4061,7 +4061,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4077,7 +4077,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -4253,7 +4253,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4269,7 +4269,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4285,7 +4285,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -4301,7 +4301,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -4317,7 +4317,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -4334,7 +4334,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -4351,7 +4351,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4383,7 +4383,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "시앤에스",
+    "companyName": "(주)씨앤에스",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -4399,7 +4399,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "시앤에스",
+    "companyName": "(주)씨앤에스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -4515,7 +4515,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4531,7 +4531,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -4547,7 +4547,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -4563,7 +4563,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4579,7 +4579,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스,qeo",
+    "companyName": "(주)에스앤에스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -4596,7 +4596,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4612,7 +4612,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -4629,7 +4629,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -4645,7 +4645,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -4661,7 +4661,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -4853,7 +4853,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "국문",
+    "companyName": "(주)제이에스지",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4869,7 +4869,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "영문",
+    "companyName": "(주)제이에스지",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -4885,7 +4885,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -4901,7 +4901,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -4917,7 +4917,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -4933,7 +4933,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -5704,7 +5704,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태진a&t",
+    "companyName": "(주)태진에이엔티",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -5752,7 +5752,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태진a&t",
+    "companyName": "(주)태진에이엔티",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -6233,7 +6233,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "메탈이노베이션코리아",
+    "companyName": "(주)메탈이노베이션코리아",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -6249,7 +6249,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "메탈이노베이션",
+    "companyName": "(주)메탈이노베이션코리아",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -6265,7 +6265,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "정기심사",
     "standards": [
@@ -6281,7 +6281,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장ohs",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6297,7 +6297,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "정기심사",
     "standards": [
@@ -6427,7 +6427,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6443,7 +6443,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6460,7 +6460,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6477,7 +6477,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6493,7 +6493,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "세진엔지니어링",
+    "companyName": "세진엔지니어링(주)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6509,7 +6509,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "미래디스플레이",
+    "companyName": "(주)미래디스플레이",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -6525,7 +6525,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "미래디스플레이",
+    "companyName": "(주)미래디스플레이",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -6541,7 +6541,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "미래디스플레이",
+    "companyName": "(주)미래디스플레이",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -6623,7 +6623,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "그린마이스터",
+    "companyName": "(주)그린마이스터",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6639,7 +6639,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "그린마이스터",
+    "companyName": "(주)그린마이스터",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6655,7 +6655,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "그린마이스터",
+    "companyName": "(주)그린마이스터",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6719,7 +6719,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태봉화장품",
+    "companyName": "태봉(TB)화장품",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6735,7 +6735,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태봉화장품",
+    "companyName": "태봉(TB)화장품",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6751,7 +6751,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태봉화장품",
+    "companyName": "태봉(TB)화장품",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6767,7 +6767,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6783,7 +6783,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -6799,7 +6799,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -6815,7 +6815,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "신의코퍼레이션",
+    "companyName": "(주)신의코퍼레이션",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -6831,7 +6831,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -6847,7 +6847,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -6863,7 +6863,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -6879,7 +6879,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "오성이엔지",
+    "companyName": "(주)오성이엔지",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -7691,7 +7691,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -7708,7 +7708,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -7725,7 +7725,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -7741,7 +7741,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "장업시스템",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -8109,7 +8109,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -8125,7 +8125,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -8141,7 +8141,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -8157,7 +8157,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -8174,7 +8174,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "지에이치테크",
+    "companyName": "지에이치테크(GH테크)",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -8568,7 +8568,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -8585,7 +8585,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "신청/전환자료",
     "auditType": "1차사후",
     "standards": [
@@ -8602,7 +8602,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -8618,7 +8618,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -8634,7 +8634,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "디아이엔바이로",
+    "companyName": "주식회사 디아이엔바이로",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -8843,7 +8843,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -8860,7 +8860,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "연태장업",
+    "companyName": "연태장업화장용구유한공사",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -9150,7 +9150,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "q-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -9166,7 +9166,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "q-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -9214,7 +9214,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "oh-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -9230,7 +9230,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "oh-한국항로표지기술원",
+    "companyName": "한국항로표지기술원",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -9342,7 +9342,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "휴파마",
+    "companyName": "(주)휴파마",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -9358,7 +9358,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "휴파마",
+    "companyName": "(주)휴파마",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -9582,7 +9582,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "수영전자",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -9598,7 +9598,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "수영전자",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -9614,7 +9614,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "심천",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -9630,7 +9630,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "심천",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -9646,7 +9646,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "수영전자",
+    "companyName": "수영전자(심천)유한공사",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10113,7 +10113,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10129,7 +10129,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장ohs",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -10145,7 +10145,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장ohs",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10161,7 +10161,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10177,7 +10177,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10193,7 +10193,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10209,7 +10209,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -10225,7 +10225,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원1공장",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10241,7 +10241,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10257,7 +10257,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -10274,7 +10274,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -10291,7 +10291,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10307,7 +10307,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10323,7 +10323,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장qe",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -10340,7 +10340,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장qe",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10357,7 +10357,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10373,7 +10373,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10389,7 +10389,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -10406,7 +10406,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -10423,7 +10423,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10439,7 +10439,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10455,7 +10455,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장ohs",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -10471,7 +10471,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원2공장ohs",
+    "companyName": "(주)케이원메탈2공장",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10487,7 +10487,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10503,7 +10503,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "케이원메탈",
+    "companyName": "(주)케이원메탈1공장",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10679,7 +10679,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10695,7 +10695,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10711,7 +10711,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -10727,7 +10727,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10743,7 +10743,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -10760,7 +10760,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -10777,7 +10777,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "유니퀘스트",
+    "companyName": "유니퀘스트(주)/NBLESS",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10809,7 +10809,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "시앤에스",
+    "companyName": "(주)씨앤에스",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -10825,7 +10825,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "시앤에스",
+    "companyName": "(주)씨앤에스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -10941,7 +10941,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -10957,7 +10957,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10973,7 +10973,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -10989,7 +10989,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -11005,7 +11005,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스,qeo",
+    "companyName": "(주)에스앤에스",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -11022,7 +11022,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -11038,7 +11038,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -11055,7 +11055,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "인증서",
     "auditType": "2차사후",
     "standards": [
@@ -11071,7 +11071,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "신청/전환자료",
     "auditType": "2차사후",
     "standards": [
@@ -11087,7 +11087,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "에스얜에스",
+    "companyName": "(주)에스앤에스",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -11279,7 +11279,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "국문",
+    "companyName": "(주)제이에스지",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -11295,7 +11295,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "영문",
+    "companyName": "(주)제이에스지",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -11311,7 +11311,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "심사보고서",
     "auditType": "최초심사",
     "standards": [
@@ -11327,7 +11327,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "신청/전환자료",
     "auditType": "최초심사",
     "standards": [
@@ -11343,7 +11343,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -11359,7 +11359,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "제이에스지",
+    "companyName": "(주)제이에스지",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [
@@ -12130,7 +12130,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태진a&t",
+    "companyName": "(주)태진에이엔티",
     "docType": "인증서",
     "auditType": "최초심사",
     "standards": [
@@ -12178,7 +12178,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "태진a&t",
+    "companyName": "(주)태진에이엔티",
     "docType": "심사보고서",
     "auditType": "1차사후",
     "standards": [
@@ -12659,7 +12659,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "메탈이노베이션코리아",
+    "companyName": "(주)메탈이노베이션코리아",
     "docType": "인증서",
     "auditType": "1차사후",
     "standards": [
@@ -12675,7 +12675,7 @@
   },
   {
     "tenantId": "gmscs",
-    "companyName": "메탈이노베이션",
+    "companyName": "(주)메탈이노베이션코리아",
     "docType": "심사보고서",
     "auditType": "2차사후",
     "standards": [

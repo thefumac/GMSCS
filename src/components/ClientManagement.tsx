@@ -12,6 +12,8 @@ import { NewCompanyModal } from './NewCompanyModal';
 import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
 import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState } from '../utils/auditStateUtils';
+import { MIGRATED_AUDIT_DOCUMENTS } from '../data/driveReportFiles';
+import { Building2, CheckCircle2, AlertTriangle, Cloud } from 'lucide-react';
 
 export interface ClientManagementProps {
   companies: Company[];
@@ -88,6 +90,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   onOpenReport,
   onAddCompany
 }) => {
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'dormant' | 'cloudDocs'>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
   const [selectedAuditState, setSelectedAuditState] = useState<string>('all');
@@ -126,6 +129,49 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     });
     return map;
   }, [contracts]);
+
+  // Cloud PDF Document Map per company
+  const cloudDocMap = useMemo(() => {
+    const map = new Map<string, number>();
+    MIGRATED_AUDIT_DOCUMENTS.forEach(doc => {
+      const cleanName = (doc.companyName || '').replace(/[\(\)주식회사\s\-_]/g, '').toLowerCase();
+      if (cleanName) {
+        map.set(cleanName, (map.get(cleanName) || 0) + 1);
+      }
+    });
+    return map;
+  }, []);
+
+  const getCloudDocCount = (comp: Company): number => {
+    const cleanName = comp.companyName.replace(/[\(\)주식회사\s\-_]/g, '').toLowerCase();
+    return cloudDocMap.get(cleanName) || 0;
+  };
+
+  // Client category statistics
+  const counts = useMemo(() => {
+    let active = 0;
+    let dormant = 0;
+    let cloudDocs = 0;
+
+    companies.forEach(c => {
+      const state = getCompanyAuditState(c, contractMap.get(c.id), projectMap.get(c.id));
+      if (state === '자격정지') {
+        dormant++;
+      } else {
+        active++;
+      }
+      if (getCloudDocCount(c) > 0) {
+        cloudDocs++;
+      }
+    });
+
+    return {
+      all: companies.length,
+      active,
+      dormant,
+      cloudDocs
+    };
+  }, [companies, contractMap, projectMap, cloudDocMap]);
 
   // 1. 고유 지역 목록 추출
   const regionOptions = useMemo(() => {
@@ -188,7 +234,6 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     const totalStandards = (has9001 ? 1 : 0) + (has14001 ? 1 : 0) + (has45001 ? 1 : 0);
 
     if (totalStandards <= 1) {
-      // 단일 규격인 경우 날짜만 표시
       return [{ label: '', date: datesMap['9001'] || baseDate }];
     }
 
@@ -219,6 +264,13 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const region = getRegionDisplay(c);
       const managingAuditor = auditorMap.get(c.managingAuditorId || '') || { name: compAny.assignedAuditor || '남경호' };
       const agencyDisplay = getAgencyDisplayName(c.consultant || compAny.consultant, managingAuditor.name);
+      const auditState = getCompanyAuditState(c, contractMap.get(c.id), projectMap.get(c.id));
+      const cloudCount = getCloudDocCount(c);
+
+      // 0. 스마트 분류 탭 필터
+      if (activeTab === 'active' && auditState === '자격정지') return false;
+      if (activeTab === 'dormant' && auditState !== '자격정지') return false;
+      if (activeTab === 'cloudDocs' && cloudCount === 0) return false;
 
       // 1. 텍스트 검색 매칭 (기업명, 대표자, 사업자번호, 인증번호)
       const matchesSearch = !cleanSearch ||
@@ -250,12 +302,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const matchesAgency = selectedAgency === 'all' || agencyDisplay === selectedAgency;
 
       // 6. 인증상태 매칭 (최근 2년 미시행 자격정지 및 진행단계)
-      const auditState = getCompanyAuditState(c, contractMap.get(c.id), projectMap.get(c.id));
       const matchesAuditState = selectedAuditState === 'all' || auditState === selectedAuditState;
 
       return matchesSearch && matchesStandard && matchesRegion && matchesAuditor && matchesAgency && matchesAuditState;
     });
-  }, [companies, searchTerm, selectedStandard, selectedRegion, selectedAuditor, selectedAgency, selectedAuditState, auditorMap, contractMap, projectMap]);
+  }, [companies, activeTab, searchTerm, selectedStandard, selectedRegion, selectedAuditor, selectedAgency, selectedAuditState, auditorMap, contractMap, projectMap, cloudDocMap]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / PAGE_SIZE));
@@ -267,6 +318,93 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
   return (
     <div className="space-y-3 animate-in fade-in">
+      {/* 0. 상단 스마트 고객 분류 탭 (전체 573 / 활성 정기유지 / 2년 미실시 휴면 / 클라우드 PDF 보관) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <button
+          type="button"
+          onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
+          className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
+            activeTab === 'all'
+              ? 'bg-cyan-50/90 border-cyan-500 ring-1 ring-cyan-500 text-cyan-950 shadow-2xs'
+              : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className={`p-1.5 rounded ${activeTab === 'all' ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+              <Building2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">전체 고객사 DB</div>
+              <div className="text-sm font-bold text-slate-800">{counts.all}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+            </div>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono font-normal">누적전체</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setActiveTab('active'); setCurrentPage(1); }}
+          className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
+            activeTab === 'active'
+              ? 'bg-emerald-50/90 border-emerald-500 ring-1 ring-emerald-500 text-emerald-950 shadow-2xs'
+              : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className={`p-1.5 rounded ${activeTab === 'active' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600'}`}>
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">정기유지 · 활성 고객사</div>
+              <div className="text-sm font-bold text-emerald-700">{counts.active}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+            </div>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-normal">정상유지</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setActiveTab('dormant'); setCurrentPage(1); }}
+          className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
+            activeTab === 'dormant'
+              ? 'bg-amber-50/90 border-amber-500 ring-1 ring-amber-500 text-amber-950 shadow-2xs'
+              : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className={`p-1.5 rounded ${activeTab === 'dormant' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600'}`}>
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">2년 미실시 휴면·만료 대상</div>
+              <div className="text-sm font-bold text-amber-700">{counts.dormant}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
+            </div>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono font-normal">집중관리</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setActiveTab('cloudDocs'); setCurrentPage(1); }}
+          className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
+            activeTab === 'cloudDocs'
+              ? 'bg-sky-50/90 border-sky-500 ring-1 ring-sky-500 text-sky-950 shadow-2xs'
+              : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className={`p-1.5 rounded ${activeTab === 'cloudDocs' ? 'bg-sky-600 text-white' : 'bg-sky-50 text-sky-600'}`}>
+              <Cloud className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">클라우드 PDF 보관 기업</div>
+              <div className="text-sm font-bold text-sky-700">{counts.cloudDocs}<span className="text-xs font-normal text-slate-500 ml-0.5">개사 (790건)</span></div>
+            </div>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono font-normal">PDF보관</span>
+        </button>
+      </div>
+
       {/* 1. 상단 단일 조회바 (인증규격 전체 메뉴 + 인증상태 + 지역 + 담당심사원 + 협력기관 검색창) */}
       <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
@@ -476,6 +614,8 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                   const agencyDisplay = getAgencyDisplayName(comp.consultant || compAny.consultant, managingAuditor.name);
                   const auditState = getCompanyAuditState(comp, fallbackContract, projectMap.get(comp.id));
 
+                  const cloudCount = getCloudDocCount(comp);
+
                   return (
                     <tr
                       key={comp.id}
@@ -490,11 +630,20 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
 
                       {/* 고객사명: 오직 회사명만 볼드(font-bold) 유지 */}
                       <td className="py-2.5 px-3 align-middle border-r border-slate-200">
-                        <div className="text-slate-900 flex items-center gap-1">
+                        <div className="text-slate-900 flex items-center gap-1.5 flex-wrap">
                           <span className="font-bold underline decoration-slate-300 hover:decoration-cyan-600 underline-offset-2">
                             {comp.companyName}
                           </span>
                           <ExternalLink className="w-3 h-3 text-cyan-600 opacity-60 shrink-0" />
+                          {cloudCount > 0 && (
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10.5px] rounded bg-sky-50 text-sky-700 border border-sky-200 font-normal font-mono"
+                              title={`클라우드 스토리지 보관 보고서 및 인증서 ${cloudCount}건 보유`}
+                            >
+                              <Cloud className="w-2.5 h-2.5" />
+                              <span>{cloudCount}건</span>
+                            </span>
+                          )}
                         </div>
                         <div className="text-[11px] text-slate-500 font-normal mt-0.5">
                           {comp.ceoName} 대표 {comp.bizNumber ? `(${comp.bizNumber})` : ''}
