@@ -707,253 +707,301 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
                 </div>
               </div>
 
-              {/* 심사 대장 테이블: 내용 비례 너비 최적화 및 2줄 정돈된 균형미 확보 */}
+              {/* 심사 대장 테이블: Firebase Cloud Storage 보관 문서를 기반으로 연차별 심사 이력 일원화 */}
               <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-2xs">
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
                     <tr>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[210px] whitespace-nowrap">심사일자 (MD)</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[180px] whitespace-nowrap">심사구분</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[140px] whitespace-nowrap">담당 심사원</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[110px] text-center whitespace-nowrap">부적합 수</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[180px] whitespace-nowrap">심사일자 (연월)</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[170px] whitespace-nowrap">심사구분 &amp; 규격</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[130px] whitespace-nowrap">담당 심사원</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 w-[100px] text-center whitespace-nowrap">부적합 수</th>
                       <th className="py-2.5 px-3 whitespace-nowrap">발급 문서 및 보고서 열람</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-900 bg-white">
-                    {auditHistoryRecords.map((rec) => {
-                      const mdValue = rec.id.includes('2026') ? (effectiveContractRecord.appliedMd || 2.0) : 2.0;
+                    {(() => {
+                      // Firebase Cloud Storage 문서를 심사 차수별로 그룹화
+                      const groups: Record<string, {
+                        year?: number | string;
+                        month?: number | string;
+                        auditType: string;
+                        standards: string[];
+                        auditor: string;
+                        reportDoc?: DriveReportFileItem;
+                        certDoc?: DriveReportFileItem;
+                        planDoc?: DriveReportFileItem;
+                        otherDocs: DriveReportFileItem[];
+                      }> = {};
 
-                      return (
-                        <tr key={rec.id} className="hover:bg-slate-50 transition">
-                          
-                          {/* 1. 심사일자 & MD: 깔끔한 2줄(또는 1줄) 정돈 */}
-                          <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                            <div className="font-mono text-[12px] font-medium text-slate-900 whitespace-nowrap">
-                              {rec.auditDate}
-                            </div>
-                            <div className="mt-0.5 flex items-center gap-1">
-                              <span className="text-[10.5px] text-cyan-800 font-bold font-mono bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200 inline-block">
-                                {mdValue.toFixed(1)} MD
-                              </span>
-                            </div>
-                          </td>
+                      if (archivedDocs.length > 0) {
+                        archivedDocs.forEach((doc) => {
+                          const yearVal = doc.year || 2025;
+                          const monthVal = doc.month || 10;
+                          const aType = doc.auditType || '정기심사';
+                          const key = `${yearVal}_${monthVal}_${aType}`;
 
-                          {/* 2. 심사구분 */}
-                          <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                            <span className="font-semibold text-cyan-950 block">{rec.auditType}</span>
-                            <span className="text-[10.5px] text-emerald-700 font-normal">({rec.status})</span>
-                          </td>
+                          if (!groups[key]) {
+                            groups[key] = {
+                              year: yearVal,
+                              month: monthVal,
+                              auditType: aType,
+                              standards: doc.standards || [],
+                              auditor: doc.auditorName || doc.auditor || managingAuditor.name || '사무국',
+                              otherDocs: []
+                            };
+                          }
 
-                          {/* 3. 담당 심사원 */}
-                          <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                            <span className="font-medium text-slate-900 block">{rec.leadAuditor} (팀장)</span>
-                            <span className="text-[11px] text-slate-500 font-normal">{rec.teamAuditor}</span>
-                          </td>
+                          // 규격 병합
+                          if (doc.standards) {
+                            doc.standards.forEach(s => {
+                              if (!groups[key].standards.includes(s)) {
+                                groups[key].standards.push(s);
+                              }
+                            });
+                          }
 
-                          {/* 4. 부적합 수 */}
-                          <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle">
-                            <div className="flex items-center justify-center gap-1 text-[11px] font-mono">
-                              <span className={`px-1.5 py-0.5 rounded font-medium ${rec.ncCount.major > 0 ? 'bg-rose-100 text-rose-800' : 'text-slate-400'}`}>
-                                중 {rec.ncCount.major}
-                              </span>
-                              <span className={`px-1.5 py-0.5 rounded font-medium ${rec.ncCount.minor > 0 ? 'bg-amber-100 text-amber-800' : 'text-slate-400'}`}>
-                                경 {rec.ncCount.minor}
-                              </span>
-                              <span className="text-slate-500 font-normal">
-                                관 {rec.ncCount.obs}
-                              </span>
-                            </div>
-                          </td>
+                          // 문서 유형별 분류
+                          if (doc.docType === '심사보고서' || (doc.fileName && (doc.fileName.includes('보고서') || doc.fileName.includes('_re_')))) {
+                            if (!groups[key].reportDoc) groups[key].reportDoc = doc;
+                          } else if (doc.docType === '인증서' || (doc.fileName && (doc.fileName.includes('인증서') || doc.fileName.includes('cert')))) {
+                            if (!groups[key].certDoc) groups[key].certDoc = doc;
+                          } else if (doc.docType === '신청/전환자료' || (doc.fileName && (doc.fileName.includes('계획서') || doc.fileName.includes('신청') || doc.fileName.includes('_tr_')))) {
+                            if (!groups[key].planDoc) groups[key].planDoc = doc;
+                          } else {
+                            groups[key].otherDocs.push(doc);
+                          }
+                        });
+                      }
 
-                          {/* 5. 발급 문서 및 보고서 열람 */}
-                          <td className="py-2.5 px-3 align-middle">
-                            <div className="flex items-center gap-3.5 flex-wrap">
-                              
-                              {/* 심사보고서 링크 */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const std = stdAndCerts[0]?.std || 'ISO 9001:2015';
-                                  const leadAuditor = rec.leadAuditor || managingAuditor.name || '남경호';
-                                  const title = `[심사보고서] ${rec.auditType} (${rec.auditDate}) - 심사팀장: ${leadAuditor}`;
-                                  onOpenPdfReport?.({
-                                    title,
-                                    companyName: company.companyName,
-                                    standard: std,
-                                    auditType: rec.auditType,
-                                    auditDate: rec.auditDate,
-                                    auditorName: leadAuditor
-                                  });
-                                }}
-                                className="text-cyan-800 hover:text-cyan-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer group text-xs"
-                                title="공식 심사보고서 PDF 열람"
-                              >
-                                <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
-                                <span>심사보고서 (PDF 열람)</span>
-                              </button>
+                      const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+                        const gA = groups[a];
+                        const gB = groups[b];
+                        return (Number(gB.year || 0) * 100 + Number(gB.month || 0)) - (Number(gA.year || 0) * 100 + Number(gA.month || 0));
+                      });
 
-                              {/* 인증서 링크 */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const std = stdAndCerts[0]?.std || 'ISO 9001:2015';
-                                  const title = `[인증서] ${company.companyName} 공식 인증서 (${std})`;
-                                  onOpenPdfReport?.({
-                                    title,
-                                    companyName: company.companyName,
-                                    standard: std,
-                                    auditType: '인증서 발급본',
-                                    auditDate: rec.auditDate
-                                  });
-                                }}
-                                className="text-indigo-800 hover:text-indigo-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer group text-xs"
-                                title="공식 인증서 PDF 열람"
-                              >
-                                <Award className="w-3.5 h-3.5 text-indigo-800 shrink-0" />
-                                <span>인증서(국/영문)</span>
-                              </button>
-
-                              {/* 심사계획서 링크 */}
-                              <button
-                                type="button"
-                                onClick={() => setIsPlanDocOpen(true)}
-                                className="text-slate-700 hover:text-slate-950 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer group"
-                                title="F16-004 심사계획서 &amp; 청구서 열람"
-                              >
-                                <FileCheck className="w-3.5 h-3.5 text-slate-700 group-hover:scale-110 transition-transform" />
-                                <span>심사계획서</span>
-                              </button>
-
-                              {/* 부속서류 링크 - 서류가 있는 경우 진하게 & 탭 팝업 열기, 없는 경우 흐리게 표시 */}
-                              {rec.hasAttachments && rec.attachments && rec.attachments.length > 0 ? (
+                      // 만약 등록된 아카이브가 없으면 기본 최신 프로젝트 1줄 표시
+                      if (sortedGroupKeys.length === 0) {
+                        return (
+                          <tr className="hover:bg-slate-50 transition">
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-medium text-slate-900">
+                              {latestProject?.startDate || dueDate || '2026-06'}
+                              <div className="mt-0.5">
+                                <span className="text-[10px] text-cyan-800 font-bold font-mono bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
+                                  {(effectiveContractRecord.appliedMd || 2.0).toFixed(1)} MD
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                              <span className="font-semibold text-cyan-950 block">{stageText}</span>
+                              <span className="text-[10px] text-slate-500">{stdAndCerts.map(s => s.std).join(' / ')}</span>
+                            </td>
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                              <span className="font-medium text-slate-900 block">{managingAuditor.name || '사무국'}</span>
+                              <span className="text-[10.5px] text-slate-400">단독심사</span>
+                            </td>
+                            <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
+                              중 0 · 경 0 · 관 0
+                            </td>
+                            <td className="py-2.5 px-3 align-middle">
+                              <div className="flex items-center gap-3.5 flex-wrap">
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setSelectedAuditForAttachments(rec);
-                                    setIsAttachmentModalOpen(true);
+                                    onOpenPdfReport?.({
+                                      title: `[심사보고서] ${company.companyName} ${stageText}`,
+                                      companyName: company.companyName,
+                                      standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
+                                      auditType: stageText,
+                                      auditDate: latestProject?.startDate || '2026-06-08',
+                                      auditorName: managingAuditor.name || '사무국'
+                                    });
                                   }}
-                                  className="text-purple-800 hover:text-purple-950 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer group"
-                                  title={`${rec.auditType} 부속서류 (${rec.attachments.length}건) 열람`}
+                                  className="text-cyan-800 hover:text-cyan-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                 >
-                                  <Paperclip className="w-3.5 h-3.5 text-purple-700 group-hover:scale-110 transition-transform" />
-                                  <span>부속서류</span>
-                                  <span className="text-[10px] bg-purple-100 text-purple-800 px-1 py-0.2 rounded-full font-mono font-bold">
-                                    {rec.attachments.length}
-                                  </span>
+                                  <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
+                                  <span>심사보고서 (PDF 열람)</span>
                                 </button>
-                              ) : (
-                                <span 
-                                  className="text-slate-300 font-normal inline-flex items-center gap-1 cursor-default select-none"
-                                  title="등록된 부속서류 없음"
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onOpenPdfReport?.({
+                                      title: `[인증서] ${company.companyName} 공식 인증서`,
+                                      companyName: company.companyName,
+                                      standard: stdAndCerts[0]?.std || 'ISO 9001:2015',
+                                      auditType: '인증서 발급본',
+                                      auditDate: latestProject?.startDate || '2026-06-08'
+                                    });
+                                  }}
+                                  className="text-indigo-800 hover:text-indigo-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                 >
-                                  <Paperclip className="w-3.5 h-3.5 text-slate-300" />
-                                  <span>부속서류</span>
+                                  <Award className="w-3.5 h-3.5 text-indigo-800 shrink-0" />
+                                  <span>인증서(국/영문)</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsPlanDocOpen(true)}
+                                  className="text-slate-700 hover:text-slate-950 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                >
+                                  <FileCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>심사계획서</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return sortedGroupKeys.map((k) => {
+                        const grp = groups[k];
+                        const dateText = `${grp.year}년 ${grp.month ? String(grp.month).padStart(2, '0') + '월' : ''}`;
+                        const stdDisplay = grp.standards.length > 0 ? grp.standards.map(s => s.split(':')[0]).join(' · ') : (stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') || 'ISO 9001');
+
+                        return (
+                          <tr key={k} className="hover:bg-slate-50 transition">
+                            {/* 1. 심사일자 */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-medium text-slate-900 whitespace-nowrap">
+                              <div>{dateText}</div>
+                              <div className="mt-0.5">
+                                <span className="text-[10px] text-cyan-800 font-bold font-mono bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200 inline-block">
+                                  {grp.auditType.includes('최초') ? '3.0 MD' : '2.0 MD'}
                                 </span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                              </div>
+                            </td>
+
+                            {/* 2. 심사구분 & 규격 */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                              <span className="font-semibold text-cyan-950 block">{grp.auditType}</span>
+                              <span className="text-[11px] text-indigo-800 font-mono font-medium block mt-0.5">
+                                {stdDisplay}
+                              </span>
+                            </td>
+
+                            {/* 3. 담당 심사원 */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                              <span className="font-medium text-slate-900 block">{grp.auditor || managingAuditor.name || '사무국'}</span>
+                              <span className="text-[10.5px] text-slate-400 font-normal">인증원 공인심사</span>
+                            </td>
+
+                            {/* 4. 부적합 수 */}
+                            <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
+                              중 0 · 경 0 · 관 0
+                            </td>
+
+                            {/* 5. 발급 문서 및 보고서 열람 (Firebase Cloud Storage 실물 PDF 연동) */}
+                            <td className="py-2.5 px-3 align-middle">
+                              <div className="flex items-center gap-3 flex-wrap">
+                                
+                                {/* 심사보고서 */}
+                                {grp.reportDoc ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onOpenPdfReport?.({
+                                        title: `[심사보고서] ${company.companyName} ${grp.auditType} (${dateText})`,
+                                        companyName: company.companyName,
+                                        standard: grp.standards[0] || 'ISO 9001:2015',
+                                        auditType: grp.auditType,
+                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
+                                        auditorName: grp.auditor,
+                                        pdfUrl: grp.reportDoc?.downloadUrl || grp.reportDoc?.pdfUrl
+                                      });
+                                    }}
+                                    className="text-cyan-800 hover:text-cyan-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title={`공식 심사보고서 열람 (${grp.reportDoc.fileSize})`}
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-cyan-800 shrink-0" />
+                                    <span>심사보고서 (PDF 열람)</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onOpenPdfReport?.({
+                                        title: `[심사보고서] ${company.companyName} ${grp.auditType}`,
+                                        companyName: company.companyName,
+                                        standard: grp.standards[0] || 'ISO 9001:2015',
+                                        auditType: grp.auditType,
+                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
+                                        auditorName: grp.auditor
+                                      });
+                                    }}
+                                    className="text-slate-500 hover:text-slate-800 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  >
+                                    <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span>심사보고서</span>
+                                  </button>
+                                )}
+
+                                {/* 인증서 */}
+                                {grp.certDoc ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onOpenPdfReport?.({
+                                        title: `[인증서] ${company.companyName} 공식 인증서 (${grp.standards[0] || ''})`,
+                                        companyName: company.companyName,
+                                        standard: grp.standards[0] || 'ISO 9001:2015',
+                                        auditType: '공식 인증서',
+                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
+                                        pdfUrl: grp.certDoc?.downloadUrl || grp.certDoc?.pdfUrl
+                                      });
+                                    }}
+                                    className="text-indigo-800 hover:text-indigo-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title={`공식 인증서 PDF 열람 (${grp.certDoc.fileSize})`}
+                                  >
+                                    <Award className="w-3.5 h-3.5 text-indigo-800 shrink-0" />
+                                    <span>인증서(국/영문)</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs">
+                                    <Award className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                                    <span>인증서</span>
+                                  </span>
+                                )}
+
+                                {/* 심사계획서 / 전환자료 */}
+                                {grp.planDoc ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onOpenPdfReport?.({
+                                        title: `[신청/전환자료] ${company.companyName} ${grp.auditType}`,
+                                        companyName: company.companyName,
+                                        standard: grp.standards[0] || 'ISO 9001:2015',
+                                        auditType: grp.auditType,
+                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
+                                        pdfUrl: grp.planDoc?.downloadUrl || grp.planDoc?.pdfUrl
+                                      });
+                                    }}
+                                    className="text-purple-800 hover:text-purple-950 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                    title={`신청/전환/계획서 열람 (${grp.planDoc.fileSize})`}
+                                  >
+                                    <Paperclip className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                                    <span>전환/부속자료</span>
+                                    <span className="text-[10px] bg-purple-100 text-purple-800 px-1 rounded font-mono">
+                                      {grp.planDoc.fileSize}
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsPlanDocOpen(true)}
+                                    className="text-slate-600 hover:text-slate-900 font-normal inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
+                                  >
+                                    <FileCheck className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                    <span>심사계획서</span>
+                                  </button>
+                                )}
+
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
                   </tbody>
                 </table>
-              </div>
-
-              {/* 클라우드 아카이브 보관 문서 목록 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-emerald-600" />
-                    <h5 className="font-bold text-slate-900 text-xs">
-                      Firebase Cloud Storage 보관 문서 ({archivedDocs.length}건)
-                    </h5>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
-                      실시간 클라우드 연동
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-500">
-                    기업별 디렉토리: <code className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">audit_files/{effectiveCompany.companyName}/</code>
-                  </span>
-                </div>
-
-                {archivedDocs.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                    {archivedDocs.map((doc, idx) => (
-                      <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-xs transition flex flex-col justify-between gap-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                                doc.docType === '심사보고서' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
-                                doc.docType === '인증서' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
-                                doc.docType === '신청/전환자료' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                                'bg-slate-100 text-slate-800 border border-slate-200'
-                              }`}>
-                                {doc.docType}
-                              </span>
-                              {doc.year && (
-                                <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">
-                                  {doc.year}년 {doc.month ? `${doc.month}월` : ''}
-                                </span>
-                              )}
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {doc.fileSize}
-                              </span>
-                            </div>
-                            <div className="font-mono text-xs font-semibold text-slate-800 truncate" title={doc.fileName}>
-                              {doc.fileName}
-                            </div>
-                            <div className="text-[10.5px] text-slate-400 truncate mt-0.5" title={doc.originalName}>
-                              원본: {doc.originalName}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                          <span className="text-[11px] text-slate-500">
-                            담당: <strong className="text-slate-700">{doc.auditor}</strong>
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onOpenPdfReport?.({
-                                  title: `[${doc.docType}] ${effectiveCompany.companyName} (${doc.fileName})`,
-                                  companyName: effectiveCompany.companyName,
-                                  standard: doc.standards?.[0] || 'ISO 9001:2015',
-                                  auditType: doc.auditType || '정기심사',
-                                  auditDate: `${doc.year || 2026}-${String(doc.month || 1).padStart(2, '0')}-01`,
-                                  auditorName: doc.auditor,
-                                  pdfUrl: doc.pdfUrl
-                                });
-                              }}
-                              className="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-semibold rounded-lg border border-cyan-200 text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
-                              title="뷰어로 바로 열람"
-                            >
-                              <FileText className="w-3 h-3 text-cyan-700" />
-                              <span>열람</span>
-                            </button>
-                            <a
-                              href={doc.pdfUrl}
-                              download={doc.fileName}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-200 text-[11px] transition inline-flex items-center gap-1 cursor-pointer"
-                              title="파일 직접 다운로드"
-                            >
-                              <Download className="w-3 h-3 text-slate-600" />
-                              <span>다운로드</span>
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 bg-white rounded-xl border border-dashed border-slate-300 text-center text-slate-500 text-xs">
-                    보관된 심사 문서가 없습니다. (신규 심사 진행 시 자동으로 등록됩니다.)
-                  </div>
-                )}
               </div>
             </div>
           )}
