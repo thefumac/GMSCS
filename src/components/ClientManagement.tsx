@@ -11,9 +11,9 @@ import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
 import { NewCompanyModal } from './NewCompanyModal';
 import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
-import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState } from '../utils/auditStateUtils';
+import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState, getAuditTimelineStatus } from '../utils/auditStateUtils';
 import { MIGRATED_AUDIT_DOCUMENTS } from '../data/driveReportFiles';
-import { Building2, CheckCircle2, AlertTriangle, Cloud } from 'lucide-react';
+import { Building2, CheckCircle2, AlertTriangle, Cloud, Clock } from 'lucide-react';
 
 export interface ClientManagementProps {
   companies: Company[];
@@ -713,11 +713,31 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         )}
                       </td>
 
-                      {/* 인증상태 (진행상태 및 최근 2년 미시행 자격정지 배지) */}
-                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs">
-                        <span className={`px-2 py-0.5 text-[11px] rounded border ${getAuditStateBadgeClass(auditState)}`}>
+                      {/* 인증상태 및 12/24/34개월 발행 마감 알람 */}
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle text-xs font-normal">
+                        <span className={`px-2 py-0.5 text-[11px] rounded font-normal ${getAuditStateBadgeClass(auditState)}`}>
                           {auditState}
                         </span>
+                        {(() => {
+                          const timeline = getAuditTimelineStatus(comp, fallbackContract, projectMap.get(comp.id));
+                          if (!timeline) return null;
+                          if (timeline.isOverdue) {
+                            return (
+                              <div className="text-[10px] text-rose-600 font-normal mt-0.5" title={`발행기한: ${timeline.deadlineDate}`}>
+                                발행기한초과 ({Math.abs(timeline.daysRemainingToDeadline)}일)
+                              </div>
+                            );
+                          }
+                          if (timeline.isPrepAlert) {
+                            return (
+                              <div className="text-[10px] text-amber-700 font-normal mt-0.5 flex items-center justify-center gap-0.5" title={`발행마감 ${timeline.deadlineDate} (준비착수일 ${timeline.prepStartDate})`}>
+                                <Clock className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                                <span>준비착수 D-{timeline.daysRemainingToDeadline}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </td>
                     </tr>
                   );

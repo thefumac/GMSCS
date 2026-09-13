@@ -129,25 +129,109 @@ export function getCompanyAuditState(
 }
 
 /**
- * 상태별 공통 배지 CSS 스타일 클래스
+ * 상태별 공통 배지 CSS 스타일 클래스 (과도한 볼드/버튼형 배제, 심플하고 차분한 텍스트 스타일)
  */
 export function getAuditStateBadgeClass(state: CompanyAuditState): string {
   switch (state) {
     case '자격정지':
-      return 'bg-rose-100 text-rose-800 border-rose-300 font-bold';
+      return 'bg-rose-50 text-rose-700 border border-rose-200';
     case '보고서작성':
-      return 'bg-rose-50 text-rose-700 border-rose-200 font-bold';
+      return 'bg-rose-50 text-rose-700 border border-rose-200';
     case '사무국검토':
-      return 'bg-blue-50 text-blue-800 border-blue-200 font-bold';
+      return 'bg-blue-50 text-blue-700 border border-blue-200';
     case '일정·계획':
-      return 'bg-cyan-50 text-cyan-800 border-cyan-200 font-bold';
+      return 'bg-cyan-50 text-cyan-700 border border-cyan-200';
     case '심의중':
-      return 'bg-purple-50 text-purple-700 border-purple-200 font-semibold';
+      return 'bg-purple-50 text-purple-700 border border-purple-200';
     case '비용정산중':
-      return 'bg-amber-50 text-amber-700 border-amber-200 font-semibold';
+      return 'bg-amber-50 text-amber-700 border border-amber-200';
     case '인증유지':
     default:
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200 font-medium';
+      return 'bg-slate-50 text-slate-700 border border-slate-200';
   }
+}
+
+/**
+ * 12 / 24 / 34개월 인증서 발행 마감 및 60일 사전 준비 알람 계산 인터페이스
+ */
+export interface AuditTimelineStatus {
+  stage: AuditStageCycle;
+  initialCertDate: string;
+  deadlineDate: string; // YYYY-MM-DD (발행 마감일: 1차=12개월, 2차=24개월, 갱신=34개월)
+  prepStartDate: string; // YYYY-MM-DD (준비 착수일 = 마감일 - 60일)
+  daysRemainingToDeadline: number; // 마감일까지 남은 일수
+  daysRemainingToPrep: number; // 준비착수일까지 남은 일수 (음수면 이미 준비 착수 시기 도래)
+  isPrepAlert: boolean; // 60일 전 도래 여부 (심사 준비 착수 / 일정 조율 필요)
+  isOverdue: boolean; // 발행 마감 초과 여부
+  alarmText: string;
+}
+
+/**
+ * 최초 인증일 기준 12 / 24 / 34개월 발행 마감 및 60일 리드타임 알람 산출
+ * (기준일: 2026-09-12 / 현재 날짜)
+ */
+export function getAuditTimelineStatus(
+  company: Company,
+  contract?: CertContract,
+  project?: AuditProject
+): AuditTimelineStatus | null {
+  const initDateStr = contract?.initialCertDate || company.initialCertDate || company.initialContractDate;
+  if (!initDateStr || initDateStr.length < 10) return null;
+
+  const stage = getStandardAuditStage(company, contract, project);
+  const initDate = new Date(initDateStr);
+  if (isNaN(initDate.getTime())) return null;
+
+  // 마감 개월수 산정: 1차 사후 = 12개월, 2차 사후 = 24개월, 갱신 = 34개월
+  let targetMonths = 12;
+  if (stage === '2차 사후') targetMonths = 24;
+  else if (stage === '갱신') targetMonths = 34;
+  else if (stage === '최초심사') targetMonths = 12;
+
+  // 3년 주기 오프셋 보정 (예: 4년차=사후1차(48개월), 5년차=사후2차(60개월), 6년차=갱신(70개월))
+  const today = new Date('2026-09-12');
+  const yearsPassed = today.getFullYear() - initDate.getFullYear();
+  const cycleCount = Math.floor(yearsPassed / 3);
+  if (cycleCount > 0) {
+    targetMonths += cycleCount * 36;
+  }
+
+  // 마감일 계산
+  const deadline = new Date(initDate);
+  deadline.setMonth(deadline.getMonth() + targetMonths);
+
+  // 60일 사전 준비 착수일
+  const prepDate = new Date(deadline);
+  prepDate.setDate(prepDate.getDate() - 60);
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysRemainingToDeadline = Math.ceil((deadline.getTime() - today.getTime()) / msPerDay);
+  const daysRemainingToPrep = Math.ceil((prepDate.getTime() - today.getTime()) / msPerDay);
+
+  const isOverdue = daysRemainingToDeadline < 0;
+  const isPrepAlert = daysRemainingToPrep <= 0 && !isOverdue;
+
+  let alarmText = '정상 유지';
+  if (isOverdue) {
+    alarmText = `발행기한 초과 (${Math.abs(daysRemainingToDeadline)}일 경과)`;
+  } else if (isPrepAlert) {
+    alarmText = `심사준비 착수 D-${daysRemainingToDeadline}일 (일정조율 요망)`;
+  } else {
+    alarmText = `준비 착수 D-${daysRemainingToPrep}일`;
+  }
+
+  const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+  return {
+    stage,
+    initialCertDate: initDateStr.slice(0, 10),
+    deadlineDate: formatDate(deadline),
+    prepStartDate: formatDate(prepDate),
+    daysRemainingToDeadline,
+    daysRemainingToPrep,
+    isPrepAlert,
+    isOverdue,
+    alarmText
+  };
 }
 

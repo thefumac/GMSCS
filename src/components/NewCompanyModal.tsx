@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   X,
   Building2,
@@ -13,7 +13,9 @@ import {
   Trash2,
   RefreshCw,
   HelpCircle,
-  MapPin
+  MapPin,
+  Calculator,
+  Send
 } from 'lucide-react';
 import { Company, Auditor, TransferAttachment, StandardCode, AdditionalSite } from '../types';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
@@ -61,6 +63,16 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
     transferAttachments: []
   });
 
+  // 계약 검토 및 제안서 상태
+  const [proposalState, setProposalState] = useState({
+    status: '제안준비' as '제안준비' | '제안서발송' | '기업수락완료',
+    ratePerMd: 800000,
+    travelExpense: 100000,
+    discountRate: 0,
+    specialTerms: '표준 심사계약 조건 적용 (6년 법정보존 준수)',
+    sentDate: new Date().toISOString().slice(0, 10)
+  });
+
   // 추가 확장 필드 (영문명 등)
   const [extraFields, setExtraFields] = useState({
     companyNameEng: '',
@@ -81,6 +93,80 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
 
   // 복수 추가사업장 (Multi-Site) 상태
   const [additionalSites, setAdditionalSites] = useState<AdditionalSite[]>([]);
+
+  // 1. 견적 및 심사일수(MD) 자동 산출 (KAB 기준)
+  const estimatedMd = useMemo(() => {
+    const headcount = Number(extraFields.auditTargetHeadcount) || Number(formData.totalEmployees) || 15;
+    let baseMd = 1.5;
+    if (headcount > 100) baseMd = 4.5;
+    else if (headcount > 50) baseMd = 3.5;
+    else if (headcount > 25) baseMd = 2.5;
+    else if (headcount > 10) baseMd = 2.0;
+
+    // 규격 복수 신청 시 계수 적용
+    const stdCount = Math.max(1, extraFields.standards.length);
+    const multiStdFactor = stdCount > 1 ? 1 + (stdCount - 1) * 0.4 : 1.0;
+    
+    // 추가 사업장 가산
+    const siteCount = additionalSites.length;
+    const siteFactor = siteCount > 0 ? siteCount * 0.5 : 0;
+
+    const total = Math.round((baseMd * multiStdFactor + siteFactor) * 2) / 2;
+    return Math.max(1.5, total);
+  }, [extraFields.auditTargetHeadcount, formData.totalEmployees, extraFields.standards, additionalSites]);
+
+  // 2. 총 제안 견적가액
+  const estimatedTotalFee = useMemo(() => {
+    const rawFee = (estimatedMd * proposalState.ratePerMd) + proposalState.travelExpense;
+    const discount = rawFee * (proposalState.discountRate / 100);
+    return Math.round(rawFee - discount);
+  }, [estimatedMd, proposalState]);
+
+  // 3. 심사원 자격 자동 분기 판별 (영업 유치 심사원 vs 심사팀장)
+  const auditorQualificationInfo = useMemo(() => {
+    const salesPerson = formData.consultant || 'GMSCS 본부 직영';
+    const matchingAuditor = auditors.find(a => a.name === salesPerson || salesPerson.includes(a.name));
+
+    if (!matchingAuditor) {
+      return {
+        isSalesAuditor: false,
+        role: 'HQ직영영업',
+        qualifiedForStandards: true,
+        recommendedLeadAuditor: extraFields.managingAuditorName || auditors[0]?.name || '남경호',
+        notice: '사무국(HQ) 직영 영업으로 적격 심사원이 배정됩니다.'
+      };
+    }
+
+    // 신청 규격과 심사원 등록 규격 대조
+    const auditorStandards = (matchingAuditor.registeredStandards || (matchingAuditor as any).standards || []) as string[];
+    const requestedStandards = extraFields.standards;
+    const hasAllStandards = requestedStandards.every(std => 
+      auditorStandards.some((as: string) => std.includes(as) || as.includes(std.split(':')[0]))
+    );
+
+    // IAF 코드 대조
+    const auditorIaf = (matchingAuditor as any).iafCodes || [(matchingAuditor as any).iafCode || '17'];
+    const companyIaf = formData.iafCode || '17';
+    const hasIaf = auditorIaf.includes(companyIaf);
+
+    if (hasAllStandards && hasIaf) {
+      return {
+        isSalesAuditor: true,
+        role: '영업자 겸 심사팀장',
+        qualifiedForStandards: true,
+        recommendedLeadAuditor: matchingAuditor.name,
+        notice: `${matchingAuditor.name} 심사원은 신청 규격 및 IAF 코드(${companyIaf}) 자격을 모두 보유하여 심사팀장으로 직접 수행합니다.`
+      };
+    } else {
+      return {
+        isSalesAuditor: true,
+        role: '협력기관 (영업 전담)',
+        qualifiedForStandards: false,
+        recommendedLeadAuditor: extraFields.managingAuditorName || (auditors.find(a => a.name !== matchingAuditor.name)?.name || '남경호'),
+        notice: `${matchingAuditor.name} 심사원은 해당 규격/IAF 코드 미보유로 '협력기관(영업 유치자)' 지위로 등록되며, 실제 심사는 적격 심사원이 배정됩니다.`
+      };
+    }
+  }, [formData.consultant, formData.iafCode, extraFields.standards, extraFields.managingAuditorName, auditors]);
 
   if (!isOpen) return null;
 
@@ -232,12 +318,17 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
         shiftCount: Number(extraFields.shiftCount) || 1,
         standards: extraFields.standards.join(', '),
         scopeEng: extraFields.scopeEng,
-        assignedAuditorName: extraFields.managingAuditorName || auditors[0]?.name || '남경호'
+        assignedAuditorName: extraFields.managingAuditorName || auditorQualificationInfo.recommendedLeadAuditor || '남경호',
+        proposalStatus: proposalState.status,
+        proposalFee: estimatedTotalFee,
+        proposalMd: estimatedMd,
+        proposalSentDate: proposalState.sentDate,
+        salesRole: auditorQualificationInfo.role
       } as any)
     };
 
     onSave(newCompany);
-    alert(`[${newCompany.companyName}] 신규 고객사가 성공적으로 등록되었습니다.\n추가사업장 ${newCompany.additionalSites?.length || 0}개소가 저장되었으며, 심사진행현황 및 심사문서 7종에서 즉시 호출됩니다.`);
+    alert(`[${newCompany.companyName}] 신규 고객사 및 견적제안서(${estimatedMd.toFixed(1)} MD / ${(estimatedTotalFee / 10000).toLocaleString()}만원)가 등록되었습니다.\n영업구분: ${auditorQualificationInfo.role}\n배정팀장: ${(newCompany as any).assignedAuditorName}`);
     onClose();
   };
 
@@ -822,7 +913,7 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
             </div>
           </div>
 
-          {/* 5. 영업 유치 기관 & 배정 심사팀장 */}
+          {/* 5. 영업 유치 기관 & 배정 심사팀장 (자격 자동 분기) */}
           <div className="space-y-3">
             <h4 className="font-bold text-slate-900 text-xs pb-1.5 border-b border-slate-200 flex items-center gap-1.5">
               <UserCheck className="w-4 h-4 text-cyan-700" />
@@ -831,30 +922,108 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-700 font-medium mb-1">유치 기관 / 컨설턴트</label>
+                <label className="block text-slate-700 font-medium mb-1">영업 유치자 / 협력기관명</label>
                 <input
                   type="text"
-                  placeholder="예: GMSCS 본부 직영 또는 컨설팅사명"
+                  placeholder="예: 남경호 심사원 또는 협력기관명"
                   value={formData.consultant || ''}
                   onChange={(e) => setFormData({ ...formData, consultant: e.target.value, agency: e.target.value })}
-                  className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                  className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none font-normal"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 font-medium mb-1">배정 희망 심사팀장</label>
+                <label className="block text-slate-700 font-medium mb-1">실제 심사팀장 (배정)</label>
                 <select
-                  value={extraFields.managingAuditorName}
+                  value={extraFields.managingAuditorName || auditorQualificationInfo.recommendedLeadAuditor}
                   onChange={(e) => setExtraFields({ ...extraFields, managingAuditorName: e.target.value })}
-                  className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none"
+                  className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-cyan-600 focus:outline-none font-normal"
                 >
-                  <option value="">-- 심사팀장 선택 (미지정 시 사무국 자동 배정) --</option>
+                  <option value="">-- 심사팀장 선택 (적격 심사원 우선) --</option>
                   {auditors.map(a => (
                     <option key={a.id} value={a.name}>
                       {a.name} ({a.grade || '선임심사원'} / {a.affiliation || '비상근'})
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            {/* 자격 자동 분기 알림 박스 (심플 텍스트) */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 space-y-1 font-normal">
+              <div className="flex items-center gap-1.5 text-slate-800">
+                <UserCheck className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+                <span>영업 구분: <span className="text-cyan-800 font-medium">{auditorQualificationInfo.role}</span></span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-normal leading-relaxed">
+                {auditorQualificationInfo.notice}
+              </p>
+            </div>
+          </div>
+
+          {/* 6. 신규고객 계약 검토 및 견적 제안서 (Proposal) 연계 */}
+          <div className="bg-cyan-50/40 p-4 rounded-xl border border-cyan-200 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-cyan-100">
+              <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <Calculator className="w-4 h-4 text-cyan-700" />
+                <span>계약 검토 및 견적 제안서 (Proposal)</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 font-normal">제안 진행상태:</span>
+                <select
+                  value={proposalState.status}
+                  onChange={(e) => setProposalState({ ...proposalState, status: e.target.value as any })}
+                  className="bg-white border border-cyan-300 rounded p-1 text-xs text-cyan-900 font-normal focus:outline-none"
+                >
+                  <option value="제안준비">제안준비 (사내검토)</option>
+                  <option value="제안서발송">제안서 발송완료</option>
+                  <option value="기업수락완료">기업 수락완료 (계약체결)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="bg-white p-2.5 rounded-lg border border-cyan-200">
+                <div className="text-[11px] text-slate-500 font-normal">산출 심사일수 (MD)</div>
+                <div className="text-sm font-semibold text-slate-800 font-mono mt-0.5">{estimatedMd.toFixed(1)} MD</div>
+                <div className="text-[10px] text-slate-400 font-normal">KAB 인원/규격 기준</div>
+              </div>
+              <div className="bg-white p-2.5 rounded-lg border border-cyan-200">
+                <div className="text-[11px] text-slate-500 font-normal">MD당 기준 단가</div>
+                <div className="text-sm font-semibold text-slate-800 font-mono mt-0.5">{(proposalState.ratePerMd / 10000).toLocaleString()}만원</div>
+                <div className="text-[10px] text-slate-400 font-normal">직영 표준 심사비</div>
+              </div>
+              <div className="bg-white p-2.5 rounded-lg border border-cyan-200">
+                <div className="text-[11px] text-slate-500 font-normal">출장여비 / 부대비용</div>
+                <div className="text-sm font-semibold text-slate-800 font-mono mt-0.5">{(proposalState.travelExpense / 10000).toLocaleString()}만원</div>
+                <div className="text-[10px] text-slate-400 font-normal">지역 실비 적용</div>
+              </div>
+              <div className="bg-white p-2.5 rounded-lg border border-cyan-200">
+                <div className="text-[11px] text-slate-500 font-normal">총 제안 금액 (VAT별도)</div>
+                <div className="text-sm font-semibold text-cyan-800 font-mono mt-0.5">{estimatedTotalFee.toLocaleString()}원</div>
+                <div className="text-[10px] text-slate-400 font-normal">계약체결 연계</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-slate-700 font-medium mb-1 text-[11px]">제안서 발송일자</label>
+                <input
+                  type="date"
+                  value={proposalState.sentDate}
+                  onChange={(e) => setProposalState({ ...proposalState, sentDate: e.target.value })}
+                  className="w-full bg-white border border-cyan-200 rounded p-1.5 text-xs font-mono font-normal focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-medium mb-1 text-[11px]">계약 검토 특약사항</label>
+                <input
+                  type="text"
+                  placeholder="예: 1단계 문서심사 면제 조건 또는 사후관리 연계조건"
+                  value={proposalState.specialTerms}
+                  onChange={(e) => setProposalState({ ...proposalState, specialTerms: e.target.value })}
+                  className="w-full bg-white border border-cyan-200 rounded p-1.5 text-xs font-normal focus:outline-none"
+                />
               </div>
             </div>
           </div>
@@ -864,16 +1033,16 @@ export const NewCompanyModal: React.FC<NewCompanyModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl font-bold text-xs transition cursor-pointer"
+              className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-normal transition cursor-pointer"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              className="px-6 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs font-normal shadow-xs transition flex items-center gap-1.5 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>신규 고객사 등록 완료</span>
+              <span>신규 고객사 및 제안서 등록 완료</span>
             </button>
           </div>
         </form>
