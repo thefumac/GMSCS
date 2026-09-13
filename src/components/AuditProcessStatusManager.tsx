@@ -25,9 +25,11 @@ import {
   AuditReport,
   AuditorSettlement,
   CommitteeMeeting,
-  CommitteeScheduleItem
+  CommitteeScheduleItem,
+  AuditContractRecord
 } from '../types';
 import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { AuditPlanInvoiceDocModal } from './AuditPlanInvoiceDocModal';
 import { cleanStandardName } from './AuditorPortal';
 import { findNextCommitteeMeetingDate } from '../utils/committeeSchedule';
 import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState } from '../utils/auditStateUtils';
@@ -200,6 +202,13 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
   // 모달 팝업 상태
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+
+  // 공식 심사계획서 & 심사청구서 & 표준계약서 통합 모달 상태
+  const [selectedPlanContract, setSelectedPlanContract] = useState<{
+    contract: AuditContractRecord;
+    company?: Company;
+    auditor?: Auditor;
+  } | null>(null);
 
   // 문서(계획서 / 청구서) 팝업 미리보기 상태
   const [previewDoc, setPreviewDoc] = useState<{
@@ -862,14 +871,48 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                       {/* 8. 문서 열람 (순서: 계획서, 보고서, 인증서) */}
                       <td className="py-2.5 px-3 align-middle border-r border-slate-200 whitespace-nowrap font-normal">
                         <div className="flex items-center justify-center gap-2.5 text-[11.5px] font-normal">
-                          {/* 1. 계획서 링크 */}
+                          {/* 1. 계획서 링크 (공식 심사계획서 & 심사청구서 & 표준계약서 통합 서식 팩) */}
                           <span
                             onClick={(e) => {
                               e.stopPropagation();
-                              setPreviewDoc({ isOpen: true, type: 'plan', row });
+                              const comp = companyMap.get(row.companyId) || row.rawCompany;
+                              const leadAuditorObj = auditors.find(a => a.name === row.team.leadAuditor);
+                              const contractData: AuditContractRecord = {
+                                id: row.projectId,
+                                companyId: row.companyId,
+                                companyName: row.companyName,
+                                contractNumber: row.certNo || `GMS-${row.projectId}`,
+                                contractDate: row.schedule.startDate,
+                                standards: row.standardsText.split(',').map(s => s.trim()) as any,
+                                contractType: '정기 사후관리' as any,
+                                contractStatus: '계약체결' as any,
+                                employeeCount: row.rawCompany?.totalEmployees || 10,
+                                riskLevel: 'Medium',
+                                kabStandardMd: row.schedule.md || 2.0,
+                                appliedMd: row.schedule.md || 2.0,
+                                standardRatePerMd: 800000,
+                                ratePerMd: 800000,
+                                docAuditMd: 0.5,
+                                docAuditFee: 400000,
+                                onsiteAuditMd: Math.max(0.5, (row.schedule.md || 2.0) - 0.5),
+                                onsiteAuditFee: Math.round(Math.max(0.5, (row.schedule.md || 2.0) - 0.5) * 800000),
+                                travelExpense: 100000,
+                                lodgingOption: '업체직접제공',
+                                lodgingNights: 0,
+                                lodgingExpense: 0,
+                                applicationFee: 0,
+                                standardFee: Math.round((row.schedule.md || 2.0) * 800000) + 100000,
+                                finalFee: Math.round((row.schedule.md || 2.0) * 800000) + 100000,
+                                isAdjusted: false,
+                                approvalStatus: '승인완료',
+                                leadAuditorId: leadAuditorObj?.id || 'aud-admin',
+                                leadAuditorName: row.team.leadAuditor,
+                                agency: row.rawCompany?.consultant || 'HQ'
+                              };
+                              setSelectedPlanContract({ contract: contractData, company: comp, auditor: leadAuditorObj });
                             }}
                             className="text-slate-700 hover:text-slate-900 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                            title="심사계획서 열람"
+                            title="공식 심사계획서 및 청구서 서식팩 열람"
                           >
                             <span>계획서</span>
                             <ExternalLink className="w-2.5 h-2.5 text-slate-500 shrink-0" />
@@ -1215,6 +1258,17 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
           allAuditors={auditors}
           projects={projects}
           onOpenPdfReport={onOpenPdfReport}
+        />
+      )}
+
+      {/* 8. 공식 심사계획서 & 심사청구서 & 표준계약서 서식팩 모달 */}
+      {selectedPlanContract && (
+        <AuditPlanInvoiceDocModal
+          isOpen={Boolean(selectedPlanContract)}
+          onClose={() => setSelectedPlanContract(null)}
+          contract={selectedPlanContract.contract}
+          company={selectedPlanContract.company}
+          auditor={selectedPlanContract.auditor}
         />
       )}
     </div>
