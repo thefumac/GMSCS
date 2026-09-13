@@ -799,9 +799,17 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                         {(safeCurrentPage - 1) * PAGE_SIZE + idx + 1}
                       </td>
 
-                      {/* 2. 진행상태 (No와 회사명 사이: 순수 텍스트 배지) */}
+                      {/* 2. 진행상태 (No와 회사명 사이: 테두리 없는 깔끔한 텍스트) */}
                       <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal">
-                        <span className={`px-2 py-0.5 text-[11px] rounded border font-normal ${getAuditStateBadgeClass(auditState)}`}>
+                        <span className={`text-[11.5px] font-normal ${
+                          auditState === '보고서작성' ? 'text-rose-600' :
+                          auditState === '일정·계획' ? 'text-cyan-700' :
+                          auditState === '사무국검토' ? 'text-blue-700' :
+                          auditState === '심의중' ? 'text-purple-700' :
+                          auditState === '비용정산중' ? 'text-amber-700' :
+                          auditState === '자격정지' ? 'text-slate-400' :
+                          'text-emerald-700'
+                        }`}>
                           {auditState}
                         </span>
                       </td>
@@ -851,10 +859,25 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
                         </div>
                       </td>
 
-                      {/* 8. 문서 열람 (보고서, 계획서, 인증서 텍스트 링크) */}
+                      {/* 8. 문서 열람 (순서: 계획서, 보고서, 인증서) */}
                       <td className="py-2.5 px-3 align-middle border-r border-slate-200 whitespace-nowrap font-normal">
                         <div className="flex items-center justify-center gap-2.5 text-[11.5px] font-normal">
-                          {/* 보고서 링크 */}
+                          {/* 1. 계획서 링크 */}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewDoc({ isOpen: true, type: 'plan', row });
+                            }}
+                            className="text-slate-700 hover:text-slate-900 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                            title="심사계획서 열람"
+                          >
+                            <span>계획서</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                          </span>
+
+                          <span className="text-slate-300 font-normal select-none">|</span>
+
+                          {/* 2. 보고서 링크 */}
                           <span
                             onClick={(e) => {
                               e.stopPropagation();
@@ -876,22 +899,7 @@ export const AuditProcessStatusManager: React.FC<AuditProcessStatusManagerProps>
 
                           <span className="text-slate-300 font-normal select-none">|</span>
 
-                          {/* 계획서 링크 */}
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewDoc({ isOpen: true, type: 'plan', row });
-                            }}
-                            className="text-slate-700 hover:text-slate-900 font-normal hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                            title="심사계획서 열람"
-                          >
-                            <span>계획서</span>
-                            <ExternalLink className="w-2.5 h-2.5 text-slate-500 shrink-0" />
-                          </span>
-
-                          <span className="text-slate-300 font-normal select-none">|</span>
-
-                          {/* 인증서 링크 */}
+                          {/* 3. 인증서 링크 */}
                           <span
                             onClick={(e) => {
                               e.stopPropagation();
