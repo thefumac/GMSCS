@@ -34,12 +34,14 @@ import {
   Database,
   Info,
   Languages,
-  Globe
+  Globe,
+  Award
 } from 'lucide-react';
 import { AuditReport, SignatureLog, ProcessMatrixRow, ThreeYearCyclePlanItem, PreviousAuditNcCheck, CertChangeApplicationData, WeekendAuditReasonData, Company } from '../types';
 import { SignatureCanvas } from './SignatureCanvas';
 import { CertChangeApplicationModal } from './CertChangeApplicationModal';
 import { WeekendAuditReasonModal } from './WeekendAuditReasonModal';
+import { DeliberationReportDocModal } from './DeliberationReportDocModal';
 import { remarkMeetingAgendas } from '../data/mockRemarkData';
 import { 
   FullAuditReportPackData, 
@@ -55,6 +57,7 @@ interface AuditReportEditorProps {
   currentUserRole?: string;
   onSecretariatReview?: (reportId: string, status: '검토승인' | '보완요청', comment: string, reviewer: string) => void;
   onSubmitToSecretariat?: (reportId: string) => void;
+  isOfficeReviewStage?: boolean;
 }
 
 export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
@@ -64,8 +67,10 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
   onBackToList,
   currentUserRole = 'admin',
   onSecretariatReview,
-  onSubmitToSecretariat
+  onSubmitToSecretariat,
+  isOfficeReviewStage = true
 }) => {
+  const [isF18ModalOpen, setIsF18ModalOpen] = useState<boolean>(false);
   // 풀스펙 양식 데이터 (LocalStorage 영구 저장 연동 & 신규 매트릭스 필드 안전 병합)
   const [packData, setPackData] = useState<FullAuditReportPackData>(() => {
     if (typeof window !== 'undefined') {
@@ -463,6 +468,7 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
     { id: 'sec-pnotes', label: 'VIII. 2단계 Process Audit Note (4~10조)', icon: FileText, badge: 'Full 828줄' },
     { id: 'sec-summary', label: 'IX. 발견사항 요약 & 추천결론', icon: AlertTriangle },
     { id: 'sec-signatures', label: 'X. 다자간 서명 & 기업 확인', icon: PenTool, badge: '공인인증' },
+    { id: 'sec-f18', label: '(인증)심의결과보고서', icon: Award, badge: 'F18' },
   ];
 
   return (
@@ -780,25 +786,43 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             {navSections.map(sec => {
               const Icon = sec.icon;
               const isActive = activeSection === sec.id;
+              const isLocked = sec.id === 'sec-f18' && !isOfficeReviewStage;
+
               return (
                 <button
                   key={sec.id}
-                  onClick={() => setActiveSection(sec.id)}
+                  type="button"
+                  onClick={() => {
+                    if (isLocked) {
+                      alert('[접근 제한]\n(인증)심의결과보고서(F18) 탭은 심사원 보고서 작성이 완료되어 사무국 검토 단계에 진입한 후 활성화됩니다.');
+                      return;
+                    }
+                    setActiveSection(sec.id);
+                  }}
+                  disabled={isLocked}
+                  title={isLocked ? '사무국 검토 단계 진입 시 잠금 해제됩니다.' : undefined}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between ${
-                    isActive
-                      ? 'bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    isLocked
+                      ? 'opacity-50 bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                      : isActive
+                      ? 'bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-xs cursor-pointer'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center space-x-2 truncate">
-                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-600' : 'text-slate-400'}`} />
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isLocked ? 'text-slate-400' : isActive ? 'text-cyan-600' : 'text-slate-400'}`} />
                     <span className="truncate">{sec.label}</span>
                   </div>
-                  {sec.badge && (
-                    <span className="px-1.5 py-0.2 text-[9px] font-extrabold rounded bg-cyan-200 text-cyan-900 shrink-0">
-                      {sec.badge}
-                    </span>
-                  )}
+                  <div className="flex items-center space-x-1 shrink-0">
+                    {isLocked && <Lock className="w-3 h-3 text-slate-400" />}
+                    {sec.badge && (
+                      <span className={`px-1.5 py-0.2 text-[9px] font-extrabold rounded ${
+                        isLocked ? 'bg-slate-200 text-slate-500' : 'bg-purple-100 text-purple-900 border border-purple-200'
+                      }`}>
+                        {sec.badge}
+                      </span>
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -2037,6 +2061,73 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
             </div>
           )}
 
+          {/* 섹션 XI: (인증)심의결과보고서 (F18 양식 연동) */}
+          {activeSection === 'sec-f18' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="border-b border-purple-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <Award className="w-5 h-5 text-purple-700" />
+                    <h2 className="text-lg font-extrabold text-purple-950">
+                      (인증)심의결과보고서 서식 (F18)
+                    </h2>
+                    <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-900 font-bold text-xs border border-purple-300">
+                      사무국 검토 승인 완료
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    본 심의결과보고서는 심사보고서 검토 완료 후 [인증심의위원회] 독립 의결을 위해 최종 작성·상정되는 공식 공인 서식입니다.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsF18ModalOpen(true)}
+                  className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Award className="w-4 h-4 text-purple-200" />
+                  <span>📄 F18 풀스펙 모달/공인 출력 서식 열기</span>
+                </button>
+              </div>
+
+              {/* F18 섹션 카드 개요 */}
+              <div className="bg-purple-50/50 border border-purple-200 rounded-2xl p-5 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="bg-white p-4 rounded-xl border border-purple-100 space-y-2">
+                    <span className="text-slate-500 font-medium block">대상 기업 및 심사종류</span>
+                    <strong className="text-slate-900 text-sm block">{packData.companyName}</strong>
+                    <div className="text-purple-800 font-semibold">{packData.auditType} ({packData.standards.map((s: any) => typeof s === 'string' ? s : s.code).join(', ')})</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-purple-100 space-y-2">
+                    <span className="text-slate-500 font-medium block">심사팀 구성 &amp; 심사기간</span>
+                    <strong className="text-slate-900 text-sm block">팀장: {initialReport.leadAuditor || '김홍덕'}</strong>
+                    <div className="text-slate-600 font-mono">{initialReport.startDate} ~ {initialReport.endDate}</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border border-purple-100 space-y-2 text-xs">
+                  <h4 className="font-bold text-purple-950 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>사무국 종합 검토 및 추천 심의 의결</span>
+                  </h4>
+                  <p className="text-slate-700 leading-relaxed font-medium bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    {initialReport.secretariatComment || '본 심사 건은 ISO 규격 및 KAB 인정기준에 의거하여 적합하게 심사가 수행되었으며, 발견된 시정조치가 적절히 완결되어 인증등록 승인을 추천함.'}
+                  </p>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsF18ModalOpen(true)}
+                    className="px-5 py-2.5 bg-purple-900 hover:bg-purple-950 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
+                  >
+                    <Printer className="w-4 h-4 text-purple-300" />
+                    <span>F18 공인 양식 인쇄 및 PDF 다운로드</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -2441,6 +2532,43 @@ export const AuditReportEditor: React.FC<AuditReportEditorProps> = ({
           setSaveToast('휴일근무확인서(토/일 전기요금절감 등)가 심사보고서에 첨부 완료되었습니다.');
           setTimeout(() => setSaveToast(null), 3000);
         }}
+      />
+
+      {/* F18 (인증)심의결과보고서 풀스펙 모달 */}
+      <DeliberationReportDocModal
+        isOpen={isF18ModalOpen}
+        onClose={() => setIsF18ModalOpen(false)}
+        company={({
+          id: (initialReport as any).companyId || 'comp-k1',
+          companyName: packData.companyName,
+          ceoName: packData.ceoName,
+          address: packData.mainSiteAddress,
+          scope: packData.auditScope,
+          iafCode: '14',
+          standards: packData.standards.map((s: any) => typeof s === 'string' ? s : s.code || 'ISO 9001:2015'),
+          certNo: packData.certNumber
+        } as unknown) as Company}
+        project={{
+          id: initialReport.projectId || `proj-${initialReport.id}`,
+          companyId: (initialReport as any).companyId || 'comp-k1',
+          companyName: packData.companyName,
+          auditType: packData.auditType as any,
+          standards: packData.standards.map((s: any) => typeof s === 'string' ? s : s.code || 'ISO 9001:2015') as any,
+          leadAuditorName: initialReport.leadAuditor || '김홍덕',
+          teamAuditorNames: initialReport.auditTeam || [],
+          startDate: initialReport.startDate,
+          endDate: initialReport.endDate,
+          status: '사무국검토대기' as any,
+          md: 3.5
+        } as any}
+        auditor={{
+          id: 'aud-lead',
+          name: initialReport.leadAuditor || '김홍덕',
+          affiliation: '상근'
+        } as any}
+        decision="인증등록승인"
+        reviewNote={initialReport.secretariatComment}
+        deliberationDate={new Date().toISOString().split('T')[0]}
       />
     </div>
   );

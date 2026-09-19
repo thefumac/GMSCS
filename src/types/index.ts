@@ -24,6 +24,8 @@ export type PaymentStatus = '미입금' | '부분입금' | '입금완료';
 
 export type TaxInvoiceStatus = '미발행' | '청구발행' | '영수발행';
 
+export type UserRole = 'SuperAdmin' | 'OrgAdmin' | 'Auditor';
+
 export interface AdditionalSite {
   id: string;
   siteName: string; // 사업장명 / 공장명 / 지사명 (예: '제2공장', '연구소', '천안공장')
@@ -32,6 +34,21 @@ export interface AdditionalSite {
   phone?: string; // 전화번호
   employees?: number; // 해당 사업장 상주 인원수
   scope?: string; // 해당 사업장 생산품목 / 업무범위
+}
+
+export interface CertCycleRecord {
+  cycleNumber: number;          // 1주기, 2주기 등
+  cycleStartDate: string;       // 해당 주기 시작일
+  cycleExpiryDate: string;      // 해당 주기 만료일
+  issuedCertNo: string;         // 해당 주기 인증번호
+  standards: StandardCode[];    // 인증 규격
+  audits: {
+    stage: string;              // 최초/갱신, 1차 사후, 2차 사후
+    auditDate: string;
+    leadAuditor: string;
+    reportId?: string;
+  }[];
+  archivedAt: string;           // 아카이빙 처리 일시
 }
 
 export interface Company {
@@ -64,10 +81,18 @@ export interface Company {
 
   // 심사 일정 및 인증 이력
   initialCertDate?: string;  // 최초 인증일
+  certStartDate?: string;    // 최근 인증/심사일 (인증유효 시작일자)
   lastAuditDate?: string;    // 이전 인증심사일
+  latestAuditDate?: string;  // 최근 심사일
   expiryDate?: string;       // 인증 유효기간 만료일
   certNo?: string;           // 인증서 번호
+  certStatus?: string;       // 현상태 (인증완료, 인증취소, 심사진행 등)
   standards?: string;        // 등록 규격 목록 (예: 'ISO 9001:2015, ISO 14001:2015')
+
+  // ISO 3년 생애주기 및 과거 주기 아카이빙 (ISO/IEC 17021-1 규정 준수)
+  currentCycleNumber?: number; // 현재 주기 번호 (예: 1, 2, 3...)
+  cycleBaseDate?: string;      // 현 주기 기산일 (인증 시작/갱신일)
+  pastCycles?: CertCycleRecord[]; // 과거 완료된 주기 이력 아카이브
 
   // 복수 추가사업장 (Multi-Site) 정보
   additionalSites?: AdditionalSite[];
@@ -106,7 +131,9 @@ export interface Auditor {
   gmsNumber?: string; // GMS 심사원 등록번호 (예: GMS23001)
   name: string;
   mobile: string;
+  phone?: string;
   email: string;
+  role?: UserRole;
   grade: '선임심사원' | '정심사원' | '심사원보' | '검증심사원' | '기술전문가';
   status: '활동' | '휴식' | '자격만료임박';
   originType?: '상근' | '비상근'; // 원본 DB 구분: '상근' | '비상근'
@@ -290,6 +317,7 @@ export interface WeekendAuditReasonData {
   clientVerificationMethod: '전자서명' | '이메일확인';
   clientEmail?: string;
   clientName?: string;
+  signatureDataUrl?: string;
 }
 
 export interface AuditContractRecord {

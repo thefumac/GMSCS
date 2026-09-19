@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navbar, ActiveTab, MainCategory } from './components/Navbar';
 import { DashboardCalendar } from './components/DashboardCalendar';
 import { AuditReportEditor } from './components/AuditReportEditor';
-import { AuditReportList } from './components/AuditReportList';
+
 import { AuditContractManager } from './components/AuditContractManager';
 import { SurveillanceManager } from './components/SurveillanceManager';
 import { CompanyAuditorManager } from './components/CompanyAuditorManager';
@@ -22,9 +22,11 @@ import { AuditProcessStatusManager } from './components/AuditProcessStatusManage
 import { ClientManagement } from './components/ClientManagement';
 import { AuditorManagement } from './components/AuditorManagement';
 import { CertificationManagement } from './components/CertificationManagement';
-import { CompanyAuditHistoryModal } from './components/CompanyAuditHistoryModal';
+import { DocumentStorage } from './components/DocumentStorage';
+import { CompanyAuditHistoryModal, DocStorageTarget } from './components/CompanyAuditHistoryModal';
 import { AuditReportWorkbench } from './components/AuditReportWorkbench';
 import { CommitteeScheduleItem, loadSavedCommitteeSchedules } from './utils/committeeSchedule';
+import { SUPER_ADMIN_ACCOUNT } from './utils/authUtils';
 import { getAuditorsFromDb } from './services/auditorService';
 import { getCompaniesFromDb, saveCompanyToDb } from './services/companyService';
 
@@ -56,8 +58,16 @@ import {
   EmailDispatchLog,
   AuditContractRecord,
   AuditorAffiliation,
-  AuditorNotice
+  AuditorNotice,
+  UserRole
 } from './types';
+import {
+  maskCompany,
+  maskAuditor,
+  maskProject,
+  maskCertContract,
+  maskAuditContractRecord
+} from './utils/maskingUtils';
 
 export function App() {
   // Session & Role Management - 접속 시 항상 랜딩(로그인) 페이지가 먼저 표시되도록 초기화
@@ -107,7 +117,25 @@ export function App() {
 
     getCompaniesFromDb().then(dbCompanies => {
       if (dbCompanies && dbCompanies.length > 0) {
-        setCompanies(dbCompanies);
+        const enhancedCompanies = dbCompanies.map(c => {
+          const cAny = c as any;
+          let recentDate = c.latestAuditDate || cAny.recentAuditDate || cAny.lastAuditDate || cAny.certStartDate;
+          
+          if ((!recentDate || recentDate === '-') && Array.isArray(cAny.auditHistory) && cAny.auditHistory.length > 0) {
+            const sortedHistory = [...cAny.auditHistory].sort((a: any, b: any) => {
+              const dateA = a.auditDate || a.auditEndDate || a.auditStartDate || '';
+              const dateB = b.auditDate || b.auditEndDate || b.auditStartDate || '';
+              return dateB.localeCompare(dateA);
+            });
+            recentDate = sortedHistory[0].auditDate || sortedHistory[0].auditEndDate || sortedHistory[0].auditStartDate;
+          }
+
+          return {
+            ...c,
+            latestAuditDate: recentDate || '-'
+          };
+        });
+        setCompanies(enhancedCompanies);
       }
     }).catch(err => console.warn('[App] Firestore companies sync note:', err));
   }, []);
@@ -138,6 +166,7 @@ export function App() {
   // 심사보고서 목록 관리 vs 세부 에디터 전환 상태
   const [isEditingReport, setIsEditingReport] = useState<boolean>(false);
   const [activeReportId, setActiveReportId] = useState<string>('rep-1');
+  const [activeWorkbenchCompany, setActiveWorkbenchCompany] = useState<Company | null>(null);
 
   // 일반관리 - 재무관리 하위 서브탭 ('settlements' | 'billing')
   const [financeSubTab, setFinanceSubTab] = useState<'settlements' | 'billing'>('settlements');
@@ -183,6 +212,14 @@ export function App() {
 
   // 기업 심사이력 및 경과 통합 모달 상태
   const [historyModalCompany, setHistoryModalCompany] = useState<Company | null>(null);
+  const [docStorageTarget, setDocStorageTarget] = useState<DocStorageTarget | null>(null);
+
+  const handleNavigateToDocStorage = (target: DocStorageTarget) => {
+    setHistoryModalCompany(null);
+    setDocStorageTarget(target);
+    setActiveCategory('certification');
+    setActiveTab('certification');
+  };
 
   // 심사보고서 워크벤치 모달 상태 (신규/1단계/2단계/특약/증빙서류 통합)
   const [workbenchCompany, setWorkbenchCompany] = useState<Company | null>(null);
@@ -222,21 +259,32 @@ export function App() {
   }, []);
 
 
-  // 현재 로그인한 심사원 객체 및 권한 체계 (상근 4인: 남경호, 정현일, 남효린, 이혜원 + 현 시점 김홍덕)
-  const currentAuditorObj: Auditor = auditors.find(a => a.id === currentUserRole) 
-    || (currentUserRole === 'admin' ? auditors.find(a => a.isSystemAdmin) || auditors[0] : auditors[0]);
+  // [SuperAdmin 전용] 비식별화 마스킹 활성화 토글 (기본값: true) 및 심사원 시점 전환 (Impersonation)
+  const [isMaskingActive, setIsMaskingActive] = useState<boolean>(true);
+  const [impersonatedAuditorId, setImpersonatedAuditorId] = useState<string | null>(null);
 
-  const STAFF_NAMES = ['남경호', '정현일', '남효린', '이혜원', '이예원', '김홍덕'];
-  const STAFF_EMAILS = ['nam2304@empas.com', 'himix1993@gmail.com', 'kgms2304@gmail.com', 'yewon6798@gmail.com', 'fumac@naver.com'];
+  // 슈퍼관리자 세션 여부 (the.elphis@gmail.com 또는 super-admin)
+  const isSuperAdminSession = currentUserRole === 'super-admin' || currentUserRole === 'the.elphis@gmail.com';
 
-  const isStaff = 
-    currentAuditorObj?.isSystemAdmin || 
-    currentAuditorObj?.affiliation === '상근' || 
-    STAFF_NAMES.some(name => currentAuditorObj?.name?.includes(name)) ||
-    (currentAuditorObj?.email && STAFF_EMAILS.includes(currentAuditorObj.email.toLowerCase().trim())) ||
-    currentUserRole === 'admin';
+  // 현재 로그인 세션 사용자 객체 (SuperAdmin일 때는 완전 독립된 최고관리자 프로필 반환)
+  const sessionAuditorObj: Auditor = isSuperAdminSession
+    ? SUPER_ADMIN_ACCOUNT
+    : (auditors.find(a => a.id === currentUserRole) || (currentUserRole === 'admin' ? (auditors.find(a => a.isSystemAdmin) || auditors[0]) : auditors[0]));
 
-  const isRegularAuditor = !isStaff;
+  // 실제 화면 뷰 대상 심사원 객체 (시점 전환 시 해당 심사원, 기본은 로그인 세션)
+  const currentAuditorObj: Auditor = impersonatedAuditorId 
+    ? (auditors.find(a => a.id === impersonatedAuditorId) || sessionAuditorObj)
+    : sessionAuditorObj;
+
+  const userRole: UserRole = 
+    (isSuperAdminSession && !impersonatedAuditorId)
+      ? 'SuperAdmin'
+      : (currentAuditorObj?.role || (currentAuditorObj?.isSystemAdmin ? 'OrgAdmin' : (currentAuditorObj?.affiliation === '상근' ? 'OrgAdmin' : 'Auditor')));
+
+  const isSuperAdmin = (isSuperAdminSession || userRole === 'SuperAdmin') && !impersonatedAuditorId;
+  const isOrgAdmin = userRole === 'OrgAdmin' || isSuperAdmin || (currentUserRole === 'admin' && !impersonatedAuditorId);
+  const isRegularAuditor = userRole === 'Auditor' && !isOrgAdmin && !isSuperAdmin;
+  const isStaff = !isRegularAuditor;
   const isNonPermanent = isRegularAuditor; // 일반 심사원 전용 보안 격리
 
   // Navigation Category Helper
@@ -249,6 +297,7 @@ export function App() {
       case 'integrations':
         return 'audit';
       case 'clients':
+      case 'documentStorage':
       case 'certification':
       case 'committee':
       case 'companies':
@@ -285,6 +334,16 @@ export function App() {
     const parts = clean.split('/');
     const tab = parts[0] as ActiveTab;
 
+    if ((parts[0] as string) === 'workbench' && parts[1]) {
+      return {
+        tab: 'reports' as ActiveTab,
+        category: 'audit' as MainCategory,
+        isEditingReport: true,
+        activeReportId: 'rep-1',
+        workbenchCompanyId: decodeURIComponent(parts[1]),
+        financeSubTab: 'settlements' as const
+      };
+    }
     if (tab === 'reports' && parts[1] === 'edit' && parts[2]) {
       return {
         tab: 'reports' as ActiveTab,
@@ -380,15 +439,19 @@ export function App() {
       localStorage.setItem('gmscs_role', roleId);
     }
 
+    // 1. SuperAdmin 또는 사무국 마스터 관리자는 사무국 대시보드로 즉시 진입
+    if (roleId === 'super-admin' || roleId === 'admin' || roleId === 'the.elphis@gmail.com') {
+      navigateTo('calendar', 'audit', { isEditingReport: false, replace: true });
+      return;
+    }
+
+    // 2. 일반 심사원 및 상근 직원 분기
     const aud = auditors.find(a => a.id === roleId);
-    const staffNames = ['남경호', '정현일', '남효린', '이혜원', '이예원', '김홍덕'];
-    const staffEmails = ['nam2304@empas.com', 'himix1993@gmail.com', 'kgms2304@gmail.com', 'yewon6798@gmail.com', 'fumac@naver.com'];
     const isLoginStaff = 
-      roleId === 'admin' || 
+      aud?.role === 'SuperAdmin' || 
+      aud?.role === 'OrgAdmin' || 
       aud?.isSystemAdmin || 
-      aud?.affiliation === '상근' || 
-      staffNames.some(name => aud?.name?.includes(name)) ||
-      (aud?.email && staffEmails.includes(aud.email.toLowerCase().trim()));
+      aud?.affiliation === '상근';
 
     if (isLoginStaff) {
       // 상근 직원 및 사무국 권한자는 사무국 대시보드(월간 심사일정 달력)로 진입
@@ -429,19 +492,41 @@ export function App() {
     : settlements;
 
   const visibleCompanies = isRegularAuditor
-    ? companies.filter(c => 
-        c.managingAuditorId === currentAuditorObj.id || 
-        (c as any).assignedAuditorName?.includes(currentAuditorObj.name) || 
-        (c as any).assignedAuditor?.includes(currentAuditorObj.name) || 
-        (c as any).consultant?.includes(currentAuditorObj.name) ||
-        visibleProjects.some(p => p.companyId === c.id || p.companyName === c.companyName)
-      )
+    ? companies.filter(c => {
+        const cAny = c as any;
+        const assigned = c.assignedAuditorName || cAny.assignedAuditor || '';
+        const consultant = cAny.consultant || '';
+        const lead = cAny.leadAuditorName || '';
+        const history = cAny.auditorHistory || [];
+        const isAssigned = (c.managingAuditorId && c.managingAuditorId === currentAuditorObj.id) ||
+          (cAny.assignedAuditorId && cAny.assignedAuditorId === currentAuditorObj.id) ||
+          assigned.includes(currentAuditorObj.name) ||
+          consultant.includes(currentAuditorObj.name) ||
+          lead.includes(currentAuditorObj.name) ||
+          (Array.isArray(history) && history.some((h: string) => h.includes(currentAuditorObj.name)));
+        if (isAssigned) return true;
+        const hasProject = visibleProjects.some(p => p.companyId === c.id || p.companyName === c.companyName);
+        if (hasProject) return true;
+        const hasContract = auditContracts.some(ct =>
+          (ct.companyId === c.id || ct.companyName === c.companyName) &&
+          (ct.leadAuditorId === currentAuditorObj.id || ct.leadAuditorName?.includes(currentAuditorObj.name))
+        );
+        return hasContract;
+      })
     : companies;
 
   // 일반 비상근 심사원은 본인 및 상근 사무국 직원 외에 다른 비상근 심사원의 신상/자격 정보를 볼 수 없음
   const visibleAuditors = isRegularAuditor
     ? auditors.filter(a => a.id === currentAuditorObj.id || a.affiliation === '상근')
     : auditors;
+
+  // [슈퍼관리자 비식별화 마스킹 데이터셋] SuperAdmin 세션 및 마스킹 활성화 시에만 마스킹 적용 (마스킹 OFF 시 원본 제공)
+  const shouldMask = isSuperAdminSession && isMaskingActive && !impersonatedAuditorId;
+  const effectiveCompanies = shouldMask ? visibleCompanies.map(maskCompany) : visibleCompanies;
+  const effectiveAuditors = shouldMask ? visibleAuditors.map(maskAuditor) : visibleAuditors;
+  const effectiveProjects = shouldMask ? visibleProjects.map(maskProject) : visibleProjects;
+  const effectiveContracts = shouldMask ? contracts.map(maskCertContract) : contracts;
+  const effectiveAuditContracts = shouldMask ? auditContracts.map(maskAuditContractRecord) : auditContracts;
 
   // 일반 심사원의 비인가 탭 접근 방지 및 자동 리디렉션
   React.useEffect(() => {
@@ -527,6 +612,33 @@ export function App() {
       }
     }
   }, [navigateTo]);
+
+  // URL Hash 감지 (#workbench/companyId 새 탭 및 링크 접근 처리 & 권한 격리 검증)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkWorkbenchHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#workbench/')) {
+        const targetId = decodeURIComponent(hash.replace('#workbench/', ''));
+        const targetComp = companies.find(c => c.id === targetId || c.companyName === targetId);
+        if (targetComp) {
+          if (isRegularAuditor) {
+            const isAllowed = visibleCompanies.some(c => c.id === targetComp.id || c.companyName === targetComp.companyName);
+            if (!isAllowed) {
+              alert('[보안 접근 차단] 본인이 담당 관리자로 배정되었거나 심사팀으로 참여한 기업의 보고서만 열람/작성할 수 있습니다.');
+              navigateTo('portal', 'auditor-mgmt', { replace: true });
+              return;
+            }
+          }
+          setActiveWorkbenchCompany(targetComp);
+          navigateTo('reports', 'audit', { isEditingReport: true, replace: true });
+        }
+      }
+    };
+    checkWorkbenchHash();
+    window.addEventListener('hashchange', checkWorkbenchHash);
+    return () => window.removeEventListener('hashchange', checkWorkbenchHash);
+  }, [companies, visibleCompanies, isRegularAuditor, navigateTo]);
 
   // 긴급 알림 카운트 (D-30 이내)
   const urgentCount = mockContracts.filter(c => {
@@ -740,24 +852,17 @@ export function App() {
     const targetComp = typeof companyOrId === 'string' 
       ? (companies.find(c => c.id === companyOrId || c.companyName === companyOrId) || { id: targetId, companyName: targetId } as Company)
       : companyOrId;
-    const prj = projects.find(p => p.companyId === targetId || p.companyName === targetComp?.companyName);
 
-    if (prj && prj.status !== '보고서작성' && prj.status !== '심사진행중' && targetComp) {
-      setPdfModalState({
-        isOpen: true,
-        title: `[공식 심사보고서] ${targetComp.companyName}`,
-        companyName: targetComp.companyName,
-        standard: prj.standards?.[0] || 'ISO 9001:2015',
-        auditType: prj.auditType || '정기 사후관리 심사',
-        auditDate: prj.startDate || '2025-10-15',
-        auditorName: prj.leadAuditorName || '남경호'
-      });
-      return;
+    if (isRegularAuditor) {
+      const isAllowed = visibleCompanies.some(c => c.id === targetComp.id || c.companyName === targetComp.companyName);
+      if (!isAllowed) {
+        alert('[보안 접근 차단] 본인이 담당 관리자로 배정되었거나 심사팀으로 참여한 기업의 보고서만 열람/작성할 수 있습니다.');
+        return;
+      }
     }
 
-    if (typeof window !== 'undefined') {
-      window.open(`#workbench/${encodeURIComponent(targetId)}`, '_blank');
-    }
+    setActiveWorkbenchCompany(targetComp);
+    navigateTo('reports', 'audit', { isEditingReport: true });
   };
 
   // 심사보고서 목록으로 돌아가기
@@ -1116,6 +1221,9 @@ export function App() {
             report={Object.values(reports).find(r => r.companyName === targetComp.companyName)}
             auditor={currentAuditorObj}
             auditors={auditors}
+            companies={companies}
+            isSecretariatReview={typeof window !== 'undefined' && window.location.href.includes('mode=review')}
+            currentUserRole={currentUserRole}
             onClose={() => {
               if (window.opener) {
                 window.close();
@@ -1269,6 +1377,20 @@ export function App() {
           onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
           onOpenProfileModal={() => setIsProfileModalOpen(true)}
           onLogout={handleLogout}
+          isSuperAdmin={isSuperAdminSession}
+          isMaskingActive={isMaskingActive}
+          onToggleMasking={() => setIsMaskingActive(prev => !prev)}
+          impersonatedAuditorId={impersonatedAuditorId}
+          onSelectImpersonation={(audId) => {
+            setImpersonatedAuditorId(audId);
+            if (audId) {
+              // 심사원 시점 전환 시 심사원 포털 또는 달력으로 전환
+              navigateTo('portal', 'auditor-mgmt', { isEditingReport: false });
+            } else {
+              // 최고관리자 복귀 시 대시보드 달력으로 전환
+              navigateTo('calendar', 'audit', { isEditingReport: false });
+            }
+          }}
         />
       )}
 
@@ -1278,11 +1400,14 @@ export function App() {
         {/* ========================================================= */}
         {/* 1. 홈 / 월간 심사 일정 (로그인 랜딩 페이지) */}
         {/* ========================================================= */}
+        {/* ========================================================= */}
+        {/* 1. 홈 / 월간 심사 일정 (로그인 랜딩 페이지) */}
+        {/* ========================================================= */}
         {activeTab === 'calendar' && (
           <DashboardCalendar
-            projects={projects}
-            auditors={auditors}
-            companies={companies}
+            projects={effectiveProjects}
+            auditors={effectiveAuditors}
+            companies={effectiveCompanies}
             committeeSchedules={committeeSchedules}
             onOpenReport={handleOpenReport}
             onOpenPdfReport={(info) => {
@@ -1303,6 +1428,7 @@ export function App() {
                 financeSubTab: subTab
               });
             }}
+            onNavigateToDocStorage={handleNavigateToDocStorage}
           />
         )}
 
@@ -1311,12 +1437,13 @@ export function App() {
         {/* ========================================================= */}
         {activeTab === 'clients' && (
           <ClientManagement
-            companies={companies}
-            auditors={auditors}
-            contracts={contracts}
-            auditContracts={auditContracts}
-            projects={projects}
+            companies={effectiveCompanies}
+            auditors={effectiveAuditors}
+            contracts={effectiveContracts}
+            auditContracts={effectiveAuditContracts}
+            projects={effectiveProjects}
             onOpenReport={handleOpenReport}
+            onOpenReportWorkbench={handleOpenReportWorkbench}
             onOpenPdfReport={(info) => {
               setPdfModalState({
                 isOpen: true,
@@ -1332,7 +1459,31 @@ export function App() {
             onOpenEmailModal={(companyName, contactEmail, templateType) => {
               handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');
             }}
+            onNavigateToDocStorage={handleNavigateToDocStorage}
             onAddCompany={handleAddCompany}
+          />
+        )}
+
+        {/* ========================================================= */}
+        {/* 2-2. 문서 보관함 (탐색기) (Firebase Cloud Storage 실시간 연동) */}
+        {/* ========================================================= */}
+        {activeTab === 'documentStorage' && (
+          <DocumentStorage
+            companies={visibleCompanies}
+            projects={effectiveProjects}
+            initialDocTarget={docStorageTarget}
+            onOpenPdfReport={(info) => {
+              setPdfModalState({
+                isOpen: true,
+                title: info.title,
+                companyName: info.companyName,
+                standard: info.standard,
+                auditType: info.auditType,
+                auditDate: info.auditDate,
+                auditorName: (info as any).auditorName,
+                pdfUrl: info.pdfUrl
+              });
+            }}
           />
         )}
 
@@ -1341,10 +1492,10 @@ export function App() {
         {/* ========================================================= */}
         {activeTab === 'auditors' && (
           <AuditorManagement
-            auditors={auditors}
-            projects={projects}
-            contracts={contracts}
-            companies={companies}
+            auditors={effectiveAuditors}
+            projects={effectiveProjects}
+            contracts={effectiveContracts}
+            companies={effectiveCompanies}
             onToggleCommitteeMember={handleToggleCommitteeMember}
             onUpdateAuditorAffiliation={handleUpdateAuditorAffiliation}
             onSaveAuditor={handleUpdateAuditorProfile}
@@ -1367,11 +1518,12 @@ export function App() {
         {/* ========================================================= */}
         {activeTab === 'certification' && (
           <CertificationManagement
-            auditors={auditors}
-            companies={companies}
-            projects={projects}
+            auditors={effectiveAuditors}
+            companies={effectiveCompanies}
+            projects={effectiveProjects}
             settlements={settlements}
             committeeSchedules={committeeSchedules}
+            initialDocTarget={docStorageTarget}
             onUpdateCommitteeSchedules={setCommitteeSchedules}
             onOpenEmailModal={() => handleOpenEmailModalWithPreset()}
             onUpdateSettlementStatus={handleUpdateSettlementStatus}
@@ -1384,8 +1536,8 @@ export function App() {
         {activeTab === 'committee' && (
           <CommitteeManager
             meetings={committeeMeetings}
-            auditors={auditors}
-            projects={projects}
+            auditors={effectiveAuditors}
+            projects={effectiveProjects}
             currentUserAuditor={currentAuditorObj}
             onApproveAgenda={handleApproveCommitteeAgenda}
             onOpenReport={handleOpenReport}
@@ -1395,8 +1547,8 @@ export function App() {
         {/* 보조/호환 탭: 고객사 인증현황 (레거시) */}
         {activeTab === 'companies' && (
           <CompanyAuditorManager
-            companies={companies}
-            auditors={auditors}
+            companies={effectiveCompanies}
+            auditors={effectiveAuditors}
             initialSubTab="companies"
             onOpenPdfReport={(info) => {
               setPdfModalState({
@@ -1413,6 +1565,7 @@ export function App() {
             onToggleCommitteeMember={handleToggleCommitteeMember}
             onReassignCompanyAuditor={handleReassignCompanyAuditor}
             onUpdateAuditorAffiliation={handleUpdateAuditorAffiliation}
+            onNavigateToDocStorage={handleNavigateToDocStorage}
           />
         )}
 
@@ -1420,8 +1573,8 @@ export function App() {
         {activeTab === 'surveillance' && (
           <SurveillanceManager
             contracts={mockContracts}
-            auditors={auditors}
-            companies={companies}
+            auditors={effectiveAuditors}
+            companies={effectiveCompanies}
           />
         )}
 
@@ -1440,10 +1593,10 @@ export function App() {
         {/* ========================================================= */}
         {activeTab === 'contracts' && (
           <AuditContractManager
-            companies={companies}
-            auditors={auditors}
-            contracts={auditContracts}
-            projects={projects}
+            companies={effectiveCompanies}
+            auditors={effectiveAuditors}
+            contracts={effectiveAuditContracts}
+            projects={effectiveProjects}
             isAdmin={currentUserRole === 'admin'}
             currentUserRole={currentUserRole}
             onSaveContract={handleSaveContract}
@@ -1456,53 +1609,88 @@ export function App() {
           />
         )}
 
-        {/* 3-2. 심사 보고서 작성/편집 (특정 보고서 편집 모드일 때 렌더링, 목록은 심사진행현황으로 일원화) */}
-        {activeTab === 'reports' && isEditingReport && (
-          <div className="space-y-4">
-            {isEmailDirectEntry && (
-              <div className="bg-cyan-50 border border-cyan-200 text-cyan-900 px-5 py-3.5 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                    ✉️
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-cyan-950">
-                      [보안 직행 링크 인증 접속] <span className="font-mono text-cyan-800 font-normal">fumac@naver.com</span> 전용 세션
-                    </div>
-                    <div className="text-xs text-cyan-700">
-                      심사보고서 작성 및 실시간 저장 모드로 직접 접속되었습니다. 수정하신 모든 항목은 브라우저와 시스템 DB에 즉시 보관됩니다.
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs font-semibold px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full border border-cyan-200">
-                  직행 링크 유효성 검증 완료 ✓
-                </div>
-              </div>
-            )}
-            <AuditReportEditor
-              report={reports[activeReportId] || reports['rep-1']}
-              onSaveReport={handleSaveReport}
-              onClose={() => navigateTo('projects', 'audit')}
-              onBackToList={() => navigateTo('projects', 'audit')}
+        {/* 3-2. 심사 보고서 작성/편집 (실물 양식 완벽 복제 워크벤치) */}
+        {activeTab === 'reports' && (() => {
+          const effectiveCompany = activeWorkbenchCompany || ({
+            id: '',
+            companyName: '',
+            ceoName: '',
+            bizNumber: '',
+            clientType: '직접',
+            totalEmployees: 0,
+            address: '',
+            contactPerson: '',
+            contactPhone: '',
+            contactEmail: '',
+            standards: []
+          } as unknown as Company);
+          const effectiveContract = activeWorkbenchCompany ? auditContracts.find(c => c.companyId === activeWorkbenchCompany.id || c.companyName === activeWorkbenchCompany.companyName) : undefined;
+          const effectiveProject = activeWorkbenchCompany ? projects.find(p => p.companyId === activeWorkbenchCompany.id || p.companyName === activeWorkbenchCompany.companyName) : undefined;
+          const effectiveReport = activeWorkbenchCompany ? Object.values(reports).find(r => r.companyName === activeWorkbenchCompany.companyName) : undefined;
+
+          return (
+            <AuditReportWorkbench
+              company={effectiveCompany}
+              contract={effectiveContract}
+              project={effectiveProject}
+              report={effectiveReport}
+              auditor={activeWorkbenchCompany ? currentAuditorObj : undefined}
+              auditors={effectiveAuditors}
+              companies={effectiveCompanies}
+              isSecretariatReview={currentUserRole === 'admin' || currentUserRole === 'office'}
               currentUserRole={currentUserRole}
-              onSubmitToSecretariat={handleSubmitToSecretariat}
-              onSecretariatReview={handleSecretariatReview}
+              onSelectCompany={(comp) => setActiveWorkbenchCompany(comp)}
+              onApprove={(_data) => {
+                // 승인 시 전역 프로젝트 상태 업데이트
+                if (effectiveCompany.id) {
+                  setProjects(prev => prev.map(p => {
+                    if (p.companyId === effectiveCompany.id || p.companyName === effectiveCompany.companyName) {
+                      return { ...p, status: '심사진행중' };
+                    }
+                    return p;
+                  }));
+                }
+              }}
+              onReject={(_data) => {
+                // 반려 시 전역 프로젝트 상태 업데이트
+                if (effectiveCompany.id) {
+                  setProjects(prev => prev.map(p => {
+                    if (p.companyId === effectiveCompany.id || p.companyName === effectiveCompany.companyName) {
+                      return { ...p, status: '보고서작성' };
+                    }
+                    return p;
+                  }));
+                }
+              }}
+              onClose={() => {
+                setActiveWorkbenchCompany(null);
+                if (isRegularAuditor) {
+                  navigateTo('portal', 'auditor-mgmt');
+                } else {
+                  handleBackToReportList();
+                }
+              }}
+              onSave={(_data) => {
+                alert(`[${effectiveCompany.companyName || '신규 보고서'}] 심사보고서 및 증빙 서류가 성공적으로 저장되었습니다.`);
+              }}
+              onUpdateCompany={handleUpdateCompany}
             />
-          </div>
-        )}
+          );
+        })()}
 
         {/* 3-2. 심사 진행현황 & 프로세스 대장 (9단계 엑셀 매트릭스) */}
         {activeTab === 'projects' && (
           <AuditProcessStatusManager
-            projects={projects}
-            auditors={auditors}
-            companies={companies}
-            contracts={contracts}
+            projects={effectiveProjects}
+            auditors={effectiveAuditors}
+            companies={effectiveCompanies}
+            contracts={effectiveContracts}
             reports={reports}
             settlements={settlements}
             committeeMeetings={committeeMeetings}
             committeeSchedules={committeeSchedules}
             onOpenReport={handleOpenReport}
+            onOpenReportWorkbench={handleOpenReportWorkbench}
             onSendPlan={(companyName, contactEmail, templateType) => {
               handleOpenEmailModalWithPreset(companyName || '', contactEmail || '', (templateType as any) || '심사계획서');
             }}
@@ -1553,7 +1741,7 @@ export function App() {
               });
             }}
             onNavigateToReports={() => {
-              navigateTo('reports', 'audit', { isEditingReport: false });
+              navigateTo('reports', 'audit');
             }}
             onNavigateToSettlement={() => {
               navigateTo('finance', 'general-admin', { financeSubTab: 'settlements' });
@@ -1562,6 +1750,7 @@ export function App() {
             onOpenEmailModal={handleOpenEmailModalWithPreset}
             onOpenReportWorkbench={handleOpenReportWorkbench}
             onOpenProfileModal={() => setIsProfileModalOpen(true)}
+            onNavigateToDocStorage={handleNavigateToDocStorage}
           />
         )}
 
@@ -1706,28 +1895,10 @@ export function App() {
             pdfUrl: info.pdfUrl
           });
         }}
+        onNavigateToDocStorage={handleNavigateToDocStorage}
       />
 
-      {/* 심사보고서 워크벤치 (2.5:7.5 분할 + 4대 탭 + 증빙서류 업로드 + EHS) */}
-      {workbenchCompany && (
-        <div className="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-          <div className="w-full max-w-[1780px] h-[96vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-700">
-            <AuditReportWorkbench
-              company={workbenchCompany}
-              contract={auditContracts.find(c => c.companyId === workbenchCompany.id || c.companyName === workbenchCompany.companyName)}
-              project={projects.find(p => p.companyId === workbenchCompany.id || p.companyName === workbenchCompany.companyName)}
-              report={Object.values(reports).find(r => r.companyName === workbenchCompany.companyName)}
-              auditor={currentAuditorObj}
-              auditors={auditors}
-              onClose={() => setWorkbenchCompany(null)}
-              onSave={(_data) => {
-                alert(`[${workbenchCompany.companyName}] 심사보고서 및 증빙 서류가 임시저장/보관되었습니다.`);
-              }}
-              onUpdateCompany={handleUpdateCompany}
-            />
-          </div>
-        </div>
-      )}
+
 
       {/* Footer (okesg.com 사업자 및 플랫폼 정보 인용, 이용약관/개인정보처리방침 제외) */}
       <footer className="bg-slate-50 border-t border-slate-200 py-6 text-xs text-slate-500 no-print">

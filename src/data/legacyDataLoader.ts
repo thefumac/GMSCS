@@ -1,6 +1,7 @@
 import legacyAuditorsRaw from './legacyAuditors.json';
 import legacyCompaniesRaw from './legacyCompanies.json';
 import realAuditProjectsRaw from './realAuditProjects.json';
+import officialMasterCertsRaw from './officialMasterCerts.json';
 import { Auditor, Company, StandardCode, AuditorAffiliation, CertContract, AuditProject, AuditType, AuditStatus, AdditionalSite } from '../types';
 import { cleanCeoName, splitPersonAndPosition } from '../utils/personUtils';
 
@@ -167,11 +168,259 @@ export function getMergedAuditors(): Auditor[] {
   return auditors;
 }
 
+// 매칭 전 데이터 구조 1건 확인용 로그
+if (realAuditProjectsRaw && (realAuditProjectsRaw as any[]).length > 0) {
+  console.log('[DEBUG Project/Report Sample]', (realAuditProjectsRaw as any[])[0]);
+}
+
+export function normalizeCompanyName(name?: string): string {
+  if (!name) return '';
+  return name
+    .replace(/\(주\)|주식회사|\(유\)|유한회사|\(합\)|합자회사|\(사\)|사단법인/g, '')
+    .replace(/\s+/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+// Build index of realAuditProjects by normalized company name and bizNumber
+const realProjectsMapByNorm = new Map<string, AuditProject[]>();
+const realProjectsMapByBiz = new Map<string, AuditProject[]>();
+
+(realAuditProjectsRaw as unknown as AuditProject[]).forEach(p => {
+  const norm = normalizeCompanyName(p.companyName || (p as any).clientName);
+  if (norm) {
+    if (!realProjectsMapByNorm.has(norm)) realProjectsMapByNorm.set(norm, []);
+    realProjectsMapByNorm.get(norm)!.push(p);
+  }
+  const biz = ((p as any).bizNumber || (p as any).bizNo || '').replace(/[^0-9]/g, '').trim();
+  if (biz && biz !== '0000000000') {
+    if (!realProjectsMapByBiz.has(biz)) realProjectsMapByBiz.set(biz, []);
+    realProjectsMapByBiz.get(biz)!.push(p);
+  }
+});
+
+export function resolveRealAuditTimeline(
+  companyName: string,
+  bizNumber?: string,
+  certNo?: string
+): {
+  initialCertDate: string;
+  lastAuditDate: string;
+  latestAuditDate: string;
+  surveillanceDueDate: string;
+  expiryDate: string;
+  hasRealProjects: boolean;
+} {
+  const norm = normalizeCompanyName(companyName);
+  const cleanBiz = (bizNumber || '').replace(/[^0-9]/g, '').trim();
+
+  let matched: AuditProject[] = [];
+  if (cleanBiz && realProjectsMapByBiz.has(cleanBiz)) {
+    matched = realProjectsMapByBiz.get(cleanBiz)!;
+  } else if (norm && realProjectsMapByNorm.has(norm)) {
+    matched = realProjectsMapByNorm.get(norm)!;
+  }
+
+  const sortedProjs = [...matched].sort((a, b) => (a.startDate || '9999-99-99').localeCompare(b.startDate || '9999-99-99'));
+
+  const masterCert = (cleanBiz && masterCertsByBiz.has(cleanBiz)) 
+    ? masterCertsByBiz.get(cleanBiz) 
+    : (norm && masterCertsByNorm.has(norm)) 
+    ? masterCertsByNorm.get(norm) 
+    : undefined;
+
+  let initialDate: string | undefined = masterCert?.initialCertDate?.trim();
+  let lastAuditDate: string | undefined;
+  let latestAuditDate: string = masterCert?.certStartDate?.trim() || '-';
+  let nextDueDate: string | undefined;
+
+  const todayStr = '2026-09-18';
+
+  // 0. 가장 최신 완료 심사일 (완료된 과거 실데이터만 대상, 미래 일정 배제)
+  const pastCompletedProjs = matched.filter(p => {
+    const d = p.endDate || p.startDate || (p.auditDates && p.auditDates[p.auditDates.length - 1]) || '';
+    return d && d <= todayStr;
+  });
+
+  if (pastCompletedProjs.length > 0) {
+    const sortedByDateDesc = [...pastCompletedProjs].sort((a, b) => {
+      const dateA = a.endDate || a.startDate || (a.auditDates && a.auditDates[a.auditDates.length - 1]) || '';
+      const dateB = b.endDate || b.startDate || (b.auditDates && b.auditDates[b.auditDates.length - 1]) || '';
+      return dateB.localeCompare(dateA);
+    });
+    const target = sortedByDateDesc[0];
+    latestAuditDate = target.endDate || target.startDate || (target.auditDates && target.auditDates[target.auditDates.length - 1]) || '-';
+  } else if (!latestAuditDate || latestAuditDate === '-') {
+    latestAuditDate = '-';
+  }
+
+  // 1. 최초 심사일 (masterCert가 없을 때만 프로젝트 이력에서 추정)
+  if (!initialDate) {
+    for (const p of sortedProjs) {
+      const atype = p.auditType || '';
+      if (p.startDate && (atype.includes('최초') || atype.includes('1-2단계') || atype.includes('1·2단계') || atype.includes('신규'))) {
+        initialDate = p.startDate;
+        break;
+      }
+    }
+    if (!initialDate && sortedProjs.length > 0) {
+      initialDate = sortedProjs[0].startDate;
+    }
+  }
+
+  // 2. 가장 최근 완료된 심사일 (<= today)
+  const pastProjs = sortedProjs.filter(p => (p.startDate || '') <= todayStr);
+  if (pastProjs.length > 0) {
+    lastAuditDate = pastProjs[pastProjs.length - 1].startDate;
+  }
+
+  // 3. 차기 예정 심사일 (> today 또는 미래 계획)
+  const futureProjs = sortedProjs.filter(p => (p.startDate || '') > todayStr);
+  if (futureProjs.length > 0) {
+    nextDueDate = futureProjs[0].startDate;
+  } else if (lastAuditDate) {
+    try {
+      const d = new Date(lastAuditDate);
+      if (!isNaN(d.getTime())) {
+        const nextY = d.getFullYear() + 1;
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        nextDueDate = `${nextY}-${mm}-${dd}`;
+      }
+    } catch {
+      // ignore
+    }
+  } else if (initialDate) {
+    try {
+      const d = new Date(initialDate);
+      if (!isNaN(d.getTime())) {
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        nextDueDate = `2026-${mm}-${dd}`;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 기본값 (가상 modulo 없이 안전 기준값 적용)
+  if (!initialDate) {
+    if (certNo && certNo.length >= 3) {
+      const yrMatch = certNo.match(/\d{2}/);
+      if (yrMatch) {
+        const yr = parseInt(yrMatch[0], 10);
+        initialDate = `20${String(yr).padStart(2, '0')}-01-15`;
+      }
+    }
+    if (!initialDate) initialDate = '2024-01-01';
+  }
+
+  if (!lastAuditDate) {
+    try {
+      const d = new Date(initialDate);
+      if (!isNaN(d.getTime())) {
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        lastAuditDate = `2025-${mm}-${dd}`;
+      }
+    } catch {
+      lastAuditDate = '2025-01-01';
+    }
+  }
+
+  if (!nextDueDate) {
+    try {
+      const d = new Date(lastAuditDate || initialDate);
+      if (!isNaN(d.getTime())) {
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        nextDueDate = `2026-${mm}-${dd}`;
+      }
+    } catch {
+      nextDueDate = '2026-10-15';
+    }
+  }
+
+  // 만료일: 3년 주기 계산
+  let expiryDate = '2027-12-31';
+  try {
+    const d = new Date(initialDate);
+    if (!isNaN(d.getTime())) {
+      const initYr = d.getFullYear();
+      const cycle = Math.floor((2026 - initYr) / 3);
+      const expYr = initYr + (cycle + 1) * 3;
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      expiryDate = `${expYr}-${mm}-${dd}`;
+    }
+  } catch {
+    expiryDate = '2027-12-31';
+  }
+
+  return {
+    initialCertDate: initialDate || '2024-01-01',
+    lastAuditDate: lastAuditDate || '2025-01-01',
+    latestAuditDate: latestAuditDate,
+    surveillanceDueDate: nextDueDate || '2026-10-15',
+    expiryDate,
+    hasRealProjects: matched.length > 0
+  };
+}
+
+export interface OfficialMasterCert {
+  no: string;
+  agency: string;
+  companyName: string;
+  certStatus: string;
+  bizNumber: string;
+  region: string;
+  address: string;
+  employees: string;
+  phone: string;
+  email: string;
+  fax: string;
+  contactPerson: string;
+  ceoName: string;
+  zipCode: string;
+  standards: string;
+  certNo: string;
+  initialCertDateOrg: string;
+  initialCertDateCert: string;
+  initialCertDate: string;
+  certStartDate: string;
+  expiryDate: string;
+  scope: string;
+  iafCode1: string;
+  iafCode2: string;
+  iafCode3: string;
+}
+
+// Build index of officialMasterCerts by clean bizNumber and normalized company name
+const masterCertsByBiz = new Map<string, OfficialMasterCert>();
+const masterCertsByNorm = new Map<string, OfficialMasterCert>();
+
+(officialMasterCertsRaw as unknown as OfficialMasterCert[]).forEach(mc => {
+  const cleanBiz = (mc.bizNumber || '').replace(/[^0-9]/g, '').trim();
+  if (cleanBiz && cleanBiz !== '0000000000') {
+    if (!masterCertsByBiz.has(cleanBiz)) {
+      masterCertsByBiz.set(cleanBiz, mc);
+    }
+  }
+  const norm = normalizeCompanyName(mc.companyName);
+  if (norm) {
+    if (!masterCertsByNorm.has(norm)) {
+      masterCertsByNorm.set(norm, mc);
+    }
+  }
+});
+
 export interface LegacyCompanyExtended extends Company {
   certNo?: string;
   standards?: string;
   scope?: string;
   rawStatus?: string;
+  certStatus?: string;
+  certStartDate?: string;
   regionCode?: string;
   hasDriveReports?: boolean;
   consultant?: string;
@@ -180,6 +429,7 @@ export interface LegacyCompanyExtended extends Company {
   assignedAuditorName?: string;
   isAuditorChanged?: boolean;
   auditorHistory?: string[];
+  surveillanceDueDate?: string;
 }
 
 // Map legacy companies to Company[]
@@ -202,43 +452,63 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
     '주식회사 썬즈'
   ]);
 
-    const auditors = getMergedAuditors();
-    const adminAuditor = auditors.find(a => a.id === 'admin' || a.name.includes('남경호')) || auditors[0];
+  const auditors = getMergedAuditors();
+  const adminAuditor = auditors.find(a => a.id === 'admin' || a.name.includes('남경호')) || auditors[0];
 
-    return legacyCompaniesRaw.map((lc, idx) => {
-      const isDrive = driveCompanies.has(lc.name) || Array.from(driveCompanies).some(dc => lc.name.includes(dc));
-      
-      // 실제 원본 DB의 배정 심사원(lc.assignedAuditor 또는 consultant)을 엄격하게 매핑!
-      // 임의의 비상근 심사원 자동 배정(idx % auditors.length)을 완전히 제거하여 정보 노출 및 오매칭 방지
-      const rawAssigned = ((lc as any).assignedAuditor || '').trim();
-      const rawConsultant = ((lc as any).consultant || '').trim();
-      
-      let assignedAuditor = adminAuditor; // 기본값: 사무국 / 남경호 원장
+  const companies: LegacyCompanyExtended[] = legacyCompaniesRaw.map((lc, idx) => {
+    const isDrive = driveCompanies.has(lc.name) || Array.from(driveCompanies).some(dc => lc.name.includes(dc));
+    
+    // 실제 원본 DB의 배정 심사원(lc.assignedAuditor 또는 consultant)을 엄격하게 매핑!
+    const rawAssigned = ((lc as any).assignedAuditor || '').trim();
+    const rawConsultant = ((lc as any).consultant || '').trim();
+    
+    let assignedAuditor = adminAuditor; // 기본값: 사무국 / 남경호 원장
 
-      if (rawAssigned && rawAssigned !== '미지정') {
-        // 1순위: assignedAuditor 문자열에서 일치하는 심사원 객체 검색 (김홍덕, 이동훈, 이기영 등)
-        const matched = auditors.find(a => rawAssigned.includes(a.name));
-        if (matched) {
-          assignedAuditor = matched;
-        }
-      } else if (rawConsultant && rawConsultant !== 'HQ' && rawConsultant !== '사무국직접') {
-        // 2순위: consultant(유치 심사원) 기준 검색
-        const matched = auditors.find(a => rawConsultant.includes(a.name));
-        if (matched) {
-          assignedAuditor = matched;
-        }
+    if (rawAssigned && rawAssigned !== '미지정') {
+      const matched = auditors.find(a => rawAssigned.includes(a.name));
+      if (matched) {
+        assignedAuditor = matched;
       }
+    } else if (rawConsultant && rawConsultant !== 'HQ' && rawConsultant !== '사무국직접') {
+      const matched = auditors.find(a => rawConsultant.includes(a.name));
+      if (matched) {
+        assignedAuditor = matched;
+      }
+    }
 
     // 대표자명 및 담당자 성명/직책 정제
     const cleanedCeo = cleanCeoName(lc.ceoName || (lc.contactPerson?.includes('대표') ? lc.contactPerson : '대표이사'));
     const parsedContact = splitPersonAndPosition(lc.contactPerson || '품질팀장', '담당자');
 
-    const month = (idx % 12) + 1;
-    const day = (idx % 25) + 1;
-    const initialYear = 2024 - (idx % 3);
-    const initialDate = `${initialYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const lastAuditDate = `2025-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const expiryDate = `${initialYear + 3}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    // [실데이터 매핑] realAuditProjects 기반 실제 심사 타임라인 정밀 매핑
+    const timeline = resolveRealAuditTimeline(lc.name, lc.bizNo, lc.certNo);
+
+    // [공식 마스터 원장 연동] 고객조회2026.9.19.CSV 매칭 (1순위: 사업자등록번호 -> 2순위: 기업명 정규화)
+    const cleanBiz = (lc.bizNo || '').replace(/[^0-9]/g, '').trim();
+    const norm = normalizeCompanyName(lc.name);
+
+    let masterCert: OfficialMasterCert | null = null;
+    if (cleanBiz && masterCertsByBiz.has(cleanBiz)) {
+      masterCert = masterCertsByBiz.get(cleanBiz)!;
+    } else if (norm && masterCertsByNorm.has(norm)) {
+      masterCert = masterCertsByNorm.get(norm)!;
+    }
+
+    const certNo = (masterCert?.certNo || lc.certNo || `Q26${String(idx + 100).padStart(4, '0')}`).trim();
+    const certStatus = (masterCert ? (masterCert.certStatus || '') : (lc.status || '')).trim();
+    const initialDate = (masterCert?.initialCertDate || timeline.initialCertDate || '2024-01-01').trim();
+    const certStartDate = (masterCert?.certStartDate || '').trim();
+    const expiryDate = (masterCert?.expiryDate || timeline.expiryDate || '2027-12-31').trim();
+    const lastAuditDate = timeline.lastAuditDate;
+    const surveillanceDueDate = timeline.surveillanceDueDate;
+
+    // latestAuditDate: CSV의 [인증유효 시작일자]를 최근 심사/인증일자로 우선 할당 (비어있을 경우 프로젝트 이력 또는 '-')
+    let latestAuditDate = '-';
+    if (certStartDate) {
+      latestAuditDate = certStartDate;
+    } else if (timeline.latestAuditDate && timeline.latestAuditDate !== '-') {
+      latestAuditDate = timeline.latestAuditDate;
+    }
 
     // 기본 추가사업장 예시 (기존 데이터에 2공장 등이 있는 경우 구조화)
     const additionalSites: AdditionalSite[] = [];
@@ -256,32 +526,33 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
 
     return {
       id: `comp-legacy-${lc.no || idx + 1}`,
-      bizNumber: lc.bizNo || `000-00-${String(idx).padStart(5, '0')}`,
+      bizNumber: lc.bizNo || (masterCert?.bizNumber) || `000-00-${String(idx).padStart(5, '0')}`,
       companyName: lc.name,
       ceoName: cleanedCeo,
-      address: lc.address || '',
+      address: lc.address || (masterCert?.address) || '',
       contactPerson: parsedContact.name,
       contactPosition: parsedContact.position,
-      contactPhone: lc.phone || '',
-      contactEmail: lc.email || '',
+      contactPhone: lc.phone || (masterCert?.phone) || '',
+      contactEmail: lc.email || (masterCert?.email) || '',
       managingAuditorId: assignedAuditor.id,
       clientType: lc.region === 'HQ' ? '직영' : '심사원영업',
       totalEmployees: (() => {
-        const rawEmp = parseInt(lc.employees, 10);
+        const rawEmp = parseInt(lc.employees, 10) || parseInt(masterCert?.employees || '0', 10);
         if (rawEmp && rawEmp > 1) return rawEmp;
-        const iafNum = parseInt(lc.iafCode || '17', 10) || 17;
+        const iafNum = parseInt(lc.iafCode || masterCert?.iafCode1 || '17', 10) || 17;
         const base = (iafNum === 17 || iafNum === 28 || iafNum === 14) ? 22 : 14;
         return base + ((idx * 11) % 52);
       })(),
-      industry: lc.standards || '제조/서비스',
-      iafCode: lc.iafCode || '17',
+      industry: (lc as any).industry || (lc as any).businessType || (lc as any).product || (lc as any).mainProduct || (masterCert as any)?.industry || (masterCert as any)?.businessType || '',
+      iafCode: lc.iafCode || masterCert?.iafCode1 || '17',
       riskLevel: 'Medium',
       createdAt: '2024-01-01',
-      certNo: lc.certNo,
-      standards: lc.standards,
-      scope: lc.scope,
-      rawStatus: lc.status,
-      regionCode: lc.region,
+      certNo: certNo,
+      standards: masterCert?.standards || lc.standards,
+      scope: masterCert?.scope || lc.scope,
+      rawStatus: masterCert?.certStatus || lc.status || '',
+      certStatus: certStatus,
+      regionCode: lc.region || masterCert?.region,
       hasDriveReports: isDrive,
       consultant: (lc as any).consultant === '사무국직접' ? 'HQ' : ((lc as any).consultant || 'HQ'),
       agency: (lc as any).agency === 'HQ사무국' ? 'HQ' : ((lc as any).agency || 'HQ'),
@@ -292,16 +563,117 @@ export function getMergedCompanies(): LegacyCompanyExtended[] {
       initialContractType: idx % 12 === 7 ? '재인증' : idx % 5 === 2 ? '전환' : '신규',
       initialContractDate: initialDate,
       initialCertDate: initialDate,
+      certStartDate: certStartDate,
       lastAuditDate: lastAuditDate,
+      latestAuditDate: latestAuditDate,
       expiryDate: expiryDate,
+      surveillanceDueDate: surveillanceDueDate,
+      currentCycleNumber: (() => {
+        try {
+          const initYr = new Date(initialDate).getFullYear();
+          if (!isNaN(initYr)) {
+            return Math.max(1, Math.floor((2026 - initYr) / 3) + 1);
+          }
+        } catch { /* ignore */ }
+        return 1;
+      })(),
+      cycleBaseDate: (() => {
+        if (certStartDate && certStartDate.length >= 10 && !isNaN(new Date(certStartDate).getTime())) {
+          return certStartDate;
+        }
+        try {
+          const initD = new Date(initialDate);
+          if (!isNaN(initD.getTime())) {
+            const today = new Date('2026-09-19');
+            const diffMonths = (today.getFullYear() - initD.getFullYear()) * 12 + (today.getMonth() - initD.getMonth());
+            const cyclesPassed = Math.max(0, Math.floor(diffMonths / 36));
+            const baseD = new Date(initD.getTime());
+            baseD.setMonth(baseD.getMonth() + cyclesPassed * 36);
+            return baseD.toISOString().slice(0, 10);
+          }
+        } catch {}
+        return initialDate;
+      })(),
+      pastCycles: [],
       additionalSites: additionalSites,
       standardInitialDates: {
-        '9001': `202${(idx % 4) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`,
+        '9001': initialDate || `202${(idx % 4) + 1}-${String((idx % 12) + 1).padStart(2, '0')}-${String((idx % 28) + 1).padStart(2, '0')}`,
         '14001': `202${((idx + 1) % 4) + 2}-${String(((idx + 3) % 12) + 1).padStart(2, '0')}-${String(((idx + 5) % 28) + 1).padStart(2, '0')}`,
         '45001': `202${((idx + 2) % 3) + 3}-${String(((idx + 6) % 12) + 1).padStart(2, '0')}-${String(((idx + 10) % 28) + 1).padStart(2, '0')}`
       }
     };
   });
+
+  // CSV 공식 마스터 원장 중 기존 DB에 없는 신규 기업(예: 사랑새화장품, 휴온스랩 등) 누락 없이 통합
+  const existingBizSet = new Set(legacyCompaniesRaw.map(c => (c.bizNo || '').replace(/[^0-9]/g, '').trim()).filter(b => b && b !== '0000000000'));
+  const existingNormSet = new Set(legacyCompaniesRaw.map(c => normalizeCompanyName(c.name)).filter(Boolean));
+
+  (officialMasterCertsRaw as unknown as OfficialMasterCert[]).forEach((mc) => {
+    const cleanBiz = (mc.bizNumber || '').replace(/[^0-9]/g, '').trim();
+    const norm = normalizeCompanyName(mc.companyName);
+
+    const isBizMatched = cleanBiz && cleanBiz !== '0000000000' && existingBizSet.has(cleanBiz);
+    const isNormMatched = norm && existingNormSet.has(norm);
+
+    if (!isBizMatched && !isNormMatched) {
+      const idx = companies.length;
+      const initialDate = mc.initialCertDate || '2024-01-01';
+      const expiryDate = mc.expiryDate || '2027-12-31';
+      const certStartDate = mc.certStartDate || '';
+      const latestAuditDate = certStartDate || '-';
+
+      companies.push({
+        id: `comp-csv-master-${mc.no || idx + 1}`,
+        bizNumber: mc.bizNumber || `000-00-${String(idx).padStart(5, '0')}`,
+        companyName: mc.companyName,
+        ceoName: cleanCeoName(mc.ceoName || '대표이사'),
+        address: mc.address || '',
+        contactPerson: mc.contactPerson || '담당자',
+        contactPosition: '담당자',
+        contactPhone: mc.phone || '',
+        contactEmail: mc.email || '',
+        managingAuditorId: adminAuditor.id,
+        clientType: '직영',
+        totalEmployees: parseInt(mc.employees, 10) || 10,
+        industry: (mc as any).industry || (mc as any).businessType || (mc as any).product || (mc as any).mainProduct || '',
+        iafCode: mc.iafCode1 || '17',
+        riskLevel: 'Medium',
+        createdAt: '2024-01-01',
+        certNo: mc.certNo,
+        standards: mc.standards,
+        scope: mc.scope,
+        rawStatus: mc.certStatus,
+        certStatus: mc.certStatus || '심사진행',
+        regionCode: mc.region,
+        hasDriveReports: false,
+        consultant: 'HQ',
+        agency: 'HQ',
+        salesType: 'HQ',
+        assignedAuditorName: adminAuditor.name,
+        isAuditorChanged: false,
+        auditorHistory: [],
+        initialContractType: '신규',
+        initialContractDate: initialDate,
+        initialCertDate: initialDate,
+        certStartDate: certStartDate,
+        lastAuditDate: latestAuditDate,
+        latestAuditDate: latestAuditDate,
+        expiryDate: expiryDate,
+        surveillanceDueDate: '2026-10-15',
+        currentCycleNumber: 1,
+        cycleBaseDate: certStartDate || initialDate,
+        pastCycles: [],
+        additionalSites: [],
+        standardInitialDates: {
+          '9001': initialDate,
+          '14001': '2025-01-01',
+          '45001': '2026-01-01'
+        }
+      });
+    }
+  });
+
+  return companies;
 }
 
 // Map legacy companies to CertContract[]
@@ -316,57 +688,9 @@ export function getMergedContracts(): CertContract[] {
     }
     if (stdList.length === 0) stdList.push('ISO 9001:2015');
 
-    const name = c.companyName;
-    const isDiEnviro = name.includes('디아이엔바이로') || name.includes('디아이앤바이로');
-    const isSongi = name.includes('송이실업');
-    const isKmTech = name.includes('케이엠텍');
-    const isDoosung = name.includes('두성토건');
-    const isK1Metal1 = name.includes('케이원메탈1공장');
-    const isK1Metal2 = name.includes('케이원메탈2공장');
-    const isDyMetal = name.includes('디와이메탈');
-    const isJungin = name.includes('정인');
-    const isDongwon = name.includes('동원시스템즈') || name.includes('동원');
-    const isDongchang = name.includes('동창산업');
-
-    const month = (idx % 12) + 1;
-    const day = (idx % 25) + 1;
-    const initialYear = 2024 - (idx % 3);
-    let initialDate = `${initialYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    let nextDueDate = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-    // 실제 실적 기반 정확한 일정 매핑 (단일 진실 공급원)
-    if (isDiEnviro) {
-      initialDate = '2024-03-20';
-      nextDueDate = '2027-03-15'; // 2026.03 2차사후 완료 -> 차기 2027.03 갱신
-    } else if (isKmTech) {
-      initialDate = '2024-07-20';
-      nextDueDate = '2027-07-15'; // 2026.07 심사완료 -> 차기 2027.07 갱신
-    } else if (isDoosung) {
-      initialDate = '2024-05-15';
-      nextDueDate = '2027-05-15'; // 2026.05 심사 모두완료 -> 차기 2027.05 갱신
-    } else if (isK1Metal1 || isK1Metal2) {
-      initialDate = '2024-06-20';
-      nextDueDate = '2027-06-20'; // 2026.06 2차사후 완료 -> 차기 2027.06 갱신
-    } else if (isDongchang) {
-      initialDate = '2024-08-15';
-      nextDueDate = '2027-08-15'; // 2026.08 2차사후 완료 -> 차기 2027.08 갱신
-    } else if (isSongi) {
-      initialDate = '2023-09-07';
-      nextDueDate = '2027-09-07'; // 2026.09.07 갱신심사 완료(남경호 원장과 2MD 시행) -> 차기 1차 사후 2027-09-07
-    } else if (isDongwon) {
-      initialDate = '2024-09-23';
-      nextDueDate = '2026-09-23'; // 2026.09.23 1차 사후 (수요일, D-13 심사준비)
-    } else if (isDyMetal) {
-      initialDate = '2024-11-20';
-      nextDueDate = '2026-11-20'; // 11월 예정 (심사준비, D-71)
-    } else if (isJungin) {
-      initialDate = '2024-10-15';
-      nextDueDate = '2026-10-15'; // 10월 예정 (심사준비, D-35)
-    } else if (month < 9) {
-      nextDueDate = `2027-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    }
-
-    const expiryDate = `${parseInt(nextDueDate.substring(0, 4), 10) + 1}-12-31`;
+    const initialDate = c.initialCertDate || '2024-01-01';
+    const nextDueDate = (c as any).surveillanceDueDate || '2026-10-15';
+    const expiryDate = c.expiryDate || '2027-12-31';
 
     return {
       id: `cont-${c.id}`,
@@ -411,8 +735,47 @@ export function getMergedProjects(): AuditProject[] {
   });
 
   rawList.forEach((p, pIdx) => {
+    const comp = companies.find(c => c.companyName.trim() === p.companyName.trim()) 
+      || companies.find(c => normalizeCompanyName(c.companyName) === normalizeCompanyName(p.companyName));
+
+    let cleanAuditType = p.auditType || '정기심사';
+    if (comp) {
+      const initDateStr = comp.initialCertDate || comp.initialContractDate;
+      const auditDateStr = p.startDate || p.endDate;
+      const expDateStr = comp.expiryDate;
+      if (initDateStr && auditDateStr) {
+        const initD = new Date(initDateStr);
+        const auditD = new Date(auditDateStr);
+        if (!isNaN(initD.getTime()) && !isNaN(auditD.getTime())) {
+          const diffDays = Math.abs(auditD.getTime() - initD.getTime()) / (1000 * 60 * 60 * 24);
+          if ((p.auditType?.includes('최초') || p.auditType?.includes('1-2') || p.auditType?.includes('1·2') || p.auditType?.includes('신규')) && diffDays > 45) {
+            if (expDateStr) {
+              const expD = new Date(expDateStr);
+              if (!isNaN(expD.getTime())) {
+                const expDiff = Math.abs(auditD.getTime() - expD.getTime()) / (1000 * 60 * 60 * 24);
+                if (expDiff <= 90) {
+                  cleanAuditType = '갱신심사';
+                }
+              }
+            }
+            if (cleanAuditType === p.auditType) {
+              const diffMonths = (auditD.getFullYear() - initD.getFullYear()) * 12 + (auditD.getMonth() - initD.getMonth());
+              const cycleMonth = ((diffMonths % 36) + 36) % 36;
+              if (cycleMonth === 0 || cycleMonth >= 33 || cycleMonth <= 2) {
+                cleanAuditType = '갱신심사';
+              } else if (cycleMonth >= 20 && cycleMonth <= 28) {
+                cleanAuditType = '사후관리 2차';
+              } else {
+                cleanAuditType = '사후관리 1차';
+              }
+            }
+          }
+        }
+      }
+    }
+
     // 키: 회사명 + 시작일 + 종료일 + 심사유형
-    const key = [p.companyName.trim(), p.startDate, p.endDate, p.auditType].join('__');
+    const key = [p.companyName.trim(), p.startDate, p.endDate, cleanAuditType].join('__');
     const cleanMd = normalizeMd(p.appliedMd);
     const cleanKabMd = normalizeMd(p.kabStandardMd || p.appliedMd);
 
@@ -435,6 +798,7 @@ export function getMergedProjects(): AuditProject[] {
     if (!map.has(key)) {
       map.set(key, {
         ...p,
+        auditType: cleanAuditType as any,
         leadAuditorId: canonicalLeadId,
         leadAuditorName: leadName,
         appliedMd: cleanMd,

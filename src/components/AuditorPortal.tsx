@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Building2,
   Briefcase,
@@ -35,12 +35,14 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { Auditor, Company, AuditProject, CertContract, AuditorSettlement, AuditReport, AuditorNotice } from '../types';
-import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
-import { 
-  getCompanyAuditState, 
-  getStandardAuditStage, 
-  getAuditStateBadgeClass, 
-  CompanyAuditState 
+import { CompanyAuditHistoryModal, DocStorageTarget } from './CompanyAuditHistoryModal';
+import { Pagination } from './Pagination';
+import {
+  getCompanyAuditState,
+  getStandardAuditStage,
+  getAuditStateBadgeClass,
+  checkAuditDueThreshold,
+  CompanyAuditState
 } from '../utils/auditStateUtils';
 
 export type AuditLifecycleState = CompanyAuditState;
@@ -151,6 +153,7 @@ interface AuditorPortalProps {
   onOpenEmailModal: (recipientName?: string, recipientEmail?: string, templateType?: any) => void;
   onOpenReportWorkbench?: (companyId: string) => void;
   onOpenProfileModal?: () => void;
+  onNavigateToDocStorage?: (target: DocStorageTarget) => void;
 }
 
 // 심사 단계 판별 (표준 공통 엔진 위임)
@@ -368,9 +371,11 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
   notices = [],
   onOpenReport,
   onOpenPdfReport,
+  onNavigateToReports,
   onOpenEmailModal,
   onOpenReportWorkbench,
   onOpenProfileModal,
+  onNavigateToDocStorage,
 }) => {
   // 5대 탭 메뉴:
   // 1. ledger: 나의 심사 업체 대장
@@ -462,8 +467,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       const consultant = cAny.consultant || '';
       const history: string[] = cAny.auditorHistory || [];
 
-      const isAuditor = assigned.includes(currentAuditor.name) || 
-                        history.some((a: string) => a.includes(currentAuditor.name));
+      const isAuditor = assigned.includes(currentAuditor.name) ||
+        history.some((a: string) => a.includes(currentAuditor.name));
       const isSales = consultant.includes(currentAuditor.name);
 
       if (isAuditor || isSales) {
@@ -474,8 +479,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     // 해당 심사원이 심사팀장 또는 심사팀원으로 직접 배정된 프로젝트가 있는 기업도 포함
     projects.forEach(p => {
       const isLead = (p.leadAuditorId && p.leadAuditorId === currentAuditor.id) ||
-                     (p.leadAuditorName && p.leadAuditorName.includes(currentAuditor.name));
-      const isTeam = Boolean(p.teamAuditorNames && p.teamAuditorNames.some(name => 
+        (p.leadAuditorName && p.leadAuditorName.includes(currentAuditor.name));
+      const isTeam = Boolean(p.teamAuditorNames && p.teamAuditorNames.some(name =>
         name.includes(currentAuditor.name) || currentAuditor.name.includes(name)
       ));
       if (isLead || isTeam) {
@@ -820,6 +825,19 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     });
   }, [filteredRows, sortField, sortAsc]);
 
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const PAGE_SIZE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedStandard, selectedStateFilter]);
+
+  const totalPages = Math.ceil(sortedRows.length / PAGE_SIZE) || 1;
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedRows.slice(start, start + PAGE_SIZE);
+  }, [sortedRows, currentPage, PAGE_SIZE]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortAsc(!sortAsc);
@@ -868,8 +886,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
     // [핵심] 현재 심사원이 직접 심사팀장(책임심사원) 또는 심사팀원으로 참여하는 프로젝트만 엄격 필터링!
     const myProjects = projects.filter(p => {
       const isLead = (p.leadAuditorId && p.leadAuditorId === currentAuditor.id) ||
-                     (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
-      const isTeam = Boolean(p.teamAuditorNames && p.teamAuditorNames.some(name => 
+        (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
+      const isTeam = Boolean(p.teamAuditorNames && p.teamAuditorNames.some(name =>
         name === currentAuditor.name || name.includes(currentAuditor.name) || currentAuditor.name.includes(name)
       ));
       return isLead || isTeam;
@@ -912,14 +930,14 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           const eventType: 'completed' | 'in-progress' | 'prep' | 'scheduled' = isCompleted
             ? 'completed'
             : isInProgress
-            ? 'in-progress'
-            : 'prep';
+              ? 'in-progress'
+              : 'prep';
           const key = `${p.id || p.companyId}-${dateStr}`;
           if (!addedKeys.has(key)) {
             addedKeys.add(key);
 
             const isLead = (p.leadAuditorId && p.leadAuditorId === currentAuditor.id) ||
-                           (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
+              (p.leadAuditorName && (p.leadAuditorName === currentAuditor.name || p.leadAuditorName.includes(currentAuditor.name)));
             let roleNote: string | undefined = undefined;
             if (isLead) {
               const otherTeams = (p.teamAuditorNames || []).filter(t => !t.includes(currentAuditor.name));
@@ -1227,9 +1245,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     <span className="text-slate-500 text-[11px]">({item.stageText})</span>
                   </div>
                   <div className="flex items-center space-x-2 shrink-0 ml-2">
-                    <span className={`font-mono text-[11px] font-bold ${
-                      item.dday.isOverdue ? 'text-rose-600' : 'text-amber-700'
-                    }`}>
+                    <span className={`font-mono text-[11px] font-bold ${item.dday.isOverdue ? 'text-rose-600' : 'text-amber-700'
+                      }`}>
                       {item.dday.text}
                     </span>
                     <span className="text-slate-400 font-mono text-[10.5px]">
@@ -1264,11 +1281,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 >
                   <div className="flex items-center space-x-1.5 truncate">
                     <span className="text-cyan-600 font-black">•</span>
-                    <span className={`text-[11px] font-bold ${
-                      n.category === '긴급' ? 'text-rose-600' :
-                      n.category === 'KAB기준' ? 'text-indigo-700' :
-                      'text-cyan-800'
-                    }`}>
+                    <span className={`text-[11px] font-bold ${n.category === '긴급' ? 'text-rose-600' :
+                        n.category === 'KAB기준' ? 'text-indigo-700' :
+                          'text-cyan-800'
+                      }`}>
                       [{n.category}]
                     </span>
                     <span className="text-slate-800 font-medium truncate">{n.title}</span>
@@ -1285,7 +1301,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       {/* 2. 핵심 지표 바 & 상단 5대 탭 메뉴 바 (심사자격관리, 심사MD 포함)                 */}
       {/* ========================================================================= */}
       <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
-        
+
         {/* 3대 핵심 지표 (관리업체수 / 총심사일정수 / 규격별 관리현황 통합) */}
         <div className="flex flex-wrap items-center gap-3 text-xs w-full xl:w-auto">
           {/* 1. 관리 업체수 */}
@@ -1328,12 +1344,27 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
         <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0 flex-wrap gap-1">
           <button
             type="button"
+            onClick={() => {
+              if (onNavigateToReports) {
+                onNavigateToReports();
+              } else if (typeof window !== 'undefined') {
+                window.location.hash = '#contracts';
+              }
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-amber-500 hover:bg-amber-600 text-white shadow-xs"
+            title="심사계약·계획 관리(F02 계약검토보고서, F14 공정성평가서, 심사계획서 등 서식 통합 관리) 이동"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>보고서 양식</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('ledger')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'ledger'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'ledger'
                 ? 'bg-cyan-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             <Building2 className="w-3.5 h-3.5" />
             <span>나의 심사 업체 대장</span>
@@ -1342,11 +1373,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('monthly')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'monthly'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'monthly'
                 ? 'bg-cyan-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             <CalendarIcon className="w-3.5 h-3.5" />
             <span>월간 심사 일정 (달력)</span>
@@ -1355,11 +1385,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('settlement')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'settlement'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'settlement'
                 ? 'bg-cyan-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
             <span>비용정산</span>
@@ -1368,11 +1397,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('qualification')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'qualification'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'qualification'
                 ? 'bg-cyan-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>심사자격관리</span>
@@ -1381,11 +1409,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('auditMd')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'auditMd'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'auditMd'
                 ? 'bg-cyan-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             <Calculator className="w-3.5 h-3.5" />
             <span>심사MD</span>
@@ -1410,7 +1437,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       {/* ========================================================================= */}
       {activeTab === 'ledger' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in">
-          
+
           {/* 검색 및 필터 컨트롤 바 */}
           <div className="p-3 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2.5">
             <div className="flex flex-wrap items-center gap-2">
@@ -1471,23 +1498,15 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             </div>
           </div>
 
-          {/* 메인 심사 업체 대장 테이블 (9개 컬럼, 동일 일정 통합, 개별 일정 독립 진행상태) */}
+          {/* 메인 심사 업체 대장 테이블 (8개 컬럼, [진행상태] 컬럼 제거 및 기한 도래 행 배경색 하이라이트) */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12px] border-collapse">
               <thead>
                 <tr className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 select-none text-[12px]">
-                  {/* 1. 진행상태 */}
-                  <th
-                    onClick={() => handleSort('auditState')}
-                    className="py-2.5 px-3 text-center min-w-[95px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
-                  >
-                    진행상태 {renderSortIcon('auditState')}
-                  </th>
-
-                  {/* 2. No. */}
+                  {/* 1. No. */}
                   <th className="py-2.5 px-2 text-center w-11 text-slate-500 font-normal whitespace-nowrap">No</th>
 
-                  {/* 3. 기업명 (대표자) */}
+                  {/* 2. 기업명 (대표자) */}
                   <th
                     onClick={() => handleSort('companyName')}
                     className="py-2.5 px-3.5 min-w-[175px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
@@ -1495,7 +1514,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     기업명 (대표자) {renderSortIcon('companyName')}
                   </th>
 
-                  {/* 4. 인증규격 (인증번호) */}
+                  {/* 3. 인증규격 (인증번호) */}
                   <th
                     onClick={() => handleSort('standards')}
                     className="py-2.5 px-3.5 min-w-[210px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
@@ -1503,7 +1522,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     인증규격 (인증번호) {renderSortIcon('standards')}
                   </th>
 
-                  {/* 5. 코드 (IAF) - 줄바꿈 방지 폭 확대 및 whitespace-nowrap */}
+                  {/* 4. 코드 (IAF) - 줄바꿈 방지 폭 확대 및 whitespace-nowrap */}
                   <th
                     onClick={() => handleSort('iafCode')}
                     className="py-2.5 px-2.5 text-center min-w-[80px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
@@ -1511,7 +1530,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     코드 {renderSortIcon('iafCode')}
                   </th>
 
-                  {/* 6. 차기심사 */}
+                  {/* 5. 차기심사 */}
                   <th
                     onClick={() => handleSort('stageText')}
                     className="py-2.5 px-2.5 text-center min-w-[90px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
@@ -1519,7 +1538,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     차기심사 {renderSortIcon('stageText')}
                   </th>
 
-                  {/* 7. 차기심사일 */}
+                  {/* 6. 차기심사일 */}
                   <th
                     onClick={() => handleSort('dueDate')}
                     className="py-2.5 px-3 min-w-[130px] cursor-pointer hover:bg-slate-200/80 transition text-center whitespace-nowrap"
@@ -1527,7 +1546,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     차기심사일 {renderSortIcon('dueDate')}
                   </th>
 
-                  {/* 8. 심사역할 */}
+                  {/* 7. 심사역할 */}
                   <th
                     onClick={() => handleSort('auditorRole')}
                     className="py-2.5 px-2.5 text-center min-w-[90px] cursor-pointer hover:bg-slate-200/80 transition text-slate-800 whitespace-nowrap"
@@ -1535,7 +1554,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                     심사역할 {renderSortIcon('auditorRole')}
                   </th>
 
-                  {/* 9. 최근 심사일 (MD) - 협력기관 컬럼 대체 */}
+                  {/* 8. 최근 심사일 (MD) - 협력기관 컬럼 대체 */}
                   <th
                     onClick={() => handleSort('recentAuditDate')}
                     className="py-2.5 px-3 text-center min-w-[175px] cursor-pointer hover:bg-slate-200/80 transition whitespace-nowrap"
@@ -1547,168 +1566,146 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {sortedRows.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400 font-normal text-[12px]">
+                    <td colSpan={8} className="py-12 text-center text-slate-400 font-normal text-[12px]">
                       검색 조건에 일치하는 심사 일정이 없습니다.
                     </td>
                   </tr>
                 ) : (
-                  sortedRows.map((row, idx) => {
-                    const isTodayAudit = row.auditState === '보고서작성' || row.dueDate === '2026-09-10' || row.recentAuditDate.includes('2026-09-10');
+                  paginatedRows.map((row, idx) => {
+                    const displayIndex = (currentPage - 1) * PAGE_SIZE + idx + 1;
+                    const initDate = row.companyWithStatus.contract?.initialCertDate || row.companyWithStatus.company.initialCertDate || row.companyWithStatus.company.initialContractDate;
+                    const dueCheck = checkAuditDueThreshold(initDate, row.stageText);
+                    const isAuditDue = dueCheck.isDue || row.dday.isOverdue || row.dday.isUrgent || row.auditState === '보고서작성' || row.dueDate === '2026-09-10' || row.recentAuditDate.includes('2026-09-10');
+
                     return (
-                    <tr 
-                      key={row.rowId} 
-                      className={`transition ${
-                        isTodayAudit 
-                          ? 'bg-amber-50/60 hover:bg-amber-100/70 border-l-4 border-l-amber-500' 
-                          : 'hover:bg-slate-50/80'
-                      }`}
-                    >
-                      {/* 1. 진행상태 (버튼 디자인 없는 단정하고 세련된 텍스트 링크) */}
-                      <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => handleStatusBadgeClick(row)}
-                          className={`inline-flex items-center gap-1.5 text-[11.5px] cursor-pointer transition ${getAuditStateTextClass(row.auditState)}`}
-                          title={
-                            row.auditState === '보고서작성'
-                              ? '심사보고서 작성 (새 탭에서 열기)'
-                              : row.auditState === '일정·계획'
-                              ? '심사계획서 및 청구내역서 확인'
-                              : row.auditState === '비용정산중'
-                              ? '비용정산 내역 확인'
-                              : '기업 정보 및 심사 이력 팝업 열기'
-                          }
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            row.auditState === '보고서작성' ? 'bg-rose-600 animate-pulse' :
-                            row.auditState === '일정·계획' ? 'bg-cyan-600' :
-                            row.auditState === '심의중' ? 'bg-purple-600' :
-                            row.auditState === '비용정산중' ? 'bg-amber-600' :
-                            'bg-emerald-600'
-                          }`} />
-                          <span>{row.auditState}</span>
-                          {row.auditState === '보고서작성' && <ExternalLink className="w-2.5 h-2.5 opacity-80 shrink-0" />}
-                        </button>
-                      </td>
+                      <tr
+                        key={row.rowId}
+                        className={`transition ${isAuditDue
+                            ? 'bg-[#FFF3CD] hover:bg-[#FFE69C] border-l-4 border-l-amber-500'
+                            : 'hover:bg-slate-50/80'
+                          }`}
+                      >
+                        {/* 1. No */}
+                        <td className="py-2 px-2 text-center font-mono text-slate-400 text-[11px] align-middle">
+                          {displayIndex}
+                        </td>
 
-                      {/* 2. No */}
-                      <td className="py-2 px-2 text-center font-mono text-slate-400 text-[11px] align-middle">
-                        {idx + 1}
-                      </td>
-
-                      {/* 3. 기업명 (대표자) - 기업명만 굵게 표시 */}
-                      <td className="py-2 px-3.5 align-middle">
-                        <button
-                          type="button"
-                          onClick={() => setHistoryModalCompany(row.companyWithStatus)}
-                          className="text-left group cursor-pointer"
-                        >
-                          <div className="font-semibold text-[13px] text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5">
-                            <span className="underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
-                              {row.companyName}
-                            </span>
-                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
-                          </div>
-                          <div className="text-[11px] text-slate-500 font-normal mt-0.5">
-                            {row.ceoName} 대표 {row.bizNumber ? `(${row.bizNumber})` : ''}
-                          </div>
-                        </button>
-                      </td>
-
-                      {/* 4. 인증규격 (인증번호) - 전환대상 규격만 빨간색/뱃지 표시, 인증번호는 검정색 유지 */}
-                      <td className="py-2 px-3.5 leading-snug align-middle">
-                        <div className="text-slate-800 text-[11.5px]">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {row.standardsList.map((std, sIdx) => {
-                              const outChk = checkOutdatedStandard(std, officialVersions);
-                              return (
-                                <span
-                                  key={sIdx}
-                                  className={`inline-flex items-center gap-1 font-normal text-[11.5px] ${
-                                    outChk.isOutdated ? 'text-red-600' : 'text-slate-800'
-                                  }`}
-                                >
-                                  <span>{cleanStandardName(std)}</span>
-                                  {outChk.isOutdated && (
-                                    <span className="px-1.5 py-0.2 rounded text-[9.5px] bg-rose-50 text-rose-600 border border-rose-200 font-normal">
-                                      {outChk.officialVersion} 전환대상
-                                    </span>
-                                  )}
-                                  {sIdx < row.standardsList.length - 1 && (
-                                    <span className="text-slate-300">,</span>
-                                  )}
-                                </span>
-                              );
-                            })}
-                            {row.isIntegrated && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-medium shrink-0">
-                                통합심사
+                        {/* 2. 기업명 (대표자) - 기업명만 굵게 표시 */}
+                        <td className="py-2 px-3.5 align-middle">
+                          <button
+                            type="button"
+                            onClick={() => setHistoryModalCompany(row.companyWithStatus)}
+                            className="text-left group cursor-pointer"
+                          >
+                            <div className="font-semibold text-[13px] text-slate-900 group-hover:text-cyan-700 transition flex items-center gap-1.5">
+                              <span className="underline decoration-slate-300 group-hover:decoration-cyan-600 underline-offset-2">
+                                {row.companyName}
                               </span>
-                            )}
+                              {isAuditDue && (
+                                <span className="px-1.5 py-0.2 rounded text-[9.5px] bg-amber-200 text-amber-900 font-bold border border-amber-300 shrink-0">
+                                  기한도래
+                                </span>
+                              )}
+                              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition text-cyan-600 shrink-0" />
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-normal mt-0.5">
+                              {row.ceoName} 대표 {row.bizNumber ? `(${row.bizNumber})` : ''}
+                            </div>
+                          </button>
+                        </td>
+
+                        {/* 4. 인증규격 (인증번호) - 전환대상 규격만 빨간색/뱃지 표시, 인증번호는 검정색 유지 */}
+                        <td className="py-2 px-3.5 leading-snug align-middle">
+                          <div className="text-slate-800 text-[11.5px]">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {row.standardsList.map((std, sIdx) => {
+                                const outChk = checkOutdatedStandard(std, officialVersions);
+                                return (
+                                  <span
+                                    key={sIdx}
+                                    className={`inline-flex items-center gap-1 font-normal text-[11.5px] ${outChk.isOutdated ? 'text-red-600' : 'text-slate-800'
+                                      }`}
+                                  >
+                                    <span>{cleanStandardName(std)}</span>
+                                    {outChk.isOutdated && (
+                                      <span className="px-1.5 py-0.2 rounded text-[9.5px] bg-rose-50 text-rose-600 border border-rose-200 font-normal">
+                                        {outChk.officialVersion} 전환대상
+                                      </span>
+                                    )}
+                                    {sIdx < row.standardsList.length - 1 && (
+                                      <span className="text-slate-300">,</span>
+                                    )}
+                                  </span>
+                                );
+                              })}
+                              {row.isIntegrated && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-medium shrink-0">
+                                  통합심사
+                                </span>
+                              )}
+                            </div>
+                            {/* 인증번호는 검정색 볼드로 단정하게 표시 */}
+                            <div className="text-slate-900 font-mono text-[11px] mt-0.5 tracking-tight font-bold">
+                              ({row.certNo})
+                            </div>
                           </div>
-                          {/* 인증번호는 검정색 볼드로 단정하게 표시 */}
-                          <div className="text-slate-900 font-mono text-[11px] mt-0.5 tracking-tight font-bold">
-                            ({row.certNo})
+                        </td>
+
+                        {/* 5. 코드 (IAF) - 볼드 제거, 단정한 폰트 */}
+                        <td className="py-2 px-2.5 text-center font-mono text-slate-700 font-normal text-[11.5px] whitespace-nowrap align-middle">
+                          {row.iafCode}
+                        </td>
+
+                        {/* 6. 차기심사 (갱신은 파란색, 볼드 제거) */}
+                        <td className="py-2 px-2.5 text-center whitespace-nowrap align-middle">
+                          <span className={`text-[11.5px] ${row.stageText === '갱신'
+                              ? 'text-blue-600 font-medium'
+                              : 'text-slate-700 font-normal'
+                            }`}>
+                            {row.stageText}
+                          </span>
+                        </td>
+
+                        {/* 7. 차기심사일 (심사준비/심사중일 때만 D-Day 표시) */}
+                        <td className="py-2 px-3 text-center whitespace-nowrap align-middle">
+                          <div className="font-mono font-normal text-slate-800 text-[11.5px]">
+                            {row.dueDate}
                           </div>
-                        </div>
-                      </td>
+                          {['심사준비', '심사 중'].includes(row.auditState) && (
+                            <div className="mt-0.5 text-[10.5px] font-medium">
+                              <span className={
+                                row.dday.isOverdue
+                                  ? 'text-red-600'
+                                  : row.dday.isUrgent
+                                    ? 'text-amber-700'
+                                    : 'text-slate-500'
+                              }>
+                                {row.dday.text}
+                              </span>
+                            </div>
+                          )}
+                        </td>
 
-                      {/* 5. 코드 (IAF) - 볼드 제거, 단정한 폰트 */}
-                      <td className="py-2 px-2.5 text-center font-mono text-slate-700 font-normal text-[11.5px] whitespace-nowrap align-middle">
-                        {row.iafCode}
-                      </td>
+                        {/* 8. 심사역할 - 볼드 남발 제거 */}
+                        <td className="py-2 px-2.5 text-center whitespace-nowrap align-middle">
+                          {(() => {
+                            if (row.auditorRole === '팀장') return <span className="text-[11.5px] font-medium text-indigo-700">팀장</span>;
+                            if (row.auditorRole === '심사원') return <span className="text-[11.5px] font-normal text-cyan-800">심사원</span>;
+                            if (row.auditorRole === '심사원보') return <span className="text-[11.5px] font-normal text-slate-600">심사원보</span>;
+                            return <span className="text-[11.5px] font-medium text-amber-700">협력기관</span>;
+                          })()}
+                        </td>
 
-                      {/* 6. 차기심사 (갱신은 파란색, 볼드 제거) */}
-                      <td className="py-2 px-2.5 text-center whitespace-nowrap align-middle">
-                        <span className={`text-[11.5px] ${
-                          row.stageText === '갱신' 
-                            ? 'text-blue-600 font-medium' 
-                            : 'text-slate-700 font-normal'
-                        }`}>
-                          {row.stageText}
-                        </span>
-                      </td>
-
-                      {/* 7. 차기심사일 (심사준비/심사중일 때만 D-Day 표시) */}
-                      <td className="py-2 px-3 text-center whitespace-nowrap align-middle">
-                        <div className="font-mono font-normal text-slate-800 text-[11.5px]">
-                          {row.dueDate}
-                        </div>
-                        {['심사준비', '심사 중'].includes(row.auditState) && (
-                          <div className="mt-0.5 text-[10.5px] font-medium">
-                            <span className={
-                              row.dday.isOverdue
-                                ? 'text-red-600'
-                                : row.dday.isUrgent
-                                ? 'text-amber-700'
-                                : 'text-slate-500'
-                            }>
-                              {row.dday.text}
+                        {/* 9. 최근 심사일 (MD) - ()속에 검정색으로 심사MD 표시 */}
+                        <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
+                          <div className="font-mono font-normal text-slate-800 text-[11.5px]">
+                            <span>{row.recentAuditDate}</span>
+                            <span className="text-slate-900 font-medium ml-1.5">
+                              ({row.auditMd.toFixed(1)} MD)
                             </span>
                           </div>
-                        )}
-                      </td>
-
-                      {/* 8. 심사역할 - 볼드 남발 제거 */}
-                      <td className="py-2 px-2.5 text-center whitespace-nowrap align-middle">
-                        {(() => {
-                          if (row.auditorRole === '팀장') return <span className="text-[11.5px] font-medium text-indigo-700">팀장</span>;
-                          if (row.auditorRole === '심사원') return <span className="text-[11.5px] font-normal text-cyan-800">심사원</span>;
-                          if (row.auditorRole === '심사원보') return <span className="text-[11.5px] font-normal text-slate-600">심사원보</span>;
-                          return <span className="text-[11.5px] font-medium text-amber-700">협력기관</span>;
-                        })()}
-                      </td>
-
-                      {/* 9. 최근 심사일 (MD) - ()속에 검정색으로 심사MD 표시 */}
-                      <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
-                        <div className="font-mono font-normal text-slate-800 text-[11.5px]">
-                          <span>{row.recentAuditDate}</span>
-                          <span className="text-slate-900 font-medium ml-1.5">
-                            ({row.auditMd.toFixed(1)} MD)
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
                     );
                   })
                 )}
@@ -1716,12 +1713,21 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             </table>
           </div>
 
-          <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-            <div>
-              * 기업명을 클릭하면 해당 업체의 <strong>[전체 심사 이력]</strong>을 확인할 수 있습니다. 규격별 심사일정이 같으면 1개 행으로 통합 관리됩니다.
+          <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col items-center justify-between gap-3 text-xs text-slate-500">
+            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div>
+                * 기업명을 클릭하면 해당 업체의 <strong>[전체 심사 이력]</strong>을 확인할 수 있습니다. 규격별 심사일정이 같으면 1개 행으로 통합 관리됩니다.
+              </div>
+              <div className="font-mono text-[11px] text-slate-600">
+                총 {totalCompanyCount}개사 ({totalScheduleCount}개 심사일정) 중 {sortedRows.length}개 표시 중
+              </div>
             </div>
-            <div className="font-mono text-[11px] text-slate-600">
-              총 {totalCompanyCount}개사 ({totalScheduleCount}개 심사일정) 중 {sortedRows.length}개 표시 중
+            <div className="flex justify-center w-full pt-1">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           </div>
         </div>
@@ -1820,14 +1826,12 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
               {calendarDays.map((day, idx) => (
                 <div
                   key={idx}
-                  className={`min-h-[105px] p-1.5 transition ${
-                    day.isCurrentMonth ? 'bg-white' : 'bg-slate-50/60 text-slate-400'
-                  } ${day.isToday ? 'ring-2 ring-cyan-500 ring-inset bg-cyan-50/30' : ''}`}
+                  className={`min-h-[105px] p-1.5 transition ${day.isCurrentMonth ? 'bg-white' : 'bg-slate-50/60 text-slate-400'
+                    } ${day.isToday ? 'ring-2 ring-cyan-500 ring-inset bg-cyan-50/30' : ''}`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-bold font-mono ${
-                      idx % 7 === 0 ? 'text-red-600' : idx % 7 === 6 ? 'text-blue-600' : 'text-slate-800'
-                    }`}>
+                    <span className={`text-xs font-bold font-mono ${idx % 7 === 0 ? 'text-red-600' : idx % 7 === 6 ? 'text-blue-600' : 'text-slate-800'
+                      }`}>
                       {day.dayNumber}
                     </span>
                     {day.isToday && (
@@ -2005,13 +2009,12 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                         <td className="py-2.5 px-3 text-right font-mono text-slate-700">{item.travelFee.toLocaleString()}원</td>
                         <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900">{item.totalFee.toLocaleString()}원</td>
                         <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                            item.status === '입금완료'
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${item.status === '입금완료'
                               ? 'bg-emerald-100 text-emerald-800'
                               : item.status === '입금예정'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-slate-100 text-slate-600'
-                          }`}>
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}>
                             {item.status}
                           </span>
                         </td>
@@ -2038,7 +2041,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       {/* ========================================================================= */}
       {activeTab === 'qualification' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5 animate-in fade-in">
-          
+
           {/* 심사원증 / 심사원 카드 (KAB 공인 심사원 카드 등록 정보) */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 p-6 rounded-2xl text-white gap-5 shadow-md">
             <div className="flex items-start sm:items-center space-x-4">
@@ -2273,7 +2276,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       {/* ========================================================================= */}
       {activeTab === 'auditMd' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5 animate-in fade-in">
-          
+
           {/* 상단 안내 배너 */}
           <div className="bg-cyan-50/80 border border-cyan-200 p-4 rounded-2xl flex items-start space-x-3 text-cyan-950">
             <Calculator className="w-5 h-5 text-cyan-700 mt-0.5 shrink-0" />
@@ -2340,11 +2343,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                             setCalcStandards([...calcStandards, std]);
                           }
                         }}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                          isSelected
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${isSelected
                             ? 'bg-cyan-700 text-white shadow-xs'
                             : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-                        }`}
+                          }`}
                       >
                         {isSelected && <Check className="w-3 h-3" />}
                         <span>{std}</span>
@@ -2363,11 +2365,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                       key={stg}
                       type="button"
                       onClick={() => setCalcStage(stg)}
-                      className={`flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                        calcStage === stg
+                      className={`flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${calcStage === stg
                           ? 'bg-slate-900 text-white shadow-xs'
                           : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       {stg === '사후' ? '사후관리 (1/3)' : stg === '갱신' ? '갱신심사 (2/3)' : '최초심사 (100%)'}
                     </button>
@@ -2499,6 +2500,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
         allAuditors={_allAuditors}
         onOpenReport={onOpenReport}
         onOpenPdfReport={onOpenPdfReport}
+        onNavigateToDocStorage={onNavigateToDocStorage}
         onOpenPlanInvoiceModal={(comp) => {
           const found = allCompanyItems.find(item => item.company.id === comp.id);
           if (found) {
@@ -2773,8 +2775,8 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 <span>구버전 규격 자동 감지 안내</span>
               </div>
               <p>
-                현재 <strong>ISO 14001</strong>의 최신 공인 버전이 <strong>2026</strong>으로 설정되어 있습니다. 
-                이전 버전(예: ISO 14001:2015)으로 인증을 유지 중인 업체는 대장에서 
+                현재 <strong>ISO 14001</strong>의 최신 공인 버전이 <strong>2026</strong>으로 설정되어 있습니다.
+                이전 버전(예: ISO 14001:2015)으로 인증을 유지 중인 업체는 대장에서
                 해당 규격이 <span className="text-red-600 font-semibold ml-0.5">붉은색</span>으로 강조되며 <span className="px-1 py-0.2 rounded bg-rose-100 text-rose-700 text-[11px] font-medium border border-rose-200">[2026 전환대상]</span> 배지가 부여됩니다.
               </p>
             </div>
@@ -2787,11 +2789,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                 return (
                   <div
                     key={stdKey}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
-                      stdKey === 'ISO 14001'
+                    className={`flex items-center justify-between p-2.5 rounded-xl border transition ${stdKey === 'ISO 14001'
                         ? 'bg-cyan-50/50 border-cyan-200'
                         : 'bg-slate-50 border-slate-200'
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="font-semibold text-sm text-slate-900 flex items-center gap-2">
@@ -2987,11 +2988,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                   <button
                     type="button"
                     onClick={() => setAuditorPayoutMethod('원천징수')}
-                    className={`py-2 px-3 rounded-xl font-bold border transition cursor-pointer text-center ${
-                      auditorPayoutMethod === '원천징수'
+                    className={`py-2 px-3 rounded-xl font-bold border transition cursor-pointer text-center ${auditorPayoutMethod === '원천징수'
                         ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
                         : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     3.3% 사업소득 원천징수
                   </button>
@@ -3002,11 +3002,10 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
                       if (!auditorTaxEmail && currentAuditor.email) setAuditorTaxEmail(currentAuditor.email);
                       if (!auditorBizCeo && currentAuditor.name) setAuditorBizCeo(currentAuditor.name);
                     }}
-                    className={`py-2 px-3 rounded-xl font-bold border transition cursor-pointer text-center ${
-                      auditorPayoutMethod === '세금계산서'
+                    className={`py-2 px-3 rounded-xl font-bold border transition cursor-pointer text-center ${auditorPayoutMethod === '세금계산서'
                         ? 'bg-blue-700 text-white border-blue-700 shadow-2xs'
                         : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     전자세금계산서 발행
                   </button>
@@ -3153,7 +3152,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
       {isCertPrintModalOpen && (
         <div className="fixed inset-0 z-60 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
           <div className="bg-white max-w-3xl w-full rounded-3xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[92vh]">
-            
+
             <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Printer className="w-4 h-4 text-cyan-400" />
@@ -3169,7 +3168,7 @@ export const AuditorPortal: React.FC<AuditorPortalProps> = ({
             </div>
 
             <div className="p-8 overflow-y-auto space-y-6 text-slate-900 bg-white font-sans text-xs">
-              
+
               {/* Document Header */}
               <div className="text-center space-y-2 border-b-2 border-slate-900 pb-5">
                 <div className="text-[11px] text-slate-500 font-mono tracking-widest">

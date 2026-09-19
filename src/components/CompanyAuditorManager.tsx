@@ -20,9 +20,10 @@ import {
   Info
 } from 'lucide-react';
 import { Company, Auditor, AuditorReassignmentLog, AuditorAffiliation } from '../types';
-import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { CompanyAuditHistoryModal, DocStorageTarget } from './CompanyAuditHistoryModal';
 import { LegacyCompanyExtended } from '../data/legacyDataLoader';
 import { checkOutdatedStandard, cleanStandardName, DEFAULT_OFFICIAL_STANDARD_VERSIONS } from './AuditorPortal';
+import { Pagination } from './Pagination';
 
 interface CompanyAuditorManagerProps {
   companies: (Company | LegacyCompanyExtended)[];
@@ -32,6 +33,7 @@ interface CompanyAuditorManagerProps {
   onToggleCommitteeMember?: (auditorId: string) => void;
   onReassignCompanyAuditor?: (companyId: string, newAuditorId: string, reasonCategory: AuditorReassignmentLog['reasonCategory'], reasonDetail: string) => void;
   onUpdateAuditorAffiliation?: (auditorId: string, affiliation: AuditorAffiliation) => void;
+  onNavigateToDocStorage?: (target: DocStorageTarget) => void;
 }
 
 // Helper to format Standards with matching Certificate Numbers
@@ -66,29 +68,37 @@ function formatStandardsWithCert(standardsStr?: string, certNoStr?: string): str
 }
 
 // Helper to determine audit type and next due date
-function getAuditStageAndNextDue(comp: any, index: number): { auditType: string; nextDue: string } {
-  const cert = comp.certNo || '';
-  let auditType = '1차 사후';
-  let nextDue = '2026-11-15';
+function getAuditStageAndNextDue(comp: any, _index?: number): { auditType: string; nextDue: string } {
+  if (!comp) return { auditType: '1차 사후', nextDue: '2026-10-15' };
 
-  if (cert.includes('26')) {
-    auditType = '최초';
-    nextDue = '2027-05-20';
-  } else if (cert.includes('25')) {
-    auditType = '1차 사후';
-    nextDue = '2026-10-25';
-  } else if (cert.includes('24')) {
-    auditType = '2차 사후';
-    nextDue = '2026-11-30';
-  } else if (cert.includes('23') || cert.includes('22')) {
-    auditType = '갱신';
-    nextDue = '2026-12-15';
+  // 1. 실제 차기 심사 도래일 (surveillanceDueDate) 우선 적용
+  const nextDue = comp.surveillanceDueDate || comp.nextDueDate || '2026-10-15';
+
+  // 2. 심사 차수 계산 (최초인증일 또는 certNo 기준)
+  const initDate = comp.initialCertDate || comp.initialContractDate || '';
+  let auditType = '1차 사후';
+
+  if (comp.isTransfer || comp.transferType) {
+    auditType = '전환';
+  } else if (initDate && initDate.length >= 4) {
+    const startYear = parseInt(initDate.substring(0, 4), 10);
+    const currentYear = 2026;
+    const diff = currentYear - startYear;
+    if (diff <= 0) auditType = '최초';
+    else {
+      const cycle = diff % 3;
+      if (cycle === 1) auditType = '1차 사후';
+      else if (cycle === 2) auditType = '2차 사후';
+      else auditType = '갱신';
+    }
   } else {
-    const types = ['1차 사후', '2차 사후', '갱신', '최초'];
-    auditType = types[index % 4];
-    const months = ['10-20', '11-10', '11-28', '12-15', '01-20'];
-    nextDue = `2026-${months[index % months.length]}`;
+    const cert = (comp.certNo || '').toString();
+    if (cert.includes('26')) auditType = '최초';
+    else if (cert.includes('25')) auditType = '1차 사후';
+    else if (cert.includes('24')) auditType = '2차 사후';
+    else if (cert.includes('23') || cert.includes('22')) auditType = '갱신';
   }
+
   return { auditType, nextDue };
 }
 
@@ -100,6 +110,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
   onToggleCommitteeMember,
   onReassignCompanyAuditor,
   onUpdateAuditorAffiliation,
+  onNavigateToDocStorage,
 }) => {
   const [companies, setCompanies] = useState<(Company | LegacyCompanyExtended)[]>(initialCompanies);
   const [auditors, setAuditors] = useState<Auditor[]>(initialAuditors);
@@ -508,7 +519,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                           )}
                         </td>
                         <td className="py-2 px-3 border-r border-slate-200 text-center whitespace-nowrap text-slate-800 font-medium text-[11px]">
-                          {c.rawStatus || '인증완료'}
+                          {c.rawStatus || c.certStatus || '-'}
                         </td>
                         <td className="py-2 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1.5">
@@ -544,52 +555,21 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
           </div>
 
           {/* Pagination Footer */}
-          <div className="bg-slate-50 border-t border-slate-300 p-2.5 flex items-center justify-between text-xs">
-            <div className="text-slate-600">
-              전체 <strong>{filteredCompanies.length}</strong>개 고객사 중 <strong>{Math.min((currentPage - 1) * pageSize + 1, filteredCompanies.length)}</strong> ~ <strong>{Math.min(currentPage * pageSize, filteredCompanies.length)}</strong> 표시 중
-            </div>
-            
-            <div className="flex items-center space-x-1">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="px-2 py-1 border border-slate-300 rounded bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none text-xs flex items-center gap-0.5"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                이전
-              </button>
-
-              {/* Dynamic Page Buttons */}
-              {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-                let p = i + 1;
-                if (totalPages > 7) {
-                  if (currentPage <= 4) p = i + 1;
-                  else if (currentPage >= totalPages - 3) p = totalPages - 6 + i;
-                  else p = currentPage - 3 + i;
-                }
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setCurrentPage(p)}
-                    className={`w-7 h-7 rounded text-xs font-bold transition border ${
-                      currentPage === p
-                        ? 'bg-blue-900 text-white border-blue-900'
-                        : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-300'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-
-              <button
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className="px-2 py-1 border border-slate-300 rounded bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none text-xs flex items-center gap-0.5"
-              >
-                다음
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+          <div className="bg-slate-50 border-t border-slate-300 p-3 flex flex-col items-center justify-center gap-2 text-xs">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredCompanies.length}
+              pageSize={pageSize}
+              onPageChange={(p) => setCurrentPage(p)}
+            />
+            <div className="flex items-center justify-between w-full text-slate-500 font-normal px-2 pt-1 border-t border-slate-200/60">
+              <div className="text-slate-600">
+                전체 <strong>{filteredCompanies.length}</strong>개 고객사 중 <strong>{Math.min((currentPage - 1) * pageSize + 1, filteredCompanies.length)}</strong> ~ <strong>{Math.min(currentPage * pageSize, filteredCompanies.length)}</strong> 표시 중
+              </div>
+              <div className="font-mono text-slate-500">
+                페이지 {currentPage} / {totalPages}
+              </div>
             </div>
           </div>
         </div>
@@ -868,7 +848,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
                     </tr>
                   ) : (
                     modalManagedCompanies.map((comp: any, cIdx: number) => {
-                      const { auditType, nextDue } = getAuditStageAndNextDue(comp, cIdx);
+                      const { auditType, nextDue } = getAuditStageAndNextDue(comp);
                       return (
                         <tr key={comp.id || cIdx} className="hover:bg-blue-50/40 transition">
                           <td className="py-2.5 px-3 border-r border-slate-200 text-center text-slate-500 font-mono text-xs whitespace-nowrap">
@@ -925,6 +905,7 @@ export const CompanyAuditorManager: React.FC<CompanyAuditorManagerProps> = ({
         company={selectedCompany}
         allAuditors={auditors}
         onOpenPdfReport={onOpenPdfReport}
+        onNavigateToDocStorage={onNavigateToDocStorage}
       />
 
       {/* ========================================================================= */}

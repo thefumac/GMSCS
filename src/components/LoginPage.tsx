@@ -9,6 +9,13 @@ import {
 } from 'lucide-react';
 import { Auditor } from '../types';
 import { verifyPassword } from '../utils/authUtils';
+import { auth, db } from '../services/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updatePassword 
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface LoginPageProps {
   auditors: Auditor[];
@@ -16,13 +23,13 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
-  const [username, setUsername] = useState<string>('fumac@naver.com');
-  const [password, setPassword] = useState<string>('gms9001');
+  const [username, setUsername] = useState<string>('the.elphis@gmail.com');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
 
@@ -32,7 +39,57 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
       return;
     }
 
-    // 1. 심사원 DB에서 이메일 또는 성함으로 사용자 식별
+    const superAdminEnvEmail = (import.meta.env.VITE_SUPERADMIN_EMAIL || 'the.elphis@gmail.com').toLowerCase().trim();
+    const isSuperAdminEmail = inputClean === 'the.elphis@gmail.com' || inputClean === superAdminEnvEmail;
+
+    // =========================================================================
+    // 1. [SuperAdmin 독립 인증 분기] 심사원 DB 및 auditorService와 완전 분리
+    // =========================================================================
+    if (isSuperAdminEmail) {
+      const isPassValid = verifyPassword('super-admin', inputClean, password);
+      if (!isPassValid) {
+        console.error('[Auth Error] SuperAdmin password verification failed for:', inputClean);
+        setLoginError('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Firebase Auth 및 users 권한 동기화 (비차단)
+      try {
+        try {
+          await signInWithEmailAndPassword(auth, inputClean, password);
+          console.log('[Firebase Auth] SuperAdmin signed in successfully:', inputClean);
+        } catch (firebaseErr: any) {
+          console.warn('[Firebase Auth Note - SuperAdmin]', firebaseErr.code, firebaseErr.message);
+          if (firebaseErr.code === 'auth/user-not-found' || firebaseErr.code === 'auth/invalid-credential') {
+            try {
+              const userCred = await createUserWithEmailAndPassword(auth, inputClean, password);
+              await setDoc(doc(db, 'users', userCred.user.uid), {
+                email: inputClean,
+                role: 'SuperAdmin',
+                name: '최고관리자',
+                isSystemAdmin: true,
+                createdAt: new Date().toISOString()
+              }, { merge: true });
+            } catch (createErr: any) {
+              console.warn('[Firebase Auth SuperAdmin User Init]', createErr.message);
+            }
+          }
+        }
+      } catch (e: any) {
+        console.warn('[Firebase Auth SuperAdmin Exception]', e);
+      }
+
+      setTimeout(() => {
+        onLogin('super-admin');
+      }, 100);
+      return;
+    }
+
+    // =========================================================================
+    // 2. [일반 심사원 / 사무국 직원 인증 분기]
+    // =========================================================================
     let matched = auditors.find(a => 
       a.email.toLowerCase().trim() === inputClean || 
       a.name.toLowerCase().trim() === inputClean ||
@@ -46,21 +103,50 @@ export const LoginPage: React.FC<LoginPageProps> = ({ auditors, onLogin }) => {
     }
 
     if (!matched) {
-      setLoginError('등록된 심사원 계정을 찾을 수 없습니다. 심사원 DB에 등록된 개인 이메일을 입력해 주십시오.');
+      setLoginError('등록된 계정을 찾을 수 없습니다. 등록된 이메일을 입력해 주십시오.');
       return;
     }
 
-    // 2. 비밀번호 검증 (kgms2304@gmail.com의 경우 14001 및 기본 gms9001 허용)
-    const isPassValid = verifyPassword(matched.id, inputClean === 'kgms2304@gmail.com' ? 'kgms2304@gmail.com' : matched.email, password);
+    // 비밀번호 검증 (로컬 검증)
+    const isPassValid = verifyPassword(matched.id, inputClean, password);
     if (!isPassValid) {
+      console.error('[Auth Error] Local password verification failed for:', inputClean);
       setLoginError('비밀번호가 일치하지 않습니다.');
       return;
     }
 
     setIsLoading(true);
+
+    // Firebase Auth 동기화 시도 (비차단)
+    try {
+      if (inputClean.includes('@')) {
+        try {
+          await signInWithEmailAndPassword(auth, inputClean, password);
+          console.log('[Firebase Auth] Signed in successfully with email:', inputClean);
+        } catch (firebaseErr: any) {
+          console.warn('[Firebase Auth Note]', firebaseErr.code, firebaseErr.message);
+          if (firebaseErr.code === 'auth/user-not-found' || firebaseErr.code === 'auth/invalid-credential') {
+            try {
+              const userCred = await createUserWithEmailAndPassword(auth, inputClean, password);
+              await setDoc(doc(db, 'users', userCred.user.uid), {
+                email: inputClean,
+                role: matched.role || (matched.isSystemAdmin ? 'OrgAdmin' : 'Auditor'),
+                name: matched.name,
+                createdAt: new Date().toISOString()
+              }, { merge: true });
+            } catch (createErr: any) {
+              console.warn('[Firebase Auth Create Error]', createErr.message);
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error('[Firebase Auth Sync Error]', e);
+    }
+
     setTimeout(() => {
       onLogin(matched.id);
-    }, 200);
+    }, 150);
   };
 
   return (

@@ -132,33 +132,39 @@ export const CommitteeManager: React.FC<CommitteeManagerProps> = ({
         <div className="lg:col-span-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <span className="text-xs font-bold text-slate-700">위원회 회차 선택</span>
-            <span className="text-[11px] text-indigo-600 font-semibold">{meetings.length}개 회차 보관</span>
+            <span className="text-[11px] text-indigo-600 font-semibold">{meetings.length}개 회차</span>
           </div>
 
           <div className="space-y-2">
-            {meetings.map(m => (
-              <button
-                key={m.id}
-                onClick={() => setActiveMeetingId(m.id)}
-                className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
-                  activeMeeting.id === m.id
-                    ? 'bg-indigo-50/80 border-indigo-300 text-indigo-950 font-bold shadow-2xs'
-                    : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                <div>
-                  <div className="text-xs font-bold">{m.meetingNumber}</div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">개최일: {m.meetingDate}</div>
-                </div>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  m.status === '의결완료'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    : 'bg-amber-50 text-amber-800 border border-amber-200'
-                }`}>
-                  {m.status}
-                </span>
-              </button>
-            ))}
+            {meetings.length === 0 ? (
+              <div className="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                개최된 심의 회차가 없습니다.
+              </div>
+            ) : (
+              meetings.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => setActiveMeetingId(m.id)}
+                  className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
+                    activeMeeting && activeMeeting.id === m.id
+                      ? 'bg-indigo-50/80 border-indigo-300 text-indigo-950 font-bold shadow-2xs'
+                      : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  <div>
+                    <div className="text-xs font-bold">{m.meetingNumber}</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">개최일: {m.meetingDate}</div>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    m.status === '의결완료'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200'
+                  }`}>
+                    {m.status}
+                  </span>
+                </button>
+              ))
+            )}
           </div>
 
           {/* Committee Member Registry Status */}
@@ -192,22 +198,34 @@ export const CommitteeManager: React.FC<CommitteeManagerProps> = ({
 
         {/* Right: Agendas for Deliberation (8 cols) */}
         <div className="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <span>{activeMeeting.meetingNumber} 상정 안건 목록</span>
-                <span className="text-xs text-slate-400 font-normal">
-                  (총 {activeMeeting.agendas.length}건 / 심의완료 {activeMeeting.agendas.filter(a => a.decision).length}건)
-                </span>
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                이전 심의위원회 이후 서명 완료된 심사보고서가 상정되었습니다.
+          {!activeMeeting || activeMeeting.agendas.length === 0 ? (
+            <div className="text-center py-16 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
+                <Award className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-800">현재 상정된 심의 안건이 없습니다 (0건).</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                심사원이 심사보고서를 작성·제출하고 사무국 검토가 완료되어 '심의대기' 상태로 정식 상정되면 심의 안건으로 등록됩니다.
               </p>
             </div>
-            <div className="text-xs text-slate-500 font-medium">
-              심의위원장: <strong className="text-slate-800">{activeMeeting.chairperson}</strong>
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <span>{activeMeeting.meetingNumber} 상정 안건 목록</span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      (총 {activeMeeting.agendas.length}건 / 심의완료 {activeMeeting.agendas.filter(a => a.decision).length}건)
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    이전 심의위원회 이후 서명 완료된 심사보고서가 상정되었습니다.
+                  </p>
+                </div>
+                <div className="text-xs text-slate-500 font-medium">
+                  심의위원장: <strong className="text-slate-800">{activeMeeting.chairperson}</strong>
+                </div>
+              </div>
 
           <div className="space-y-3">
             {activeMeeting.agendas.map((agenda) => {
@@ -310,6 +328,8 @@ export const CommitteeManager: React.FC<CommitteeManagerProps> = ({
               );
             })}
           </div>
+        </>
+      )}
         </div>
       </div>
 

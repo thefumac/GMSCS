@@ -11,6 +11,50 @@ export type CompanyAuditState =
 
 export type AuditStageCycle = '최초심사' | '1차 사후' | '2차 사후' | '갱신' | '전환';
 
+export function isNormalCompany(c: any): boolean {
+  if (!c) return false;
+
+  const certStatus = (c.certStatus || '').toString().trim();
+  const rawStatus = (c.rawStatus || '').toString().trim();
+  const status = (c.status || '').toString().trim();
+
+  // 1. [정규 인증완료 명시적 확인] '인증완료', '인증유지', '정상인증' 상태 인정
+  const isValidStatus = 
+    certStatus === '인증완료' || 
+    certStatus === '인증유지' || 
+    certStatus === '정상인증' || 
+    status === '정상인증';
+  if (!isValidStatus) {
+    return false;
+  }
+
+  // 2. 실효/정지 키워드 재검증
+  if (
+    certStatus.includes('취소') || 
+    certStatus.includes('보류') || 
+    certStatus.includes('정지') || 
+    rawStatus.includes('취소') ||
+    rawStatus.includes('정지') ||
+    status.includes('취소') ||
+    status.includes('정지')
+  ) {
+    return false;
+  }
+
+  // 3. 만료일(expiryDate) 검증 (2026-09-19 기준)
+  const expiryDate = c.expiryDate || c.validUntil;
+  if (expiryDate && expiryDate !== '2027-12-31') {
+    const exp = new Date(expiryDate);
+    const now = new Date('2026-09-19');
+    if (!isNaN(exp.getTime()) && exp < now) {
+      return false;
+    }
+  }
+
+  // 4. 필수 식별자 존재 여부
+  return Boolean(c.bizNumber?.trim() || c.certNo?.trim() || c.id);
+}
+
 /**
  * 11단계 AuditStatus를 상위 5대 프로세스 그룹으로 매핑
  */
@@ -40,21 +84,41 @@ export function getAuditStatusGroup(status?: AuditStatus): CompanyAuditState {
 }
 
 /**
- * ISO 3년 주기 기반 심사 차수 판별 (하드코딩 회사명 제거)
+ * ISO 3년 주기 기반 심사 차수 판별
+ */
+/**
+ * ISO 3년 주기 기반 심사 차수 판별
  */
 export function getStandardAuditStage(
   company: Company, 
   contract?: CertContract, 
   project?: AuditProject
 ): AuditStageCycle {
-  // 1. 활성 프로젝트에 명시된 auditType 우선
+  // 1. 활성 프로젝트에 명시된 auditType 우선 검토 (단, 수년 전 최초인증 기업의 '최초' 오지정 방어)
   if (project?.auditType) {
     const t = project.auditType;
-    if (t.includes('최초') || t.includes('1-2단계')) return '최초심사';
     if (t.includes('1차') || t.includes('사후1')) return '1차 사후';
     if (t.includes('2차') || t.includes('사후2')) return '2차 사후';
     if (t.includes('갱신') || t.includes('재인증')) return '갱신';
     if (t.includes('전환')) return '전환';
+
+    if (t.includes('최초') || t.includes('1-2단계') || t.includes('1·2단계') || t.includes('신규')) {
+      const initDateStr = company.initialCertDate || contract?.initialCertDate || company.initialContractDate;
+      const auditDateStr = project.startDate || project.endDate;
+      if (initDateStr && auditDateStr) {
+        const initD = new Date(initDateStr);
+        const auditD = new Date(auditDateStr);
+        if (!isNaN(initD.getTime()) && !isNaN(auditD.getTime())) {
+          const diffDays = Math.abs(auditD.getTime() - initD.getTime()) / (1000 * 60 * 60 * 24);
+          if (diffDays <= 45) {
+            return '최초심사';
+          }
+          // 차이가 45일 초과인 경우 '최초' 오기재로 간주하고 주기 기반 자동 판정으로 진행
+        }
+      } else {
+        return '최초심사';
+      }
+    }
   }
 
   // 2. 회사 또는 계약 정보의 전환 여부
@@ -62,18 +126,33 @@ export function getStandardAuditStage(
     return '전환';
   }
 
-  // 3. 최초 인증일 및 유효기간 만료일 기반 ISO 3년 주기 동적 계산
-  const initDate = contract?.initialCertDate || company.initialCertDate || company.initialContractDate;
-  if (initDate && initDate.length >= 4) {
-    const startYear = parseInt(initDate.substring(0, 4), 10);
-    const currentYear = new Date().getFullYear(); // 2026
-    const diff = currentYear - startYear;
+  // 3. 만료일(expiryDate) 또는 갱신 기산일 기반 갱신 판단
+  const expiryDateStr = company.expiryDate || contract?.validUntil;
+  if (expiryDateStr && expiryDateStr.length >= 7) {
+    const expDate = new Date(expiryDateStr);
+    if (!isNaN(expDate.getTime())) {
+      const targetDate = project?.startDate ? new Date(project.startDate) : new Date('2026-09-19');
+      const diffDays = (expDate.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24);
+      // 만료일 기준 120일 전 ~ 60일 후는 갱신심사
+      if (diffDays >= -60 && diffDays <= 120) {
+        return '갱신';
+      }
+    }
+  }
 
-    if (diff <= 0) return '최초심사';
-    const cyclePos = diff % 3;
-    if (cyclePos === 1) return '1차 사후';
-    if (cyclePos === 2) return '2차 사후';
-    return '갱신';
+  // 4. cycleBaseDate / certStartDate / 최초 인증일 기반 ISO 3년 주기 동적 계산
+  const baseDateStr = company.cycleBaseDate || company.certStartDate || contract?.initialCertDate || company.initialCertDate;
+  if (baseDateStr && baseDateStr.length >= 7) {
+    const baseDate = new Date(baseDateStr);
+    if (!isNaN(baseDate.getTime())) {
+      const targetDate = project?.startDate ? new Date(project.startDate) : new Date('2026-09-19');
+      const diffMonths = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 + (targetDate.getMonth() - baseDate.getMonth());
+      const cycleMonth = ((diffMonths % 36) + 36) % 36;
+
+      if (cycleMonth <= 14) return '1차 사후';
+      if (cycleMonth <= 26) return '2차 사후';
+      return '갱신';
+    }
   }
 
   return '1차 사후';
@@ -113,11 +192,11 @@ export function getCompanyAuditState(
   if (surveillanceDueDate) {
     try {
       const targetDate = new Date(surveillanceDueDate);
-      const today = new Date('2026-09-12');
+      const today = new Date('2026-09-19');
       const diffDays = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      // 1년 이상 초과 시 자격정지
-      if (diffDays < -365) return '자격정지';
+      // 6개월(180일) 이상 초과 시 자격정지
+      if (diffDays < -180) return '자격정지';
       // 45일 이내 도래 시 일정계획 착수
       if (diffDays >= 0 && diffDays <= 45) return '일정·계획';
     } catch {
@@ -152,57 +231,95 @@ export function getAuditStateBadgeClass(state: CompanyAuditState): string {
 }
 
 /**
- * 12 / 24 / 34개월 인증서 발행 마감 및 60일 사전 준비 알람 계산 인터페이스
+ * 12 / 24 / 36개월 인증서 발행 마감 및 D-60 / D-90 사전 준비 알람 계산 인터페이스
  */
 export interface AuditTimelineStatus {
   stage: AuditStageCycle;
   initialCertDate: string;
-  deadlineDate: string; // YYYY-MM-DD (발행 마감일: 1차=12개월, 2차=24개월, 갱신=34개월)
-  prepStartDate: string; // YYYY-MM-DD (준비 착수일 = 마감일 - 60일)
+  deadlineDate: string; // YYYY-MM-DD (발행 마감일: 1차=12개월, 2차=24개월, 갱신=36개월/만료일)
+  prepStartDate: string; // YYYY-MM-DD (준비 착수일 = 마감일 - 60일(사후) / 90일(갱신))
   daysRemainingToDeadline: number; // 마감일까지 남은 일수
   daysRemainingToPrep: number; // 준비착수일까지 남은 일수 (음수면 이미 준비 착수 시기 도래)
-  isPrepAlert: boolean; // 60일 전 도래 여부 (심사 준비 착수 / 일정 조율 필요)
+  isPrepAlert: boolean; // D-60(사후) / D-90(갱신) 도래 여부 (심사 준비 착수 / 일정 조율 필요)
   isOverdue: boolean; // 발행 마감 초과 여부
   alarmText: string;
 }
 
+function addMonthsToDate(date: Date, months: number): Date {
+  const result = new Date(date.getTime());
+  const curMonth = result.getMonth();
+  result.setMonth(curMonth + months);
+  if (result.getMonth() !== ((curMonth + months) % 12 + 12) % 12) {
+    result.setDate(0);
+  }
+  return result;
+}
+
 /**
- * 최초 인증일 기준 12 / 24 / 34개월 발행 마감 및 60일 리드타임 알람 산출
- * (기준일: 2026-09-12 / 현재 날짜)
+ * cycleBaseDate 기준 12 / 24 / 36개월 발행 마감 및 D-60 (사후) / D-90 (갱신) 리드타임 알람 산출
+ * (기준일: 2026-09-19)
  */
 export function getAuditTimelineStatus(
   company: Company,
   contract?: CertContract,
   project?: AuditProject
 ): AuditTimelineStatus | null {
-  const initDateStr = contract?.initialCertDate || company.initialCertDate || company.initialContractDate;
+  const initDateStr = company.initialCertDate || contract?.initialCertDate || company.initialContractDate;
   if (!initDateStr || initDateStr.length < 10) return null;
 
-  const stage = getStandardAuditStage(company, contract, project);
   const initDate = new Date(initDateStr);
   if (isNaN(initDate.getTime())) return null;
 
-  // 마감 개월수 산정: 1차 사후 = 12개월, 2차 사후 = 24개월, 갱신 = 34개월
-  let targetMonths = 12;
-  if (stage === '2차 사후') targetMonths = 24;
-  else if (stage === '갱신') targetMonths = 34;
-  else if (stage === '최초심사') targetMonths = 12;
+  const today = new Date('2026-09-19');
+  const stage = getStandardAuditStage(company, contract, project);
 
-  // 3년 주기 오프셋 보정 (예: 4년차=사후1차(48개월), 5년차=사후2차(60개월), 6년차=갱신(70개월))
-  const today = new Date('2026-09-12');
-  const yearsPassed = today.getFullYear() - initDate.getFullYear();
-  const cycleCount = Math.floor(yearsPassed / 3);
-  if (cycleCount > 0) {
-    targetMonths += cycleCount * 36;
+  // 현 주기 기산일(cycleBaseDate) 계산:
+  // 1) 갱신일(certStartDate / cycleBaseDate)이 있고 initDate보다 최신이면 해당 일자를 기산일로 사용
+  // 2) 없으면 initDate에서 36개월 주기를 곱하여 현재 주기의 기산일 산출
+  let currentCycleBase: Date;
+  const cycleBaseCandidate = company.cycleBaseDate || company.certStartDate;
+  if (cycleBaseCandidate && cycleBaseCandidate.length >= 10 && !isNaN(new Date(cycleBaseCandidate).getTime())) {
+    currentCycleBase = new Date(cycleBaseCandidate);
+  } else {
+    const diffMonthsToToday = (today.getFullYear() - initDate.getFullYear()) * 12 + (today.getMonth() - initDate.getMonth());
+    const cyclesPassed = Math.max(0, Math.floor(diffMonthsToToday / 36));
+    currentCycleBase = addMonthsToDate(initDate, cyclesPassed * 36);
   }
 
-  // 마감일 계산
-  const deadline = new Date(initDate);
-  deadline.setMonth(deadline.getMonth() + targetMonths);
+  const compAny = (company || {}) as any;
+  const surveillanceDueDate = contract?.surveillanceDueDate || compAny.surveillanceDueDate;
+  const expiryDateStr = company.expiryDate || contract?.validUntil || compAny.validUntil;
 
-  // 60일 사전 준비 착수일
+  let deadline: Date;
+  let prepLeadDays = 60; // 사후관리 기본 D-60 (2개월 전)
+
+  if (stage === '갱신') {
+    prepLeadDays = 90; // 갱신심사는 36개월 만료일(expiryDate) 기준 D-90 (3개월 전)
+    if (expiryDateStr && expiryDateStr.length >= 10 && !isNaN(new Date(expiryDateStr).getTime())) {
+      deadline = new Date(expiryDateStr);
+    } else {
+      deadline = addMonthsToDate(currentCycleBase, 36);
+    }
+  } else if (stage === '2차 사후') {
+    prepLeadDays = 60; // 2차 사후: 현 주기 기산일 + 24개월
+    if (surveillanceDueDate && !isNaN(new Date(surveillanceDueDate).getTime())) {
+      deadline = new Date(surveillanceDueDate);
+    } else {
+      deadline = addMonthsToDate(currentCycleBase, 24);
+    }
+  } else {
+    // 1차 사후 (또는 최초심사/전환)
+    prepLeadDays = 60; // 1차 사후: 현 주기 기산일 + 12개월
+    if (surveillanceDueDate && !isNaN(new Date(surveillanceDueDate).getTime())) {
+      deadline = new Date(surveillanceDueDate);
+    } else {
+      deadline = addMonthsToDate(currentCycleBase, 12);
+    }
+  }
+
+  // 준비 착수일 (마감일 - 60일 또는 90일)
   const prepDate = new Date(deadline);
-  prepDate.setDate(prepDate.getDate() - 60);
+  prepDate.setDate(prepDate.getDate() - prepLeadDays);
 
   const msPerDay = 1000 * 60 * 60 * 24;
   const daysRemainingToDeadline = Math.ceil((deadline.getTime() - today.getTime()) / msPerDay);
@@ -232,6 +349,87 @@ export function getAuditTimelineStatus(
     isPrepAlert,
     isOverdue,
     alarmText
+  };
+}
+
+/**
+ * 심사 도래 기준 판정 (1차 사후: 10개월, 2차 사후: 22개월, 갱신: 33개월)
+ * 현재 접속 월이 기준월에 도달하거나 경과한 경우 true 반환
+ */
+export function checkAuditDueThreshold(
+  initDateStr?: string,
+  stage?: string,
+  currentDate: Date = new Date()
+): {
+  isDue: boolean;
+  isOverdue: boolean;
+  targetTotalMonths: number;
+  targetYearMonthStr: string;
+  stageName: string;
+  monthsPassed: number;
+  monthsDiff: number;
+  effectiveStage: string;
+} {
+  if (!initDateStr || initDateStr.length < 7) {
+    return { isDue: false, isOverdue: false, targetTotalMonths: 0, targetYearMonthStr: '', stageName: stage || '', monthsPassed: 0, monthsDiff: 0, effectiveStage: stage || '' };
+  }
+
+  const initDate = new Date(initDateStr);
+  if (isNaN(initDate.getTime())) {
+    return { isDue: false, isOverdue: false, targetTotalMonths: 0, targetYearMonthStr: '', stageName: stage || '', monthsPassed: 0, monthsDiff: 0, effectiveStage: stage || '' };
+  }
+
+  const curYear = currentDate.getFullYear();
+  const curMonth = currentDate.getMonth(); // 0-indexed (0=1월, 8=9월)
+  const currentTotalMonths = curYear * 12 + curMonth;
+
+  const initYear = initDate.getFullYear();
+  const initMonth = initDate.getMonth();
+  const initTotalMonths = initYear * 12 + initMonth;
+
+  const monthsDiff = currentTotalMonths - initTotalMonths;
+
+  // 3년 주기 내 차수 산출
+  let effectiveStage = stage || '';
+  if (!effectiveStage) {
+    const yearsDiff = curYear - initYear;
+    const cycle = (yearsDiff % 3 + 3) % 3;
+    if (cycle === 1) effectiveStage = '1차 사후';
+    else if (cycle === 2) effectiveStage = '2차 사후';
+    else effectiveStage = '갱신';
+  }
+
+  // [수정부분] 36개월 갱신 시점에 cycleCount가 +1 오버슈팅되는 현상 방지
+  const cycleCount = Math.max(0, Math.floor(Math.max(0, monthsDiff - 1) / 36));
+
+  let baseMonths = 10; // 1차 사후 기본: 10개월째 달
+  if (effectiveStage.includes('2차')) {
+    baseMonths = 22; // 2차 사후: 22개월째 달
+  } else if (effectiveStage.includes('갱신') || effectiveStage.includes('재인증')) {
+    baseMonths = 33; // 갱신: 33개월째 달
+  } else if (effectiveStage.includes('1차') || effectiveStage.includes('사후')) {
+    baseMonths = 10;
+  }
+
+  const targetTotalMonths = initTotalMonths + (cycleCount * 36) + baseMonths;
+  
+  // [수정부분] 당월 정확 일치(===) 판정으로 교정 및 기한초과(isOverdue) 분리
+  const isDue = currentTotalMonths === targetTotalMonths;
+  const isOverdue = currentTotalMonths > targetTotalMonths;
+
+  const targetYear = Math.floor(targetTotalMonths / 12);
+  const targetMonthNum = (targetTotalMonths % 12) + 1;
+  const targetYearMonthStr = `${targetYear}-${String(targetMonthNum).padStart(2, '0')}`;
+
+  return {
+    isDue,
+    isOverdue,
+    targetTotalMonths,
+    targetYearMonthStr,
+    stageName: effectiveStage,
+    monthsPassed: monthsDiff,
+    monthsDiff,
+    effectiveStage
   };
 }
 

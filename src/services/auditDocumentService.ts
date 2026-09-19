@@ -44,7 +44,11 @@ const downloadUrlCache = new Map<string, string>();
  */
 export function normalizeCompanyName(name: string): string {
   if (!name) return '';
-  return name.replace(/[\s\(\)\[\]주식회사㈜\.\-_]/g, '').toLowerCase().trim();
+  return name
+    .replace(/\(주\)|주식회사|\(유\)|유한회사|\(합\)|합자회사|\(사\)|사단법인/g, '')
+    .replace(/[\s\(\)\[\]주식회사㈜\.\-_]/g, '')
+    .toLowerCase()
+    .trim();
 }
 
 /**
@@ -80,8 +84,20 @@ export async function getDocumentDownloadUrl(storagePath: string): Promise<strin
   }
 }
 
+function parseFileSizeBytes(sizeStr?: string | number): number {
+  if (typeof sizeStr === 'number') return sizeStr;
+  if (!sizeStr) return 0;
+  const s = sizeStr.trim().toUpperCase();
+  const num = parseFloat(s);
+  if (isNaN(num)) return 0;
+  if (s.includes('GB')) return Math.round(num * 1024 * 1024 * 1024);
+  if (s.includes('MB')) return Math.round(num * 1024 * 1024);
+  if (s.includes('KB')) return Math.round(num * 1024);
+  return Math.round(num);
+}
+
 /**
- * 특정 기업의 모든 심사 문서 목록 조회
+ * 특정 기업의 모든 심사 문서 목록 조회 (엄격한 기업 격리 쿼리)
  * (1. 메모리 캐시 -> 2. Firestore query -> 3. 로컬 마이그레이션 JSON 폴백)
  */
 export async function getCompanyAuditDocuments(companyName: string): Promise<AuditDocumentRecord[]> {
@@ -108,38 +124,43 @@ export async function getCompanyAuditDocuments(companyName: string): Promise<Aud
       const allDocs = snap.docs.map(d => d.data() as AuditDocumentRecord);
       results = allDocs.filter(d => {
         const docClean = normalizeCompanyName(d.companyName);
-        return docClean === cleanTarget || docClean.includes(cleanTarget) || cleanTarget.includes(docClean);
+        return docClean === cleanTarget;
       });
     }
   } catch (e) {
     console.warn('Firestore 조회 건너뜀 (로컬 마이그레이션 데이터 사용):', e);
   }
 
-  // 2. Firestore에 데이터가 없거나 로컬 모드일 경우 마이그레이션된 JSON에서 검색
+  // 2. Firestore에 데이터가 없거나 로컬 모드일 경우 마이그레이션된 JSON에서 검색 (엄격한 기업명 일치만 허용)
   if (results.length === 0) {
     const staticDocs = rawMigratedDocs as any[];
     results = staticDocs
       .filter(item => {
         const itemClean = normalizeCompanyName(item.companyName || '');
-        return itemClean === cleanTarget || itemClean.includes(cleanTarget) || cleanTarget.includes(itemClean);
+        return itemClean === cleanTarget;
       })
-      .map((item, idx) => ({
-        id: `migrated-${cleanTarget}-${idx}`,
-        tenantId: item.tenantId || TENANT_CONFIG.tenantId,
-        companyName: item.companyName || companyName,
-        docType: (item.docType as AuditDocType) || '심사보고서',
-        auditType: item.auditType || '정기심사',
-        standards: item.standards || ['ISO 9001:2015'],
-        year: item.year || 2026,
-        month: item.month || 1,
-        auditorName: item.auditorName || '사무국',
-        storagePath: item.storagePath || `audit_files/${item.companyName}/${item.simplifiedFileName}`,
-        fileSizeBytes: item.fileSizeBytes || 800000,
-        originalFileName: item.originalFileName || '',
-        simplifiedFileName: item.simplifiedFileName || `${item.year || 2026}_심사문서.pdf`,
-        createdAt: '2026-09-13T00:00:00Z',
-        isLegacyMigrated: true
-      }));
+      .map((item, idx) => {
+        const actualSizeBytes = item.fileSizeBytes || (item.fileSize ? parseFileSizeBytes(item.fileSize) : 0);
+        const url = item.downloadUrl || item.pdfUrl || '';
+        return {
+          id: item.id || `migrated-${cleanTarget}-${idx}`,
+          tenantId: item.tenantId || TENANT_CONFIG.tenantId,
+          companyName: item.companyName || companyName,
+          docType: (item.docType as AuditDocType) || '심사보고서',
+          auditType: item.auditType || '정기심사',
+          standards: item.standards || ['ISO 9001:2015'],
+          year: item.year || 2026,
+          month: item.month || 1,
+          auditorName: item.auditor || item.auditorName || '사무국',
+          storagePath: item.storagePath || `audit_files/${item.companyName}/${item.fileName || item.simplifiedFileName || 'document.pdf'}`,
+          downloadUrl: url,
+          fileSizeBytes: actualSizeBytes,
+          originalFileName: item.originalFilename || item.originalFileName || item.fileName || '',
+          simplifiedFileName: item.fileName || item.simplifiedFileName || `${item.year || 2026}_심사문서.pdf`,
+          createdAt: item.uploadedAt || '2026-09-13T00:00:00Z',
+          isLegacyMigrated: true
+        };
+      });
   }
 
   // 최신 연도, 최신 월 순으로 정렬
@@ -147,6 +168,8 @@ export async function getCompanyAuditDocuments(companyName: string): Promise<Aud
     if (b.year !== a.year) return b.year - a.year;
     return (b.month || 0) - (a.month || 0);
   });
+
+  console.log(`[auditDocumentService DEBUG] Querying documents for company: "${companyName}" (normalized: "${cleanTarget}") -> Found ${results.length} docs:`, results);
 
   companyDocsCache.set(cleanTarget, results);
   return results;

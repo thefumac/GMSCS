@@ -21,6 +21,10 @@ export interface CompanyRecord extends Company {
  * Firestore에서 고객사(기업) DB 실시간 조회 (로컬 fallback)
  */
 export async function getCompaniesFromDb(): Promise<Company[]> {
+  const localList = getMergedCompanies();
+  const localMap = new Map<string, Company>();
+  localList.forEach(c => localMap.set(c.id, c));
+
   try {
     const q = query(
       collection(db, 'companies'),
@@ -29,43 +33,73 @@ export async function getCompaniesFromDb(): Promise<Company[]> {
     const snap = await getDocs(q);
 
     if (!snap.empty) {
-      const list = snap.docs.map(d => {
+      const dbList = snap.docs.map(d => {
         const data = d.data();
+        const local = localMap.get(d.id);
+
+        const certNo = data.certNo || local?.certNo || '';
+        const certStatus = data.certStatus !== undefined ? data.certStatus : ((local as any)?.certStatus || '');
+        const certStartDate = data.certStartDate || (local as any)?.certStartDate || '';
+        const initialDate = data.initialCertDate || data.initialContractDate || local?.initialCertDate || '2024-01-01';
+        const lastAuditDate = data.lastAuditDate || local?.lastAuditDate || '';
+        const latestAuditDate = (data.latestAuditDate && data.latestAuditDate !== '-')
+          ? data.latestAuditDate
+          : (certStartDate || local?.latestAuditDate || lastAuditDate || '-');
+        const expiryDate = data.expiryDate || local?.expiryDate || '2027-12-31';
+
         return {
           id: d.id,
-          companyName: data.companyName || '고객사',
-          bizNumber: data.bizNumber || '',
-          ceoName: data.ceoName || '대표이사',
-          address: data.address || '',
-          zipCode: data.zipCode || '',
-          phone: data.phone || '',
+          companyName: data.companyName || local?.companyName || '고객사',
+          bizNumber: data.bizNumber || local?.bizNumber || '',
+          ceoName: data.ceoName || local?.ceoName || '대표이사',
+          address: data.address || local?.address || '',
+          zipCode: data.zipCode || (local as any)?.zipCode || '',
+          phone: data.phone || local?.contactPhone || '',
           fax: data.fax || '',
-          email: data.email || '',
-          industry: data.industry || data.scope || '',
-          scope: data.scope || '',
-          iafCode: data.iafCode || '17',
-          region: data.region || '경기',
-          totalEmployees: Number(data.totalEmployees || 10),
-          standards: data.standards || ['ISO 9001:2015'],
-          certNo: data.certNo || '',
-          initialContractDate: data.initialContractDate || '2024-01-01',
-          initialContractType: data.initialContractType || '신규',
-          assignedAuditorName: data.assignedAuditorName || '남경호',
-          managingAuditorId: data.managingAuditorId || '',
-          consultant: data.consultant || 'HQ',
-          auditState: data.auditState || '인증유지',
-          status: '정상인증',
-          riskLevel: '일반'
+          email: data.email || local?.contactEmail || '',
+          industry: data.industry || local?.industry || (data as any).businessType || (data as any).product || '',
+          scope: data.scope || local?.scope || '',
+          iafCode: data.iafCode || local?.iafCode || '17',
+          region: data.region || (local as any)?.regionCode || '경기',
+          totalEmployees: Number(data.totalEmployees || local?.totalEmployees || 10),
+          standards: data.standards || local?.standards || ['ISO 9001:2015'],
+          certNo: certNo,
+          certStatus: certStatus,
+          rawStatus: (local as any)?.rawStatus || certStatus,
+          certStartDate: certStartDate,
+          initialContractDate: data.initialContractDate || initialDate,
+          initialContractType: data.initialContractType || local?.initialContractType || '신규',
+          initialCertDate: initialDate,
+          lastAuditDate: lastAuditDate,
+          latestAuditDate: latestAuditDate,
+          expiryDate: expiryDate,
+          currentCycleNumber: data.currentCycleNumber || (local as any)?.currentCycleNumber || 1,
+          cycleBaseDate: data.cycleBaseDate || (local as any)?.cycleBaseDate || certStartDate || initialDate,
+          pastCycles: data.pastCycles || (local as any)?.pastCycles || [],
+          assignedAuditorName: data.assignedAuditorName || local?.assignedAuditorName || '남경호',
+          managingAuditorId: data.managingAuditorId || local?.managingAuditorId || '',
+          consultant: data.consultant || local?.consultant || 'HQ',
+          auditState: (certStatus === '인증취소' || (expiryDate && expiryDate < '2026-09-19')) ? '인증취소/만료' : (data.auditState || (certStatus === '인증완료' || certStatus === '인증유지' ? '인증유지' : '미확인')),
+          status: (certStatus === '인증완료' || certStatus === '인증유지') ? '정상인증' : (certStatus || '미확인'),
+          riskLevel: data.riskLevel || local?.riskLevel || '일반'
         } as unknown as Company;
       });
-      return list;
+
+      const dbIdSet = new Set(dbList.map(c => c.id));
+      const mergedList = [...dbList];
+      localList.forEach(lc => {
+        if (!dbIdSet.has(lc.id)) {
+          mergedList.push(lc);
+        }
+      });
+
+      return mergedList;
     }
   } catch (err) {
     console.warn('[CompanyService] Firestore 연결 실패, 로컬 레거시 DB를 로드합니다:', err);
   }
 
-  // Fallback to local structured data
-  return getMergedCompanies();
+  return localList;
 }
 
 /**

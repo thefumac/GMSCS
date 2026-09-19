@@ -7,13 +7,14 @@ import {
   Plus
 } from 'lucide-react';
 import { Company, Auditor, CertContract, AuditProject, AuditContractRecord } from '../types';
-import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { CompanyAuditHistoryModal, DocStorageTarget } from './CompanyAuditHistoryModal';
 import { NewCompanyModal } from './NewCompanyModal';
 import { getAgencyDisplayName, isConflictOfInterest } from '../utils/conflictUtils';
 import { GMS_AVAILABLE_STANDARDS } from '../constants/standards';
-import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState, getAuditTimelineStatus } from '../utils/auditStateUtils';
+import { getCompanyAuditState, getAuditStateBadgeClass, CompanyAuditState, getAuditTimelineStatus, checkAuditDueThreshold, isNormalCompany } from '../utils/auditStateUtils';
 import { MIGRATED_AUDIT_DOCUMENTS } from '../data/driveReportFiles';
 import { Building2, CheckCircle2, AlertTriangle, Cloud, Clock } from 'lucide-react';
+import { Pagination } from './Pagination';
 
 export interface ClientManagementProps {
   companies: Company[];
@@ -22,7 +23,9 @@ export interface ClientManagementProps {
   auditContracts?: AuditContractRecord[];
   projects?: AuditProject[];
   onOpenReport?: (reportId: string) => void;
+  onOpenReportWorkbench?: (company: Company) => void;
   onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; auditorName?: string; pdfUrl?: string }) => void;
+  onNavigateToDocStorage?: (target: DocStorageTarget) => void;
   onOpenEmailModal?: (recipientName?: string, recipientEmail?: string, templateType?: string) => void;
   onAddCompany?: (company: Company) => void;
 }
@@ -89,9 +92,17 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   contracts = [],
   projects = [],
   onOpenReport,
+  onOpenReportWorkbench,
   onOpenPdfReport,
+  onNavigateToDocStorage,
   onAddCompany
 }) => {
+  console.log('[DEBUG ClientManagement]', {
+    total: companies.length,
+    normalCount: companies.filter(isNormalCompany).length,
+    inactiveCount: companies.filter(c => !isNormalCompany(c)).length
+  });
+
   const [activeTab, setActiveTab] = useState<'normal' | 'dueSoon' | 'dormant' | 'all'>('normal');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStandard, setSelectedStandard] = useState<string>('all');
@@ -148,44 +159,26 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     const cleanName = comp.companyName.replace(/[\(\)주식회사\s\-_]/g, '').toLowerCase();
     return cloudDocMap.get(cleanName) || 0;
   };
-
-  // Helper: 정상 관리 대상 기업 판별 (인증완료 307 + 심사진행 11 + 인증유지 1 = 319개사)
-  const isNormalCompany = (c: Company): boolean => {
-    const compAny = c as any;
-    const rawStatus = (compAny.status || compAny.rawStatus || '').trim();
-    const isCancelledOrDormant = 
-      rawStatus.includes('취소') || 
-      rawStatus.includes('정지') || 
-      rawStatus.includes('철회') || 
-      rawStatus === '심사보류' || 
-      !rawStatus || 
-      rawStatus === 'None';
-    return !isCancelledOrDormant;
-  };
-
-  // Client category statistics
   const counts = useMemo(() => {
-    let normal = 0;
+    const normal = companies.filter(c => isNormalCompany(c)).length;
+    const dormant = companies.filter(c => !isNormalCompany(c)).length;
     let dueSoon = 0;
-    let dormant = 0;
     let cancelled = 0;
     let unassigned = 0;
 
     companies.forEach(c => {
       const compAny = c as any;
-      const rawStatus = (compAny.status || compAny.rawStatus || '').trim();
+      const rawStatus = (compAny.certStatus || compAny.status || compAny.rawStatus || '').trim();
       const fallbackContract = contractMap.get(c.id);
       const fallbackProject = projectMap.get(c.id);
       const isNormal = isNormalCompany(c);
 
       if (isNormal) {
-        normal++;
         const timeline = getAuditTimelineStatus(c, fallbackContract, fallbackProject);
-        if (timeline && (timeline.daysRemainingToDeadline <= 60 || timeline.isPrepAlert || timeline.isOverdue)) {
+        if (timeline && (timeline.isPrepAlert || timeline.isOverdue)) {
           dueSoon++;
         }
       } else {
-        dormant++;
         if (rawStatus.includes('취소') || rawStatus.includes('정지')) {
           cancelled++;
         } else {
@@ -288,7 +281,12 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
     return companies.filter(c => {
       const compAny = c as any;
       const certNo = (compAny.certNo || '').toLowerCase();
-      const standards = (compAny.standards || '').toLowerCase();
+      const standardsStr = Array.isArray(compAny.standards)
+        ? compAny.standards.join(' ')
+        : typeof compAny.standards === 'string'
+        ? compAny.standards
+        : '';
+      const standards = standardsStr.toLowerCase();
       const compName = c.companyName.replace(/\s+/g, '').toLowerCase();
       const ceo = (c.ceoName || '').replace(/\s+/g, '').toLowerCase();
       const biz = (c.bizNumber || '').replace(/[-\s]/g, '');
@@ -297,16 +295,19 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       const agencyDisplay = getAgencyDisplayName(c.consultant || compAny.consultant, managingAuditor.name);
       const fallbackContract = contractMap.get(c.id);
       const fallbackProject = projectMap.get(c.id);
-      const auditState = getCompanyAuditState(c, fallbackContract, fallbackProject);
       const isNormal = isNormalCompany(c);
       const timeline = getAuditTimelineStatus(c, fallbackContract, fallbackProject);
-      const isDueSoon = isNormal && Boolean(timeline && (timeline.daysRemainingToDeadline <= 60 || timeline.isPrepAlert || timeline.isOverdue));
+      const isPrepTarget = isNormal && Boolean(timeline && timeline.isPrepAlert);
+      const isOverdue = isNormal && Boolean(timeline && timeline.isOverdue);
+      const isDueSoon = isNormal && Boolean(timeline && (timeline.isPrepAlert || timeline.isOverdue));
 
       // 0. 스마트 분류 탭 필터
-      if (activeTab === 'normal' && !isNormal) return false;
-      if (activeTab === 'dueSoon' && !isDueSoon) return false;
-      if (activeTab === 'dormant' && isNormal) return false;
-      // if activeTab === 'all', show all companies
+      if (selectedAuditState === 'all') {
+        if (activeTab === 'normal' && !isNormal) return false;
+        if (activeTab === 'dueSoon' && !isDueSoon) return false;
+        if (activeTab === 'dormant' && isNormal) return false;
+        // if activeTab === 'all', show all companies
+      }
 
       // 1. 텍스트 검색 매칭 (기업명, 대표자, 사업자번호, 인증번호)
       const matchesSearch = !cleanSearch ||
@@ -337,8 +338,17 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       // 5. 협력기관 매칭
       const matchesAgency = selectedAgency === 'all' || agencyDisplay === selectedAgency;
 
-      // 6. 인증상태 매칭 (최근 2년 미시행 자격정지 및 진행단계)
-      const matchesAuditState = selectedAuditState === 'all' || auditState === selectedAuditState;
+      // 6. 원장 관리 상태 필터 (전체 고객사, 인증유지(정상), 심사준비대상(D-60/D-90), 발행기한초과(주의/경고), 휴면 및 인증정지·취소)
+      let matchesAuditState = true;
+      if (selectedAuditState === '인증유지') {
+        matchesAuditState = isNormal && !isPrepTarget && !isOverdue;
+      } else if (selectedAuditState === '심사준비대상') {
+        matchesAuditState = isPrepTarget;
+      } else if (selectedAuditState === '발행기한초과') {
+        matchesAuditState = isOverdue;
+      } else if (selectedAuditState === '휴면및정지') {
+        matchesAuditState = !isNormal;
+      }
 
       return matchesSearch && matchesStandard && matchesRegion && matchesAuditor && matchesAgency && matchesAuditState;
     }).sort((a, b) => {
@@ -366,7 +376,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         {/* 카드 1: 정상 관리 대상 고객사 (기본 목록) */}
         <button
           type="button"
-          onClick={() => { setActiveTab('normal'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('normal'); setSelectedAuditState('all'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
             activeTab === 'normal'
               ? 'bg-cyan-50/90 border-cyan-500 ring-1 ring-cyan-500 text-cyan-950 shadow-2xs'
@@ -386,10 +396,10 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 font-mono font-normal">정상유지</span>
         </button>
 
-        {/* 카드 2: 2개월 내 심사 대상 기업 */}
+        {/* 카드 2: 심사 준비 대상 기업 (D-60 / D-90 도래) */}
         <button
           type="button"
-          onClick={() => { setActiveTab('dueSoon'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('dueSoon'); setSelectedAuditState('all'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
             activeTab === 'dueSoon'
               ? 'bg-indigo-50/90 border-indigo-500 ring-1 ring-indigo-500 text-indigo-950 shadow-2xs'
@@ -401,9 +411,9 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
               <Clock className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-500 font-normal">2개월 내 심사 대상 기업</div>
+              <div className="text-[11px] text-slate-500 font-normal">심사 준비 대상 기업</div>
               <div className="text-sm font-bold text-indigo-700">{counts.dueSoon}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
-              <div className="text-[10px] text-slate-400 font-normal mt-0.5">심사도래 · 일정 조율 대상</div>
+              <div className="text-[10px] text-slate-400 font-normal mt-0.5">D-60(사후) · D-90(갱신) 도래</div>
             </div>
           </div>
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono font-normal">일정집중</span>
@@ -412,7 +422,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         {/* 카드 3: 휴면 및 인증정지/취소 대상 기업 */}
         <button
           type="button"
-          onClick={() => { setActiveTab('dormant'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('dormant'); setSelectedAuditState('all'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
             activeTab === 'dormant'
               ? 'bg-rose-50/90 border-rose-500 ring-1 ring-rose-500 text-rose-950 shadow-2xs'
@@ -437,7 +447,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         {/* 카드 4: 전체 누적 고객사 마스터 DB */}
         <button
           type="button"
-          onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('all'); setSelectedAuditState('all'); setCurrentPage(1); }}
           className={`p-2.5 rounded border text-left transition cursor-pointer flex items-center justify-between ${
             activeTab === 'all'
               ? 'bg-slate-100 border-slate-500 ring-1 ring-slate-500 text-slate-950 shadow-2xs'
@@ -452,7 +462,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
               <div className="text-[11px] text-slate-500 font-normal">전체 고객사 마스터 DB</div>
               <div className="text-sm font-bold text-slate-900">총 {counts.all}<span className="text-xs font-normal text-slate-500 ml-0.5">개사</span></div>
               <div className="text-[10px] text-slate-500 font-normal mt-0.5 truncate max-w-[200px]" title={`총 ${counts.all}개 / 정상유지 ${counts.normal}개 / 휴면·정지 ${counts.dormant}개`}>
-                총 {counts.all}개 / 정상유지 {counts.normal}개 / 휴면·정지 {counts.dormant}개
+                총 {counts.all}개 / 정상유지 ${counts.normal}개 / 휴면·정지 ${counts.dormant}개
               </div>
             </div>
           </div>
@@ -460,25 +470,26 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         </button>
       </div>
 
-      {/* 1. 상단 단일 조회바 (인증규격 전체 메뉴 + 인증상태 + 지역 + 담당심사원 + 협력기관 검색창) */}
-      <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* 검색창 */}
-          <div className="relative min-w-[200px] max-w-[260px]">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="기업명, 대표자, 사업자번호 검색"
-              className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-cyan-500 focus:bg-white"
-            />
-          </div>
+      {/* 1. 상단 단일 조회바 (인증규격 전체 메뉴 + 원장 관리상태 + 지역 + 담당심사원 + 협력기관 검색창) */}
+      <div className="bg-white p-2.5 rounded border border-slate-200 shadow-2xs">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 검색창 */}
+            <div className="relative min-w-[200px] max-w-[260px]">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="기업명, 대표자, 사업자번호 검색"
+                className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded text-xs font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-cyan-500 focus:bg-white"
+              />
+            </div>
 
-          {/* 인증상태 필터 (전체, 인증유지, 일정·계획, 보고서작성, 심의중, 자격정지) */}
+          {/* 원장 관리 상태 필터 (전체 고객사, 인증유지(정상), 심사준비대상(D-60/D-90), 발행기한초과, 휴면 및 인증정지·취소) */}
           <select
             value={selectedAuditState}
             onChange={(e) => {
@@ -487,12 +498,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             }}
             className="py-1 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-700 font-semibold focus:outline-hidden cursor-pointer"
           >
-            <option value="all">전체 인증상태</option>
-            <option value="인증유지">인증유지</option>
-            <option value="일정·계획">일정·계획</option>
-            <option value="보고서작성">보고서작성</option>
-            <option value="심의중">심의중</option>
-            <option value="자격정지">자격정지 (2년 미시행)</option>
+            <option value="all">전체 고객사</option>
+            <option value="인증유지">인증유지 (정상)</option>
+            <option value="심사준비대상">심사준비대상 (D-60 / D-90 도래)</option>
+            <option value="발행기한초과">발행기한초과 (주의/경고)</option>
+            <option value="휴면및정지">휴면 및 인증정지·취소</option>
           </select>
 
           {/* 인증규격 필터 (GMS_AVAILABLE_STANDARDS 변수에서 동적 생성) */}
@@ -564,44 +574,24 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
           </select>
         </div>
 
-        {/* 우측 카운터, 페이지네이션 및 신규 등록 버튼 */}
-        <div className="flex items-center gap-2.5 text-xs text-slate-600 font-mono font-normal">
+        {/* 우측 카운터 및 신규 등록 버튼 (상단 페이징 컨트롤 제거) */}
+        <div className="flex items-center gap-3 text-xs text-slate-600 font-mono font-normal">
           <div>
-            총 <span className="text-cyan-700 font-normal">{filteredCompanies.length}</span>개사
+            총 <span className="text-cyan-700 font-bold">{filteredCompanies.length}</span>개사
             <span className="text-slate-400 ml-1 font-normal">({safePage}/{totalPages}p)</span>
-          </div>
-          <div className="inline-flex items-center bg-slate-50 border border-slate-300 rounded p-0.5">
-            <button
-              type="button"
-              disabled={safePage <= 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="p-1 hover:bg-white disabled:opacity-30 rounded transition cursor-pointer"
-              title="이전 페이지"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <span className="px-2 text-xs font-normal">{safePage}</span>
-            <button
-              type="button"
-              disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="p-1 hover:bg-white disabled:opacity-30 rounded transition cursor-pointer"
-              title="다음 페이지"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
           </div>
 
           {/* 신규 고객 등록 버튼 */}
           <button
             type="button"
             onClick={() => setIsNewCompanyModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-cyan-700 to-sky-700 hover:from-cyan-800 hover:to-sky-800 text-white rounded font-sans font-medium text-xs shadow-2xs hover:shadow-xs transition cursor-pointer ml-1"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-700 to-sky-700 hover:from-cyan-800 hover:to-sky-800 text-white rounded font-sans font-medium text-xs shadow-2xs hover:shadow-xs transition cursor-pointer ml-1"
             title="신규 고객사 및 타기관 전환 기업 등록"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>신규 고객 등록</span>
           </button>
+        </div>
         </div>
       </div>
 
@@ -629,6 +619,9 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                 <th className="py-2.5 px-3 text-center min-w-[125px] font-normal border-r border-slate-300">
                   최초 계약일
                 </th>
+                <th className="py-2.5 px-3 text-center min-w-[105px] font-normal border-r border-slate-300">
+                  최근 심사일
+                </th>
                 <th className="py-2.5 px-2 text-center min-w-[60px] font-normal border-r border-slate-300">
                   직원수
                 </th>
@@ -649,7 +642,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
             <tbody className="divide-y divide-slate-200 text-slate-700 font-normal">
               {paginatedCompanies.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-400 font-normal">
+                  <td colSpan={12} className="py-12 text-center text-slate-400 font-normal">
                     검색 조건에 일치하는 고객사 내역이 없습니다.
                   </td>
                 </tr>
@@ -748,6 +741,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         ))}
                       </td>
 
+                      {/* 최근 심사일 */}
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap align-middle border-r border-slate-200 font-mono text-xs font-normal text-slate-600">
+                        {comp.latestAuditDate || comp.certStartDate || '-'}
+                      </td>
+
                       {/* 직원수 */}
                       <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle border-r border-slate-200 text-xs font-normal text-slate-700">
                         {employees}명
@@ -810,7 +808,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                             return (
                               <div className="text-[10px] text-amber-700 font-normal mt-0.5 flex items-center justify-center gap-0.5" title={`발행마감 ${timeline.deadlineDate} (준비착수일 ${timeline.prepStartDate})`}>
                                 <Clock className="w-2.5 h-2.5 text-amber-600 shrink-0" />
-                                <span>준비착수 D-{timeline.daysRemainingToDeadline}</span>
+                                <span>심사준비 D-{timeline.daysRemainingToDeadline}</span>
                               </div>
                             );
                           }
@@ -825,13 +823,22 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
           </table>
         </div>
 
-        {/* 테이블 푸터 */}
-        <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 font-normal">
-          <div>
-            * 고객사 목록의 행을 클릭하면 규격별 심사이력, 인증서, 심사계획 및 배정 정보 상세 팝업이 표시됩니다.
-          </div>
-          <div className="font-mono text-slate-600 font-normal">
-            총 {filteredCompanies.length}개사 중 {filteredCompanies.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1} ~ {Math.min(filteredCompanies.length, safePage * PAGE_SIZE)}개사 표시
+        {/* 테이블 푸터 및 하단 중앙 페이지네이션 */}
+        <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col items-center justify-center gap-2">
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={filteredCompanies.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={(p) => setCurrentPage(p)}
+          />
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full text-xs text-slate-500 font-normal px-2 pt-1 border-t border-slate-200/60">
+            <div>
+              * 고객사 목록의 행을 클릭하면 규격별 심사이력, 인증서, 심사계획 및 배정 정보 상세 팝업이 표시됩니다.
+            </div>
+            <div className="font-mono text-slate-600 font-normal">
+              총 {filteredCompanies.length}개사 중 {filteredCompanies.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1} ~ {Math.min(filteredCompanies.length, safePage * PAGE_SIZE)}개사 표시
+            </div>
           </div>
         </div>
       </div>
@@ -845,7 +852,9 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
         projects={projects}
         allAuditors={auditors}
         onOpenReport={onOpenReport}
+        onOpenReportWorkbench={onOpenReportWorkbench}
         onOpenPdfReport={onOpenPdfReport}
+        onNavigateToDocStorage={onNavigateToDocStorage}
       />
 
       {/* 신규 고객 등록 모달 (신규/전환) */}

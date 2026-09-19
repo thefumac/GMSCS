@@ -10,8 +10,9 @@ import {
 } from 'lucide-react';
 import { AuditProject, Auditor, Company } from '../types';
 import { ActiveTab, MainCategory } from './Navbar';
-import { CompanyAuditHistoryModal } from './CompanyAuditHistoryModal';
+import { CompanyAuditHistoryModal, DocStorageTarget } from './CompanyAuditHistoryModal';
 import { CommitteeScheduleItem } from '../utils/committeeSchedule';
+import { isNormalCompany } from '../utils/auditStateUtils';
 
 interface DashboardCalendarProps {
   projects: AuditProject[];
@@ -22,6 +23,7 @@ interface DashboardCalendarProps {
   onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; pdfUrl?: string }) => void;
   onSendPlan: (projectId: string) => void;
   onNavigateTab?: (category: MainCategory, tab: ActiveTab, subTab?: 'settlements' | 'billing') => void;
+  onNavigateToDocStorage?: (target: DocStorageTarget) => void;
 }
 
 export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
@@ -32,7 +34,8 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   onOpenReport,
   onOpenPdfReport,
   onSendPlan: _onSendPlan,
-  onNavigateTab
+  onNavigateTab,
+  onNavigateToDocStorage
 }) => {
   // 시스템 현재 기준 날짜 (실시간 KST 시간대 반영: 2026-09-13 등)
   const todayDate = useMemo(() => new Date(), []);
@@ -123,17 +126,33 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
 
   // 대시보드 통계 계산 (실제 DB 기반 완전 동적 산출)
   const stats = useMemo(() => {
-    // 1. 당해년도 전체 심사 및 시행 완료 건수
-    const yearProjects = projects.filter(p => p.startDate && p.startDate.startsWith(String(currentYear)));
-    const totalYearCount = yearProjects.length;
+    // 1. 당해년도 정상 관리 대상 고객사 전체 모수 및 심사 완료/일정 수립 기업 수
+    const normalCompanies = companies.filter(isNormalCompany);
+    const totalYearCount = normalCompanies.length;
 
-    // 시행 완료: 오늘 이전 심사일정이거나, 보고서작성/서명완료/심의/인증발행 상태인 심사
-    const completedProjects = yearProjects.filter(p => {
-      const isPastDate = (p.endDate && p.endDate <= todayStr) || (p.startDate && p.startDate <= todayStr);
-      const isFinishedStatus = p.status === '인증발행' || p.status === '심의진행' || p.status === '보고서작성' || p.status === '서명완료' || p.status === '사무국검토대기';
-      return isPastDate || isFinishedStatus;
+    const curYearStr = String(currentYear);
+    const completedCompanySet = new Set<string>();
+
+    // 2026년에 심사를 완료했거나 일정이 잡힌 고유 정상 관리 대상 기업 수 집계
+    projects.forEach(p => {
+      const isThisYear = (p.startDate && p.startDate.startsWith(curYearStr)) || 
+        (p.auditDates && p.auditDates.some(d => d.startsWith(curYearStr)));
+      if (isThisYear) {
+        const matchedComp = normalCompanies.find(c => c.id === p.companyId || c.companyName.trim() === p.companyName.trim());
+        if (matchedComp) {
+          completedCompanySet.add(matchedComp.id);
+        }
+      }
     });
-    const completedCount = completedProjects.length;
+
+    normalCompanies.forEach(c => {
+      const recent = c.latestAuditDate || (c as any).certStartDate;
+      if (recent && recent.startsWith(curYearStr) && recent !== '-') {
+        completedCompanySet.add(c.id);
+      }
+    });
+
+    const completedCount = completedCompanySet.size;
     const yearCompletionRate = totalYearCount > 0 ? ((completedCount / totalYearCount) * 100).toFixed(1) : '0.0';
 
     // 2. 당월 심사
@@ -178,7 +197,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
       unpaidCount,
       unpaidTotal
     };
-  }, [projects, currentYear, currentMonth, todayStr]);
+  }, [companies, projects, currentYear, currentMonth, todayStr]);
 
   // 일자별 심사원 배정 일정 매핑 (심사원별 달력 뷰용 - 동일 심사원/기업 중복 방지)
   const auditorSchedulesByDate = useMemo(() => {
@@ -351,7 +370,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
               <span>{currentYear}년 연간 심사 완료율</span>
             </p>
             <h3 className="text-xl font-bold text-emerald-800 mt-0.5 leading-tight">
-              {stats.completedCount} <span className="text-xs text-slate-400 font-normal">/ {stats.totalYearCount}건</span>
+              {stats.completedCount} <span className="text-xs text-slate-400 font-normal">/ {stats.totalYearCount}개사</span>
             </h3>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[11px] font-bold text-emerald-600">{stats.yearCompletionRate}%</span>
@@ -681,6 +700,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         allAuditors={auditors}
         onOpenReport={onOpenReport}
         onOpenPdfReport={onOpenPdfReport}
+        onNavigateToDocStorage={onNavigateToDocStorage}
       />
     </div>
   );

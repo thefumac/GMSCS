@@ -140,7 +140,7 @@ export function verifyMemberApprovalPin(memberIdOrName: string, pin: string): { 
 export function isPermanentStaffMember(nameOrIdOrEmail?: string): boolean {
   if (!nameOrIdOrEmail) return false;
   const clean = nameOrIdOrEmail.toLowerCase().trim();
-  if (clean === 'admin' || clean === 'fumac@naver.com' || clean === 'kgms2304@gmail.com') return true;
+  if (clean === 'admin' || clean === 'super-admin' || clean === 'the.elphis@gmail.com' || clean === '최고관리자' || clean === 'fumac@naver.com' || clean === 'kgms2304@gmail.com') return true;
   
   const permanentNames = ['남경호', '정현일', '이혜원', '남효린', '김홍덕'];
   if (permanentNames.some(n => clean.includes(n.toLowerCase()))) return true;

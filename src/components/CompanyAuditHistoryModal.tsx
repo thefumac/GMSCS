@@ -6,44 +6,22 @@ import {
   FileText, 
   Award, 
   UserCheck, 
-  Folder,
-  Layers,
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Briefcase,
-  Send,
-  CheckCircle2,
-  FileCheck,
-  AlertCircle,
-  ExternalLink,
-  Shield,
-  Leaf,
-  Users,
-  Database,
-  Printer,
-  ChevronRight,
-  ClipboardList,
-  Plus,
-  Trash2,
-  Paperclip,
-  ArrowRightLeft,
-  FileCheck2,
-  Download,
-  FolderArchive,
-  HardDrive
+  Clock, 
+  CheckCircle2
 } from 'lucide-react';
 import { Company, AuditProject, CertContract, Auditor, AuditReport, AuditorSettlement, AuditContractRecord } from '../types';
-import { isConflictOfInterest, getAgencyDisplayName } from '../utils/conflictUtils';
-import { AuditPlanInvoiceDocModal } from './AuditPlanInvoiceDocModal';
-import { AuditAttachmentDocModal, AttachmentDocItem } from './AuditAttachmentDocModal';
-import { ImpartialityAssessmentDocModal } from './ImpartialityAssessmentDocModal';
-import { ContractReviewDocModal } from './ContractReviewDocModal';
-import { DeliberationReportDocModal } from './DeliberationReportDocModal';
-import { StandardContractViewModal } from './StandardContractViewModal';
-import { cleanCeoName, cleanPersonName, splitPersonAndPosition } from '../utils/personUtils';
+import { cleanCeoName, cleanPersonName } from '../utils/personUtils';
 import { getDriveReportsForCompany, DriveReportFileItem } from '../data/driveReportFiles';
+import { getAuditTimelineStatus } from '../utils/auditStateUtils';
+
+export interface DocStorageTarget {
+  companyId?: string;
+  companyName?: string;
+  bizNumber?: string;
+  auditYear?: number | string;
+  auditStage?: string;
+  roundKey?: string;
+}
 
 export interface CompanyAuditHistoryModalProps {
   isOpen: boolean;
@@ -59,90 +37,134 @@ export interface CompanyAuditHistoryModalProps {
   onOpenReportWorkbench?: (company: Company) => void;
   onOpenPlanInvoiceModal?: (company: Company) => void;
   onOpenPdfReport?: (info: { title: string; companyName: string; standard?: string; auditType?: string; auditDate?: string; auditorName?: string; pdfUrl?: string }) => void;
+  onNavigateToDocStorage?: (target: DocStorageTarget) => void;
 }
 
-// 심사 성격 계산
+// 심사 구분 표준 판정 (괄호 중복 없이 간결하게 '최초심사', '1차 사후', '2차 사후', '갱신심사', '전환심사')
+export function formatCleanAuditStage(rawStage?: string): string {
+  if (!rawStage) return '1차 사후';
+  const s = rawStage.trim();
+  if (s.includes('최초') || s.includes('1단계') || s.includes('2단계') || s.includes('1-2') || s.includes('1·2') || s.includes('신규')) {
+    return '최초심사';
+  }
+  if (s.includes('1차') || s.includes('사후1') || s.includes('사후 1')) {
+    return '1차 사후';
+  }
+  if (s.includes('2차') || s.includes('사후2') || s.includes('사후 2')) {
+    return '2차 사후';
+  }
+  if (s.includes('갱신') || s.includes('재인증')) {
+    return '갱신심사';
+  }
+  if (s.includes('전환')) {
+    return '전환심사';
+  }
+  if (s.includes('특별') || s.includes('임시')) {
+    return '특별심사';
+  }
+  return '1차 사후';
+}
+
+// 심사 성격 계산 (원장 우선 및 최초인증일/3년주기/만료일 기반 정밀 판정)
 function getAuditStage(comp: Company, contract?: CertContract, project?: AuditProject): string {
   if (project?.auditType) {
-    if (project.auditType.includes('최초')) return '최초심사 (1단계/2단계)';
-    if (project.auditType.includes('1차')) return '1차 사후관리심사';
-    if (project.auditType.includes('2차')) return '2차 사후관리심사';
-    if (project.auditType.includes('갱신')) return '갱신심사 (재인증)';
-    return project.auditType;
+    const pType = project.auditType;
+    if (pType.includes('1차') || pType.includes('사후1')) return '1차 사후';
+    if (pType.includes('2차') || pType.includes('사후2')) return '2차 사후';
+    if (pType.includes('갱신') || pType.includes('재인증')) return '갱신심사';
+    if (pType.includes('전환')) return '전환심사';
+
+    // 최초심사 지정된 경우 최초인증일과의 격차 검증 (45일 초과 시 주기 기반 자동 판정)
+    if (pType.includes('최초') || pType.includes('1-2단계') || pType.includes('1·2단계') || pType.includes('신규')) {
+      const initDateStr = comp.initialCertDate || contract?.initialCertDate || comp.initialContractDate;
+      const auditDateStr = project.startDate || project.endDate;
+      if (initDateStr && auditDateStr) {
+        const initD = new Date(initDateStr);
+        const auditD = new Date(auditDateStr);
+        if (!isNaN(initD.getTime()) && !isNaN(auditD.getTime())) {
+          const diffDays = Math.abs(auditD.getTime() - initD.getTime()) / (1000 * 60 * 60 * 24);
+          if (diffDays <= 45) {
+            return '최초심사';
+          }
+        }
+      } else {
+        return '최초심사';
+      }
+    }
   }
-  if (contract?.initialCertDate) {
-    const certYear = parseInt(contract.initialCertDate.substring(0, 4), 10);
-    const currentYear = 2026;
-    const diff = currentYear - certYear;
-    if (diff <= 0) return '최초심사 (1단계/2단계)';
-    if (diff % 3 === 1) return '1차 사후관리심사';
-    if (diff % 3 === 2) return '2차 사후관리심사';
-    return '갱신심사 (재인증)';
+
+  // 3년 만료일 근접 시 갱신심사 판정
+  const expStr = comp.expiryDate || contract?.validUntil;
+  if (expStr) {
+    const expD = new Date(expStr);
+    const targetD = project?.startDate ? new Date(project.startDate) : new Date('2026-09-19');
+    if (!isNaN(expD.getTime()) && !isNaN(targetD.getTime())) {
+      const diffD = (expD.getTime() - targetD.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffD >= -60 && diffD <= 120) {
+        return '갱신심사';
+      }
+    }
   }
-  return '1차 사후관리심사';
+
+  const baseDateStr = comp.cycleBaseDate || comp.certStartDate || contract?.initialCertDate || comp.initialCertDate;
+  if (baseDateStr) {
+    const baseD = new Date(baseDateStr);
+    if (!isNaN(baseD.getTime())) {
+      const targetD = project?.startDate ? new Date(project.startDate) : new Date('2026-09-19');
+      const diffMonths = (targetD.getFullYear() - baseD.getFullYear()) * 12 + (targetD.getMonth() - baseD.getMonth());
+      const cycleMonth = ((diffMonths % 36) + 36) % 36;
+
+      if (cycleMonth <= 14) return '1차 사후';
+      if (cycleMonth <= 26) return '2차 사후';
+      return '갱신심사';
+    }
+  }
+
+  return '1차 사후';
 }
 
-// 인증 표준 및 인증번호 매핑
-function getStandardsWithCertNo(comp: Company, contract?: CertContract): { std: string; certNo: string }[] {
+function getStandardsWithCertNo(comp?: Company | null, contract?: CertContract): { std: string; certNo: string }[] {
+  if (!comp) return [];
   const compAny = comp as any;
-  let stds: string[] = ['ISO 9001:2015'];
+  let stds: string[] = [];
 
-  if (contract?.standards && contract.standards.length > 0) {
+  if (contract?.standards && Array.isArray(contract.standards) && contract.standards.length > 0) {
     stds = contract.standards;
   } else if (compAny.standards) {
-    stds = typeof compAny.standards === 'string' 
-      ? compAny.standards.split(/[/,;]+/).map((s: string) => s.trim()) 
-      : compAny.standards;
+    if (Array.isArray(compAny.standards)) {
+      stds = compAny.standards;
+    } else if (typeof compAny.standards === 'string') {
+      stds = compAny.standards.split(/[/,;]+/).map((s: string) => s.trim()).filter(Boolean);
+    }
   }
 
-  const baseCert = contract?.certNumber || compAny.certNo || 'Q260101';
+  const realCertNo = contract?.certNumber || compAny.certNo || (comp as any).certNo || '';
 
-  return stds.map((rawS: string, idx: number) => {
-    const s = rawS.replace(/\s*\((?:QMS|EMS|OHS|ISMS|품질|환경|안전보건|안전)\)/gi, '').trim();
-    let prefix = 'Q';
-    if (s.includes('14001')) prefix = 'E';
-    else if (s.includes('45001')) prefix = 'O';
-    else if (s.includes('27001')) prefix = 'IS';
-    else if (s.includes('13485')) prefix = 'M';
-    else if (s.includes('22000')) prefix = 'FS';
-
-    const numPart = baseCert.replace(/^[A-Za-z]+/, '');
-    const certNum = `${prefix}${numPart ? (parseInt(numPart, 10) + idx * 2).toString().padStart(6, '0') : '260' + (100 + idx)}`;
-    return { std: s, certNo: certNum };
+  return stds.map((rawS: string) => {
+    const s = (typeof rawS === 'string' ? rawS : String(rawS))
+      .replace(/\s*\((?:QMS|EMS|OHS|ISMS|품질|환경|안전보건|안전)\)/gi, '')
+      .trim();
+    return { std: s, certNo: realCertNo || '-' };
   });
 }
 
-// D-Day 계산
-function calculateDDay(dueDateStr: string): { text: string; isUrgent: boolean; isOverdue: boolean } {
-  const target = new Date(dueDateStr);
-  const now = new Date(2026, 8, 9);
-  const diffTime = target.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    return { text: `D+${Math.abs(diffDays)}일 경과`, isUrgent: true, isOverdue: true };
-  } else if (diffDays === 0) {
-    return { text: 'D-Day (오늘)', isUrgent: true, isOverdue: false };
-  } else {
-    return { text: `D-${diffDays}일`, isUrgent: diffDays <= 30, isOverdue: false };
-  }
-}
-
-type BinderTabKey = 'profile' | 'history' | 'ehs';
-
-interface AuditHistoryRecordItem {
-  id: string;
-  auditDate: string;
-  auditType: string;
-  leadAuditor: string;
-  teamAuditor: string;
-  ncCount: { major: number; minor: number; obs: number };
-  status: string;
-  reportAvailable: boolean;
-  certAvailable: boolean;
-  planAvailable: boolean;
-  hasAttachments: boolean;
-  attachments?: AttachmentDocItem[];
+export interface AuditHistoryEntry {
+  key: string;
+  year?: number | string;
+  month?: number | string;
+  dateDisplay: string;
+  mdDisplay: string;
+  stageDisplay: string;
+  standardsDisplay: string;
+  auditorDisplay: string;
+  statusDisplay: string;
+  isCompleted: boolean;
+  project?: AuditProject;
+  archivedGroup?: {
+    year?: number | string;
+    month?: number | string;
+    auditType?: string;
+  };
 }
 
 export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> = ({
@@ -152,25 +174,13 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
   contracts = [],
   auditContracts = [],
   projects = [],
-  reports = {},
   allAuditors = [],
   onOpenReport,
   onOpenReportWorkbench,
   onOpenPdfReport,
-  onOpenPlanInvoiceModal
+  onNavigateToDocStorage
 }) => {
-  // 상단 종이 바인더 탭 상태 (3개 탭 구성)
-  const [activeTab, setActiveTab] = useState<BinderTabKey>('profile');
-  
-  const [isPlanDocOpen, setIsPlanDocOpen] = useState(false);
-  const [isImpartialityDocOpen, setIsImpartialityDocOpen] = useState(false);
-  const [isContractReviewDocOpen, setIsContractReviewDocOpen] = useState(false);
-  const [isDeliberationDocOpen, setIsDeliberationDocOpen] = useState(false);
-  const [isContractDocOpen, setIsContractDocOpen] = useState(false);
-  const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
-  const [selectedAuditForAttachments, setSelectedAuditForAttachments] = useState<AuditHistoryRecordItem | null>(null);
-
-  // 실시간 로컬스토리지 및 심사보고서(인정범위확인서) 변경분 병합 (반드시 모든 Hook은 조건문 이전에 실행)
+  // 실시간 로컬스토리지 및 심사보고서(인정범위확인서) 변경분 병합
   const effectiveCompany = useMemo(() => {
     if (!company) return null;
     try {
@@ -207,150 +217,335 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
     return effectiveCompany ? getDriveReportsForCompany(effectiveCompany.companyName) : [];
   }, [effectiveCompany]);
 
-  if (!isOpen || !company || !effectiveCompany) return null;
+  // 업종 / 주요생산품 (ISO 규격명이 잘못 노출되지 않도록 필터링 및 실제 업종/생산품 필드 바인딩)
+  const displayIndustry = useMemo(() => {
+    if (!effectiveCompany) return '-';
+    const compAny = effectiveCompany as any;
+    const raw = (
+      effectiveCompany.industry || 
+      compAny.businessType || 
+      compAny.product || 
+      compAny.mainProduct || 
+      compAny.industryType || 
+      ''
+    ).trim();
 
-  const contract = contracts.find(c => c.companyId === effectiveCompany.id);
-  const matchingProjects = projects.filter(p => p.companyId === effectiveCompany.id || p.companyName === effectiveCompany.companyName);
+    if (!raw) return '-';
+    // ISO/인증규격 문자열이 잘못 들어있는 경우 배제하고 '-' 처리
+    if (/^ISO\s*\d+|^\d{4,5}|KS\s*Q|K-OHSAS|HACCP|IATF/i.test(raw)) {
+      return '-';
+    }
+    return raw;
+  }, [effectiveCompany]);
+
+  const contract = useMemo(() => {
+    if (!effectiveCompany) return undefined;
+    return contracts.find(c => c.companyId === effectiveCompany.id);
+  }, [contracts, effectiveCompany]);
+
+  const matchingProjects = useMemo(() => {
+    if (!effectiveCompany) return [];
+    const cleanBiz = (effectiveCompany.bizNumber || '').replace(/[^0-9]/g, '');
+    const normCompName = (effectiveCompany.companyName || '').replace(/[\s\(\)\[\]주식회사㈜\.\-_]/g, '').toLowerCase();
+
+    return projects.filter(p => {
+      if (p.companyId && effectiveCompany.id && p.companyId === effectiveCompany.id) return true;
+      if (p.companyName === effectiveCompany.companyName) return true;
+      if (cleanBiz && (p as any).bizNumber && (p as any).bizNumber.replace(/[^0-9]/g, '') === cleanBiz) return true;
+      const pNorm = (p.companyName || '').replace(/[\s\(\)\[\]주식회사㈜\.\-_]/g, '').toLowerCase();
+      if (pNorm && normCompName && pNorm === normCompName) return true;
+      return false;
+    });
+  }, [projects, effectiveCompany]);
+
   const latestProject = matchingProjects[0];
-  const matchingAuditContract = auditContracts.find(c => c.companyId === effectiveCompany.id || c.companyName === effectiveCompany.companyName);
+  const matchingAuditContract = useMemo(() => {
+    if (!effectiveCompany) return undefined;
+    return auditContracts.find(c => c.companyId === effectiveCompany.id || c.companyName === effectiveCompany.companyName);
+  }, [auditContracts, effectiveCompany]);
   
-  const stageText = getAuditStage(effectiveCompany, contract, latestProject);
-  const stdAndCerts = getStandardsWithCertNo(effectiveCompany, contract);
-  const dueDate = contract?.surveillanceDueDate || contract?.validUntil || latestProject?.endDate || '2026-10-31';
-  const dday = calculateDDay(dueDate);
+  const stageText = useMemo(() => {
+    if (!effectiveCompany) return '1차 사후';
+    return getAuditStage(effectiveCompany, contract, latestProject);
+  }, [effectiveCompany, contract, latestProject]);
+
+  const stdAndCerts = useMemo(() => {
+    return getStandardsWithCertNo(effectiveCompany, contract);
+  }, [effectiveCompany, contract]);
+
+  const timeline = useMemo(() => {
+    if (!effectiveCompany) return null;
+    return getAuditTimelineStatus(effectiveCompany, contract, latestProject);
+  }, [effectiveCompany, contract, latestProject]);
 
   // 배정 심사원
-  const managingAuditor = allAuditors.find(a => a.id === effectiveCompany.managingAuditorId || a.id === latestProject?.leadAuditorId) 
-    || allAuditors.find(a => a.name === latestProject?.leadAuditorName) 
-    || { name: effectiveCompany.managingAuditorId || '', grade: '심사원', mobile: '', email: '' };
+  const managingAuditor = useMemo(() => {
+    if (!effectiveCompany) return { name: '-', grade: '', mobile: '', email: '' };
+    return allAuditors.find(a => a.id === effectiveCompany.managingAuditorId || a.id === latestProject?.leadAuditorId) 
+      || allAuditors.find(a => a.name === latestProject?.leadAuditorName) 
+      || { name: (effectiveCompany as any).assignedAuditor || effectiveCompany.assignedAuditorName || (effectiveCompany as any).leadAuditor || '-', grade: '선임심사원', mobile: '', email: '' };
+  }, [allAuditors, effectiveCompany, latestProject]);
 
-  // Effective AuditContractRecord for document display
-  const effectiveContractRecord: AuditContractRecord = matchingAuditContract || {
-    id: `CTR-${effectiveCompany.id}`,
-    contractNumber: `CTR-${effectiveCompany.bizNumber ? effectiveCompany.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : ''}`,
-    companyId: effectiveCompany.id,
-    companyName: effectiveCompany.companyName,
-    contractType: (stageText.includes('최초') ? '신규인증' : stageText.includes('갱신') ? '갱신심사' : '정기사후') as any,
-    standards: stdAndCerts.map(s => s.std as any),
-    employeeCount: effectiveCompany.totalEmployees || 0,
-    riskLevel: 'Medium',
-    contractDate: contract?.initialCertDate || '',
-    plannedAuditStartDate: latestProject?.startDate || '',
-    contractStatus: (latestProject?.status === '계획수립' ? '진행중' : '계약체결') as any,
-    leadAuditorId: (managingAuditor as any).id || '',
-    leadAuditorName: managingAuditor.name || '',
-    agency: effectiveCompany.consultant || effectiveCompany.agency || '직영',
-    kabStandardMd: 2.0,
-    appliedMd: 2.0,
-    standardRatePerMd: 800000,
-    ratePerMd: 800000,
-    standardFee: 1600000,
-    finalFee: 2000000,
-    docAuditMd: 0.5,
-    docAuditFee: 500000,
-    onsiteAuditMd: 1.5,
-    onsiteAuditFee: 1100000,
-    travelExpense: 200000,
-    lodgingOption: '업체직접제공',
-    lodgingNights: 0,
-    lodgingExpense: 0,
-    applicationFee: 200000,
-    docFee: 500000,
-    siteFee: 1100000,
-    travelFee: 200000,
-    lodgingFee: 0,
-    lodgingProvidedByClient: true,
-    appFee: 200000,
-    approvalStatus: '승인완료',
-    isAdjusted: false,
-    planInvoiceDispatchStatus: (latestProject?.status === '계획서발송' || latestProject?.status === '심사진행중') ? '발송완료' : '발송대기',
-    auditorResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답',
-    agencyResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답',
-    clientResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답'
+  const effectiveContractRecord: AuditContractRecord = useMemo(() => {
+    if (matchingAuditContract) return matchingAuditContract;
+    const comp = effectiveCompany || { id: '', companyName: '', bizNumber: '', totalEmployees: 0, consultant: '', agency: '' };
+    return {
+      id: `CTR-${comp.id}`,
+      contractNumber: `CTR-${comp.bizNumber ? comp.bizNumber.replace(/[^0-9]/g, '').substring(0, 6) : ''}`,
+      companyId: comp.id,
+      companyName: comp.companyName,
+      contractType: (stageText.includes('최초') ? '신규인증' : stageText.includes('갱신') ? '갱신심사' : '정기사후') as any,
+      standards: stdAndCerts.map(s => s.std as any),
+      employeeCount: comp.totalEmployees || 0,
+      riskLevel: 'Medium',
+      contractDate: contract?.initialCertDate || '',
+      plannedAuditStartDate: latestProject?.startDate || '',
+      contractStatus: (latestProject?.status === '계획수립' ? '진행중' : '계약체결') as any,
+      leadAuditorId: (managingAuditor as any).id || '',
+      leadAuditorName: managingAuditor.name || '',
+      agency: comp.consultant || (comp as any).agency || '직영',
+      kabStandardMd: 2.0,
+      appliedMd: 2.0,
+      standardRatePerMd: 800000,
+      ratePerMd: 800000,
+      standardFee: 1600000,
+      finalFee: 2000000,
+      docAuditMd: 0.5,
+      docAuditFee: 500000,
+      onsiteAuditMd: 1.5,
+      onsiteAuditFee: 1100000,
+      travelExpense: 200000,
+      lodgingOption: '업체직접제공',
+      lodgingNights: 0,
+      lodgingExpense: 0,
+      applicationFee: 200000,
+      docFee: 500000,
+      siteFee: 1100000,
+      travelFee: 200000,
+      lodgingFee: 0,
+      lodgingProvidedByClient: true,
+      appFee: 200000,
+      approvalStatus: '승인완료',
+      isAdjusted: false,
+      planInvoiceDispatchStatus: (latestProject?.status === '계획서발송' || latestProject?.status === '심사진행중') ? '발송완료' : '발송대기',
+      auditorResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답',
+      agencyResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답',
+      clientResponseStatus: latestProject?.status === '심사진행중' ? '동의' : '미응답'
+    };
+  }, [matchingAuditContract, effectiveCompany, stageText, stdAndCerts, contract, latestProject, managingAuditor]);
+
+  // [실데이터 기반 심사 이력 및 문서 대장 목록 구축]
+  const auditHistoryList = useMemo<AuditHistoryEntry[]>(() => {
+    if (!effectiveCompany) return [];
+
+    const items: AuditHistoryEntry[] = [];
+    const coveredYears = new Set<number>();
+
+    // 1. matchingProjects에서 추출 (실제 프로젝트)
+    matchingProjects.forEach((proj, idx) => {
+      const startD = proj.startDate || proj.auditDates?.[0] || '';
+      const yr = startD ? new Date(startD).getFullYear() : ((proj as any).auditYear || 2026);
+      if (!isNaN(yr)) coveredYears.add(yr);
+
+      const dateStr = proj.auditDates && proj.auditDates.length > 1
+        ? `${proj.startDate} ~ ${proj.endDate?.slice(5) || ''}`
+        : (proj.startDate || (yr ? `${yr}` : '-'));
+      const mdVal = proj.appliedMd ? `${proj.appliedMd.toFixed(1)} MD` : '-';
+      const cleanStage = formatCleanAuditStage(proj.auditType || stageText);
+      const auditorName = proj.leadAuditorName 
+        ? `팀장: ${proj.leadAuditorName}${proj.teamAuditorNames?.length ? ` / 팀원: ${proj.teamAuditorNames.join(', ')}` : ''}`
+        : ((effectiveCompany as any).assignedAuditor || managingAuditor.name || '-');
+      
+      const stds = proj.standards && proj.standards.length > 0 
+        ? proj.standards.map(s => s.split(':')[0]).join(' · ')
+        : (stdAndCerts.length > 0 ? stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') : '-');
+
+      const isDone = (proj.status as string) === '인증발행' || (proj.status as string) === '완료';
+
+      items.push({
+        key: `proj-${proj.id || idx}-${yr}`,
+        year: yr,
+        month: startD ? new Date(startD).getMonth() + 1 : undefined,
+        dateDisplay: mdVal !== '-' ? `${dateStr} (${mdVal})` : dateStr,
+        mdDisplay: mdVal,
+        stageDisplay: cleanStage,
+        standardsDisplay: stds,
+        auditorDisplay: auditorName !== '-' ? `${auditorName} (선임)` : '-',
+        statusDisplay: isDone ? '적합 (인증발행)' : ((proj.status as string) || '적합 (인증유지)'),
+        isCompleted: isDone,
+        project: proj,
+        archivedGroup: {
+          year: yr,
+          month: startD ? new Date(startD).getMonth() + 1 : undefined,
+          auditType: cleanStage
+        }
+      });
+    });
+
+    // 2. archivedDocs에서 추출 (Firebase Storage / Drive 실제 보관 문서 아카이브)
+    if (archivedDocs.length > 0) {
+      const groups: Record<string, {
+        year?: number;
+        month?: number;
+        auditType: string;
+        standards: string[];
+        auditor: string;
+      }> = {};
+
+      archivedDocs.forEach((doc) => {
+        const yearVal = Number(doc.year) || undefined;
+        const monthVal = Number(doc.month) || undefined;
+        const aType = formatCleanAuditStage(doc.auditType || '1차 사후');
+        const gKey = `${yearVal || ''}_${monthVal || ''}_${aType}`;
+
+        if (!groups[gKey]) {
+          groups[gKey] = {
+            year: yearVal,
+            month: monthVal,
+            auditType: aType,
+            standards: doc.standards || [],
+            auditor: doc.auditorName || doc.auditor || managingAuditor.name || '-'
+          };
+        }
+        if (doc.standards) {
+          doc.standards.forEach(s => {
+            if (!groups[gKey].standards.includes(s)) {
+              groups[gKey].standards.push(s);
+            }
+          });
+        }
+      });
+
+      Object.entries(groups).forEach(([gKey, gVal]) => {
+        const yr = gVal.year;
+        const alreadyHas = items.some(it => (yr ? it.year === yr : true) && it.stageDisplay === gVal.auditType);
+        if (!alreadyHas) {
+          if (yr) coveredYears.add(yr);
+          const dateStr = gVal.year ? (gVal.month ? `${gVal.year}.${String(gVal.month).padStart(2, '0')}` : `${gVal.year}`) : '-';
+          const stds = gVal.standards.length > 0 
+            ? gVal.standards.map(s => s.split(':')[0]).join(' · ')
+            : (stdAndCerts.length > 0 ? stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') : '-');
+
+          items.push({
+            key: `arch-${gKey}`,
+            year: yr,
+            month: gVal.month,
+            dateDisplay: dateStr,
+            mdDisplay: '-',
+            stageDisplay: gVal.auditType,
+            standardsDisplay: stds,
+            auditorDisplay: gVal.auditor !== '-' ? `${gVal.auditor} (선임)` : '-',
+            statusDisplay: '적합 (인증유지)',
+            isCompleted: true,
+            archivedGroup: {
+              year: yr,
+              month: gVal.month,
+              auditType: gVal.auditType
+            }
+          });
+        }
+      });
+    }
+
+    // 3. (effectiveCompany as any).auditHistory (원장에 저장된 실제 이력)
+    const rawHist = (effectiveCompany as any).auditHistory || (effectiveCompany as any).audits;
+    if (Array.isArray(rawHist) && rawHist.length > 0) {
+      rawHist.forEach((h: any, idx: number) => {
+        const dt = h.auditDate || h.auditStartDate || h.startDate || '';
+        const yr = dt ? new Date(dt).getFullYear() : null;
+        const cleanStage = formatCleanAuditStage(h.auditType || h.stage || h.auditStage);
+        if (yr && !isNaN(yr)) {
+          const alreadyHas = items.some(it => it.year === yr && it.stageDisplay === cleanStage);
+          if (!alreadyHas) {
+            coveredYears.add(yr);
+            const mdVal = h.md || h.appliedMd ? `${(h.md || h.appliedMd)} MD` : '-';
+            const stds = h.standards ? (Array.isArray(h.standards) ? h.standards.map((s: string) => s.split(':')[0]).join(' · ') : h.standards) : (stdAndCerts.length > 0 ? stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') : '-');
+            const audName = h.leadAuditor || h.leadAuditorName || managingAuditor.name || '-';
+            items.push({
+              key: `rawHist-${idx}-${yr}`,
+              year: yr,
+              month: dt ? new Date(dt).getMonth() + 1 : undefined,
+              dateDisplay: mdVal !== '-' ? `${dt} (${mdVal})` : dt,
+              mdDisplay: mdVal,
+              stageDisplay: cleanStage,
+              standardsDisplay: stds,
+              auditorDisplay: audName !== '-' ? `${audName} (선임)` : '-',
+              statusDisplay: h.status || '적합 (인증유지)',
+              isCompleted: true,
+              archivedGroup: {
+                year: yr,
+                month: dt ? new Date(dt).getMonth() + 1 : undefined,
+                auditType: cleanStage
+              }
+            });
+          }
+        }
+      });
+    }
+
+    // 날짜/연도 내림차순 정렬
+    return items.sort((a, b) => {
+      const yrA = Number(a.year || 0);
+      const yrB = Number(b.year || 0);
+      if (yrB !== yrA) return yrB - yrA;
+      const moA = Number(a.month || 0);
+      const moB = Number(b.month || 0);
+      return moB - moA;
+    });
+  }, [effectiveCompany, matchingProjects, archivedDocs, stageText, stdAndCerts, managingAuditor]);
+
+  // [React Rules of Hooks 준수] 모든 Hook 선언 완료 후 조기 반환 처리
+  if (!isOpen || !company || !effectiveCompany) return null;
+
+  // 문서 관리 연동 액션 핸들러 (문서 보관함 탐색기로 자동 라우팅 - 보고서 뷰어/작성기 팝업 호출 전면 제거)
+  const handleOpenDocStorageAction = (grp?: { year?: number | string; month?: number | string; auditType?: string }) => {
+    if (onNavigateToDocStorage) {
+      const pureBiz = (effectiveCompany.bizNumber || '').replace(/[^0-9]/g, '');
+      onNavigateToDocStorage({
+        companyId: effectiveCompany.id,
+        companyName: effectiveCompany.companyName,
+        bizNumber: pureBiz || effectiveCompany.bizNumber,
+        auditYear: grp?.year,
+        auditStage: grp?.auditType || stageText,
+        roundKey: grp ? `${grp.year}_${grp.month}_${grp.auditType}` : undefined
+      });
+    }
+    onClose();
   };
 
-  // 과거 심사 완료 이력 대장 데이터 (실제 프로젝트 목록 매핑)
-  const auditHistoryRecords: AuditHistoryRecordItem[] = matchingProjects.length > 0 ? matchingProjects.map((p, idx) => ({
-    id: p.id || `audit-${idx}`,
-    auditDate: p.startDate && p.endDate ? `${p.startDate} ~ ${p.endDate}` : (p.startDate || ''),
-    auditType: p.auditType || stageText,
-    leadAuditor: p.leadAuditorName || managingAuditor.name || '',
-    teamAuditor: (p as any).teamAuditorName || '단독심사',
-    ncCount: { major: 0, minor: 0, obs: 0 },
-    status: p.status || '계획수립',
-    reportAvailable: true,
-    certAvailable: true,
-    planAvailable: true,
-    hasAttachments: false,
-    attachments: []
-  })) : [
-    {
-      id: `audit-${effectiveCompany.id}`,
-      auditDate: latestProject ? (latestProject.startDate && latestProject.endDate ? `${latestProject.startDate} ~ ${latestProject.endDate}` : latestProject.startDate) : (contract?.initialCertDate || ''),
-      auditType: stageText,
-      leadAuditor: managingAuditor.name || '',
-      teamAuditor: '단독심사',
-      ncCount: { major: 0, minor: 0, obs: 0 },
-      status: latestProject?.status || (contract ? '인증유지' : '계획수립'),
-      reportAvailable: true,
-      certAvailable: true,
-      planAvailable: true,
-      hasAttachments: false,
-      attachments: []
-    }
-  ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/70 backdrop-blur-xs p-3 sm:p-5 pt-6 sm:pt-10 overflow-y-auto animate-in fade-in">
-      <div className="bg-slate-100 rounded-3xl max-w-5xl w-full border border-slate-300 shadow-2xl overflow-hidden flex flex-col h-[86vh] mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto animate-in fade-in">
+      <div className="bg-white rounded-2xl max-w-5xl w-full border border-slate-300 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto">
         
         {/* ========================================================================= */}
-        {/* 1. 모달 상단 헤더 & 기업 타이틀 */}
+        {/* 1. 상단 모달 헤더 (회사명, 사업자번호, 우측 상태 뱃지, 닫기)             */}
         {/* ========================================================================= */}
-        <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <div className="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-cyan-700 text-white flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-cyan-600 text-white flex items-center justify-center shadow-xs">
               <Building2 className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-extrabold text-slate-900">
-                  {company.companyName}
-                </h3>
-                {company.iafCode && (
-                  <span className="text-cyan-800 font-semibold text-[11px] bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
-                    IAF {company.iafCode}
-                  </span>
-                )}
-                {company.bizNumber && (
-                  <span className="text-[11px] text-slate-500 font-mono">
-                    (사업자번호: {company.bizNumber})
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                대표자: {company.ceoName || ''} {company.industry ? `· 업종: ${company.industry}` : ''} {company.address ? `· 본사: ${company.address}` : ''}
-              </p>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="text-base font-bold text-white tracking-tight">
+                {effectiveCompany.companyName}
+              </h3>
+              <span className="text-xs text-slate-300 font-mono">
+                (사업자: {effectiveCompany.bizNumber || '-'})
+              </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {latestProject && latestProject.status !== '인증발행' ? (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded-full text-xs font-bold shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse shrink-0" />
-                <span>현재 심사진행 중 ({latestProject.auditType || stageText})</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full text-xs font-semibold shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
-                <span>인증유지 (유효)</span>
-              </div>
-            )}
+            {/* 상태 뱃지: 고객 원장 기준의 기본 상태 깔끔 단일 표시 */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 border border-emerald-400 text-emerald-200 rounded-full text-xs font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>{effectiveCompany.certStatus === '정지' || effectiveCompany.certStatus === '취소' ? effectiveCompany.certStatus : '인증유지 (유효)'}</span>
+            </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
               title="닫기"
             >
               <X className="w-5 h-5" />
@@ -359,947 +554,261 @@ export const CompanyAuditHistoryModal: React.FC<CompanyAuditHistoryModalProps> =
         </div>
 
         {/* ========================================================================= */}
-        {/* 2. 상단 종이 바인더 서류철 인덱스 탭 (3개 탭으로 정돈) */}
+        {/* 2. 모달 본문 통합 단일 뷰 (위: 마스터 정보 3열 카드 / 아래: 심사이력 대장) */}
         {/* ========================================================================= */}
-        <div className="bg-slate-200/90 px-4 pt-2 border-b border-slate-300 grid grid-cols-3 gap-0 shrink-0">
-          
-          {/* 탭 1: 기업 및 인증 기본 정보 */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('profile')}
-            className={`py-2.5 px-2 text-xs font-bold transition flex items-center justify-center gap-1.5 border-t border-r border-l first:rounded-tl-xl cursor-pointer ${
-              activeTab === 'profile'
-                ? 'bg-white text-cyan-950 border-slate-300 shadow-xs translate-y-[1px] z-10 font-extrabold'
-                : 'bg-slate-200/60 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-slate-300/60'
-            }`}
-          >
-            <Building2 className={`w-3.5 h-3.5 ${activeTab === 'profile' ? 'text-cyan-700' : 'text-slate-500'}`} />
-            <span>1. 기업 및 인증 기본 정보</span>
-          </button>
-
-          {/* 탭 2: 심사 이력 및 발급 문서 대장 */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('history')}
-            className={`py-2.5 px-2 text-xs font-bold transition flex items-center justify-center gap-1.5 border-t border-r border-l -ml-[1px] cursor-pointer ${
-              activeTab === 'history'
-                ? 'bg-white text-cyan-950 border-slate-300 shadow-xs translate-y-[1px] z-10 font-extrabold'
-                : 'bg-slate-200/60 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-slate-300/60'
-            }`}
-          >
-            <CalendarIcon className={`w-3.5 h-3.5 ${activeTab === 'history' ? 'text-cyan-700' : 'text-slate-500'}`} />
-            <span>2. 심사 이력 및 발급 문서 대장</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-mono">
-              {auditHistoryRecords.length}
-            </span>
-          </button>
-
-          {/* 탭 3: EHS & 환경·안전 법규 관리 */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('ehs')}
-            className={`py-2.5 px-2 text-xs font-bold transition flex items-center justify-center gap-1.5 border-t border-r border-l -ml-[1px] last:rounded-tr-xl cursor-pointer ${
-              activeTab === 'ehs'
-                ? 'bg-white text-emerald-950 border-slate-300 shadow-xs translate-y-[1px] z-10 font-extrabold'
-                : 'bg-slate-200/60 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-slate-300/60'
-            }`}
-          >
-            <Leaf className={`w-3.5 h-3.5 ${activeTab === 'ehs' ? 'text-emerald-700' : 'text-slate-500'}`} />
-            <span>3. EHS &amp; 환경·안전 법규 관리</span>
-          </button>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* 3. 인덱스 탭 내용 영역 (Scrollable Body) */}
-        {/* ========================================================================= */}
-        <div className="flex-1 bg-white p-6 overflow-y-auto space-y-4 text-slate-800 text-xs">
+        <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/50 text-slate-800 text-xs">
           
           {/* ------------------------------------------------------------- */}
-          {/* TAB 1: [기업 및 인증 기본 정보] - 볼드체 다이어트 적용        */}
+          {/* ① 상단 섹션: [기업 및 인증 마스터 정보 (3열 카드)]            */}
           {/* ------------------------------------------------------------- */}
-          {activeTab === 'profile' && (
-            <div className="space-y-4 animate-in fade-in">
-              
-              {/* 1-1. 회사 기본 정보 & 담당자 */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <h4 className="font-bold text-slate-900 text-xs mb-3 flex items-center gap-1.5 pb-2 border-b border-slate-200">
-                  <Building2 className="w-4 h-4 text-cyan-700" />
-                  <span>회사 기본 정보 및 실무 담당자</span>
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">회사명:</span>
-                      <span className="text-slate-900 font-medium">{effectiveCompany.companyName}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">대표자명:</span>
-                      <span className="text-slate-900 font-normal">{cleanCeoName(effectiveCompany.ceoName)} 대표이사</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">사업자등록번호:</span>
-                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.bizNumber || ''}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">업종 / 주요생산품:</span>
-                      <span className="text-slate-800 font-normal">{effectiveCompany.industry || ''}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">실무 담당자:</span>
-                      <span className="text-slate-900 font-medium">
-                        {cleanPersonName(effectiveCompany.contactPerson)} {effectiveCompany.contactPosition || '담당자'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">담당자 연락처:</span>
-                      <span className="font-mono text-slate-800 font-normal">{effectiveCompany.contactPhone || ''}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">담당자 이메일:</span>
-                      <span className="font-mono text-cyan-800 font-normal">{effectiveCompany.contactEmail || ''}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">대표 사업장 주소:</span>
-                      <span className="text-slate-800 font-normal truncate max-w-[240px]">{effectiveCompany.address || ''}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 추가사업장 (Multi-Site) 목록 렌더링 */}
-                {effectiveCompany.additionalSites && effectiveCompany.additionalSites.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-200">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 mb-2">
-                      <MapPin className="w-3.5 h-3.5 text-cyan-700" />
-                      <span>등록된 추가사업장 ({effectiveCompany.additionalSites.length}개소)</span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
-                      {effectiveCompany.additionalSites.map((site: any, sIdx: number) => (
-                        <div key={site.id || sIdx} className="p-2 bg-white border border-slate-200 rounded-lg space-y-0.5">
-                          <div className="flex items-center justify-between font-bold text-slate-800">
-                            <span>#{sIdx + 1} {site.siteName}</span>
-                            {site.employees && <span className="font-mono text-cyan-800 font-medium">{site.employees}명</span>}
-                          </div>
-                          <p className="text-slate-600 truncate">{site.address}</p>
-                          {site.scope && <p className="text-slate-500 text-[10.5px]">범위: {site.scope}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            
+            {/* 카드 1: 기업 기본 정보 (사업자번호 제거로 여백 확보) */}
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+              <div className="flex items-center gap-1.5 pb-2 border-b border-slate-200 font-bold text-slate-900 text-xs">
+                <Building2 className="w-3.5 h-3.5 text-cyan-700" />
+                <span>기업 기본 정보</span>
               </div>
-
-              {/* 1-2. 인증범위 요약 박스 (국문 & 영문) */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <Award className="w-4 h-4 text-indigo-700" />
-                      <span>공식 인증범위 (Certification Scope)</span>
-                    </h4>
-                    {(effectiveCompany as any).scopeUpdatedAt && (
-                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded border border-emerald-300">
-                        인정범위 확인서 최종 반영됨 ({(effectiveCompany as any).scopeUpdatedAt})
-                      </span>
-                    )}
-                  </div>
-                  {effectiveCompany.iafCode && (
-                    <span className="text-[11px] text-indigo-900 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                      IAF Code: {effectiveCompany.iafCode}
-                    </span>
-                  )}
+              <div className="space-y-1.5 text-[11.5px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">대표자명:</span>
+                  <span className="text-slate-900 font-medium">{cleanCeoName(effectiveCompany.ceoName)} 대표</span>
                 </div>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[국문 인증범위]</span>
-                    <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-800 font-medium leading-relaxed">
-                      {effectiveCompany.scope || ''}
-                    </p>
-                  </div>
-                  {(effectiveCompany as any).scopeEng && (
-                    <div>
-                      <span className="text-[11px] font-medium text-slate-600 block mb-0.5">[영문 인증범위 (English Scope)]</span>
-                      <p className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 font-mono text-[11px] font-normal leading-relaxed">
-                        {(effectiveCompany as any).scopeEng}
-                      </p>
-                    </div>
-                  )}
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">업종 / 주요생산품:</span>
+                  <span className="text-slate-800 font-normal truncate max-w-[150px]" title={displayIndustry !== '-' ? displayIndustry : ''}>
+                    {displayIndustry}
+                  </span>
                 </div>
-              </div>
-
-              {/* 1-3. 인증원 관리 사항 & 심사 배정 */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <h4 className="font-bold text-slate-900 text-xs mb-3 flex items-center gap-1.5 pb-2 border-b border-slate-200">
-                  <UserCheck className="w-4 h-4 text-cyan-700" />
-                  <span>인증원 관리 사항 및 배정 심사원 현황</span>
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">담당(관리) 심사원:</span>
-                      <span className="text-slate-900 font-medium">{(effectiveCompany as any).assignedAuditor || effectiveCompany.assignedAuditorName || managingAuditor.name || '-'}</span>
-                    </div>
-                    {latestProject?.leadAuditorName && (
-                      <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                        <span className="text-slate-500 font-normal">최근 심사팀 배정:</span>
-                        <span className="text-slate-900 font-medium">
-                          팀장: {latestProject.leadAuditorName}{latestProject.teamAuditorNames?.length ? ` · 팀원: ${latestProject.teamAuditorNames.join(', ')}` : ' (단독)'}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">심사원 연락처/이메일:</span>
-                      <span className="font-mono text-slate-700 text-[11px] font-normal">{managingAuditor.mobile || ''}{managingAuditor.email ? ` / ${managingAuditor.email}` : ''}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">영업/협력기관 (컨설턴트):</span>
-                      <span className="text-slate-800 font-normal">{company.consultant || company.agency || 'GMSCS 본부 직영'}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">종업원 수 (M/D 산정기준):</span>
-                      <span className="text-slate-800 font-mono font-normal">{company.totalEmployees ? `${company.totalEmployees}명` : '-'}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">보유 인증표준 &amp; 인증번호:</span>
-                      <div className="text-right">
-                        {stdAndCerts.map((sc, i) => (
-                          <div key={i} className="text-cyan-950 font-mono text-[11px] font-medium">
-                            {sc.std} <span className="text-slate-500 font-normal">({sc.certNo || '발급전'})</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">최초 계약일:</span>
-                      <span className="font-mono text-slate-800 font-normal">{contract?.initialCertDate || '-'}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">최초 인증등록일:</span>
-                      <span className="font-mono text-emerald-800 font-medium">{contract?.initialCertDate || '-'}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">차기 사후관리 만료일:</span>
-                      <span className="font-mono text-amber-900 font-medium">{dueDate ? `${dueDate} (${dday.text})` : '-'}</span>
-                    </div>
-                  </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">실무 담당자:</span>
+                  <span className="text-slate-900 font-medium">
+                    {cleanPersonName(effectiveCompany.contactPerson)} {effectiveCompany.contactPosition || '담당자'}
+                  </span>
                 </div>
-              </div>
-
-              {/* 1-4. 인증 전환(Transfer) 및 이전 인증기관 이력 정보 */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-3">
-                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                    <ArrowRightLeft className="w-4 h-4 text-cyan-700" />
-                    <span>인증 전환(Transfer) 및 이전 인증기관 이력 정보</span>
-                  </h4>
-                  {effectiveCompany.isTransfer ? (
-                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-900 text-[11px] font-bold border border-cyan-300">
-                      타 기관 전환 심사 고객 ({effectiveCompany.transferType || '타기관 인증 전환'})
-                    </span>
-                  ) : (
-                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
-                      GMSCS 표준 심사 대상 (신규/갱신)
-                    </span>
-                  )}
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">담당자 연락처:</span>
+                  <span className="font-mono text-slate-800">{effectiveCompany.contactPhone || '-'}</span>
                 </div>
-
-                {effectiveCompany.isTransfer ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="space-y-2">
-                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                          <span className="text-slate-500 font-normal">이전 인증기관명:</span>
-                          <span className="text-cyan-950 font-bold">{effectiveCompany.prevCertificationBody || '-'}</span>
-                        </div>
-                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                          <span className="text-slate-500 font-normal">이전 인증서 번호:</span>
-                          <span className="font-mono text-slate-800 font-medium">{effectiveCompany.prevCertNumber || '-'}</span>
-                        </div>
-                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                          <span className="text-slate-500 font-normal">이전 인증 유효기간:</span>
-                          <span className="font-mono text-slate-800">
-                            {effectiveCompany.prevCertIssueDate || '-'} ~ {effectiveCompany.prevCertExpiryDate || '-'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                          <span className="text-slate-500 font-normal">전환 심사 착수 구분:</span>
-                          <span className="text-slate-900 font-medium">{effectiveCompany.transferType || '타기관 인증 전환'}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-500 font-normal block mb-1">전환 / 대체 사유 및 시작 배경:</span>
-                          <p className="p-2 bg-white rounded border border-slate-200 text-slate-700 text-[11px] leading-relaxed">
-                            {effectiveCompany.transferReason || '-'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {effectiveCompany.prevAuditDetails && (
-                      <div className="mt-2 pt-2 border-t border-slate-200">
-                        <span className="text-slate-500 font-normal text-[11px] block mb-1">이전 심사 기록 및 부적합(NCR) 조치 사항:</span>
-                        <p className="p-2 bg-white rounded border border-slate-200 text-slate-700 text-[11px] leading-relaxed">
-                          {effectiveCompany.prevAuditDetails}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* 이전 인증서 / 심사보고서 첨부파일 목록 */}
-                    <div className="mt-2 pt-2 border-t border-slate-200">
-                      <span className="text-slate-600 font-bold text-[11px] block mb-1.5 flex items-center gap-1">
-                        <Paperclip className="w-3.5 h-3.5 text-cyan-700" />
-                        <span>이전 심사보고서 및 인증서 사본 첨부문서</span>
-                      </span>
-                      {effectiveCompany.transferAttachments && effectiveCompany.transferAttachments.length > 0 ? (
-                        <div className="space-y-1.5">
-                          {effectiveCompany.transferAttachments.map((att: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 text-xs">
-                              <div className="flex items-center gap-2 overflow-hidden">
-                                <FileCheck2 className="w-4 h-4 text-cyan-700 shrink-0" />
-                                <div>
-                                  <div className="font-medium text-slate-800 truncate max-w-[320px]">{att.fileName}</div>
-                                  <div className="text-[10px] text-slate-500 font-mono">{att.fileSize} · {att.uploadedAt}</div>
-                                </div>
-                              </div>
-                              {att.fileData ? (
-                                <a
-                                  href={att.fileData}
-                                  download={att.fileName}
-                                  className="flex items-center gap-1 px-2 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 rounded border border-cyan-200 text-[11px] font-medium transition cursor-pointer"
-                                >
-                                  <Download className="w-3 h-3" />
-                                  <span>다운로드</span>
-                                </a>
-                              ) : (
-                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">보관완료</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-2.5 bg-white rounded border border-dashed border-slate-200 text-slate-500 text-[11px] flex items-center justify-between">
-                          <span>등록된 이전 심사보고서 첨부파일이 없습니다.</span>
-                          <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">첨부문서 없음</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-white rounded-xl border border-slate-200 text-slate-600 text-xs leading-relaxed">
-                    <p className="flex items-center gap-2 text-slate-700 font-medium mb-1">
-                      <span className="w-2 h-2 rounded-full bg-slate-400" />
-                      <span>타 기관 인증 전환 대상이 아닙니다.</span>
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      GMSCS 인증원 최초 1·2단계 신규 심사 또는 정기 갱신/사후관리 심사 절차에 따라 진행되는 고객사입니다. 타 기관에서 이관된 경우 신규 등록 시 '전환 여부'를 체크하여 이전 인증기관 및 심사이력을 첨부 등록할 수 있습니다.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ------------------------------------------------------------- */}
-          {/* TAB 2: [심사 이력 및 발급 문서 대장]                          */}
-          {/* ------------------------------------------------------------- */}
-          {activeTab === 'history' && (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                    <CalendarIcon className="w-4 h-4 text-cyan-700" />
-                    <span>완료 및 진행 심사 목록 대장 (DB 전체 보유분)</span>
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    해당 기업의 연차별 심사 결과와 발급 문서(보고서, 인증서, 계획서, 부속서류)를 확인합니다.
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">담당자 이메일:</span>
+                  <span className="font-mono text-cyan-800 truncate max-w-[140px]" title={effectiveCompany.contactEmail || ''}>
+                    {effectiveCompany.contactEmail || '-'}
+                  </span>
+                </div>
+                <div className="pt-1 border-t border-slate-100">
+                  <span className="text-slate-500 font-normal block mb-0.5">사업장 주소:</span>
+                  <p className="text-slate-700 font-normal truncate" title={effectiveCompany.address || ''}>
+                    {effectiveCompany.address || '-'}
                   </p>
                 </div>
               </div>
+            </div>
 
-              {/* 표준 서식 바로가기 바 */}
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-cyan-700 shrink-0" />
-                  <div>
-                    <span className="font-bold text-slate-900 text-xs">ISO 공인 표준 서식 원문 열람 및 출력</span>
-                    <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline">(계약검토, 공정성평가, 심사계획, 심의결과서)</span>
-                  </div>
+            {/* 카드 2: 인증 현황 및 범위 (IAF 코드 동적 조건부 렌더링) */}
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 font-bold text-slate-900 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-indigo-700" />
+                  <span>인증 현황 및 범위</span>
                 </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setIsContractReviewDocOpen(true)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                    title="[F02] 인증신청 및 계약검토보고서 열람/인쇄"
-                  >
-                    <FileText className="w-3 h-3 text-cyan-700" />
-                    <span>[F02] 계약검토보고서</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsImpartialityDocOpen(true)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                    title="[F14] 공정성 관리 및 이해상충 평가서 열람/인쇄"
-                  >
-                    <Shield className="w-3 h-3 text-emerald-700" />
-                    <span>[F14] 공정성관리평가서</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsPlanDocOpen(true)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                    title="[F16] 심사계획 및 비용청구서 열람/인쇄"
-                  >
-                    <ClipboardList className="w-3 h-3 text-indigo-700" />
-                    <span>[F16] 심사계획·청구서</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsDeliberationDocOpen(true)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-[11px] font-medium transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                    title="[F18] 인증심의 결과보고서 및 의결서 열람/인쇄"
-                  >
-                    <Award className="w-3 h-3 text-purple-700" />
-                    <span>[F18] 심의결과보고서</span>
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  {effectiveCompany.iafCode ? (
+                    <span className="text-[10.5px] font-mono font-semibold text-cyan-800 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
+                      IAF {effectiveCompany.iafCode}
+                    </span>
+                  ) : null}
+                  {effectiveCompany.totalEmployees ? (
+                    <span className="text-[10.5px] font-mono text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 font-normal">
+                      {effectiveCompany.totalEmployees}명 (MD기준)
+                    </span>
+                  ) : null}
                 </div>
               </div>
+              <div className="space-y-1.5 text-[11.5px]">
+                <div>
+                  <span className="text-slate-500 font-normal block mb-0.5">인증규격 및 인증번호:</span>
+                  <div className="space-y-0.5">
+                    {stdAndCerts.map((sc, i) => (
+                      <div key={i} className="flex justify-between items-center bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60 font-mono text-[11px]">
+                        <span className="text-slate-900 font-medium">{sc.std}</span>
+                        <span className="text-cyan-800 font-normal">{sc.certNo || '발급전'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between pt-1">
+                  <span className="text-slate-500 font-normal">담당(관리) 심사원:</span>
+                  <span className="text-slate-900 font-medium">
+                    {(effectiveCompany as any).assignedAuditor || effectiveCompany.assignedAuditorName || (effectiveCompany as any).leadAuditor || (managingAuditor.name !== '-' ? managingAuditor.name : '-')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">영업/협력기관:</span>
+                  <span className="text-slate-800">{effectiveCompany.consultant || (effectiveCompany as any).agency || 'GMSCS 본부 직영'}</span>
+                </div>
+                <div className="pt-1 border-t border-slate-100">
+                  <span className="text-slate-500 font-normal block mb-0.5">국문 인증범위 (Scope):</span>
+                  <p className="text-slate-700 font-normal line-clamp-2 leading-relaxed bg-slate-50 p-1.5 rounded border border-slate-200/60 text-[11px]" title={effectiveCompany.scope || ''}>
+                    {effectiveCompany.scope || '인증 범위 정보가 등록되어 있지 않습니다.'}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-              {/* 심사 대장 테이블: Firebase Cloud Storage 보관 문서를 기반으로 연차별 심사 이력 일원화 */}
-              <div className="border border-slate-300 rounded-2xl overflow-hidden shadow-2xs">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-800">
+            {/* 카드 3: 생애주기 날짜 & D-Day 알람 */}
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 font-bold text-slate-900 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <CalendarIcon className="w-3.5 h-3.5 text-cyan-700" />
+                  <span>생애주기 날짜 현황</span>
+                </div>
+                {timeline?.isPrepAlert ? (
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 animate-pulse">
+                    심사준비 대상
+                  </span>
+                ) : timeline?.isOverdue ? (
+                  <span className="text-[10px] font-bold text-rose-800 bg-rose-100 px-1.5 py-0.5 rounded border border-rose-300">
+                    기한초과
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-normal text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                    정상유지
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1.5 text-[11.5px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">최초 인증등록일:</span>
+                  <span className="font-mono text-slate-800 font-normal">
+                    {contract?.initialCertDate || effectiveCompany.initialCertDate || effectiveCompany.initialContractDate || '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">현 주기 기산일:</span>
+                  <span className="font-mono text-cyan-900 font-medium">
+                    {effectiveCompany.cycleBaseDate || effectiveCompany.certStartDate || contract?.initialCertDate || '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-normal">최근 심사일자:</span>
+                  <span className="font-mono text-slate-800 font-normal">
+                    {effectiveCompany.latestAuditDate || effectiveCompany.certStartDate || effectiveCompany.lastAuditDate || latestProject?.startDate || '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-slate-100">
+                  <span className="text-slate-500 font-normal">차기 심사 마감일:</span>
+                  <span className="font-mono text-slate-900 font-medium">
+                    {timeline?.deadlineDate || contract?.surveillanceDueDate || contract?.validUntil || '-'}
+                  </span>
+                </div>
+                <div className="p-2 bg-cyan-50/70 border border-cyan-200 rounded-lg text-center font-mono text-[11px]">
+                  <span className="text-slate-600 mr-1">알람 상태:</span>
+                  <span className={`font-bold ${timeline?.isOverdue ? 'text-rose-700' : timeline?.isPrepAlert ? 'text-amber-800' : 'text-cyan-900'}`}>
+                    {timeline?.alarmText || '정상 유지'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ------------------------------------------------------------- */}
+          {/* ② 하단 섹션: [심사 이력 및 문서 대장 (3개년 전체 이력 표시)]   */}
+          {/* ------------------------------------------------------------- */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div className="px-4 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-cyan-700" />
+                <span className="font-bold text-slate-900 text-xs">심사 이력 및 문서 대장</span>
+                <span className="text-[11px] text-slate-500 font-normal">
+                  (연차별 심사 수행 결과 및 공인 발급 문서)
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 text-[11.5px]">
+                  <tr>
+                    <th className="py-2.5 px-3 border-r border-slate-200 w-[200px] whitespace-nowrap">
+                      심사구분 &amp; 규격
+                    </th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 w-[190px] whitespace-nowrap">
+                      심사일자 (MD)
+                    </th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 w-[170px] whitespace-nowrap">
+                      심사팀
+                    </th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 w-[130px] text-center whitespace-nowrap">
+                      심사 결과
+                    </th>
+                    <th className="py-2.5 px-3 text-center whitespace-nowrap w-[160px]">
+                      문서 관리
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 text-slate-800 bg-white">
+                  {auditHistoryList.length === 0 ? (
                     <tr>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[190px] whitespace-nowrap">심사구분 &amp; 규격</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[170px] whitespace-nowrap">심사일자 (MD)</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[110px] whitespace-nowrap">차기 예정일</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[130px] whitespace-nowrap">담당 심사원</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 w-[90px] text-center whitespace-nowrap">부적합 수</th>
-                      <th className="py-2.5 px-3 whitespace-nowrap">발급 문서 및 보고서 열람</th>
+                      <td colSpan={5} className="py-8 text-center text-slate-400 font-normal">
+                        조회된 심사 이력 및 보관 문서가 없습니다.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 text-slate-900 bg-white">
-                    {(() => {
-                      // Firebase Cloud Storage 문서를 심사 차수별로 그룹화
-                      const groups: Record<string, {
-                        year?: number | string;
-                        month?: number | string;
-                        auditType: string;
-                        standards: string[];
-                        auditor: string;
-                        reportDoc?: DriveReportFileItem;
-                        certDoc?: DriveReportFileItem;
-                        planDoc?: DriveReportFileItem;
-                        otherDocs: DriveReportFileItem[];
-                      }> = {};
+                  ) : (
+                    auditHistoryList.map((entry) => (
+                      <tr key={entry.key} className="hover:bg-slate-50/80 transition">
+                        {/* 1. 심사구분 & 규격 */}
+                        <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                          <span className="font-semibold text-cyan-950 block">{entry.stageDisplay}</span>
+                          <span className="text-[10.5px] text-slate-500 font-mono">
+                            {entry.standardsDisplay}
+                          </span>
+                        </td>
 
-                      if (archivedDocs.length > 0) {
-                        archivedDocs.forEach((doc) => {
-                          const yearVal = doc.year || 2025;
-                          const monthVal = doc.month || 10;
-                          const aType = doc.auditType || '정기심사';
-                          const key = `${yearVal}_${monthVal}_${aType}`;
+                        {/* 2. 심사일자 (MD) */}
+                        <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[11.5px] text-slate-800 whitespace-nowrap">
+                          {entry.dateDisplay}
+                        </td>
 
-                          if (!groups[key]) {
-                            groups[key] = {
-                              year: yearVal,
-                              month: monthVal,
-                              auditType: aType,
-                              standards: doc.standards || [],
-                              auditor: doc.auditorName || doc.auditor || managingAuditor.name || '사무국',
-                              otherDocs: []
-                            };
-                          }
+                        {/* 3. 심사팀 */}
+                        <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
+                          <span className="font-medium text-slate-900 block">{entry.auditorDisplay}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">GMSCS 공인 심사원</span>
+                        </td>
 
-                          // 규격 병합
-                          if (doc.standards) {
-                            doc.standards.forEach(s => {
-                              if (!groups[key].standards.includes(s)) {
-                                groups[key].standards.push(s);
-                              }
-                            });
-                          }
+                        {/* 4. 심사 결과 */}
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px]">
+                          <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">
+                            {entry.statusDisplay}
+                          </span>
+                        </td>
 
-                          // 문서 유형별 분류
-                          if (doc.docType === '심사보고서' || (doc.fileName && (doc.fileName.includes('보고서') || doc.fileName.includes('_re_')))) {
-                            if (!groups[key].reportDoc) groups[key].reportDoc = doc;
-                          } else if (doc.docType === '인증서' || (doc.fileName && (doc.fileName.includes('인증서') || doc.fileName.includes('cert')))) {
-                            if (!groups[key].certDoc) groups[key].certDoc = doc;
-                          } else if (doc.docType === '신청/전환자료' || (doc.fileName && (doc.fileName.includes('계획서') || doc.fileName.includes('신청') || doc.fileName.includes('_tr_')))) {
-                            if (!groups[key].planDoc) groups[key].planDoc = doc;
-                          } else {
-                            groups[key].otherDocs.push(doc);
-                          }
-                        });
-                      }
-
-                      const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
-                        const gA = groups[a];
-                        const gB = groups[b];
-                        return (Number(gB.year || 0) * 100 + Number(gB.month || 0)) - (Number(gA.year || 0) * 100 + Number(gA.month || 0));
-                      });
-
-                      // 만약 등록된 아카이브가 없으면 기본 최신 프로젝트 1줄 표시
-                      if (sortedGroupKeys.length === 0) {
-                        const fallbackAuditDateStr = latestProject?.auditDates?.length 
-                          ? (latestProject.auditDates.length > 1 ? `${latestProject.startDate} ~ ${latestProject.endDate.slice(5)}` : latestProject.startDate) 
-                          : (dueDate?.slice(0, 7) || '2026.09');
-                        const fallbackMd = (effectiveContractRecord.appliedMd || latestProject?.appliedMd || 2.0).toFixed(1);
-                        const fallbackAuditorDisplay = latestProject?.leadAuditorName 
-                          ? `팀장: ${latestProject.leadAuditorName}${latestProject.teamAuditorNames?.length ? ` / 팀원: ${latestProject.teamAuditorNames.join(', ')}` : ''}`
-                          : ((effectiveCompany as any).assignedAuditor || managingAuditor.name || '사무국');
-
-                        // 차기 예정일 계산 (심사일자 기준 1년 뒤 또는 dueDate)
-                        let nextDueDate = dueDate || '';
-                        if (latestProject?.startDate) {
-                          const parts = latestProject.startDate.split('-');
-                          if (parts.length === 3) {
-                            nextDueDate = `${Number(parts[0]) + 1}.${parts[1]}.${parts[2]}`;
-                          }
-                        } else if (dueDate) {
-                          nextDueDate = dueDate.replace(/-/g, '.');
-                        }
-
-                        return (
-                          <tr className="hover:bg-slate-50 transition">
-                            {/* 1. 심사구분 & 규격 (첫번째 컬럼) */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                              <span className="font-semibold text-cyan-950 block">{stageText}</span>
-                              <span className="text-[10px] text-slate-500 font-mono">{stdAndCerts.map(s => s.std).join(' / ')}</span>
-                            </td>
-
-                            {/* 2. 심사일자 (MD) */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
-                              {fallbackAuditDateStr} ({fallbackMd} MD)
-                            </td>
-
-                            {/* 3. 차기 예정일 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[11px] font-medium text-slate-700 whitespace-nowrap">
-                              {nextDueDate || '-'}
-                            </td>
-
-                            {/* 4. 담당 심사원 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                              <span className="font-medium text-slate-900 block">{fallbackAuditorDisplay}</span>
-                              <span className="text-[10.5px] text-slate-400">인증원 공인심사</span>
-                            </td>
-
-                            {/* 5. 부적합 수 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
-                              중 0 · 경 0 · 관 0
-                            </td>
-
-                            {/* 6. 발급 문서 및 보고서 열람 (7개 링크 엄격한 고정 순서 유지) */}
-                            <td className="py-2.5 px-3 align-middle">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                
-                                {/* 1. 계약검토보고서 (F02) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsContractReviewDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F02] 인증신청 및 계약검토보고서 원문 열람/인쇄"
-                                >
-                                  <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>계약검토보고서</span>
-                                </button>
-
-                                {/* 2. 공정성관리평가서 (F14) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsImpartialityDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F14] 공정성 관리 및 이해상충 평가서 원문 열람/인쇄"
-                                >
-                                  <Shield className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>공정성관리평가서</span>
-                                </button>
-
-                                {/* 3. 표준계약서 (F16) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsContractDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F16] 인증심사 표준계약서 열람/인쇄"
-                                >
-                                  <FileCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>표준계약서</span>
-                                </button>
-
-                                {/* 4. 심사계획·청구서 (F16) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsPlanDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F16] 심사계획 및 비용청구서 공문 열람/인쇄"
-                                >
-                                  <ClipboardList className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>심사계획·청구서</span>
-                                </button>
-
-                                {/* 5. 심사보고서 (F17) */}
-                                {onOpenReportWorkbench ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => onOpenReportWorkbench(effectiveCompany)}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title="공식 심사보고서 작성 및 PDF 뷰어"
-                                  >
-                                    <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                    <span>심사보고서</span>
-                                  </button>
-                                ) : (
-                                  <span className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none">
-                                    <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                    <span>심사보고서</span>
-                                  </span>
-                                )}
-
-                                {/* 6. 심의결과보고서 (F18) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsDeliberationDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F18] 인증심의 결과보고서 및 의결서 열람/인쇄"
-                                >
-                                  <Award className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>심의결과보고서</span>
-                                </button>
-
-                                {/* 7. 인증서 (국/영문) */}
-                                <span className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none">
-                                  <Award className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                  <span>인증서</span>
-                                </span>
-
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      }
-
-                      return sortedGroupKeys.map((k) => {
-                        const grp = groups[k];
-                        const dateText = grp.month ? `${grp.year}.${String(grp.month).padStart(2, '0')}` : `${grp.year}`;
-                        const mdText = grp.auditType.includes('최초') ? '3.0 MD' : '2.0 MD';
-                        const stdDisplay = grp.standards.length > 0 ? grp.standards.map(s => s.split(':')[0]).join(' · ') : (stdAndCerts.map(s => s.std.split(':')[0]).join(' · ') || 'ISO 9001');
-
-                        // 차기 예정일 계산 (해당 심사 연도 + 1년)
-                        const nextYear = Number(grp.year || 2025) + 1;
-                        const nextMonth = grp.month ? String(grp.month).padStart(2, '0') : '10';
-                        const nextDateStr = `${nextYear}.${nextMonth}`;
-
-                        return (
-                          <tr key={k} className="hover:bg-slate-50 transition">
-                            {/* 1. 심사구분 & 규격 (첫번째 컬럼) */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                              <span className="font-semibold text-cyan-950 block">{grp.auditType}</span>
-                              <span className="text-[11px] text-slate-600 font-mono font-normal block mt-0.5">
-                                {stdDisplay}
-                              </span>
-                            </td>
-
-                            {/* 2. 심사일자 (MD) */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[12px] font-normal text-slate-800 whitespace-nowrap">
-                              {dateText} ({mdText})
-                            </td>
-
-                            {/* 3. 차기 예정일 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle font-mono text-[11px] font-medium text-slate-700 whitespace-nowrap">
-                              {nextDateStr}
-                            </td>
-
-                            {/* 4. 담당 심사원 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 align-middle">
-                              <span className="font-medium text-slate-900 block">{grp.auditor || managingAuditor.name || '사무국'}</span>
-                              <span className="text-[10.5px] text-slate-400 font-normal">인증원 공인심사</span>
-                            </td>
-
-                            {/* 5. 부적합 수 */}
-                            <td className="py-2.5 px-3 border-r border-slate-200 text-center align-middle text-[11px] font-mono text-slate-400">
-                              중 0 · 경 0 · 관 0
-                            </td>
-
-                            {/* 6. 발급 문서 및 보고서 열람 (7개 링크 엄격한 고정 순서 유지) */}
-                            <td className="py-2.5 px-3 align-middle">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                
-                                {/* 1. 계약검토보고서 (F02) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsContractReviewDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F02] 인증신청 및 계약검토보고서 열람/인쇄"
-                                >
-                                  <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>계약검토보고서</span>
-                                </button>
-
-                                {/* 2. 공정성관리평가서 (F14) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsImpartialityDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F14] 공정성 관리 및 이해상충 평가서 열람/인쇄"
-                                >
-                                  <Shield className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>공정성관리평가서</span>
-                                </button>
-
-                                {/* 3. 표준계약서 (F16) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsContractDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F16] 인증심사 표준계약서 열람/인쇄"
-                                >
-                                  <FileCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>표준계약서</span>
-                                </button>
-
-                                {/* 4. 심사계획·청구서 (F16) */}
-                                {grp.planDoc ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onOpenPdfReport?.({
-                                        title: grp.planDoc?.fileName || `[심사계획서] ${company.companyName} ${grp.auditType}`,
-                                        companyName: company.companyName,
-                                        standard: grp.standards[0] || 'ISO 9001:2015',
-                                        auditType: grp.auditType,
-                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
-                                        pdfUrl: grp.planDoc?.downloadUrl || grp.planDoc?.pdfUrl
-                                      });
-                                    }}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title={`신청/전환/계획서 열람 (${grp.planDoc.fileSize})`}
-                                  >
-                                    <ClipboardList className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                    <span>심사계획·청구서</span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsPlanDocOpen(true)}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title="[F16] 심사계획 및 비용청구서 열람/인쇄"
-                                  >
-                                    <ClipboardList className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                    <span>심사계획·청구서</span>
-                                  </button>
-                                )}
-
-                                {/* 5. 심사보고서 (F17) */}
-                                {grp.reportDoc ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onOpenPdfReport?.({
-                                        title: grp.reportDoc?.fileName || `[심사보고서] ${company.companyName} ${grp.auditType} (${dateText})`,
-                                        companyName: company.companyName,
-                                        standard: grp.standards[0] || 'ISO 9001:2015',
-                                        auditType: grp.auditType,
-                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
-                                        auditorName: grp.auditor,
-                                        pdfUrl: grp.reportDoc?.downloadUrl || grp.reportDoc?.pdfUrl
-                                      });
-                                    }}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title={`공식 심사보고서 PDF 열람 (${grp.reportDoc.fileSize})`}
-                                  >
-                                    <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                    <span>심사보고서</span>
-                                  </button>
-                                ) : onOpenReportWorkbench ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => onOpenReportWorkbench(effectiveCompany)}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title="심사보고서 작성/열람"
-                                  >
-                                    <FileText className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                    <span>심사보고서</span>
-                                  </button>
-                                ) : (
-                                  <span 
-                                    className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none"
-                                    title="보관된 심사보고서 실물 파일 없음"
-                                  >
-                                    <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                    <span>심사보고서</span>
-                                  </span>
-                                )}
-
-                                {/* 6. 심의결과보고서 (F18) */}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsDeliberationDocOpen(true)}
-                                  className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                  title="[F18] 인증심의 결과보고서 및 의결서 열람/인쇄"
-                                >
-                                  <Award className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                  <span>심의결과보고서</span>
-                                </button>
-
-                                {/* 7. 인증서 (국/영문) */}
-                                {grp.certDoc ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onOpenPdfReport?.({
-                                        title: grp.certDoc?.fileName || `[인증서] ${company.companyName} 공식 인증서 (${grp.standards[0] || ''})`,
-                                        companyName: company.companyName,
-                                        standard: grp.standards[0] || 'ISO 9001:2015',
-                                        auditType: '공식 인증서',
-                                        auditDate: `${grp.year}-${String(grp.month || 1).padStart(2, '0')}-15`,
-                                        pdfUrl: grp.certDoc?.downloadUrl || grp.certDoc?.pdfUrl
-                                      });
-                                    }}
-                                    className="text-slate-900 hover:text-black font-medium inline-flex items-center gap-1 hover:underline cursor-pointer text-xs"
-                                    title={`공식 인증서 PDF 열람 (${grp.certDoc.fileSize})`}
-                                  >
-                                    <Award className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                                    <span>인증서(국/영문)</span>
-                                  </button>
-                                ) : (
-                                  <span 
-                                    className="text-slate-300 font-normal inline-flex items-center gap-1 text-xs cursor-default select-none"
-                                    title="보관된 인증서 실물 파일 없음"
-                                  >
-                                    <Award className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                    <span>인증서</span>
-                                  </span>
-                                )}
-
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      });
-                    })()}
-                  </tbody>
-                </table>
-              </div>
+                        {/* 5. 문서 관리 단일 액션 버튼 (문서 보관함 탐색기로 이동) */}
+                        <td className="py-2.5 px-3 text-center align-middle">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDocStorageAction(entry.archivedGroup)}
+                            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-700 to-sky-700 hover:from-cyan-800 hover:to-sky-800 text-white rounded-lg text-xs font-medium shadow-2xs hover:shadow-xs transition cursor-pointer"
+                            title="문서 보관함 (탐색기)로 이동하여 해당 심사 보관 문서 열람"
+                          >
+                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                            <span>문서관리 연동 열기</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-
-          {/* ------------------------------------------------------------- */}
-          {/* TAB 3: [EHS & 환경·안전 법규 관리]                            */}
-          {/* ------------------------------------------------------------- */}
-          {activeTab === 'ehs' && (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <h4 className="font-bold text-slate-900 text-xs mb-3 flex items-center gap-1.5 pb-2 border-b border-slate-200">
-                  <Leaf className="w-4 h-4 text-emerald-700" />
-                  <span>EHS(환경·안전보건) 법규 준수 평가 현황 (ISO 14001 / ISO 45001)</span>
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">대기 배출시설 등급:</span>
-                      <span className="text-slate-800 font-medium">4종 (집진기 설비 보유)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">폐수 배출시설 등급:</span>
-                      <span className="text-slate-800 font-medium">5종 (위탁처리)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">소방 안전관리 등급:</span>
-                      <span className="text-slate-800 font-medium">2급 (자체 선임 관리)</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">안전보건관리자 선임:</span>
-                      <span className="text-emerald-800 font-medium">선임 완료 (안전관리 전문기관 위탁)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">유해화학물질 취급 여부:</span>
-                      <span className="text-slate-800 font-medium">취급 없음 (해당없음)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-200/60 pb-1">
-                      <span className="text-slate-500 font-normal">사업장폐기물 관리:</span>
-                      <span className="text-slate-800 font-medium">올바로시스템(Allbaro) 전산 등록 준수</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
 
         </div>
 
       </div>
 
-      {/* 심사계획서 & 청구내역서 F16-004 모달 */}
-      <AuditPlanInvoiceDocModal
-        isOpen={isPlanDocOpen}
-        onClose={() => setIsPlanDocOpen(false)}
-        company={company}
-        contract={effectiveContractRecord}
-        auditor={managingAuditor as any}
-      />
-
-      {/* 공정성 관리 및 이해상충 평가서 F14-001 모달 */}
-      <ImpartialityAssessmentDocModal
-        isOpen={isImpartialityDocOpen}
-        onClose={() => setIsImpartialityDocOpen(false)}
-        company={company}
-        project={latestProject}
-        contract={effectiveContractRecord}
-        auditor={managingAuditor as any}
-      />
-
-      {/* 인증신청 및 계약검토보고서 F02-001 모달 */}
-      <ContractReviewDocModal
-        isOpen={isContractReviewDocOpen}
-        onClose={() => setIsContractReviewDocOpen(false)}
-        company={company}
-        contract={effectiveContractRecord}
-        project={latestProject}
-        auditor={managingAuditor as any}
-      />
-
-      {/* 인증심의 결과보고서 및 의결서 F18-001 모달 */}
-      <DeliberationReportDocModal
-        isOpen={isDeliberationDocOpen}
-        onClose={() => setIsDeliberationDocOpen(false)}
-        company={company}
-        project={latestProject}
-        auditor={managingAuditor as any}
-        decision="인증등록승인"
-      />
-
-      {/* 인증심사 표준계약서 F16-004 모달 */}
-      <StandardContractViewModal
-        isOpen={isContractDocOpen}
-        onClose={() => setIsContractDocOpen(false)}
-        contract={effectiveContractRecord}
-      />
-
-      {/* 회차별 부속서류철 탭 모달 */}
-      {selectedAuditForAttachments && (
-        <AuditAttachmentDocModal
-          isOpen={isAttachmentModalOpen}
-          onClose={() => setIsAttachmentModalOpen(false)}
-          company={company}
-          auditInfo={{
-            auditDate: selectedAuditForAttachments.auditDate,
-            auditType: selectedAuditForAttachments.auditType,
-            leadAuditor: selectedAuditForAttachments.leadAuditor
-          }}
-          attachments={selectedAuditForAttachments.attachments || []}
-        />
-      )}
-
     </div>
   );
 };
+

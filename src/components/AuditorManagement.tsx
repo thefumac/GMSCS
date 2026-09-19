@@ -18,6 +18,7 @@ import {
 import { Auditor, AuditorAffiliation, AuditProject, CertContract, Company } from '../types';
 import { AuditorProfileModal } from './AuditorProfileModal';
 import { extractProvinceName, updateAuditorInDb } from '../services/auditorService';
+import { Pagination } from './Pagination';
 
 export interface AuditorManagementProps {
   auditors: Auditor[];
@@ -179,32 +180,11 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
           </select>
         </div>
 
-        {/* 우측 카운터 및 페이지네이션 */}
+        {/* 우측 카운터 (상단 페이징 컨트롤 제거) */}
         <div className="flex items-center gap-3 text-xs text-slate-600 font-mono">
           <div>
             총 <strong className="text-cyan-700 font-bold">{filteredAuditors.length}</strong>명
             <span className="text-slate-400 ml-1">({safePage}/{totalPages}p)</span>
-          </div>
-          <div className="inline-flex items-center bg-slate-50 border border-slate-300 rounded-lg p-0.5">
-            <button
-              type="button"
-              disabled={safePage <= 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="p-1 hover:bg-white disabled:opacity-30 rounded transition cursor-pointer"
-              title="이전 페이지"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <span className="px-2 font-bold text-xs">{safePage}</span>
-            <button
-              type="button"
-              disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="p-1 hover:bg-white disabled:opacity-30 rounded transition cursor-pointer"
-              title="다음 페이지"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </div>
@@ -368,13 +348,22 @@ export const AuditorManagement: React.FC<AuditorManagementProps> = ({
           </table>
         </div>
 
-        {/* 테이블 푸터 */}
-        <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 font-normal">
-          <div>
-            * 심사원 기본 초기 비밀번호는 <code className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-300 font-bold">gms9001</code>이며, 교육 이수 및 세미나 상세는 행 클릭 시 팝업에서 조회 가능합니다.
-          </div>
-          <div className="font-mono text-slate-600 font-normal">
-            총 {filteredAuditors.length}명 중 {Math.min(filteredAuditors.length, (safePage - 1) * PAGE_SIZE + 1)} ~ {Math.min(filteredAuditors.length, safePage * PAGE_SIZE)}명 표시
+        {/* 테이블 푸터 및 하단 중앙 페이지네이션 */}
+        <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col items-center justify-center gap-2">
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={filteredAuditors.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={(p) => setCurrentPage(p)}
+          />
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full text-xs text-slate-500 font-normal px-2 pt-1 border-t border-slate-200/60">
+            <div>
+              * 심사원 기본 초기 비밀번호는 <code className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-300 font-bold">gms9001</code>이며, 교육 이수 및 세미나 상세는 행 클릭 시 팝업에서 조회 가능합니다.
+            </div>
+            <div className="font-mono text-slate-600 font-normal">
+              총 {filteredAuditors.length}명 중 {Math.min(filteredAuditors.length, (safePage - 1) * PAGE_SIZE + 1)} ~ {Math.min(filteredAuditors.length, safePage * PAGE_SIZE)}명 표시
+            </div>
           </div>
         </div>
       </div>
